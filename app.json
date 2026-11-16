@@ -9,7 +9,7 @@
     "userInterfaceStyle": "automatic",
     "ios": {
       "bundleIdentifier": "com.fordytechsolutions.talino",
-      "buildNumber": "8",
+      "buildNumber": "9",
       "appleTeamId": "M225MU29H3",
       "config": {
         "usesNonExemptEncryption": false
