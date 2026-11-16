@@ -41,3 +41,11 @@ example
 # generated native folders
 /ios
 /android
+
+# server-only secrets (Expo API routes)
+.env
+
+# Audio generation (scripts/audio): the model, its virtualenv and the generated files are local only
+scripts/audio/.venv/
+scripts/audio/models/
+scripts/audio/out/

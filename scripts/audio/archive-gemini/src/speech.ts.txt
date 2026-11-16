@@ -1,0 +1,30 @@
+import type { File } from 'expo-file-system';
+
+import type { CompanionId } from '@/features/companion/lib/companions';
+import { savedClip, voiceClip, type ClipStore } from '@/lib/voice-clip';
+
+import type { CoachIdentity } from './client';
+
+/**
+ * The coach's voice for chat answers, one piece at a time: the server (`/api/speech`, Gemini text to speech) makes the audio, and every
+ * piece is kept on the phone, named by its voice and words, so hearing an answer again is instant and works with no connection. The files
+ * are in the cache folder (the system may clear it; they are simply made again) and never in a backup. The oldest go when they pass a size.
+ * The saving and fetching is shared with the lessons' sentences (`lib/voice-clip.ts`).
+ */
+const STORE: ClipStore = { folder: 'reply-voice', maxBytes: 80 * 1024 * 1024, kind: 'reply', feature: 'coach', step: 'reply_voice' };
+
+/** The saved file of a piece, or null. */
+export function savedPiece(companion: CompanionId, text: string): File | null {
+  return savedClip(STORE, companion, text);
+}
+
+/** Whether every piece is already on the phone (the answer can be heard with no connection). */
+export const allSaved = (companion: CompanionId, pieces: readonly string[]): boolean => pieces.length > 0 && pieces.every((piece) => savedPiece(companion, piece) !== null);
+
+/**
+ * The audio file of one piece of an answer in the coach's voice: from the phone if it is there, otherwise made by the server and saved.
+ * Null when it can't be had (no server in this build, no connection, the server said no): the caller reads the rest with the phone's own voice.
+ */
+export function pieceAudio(identity: CoachIdentity, companion: CompanionId, text: string): Promise<string | null> {
+  return voiceClip(STORE, identity, companion, text);
+}

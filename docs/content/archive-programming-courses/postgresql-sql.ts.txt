@@ -1,0 +1,2885 @@
+import type { Course, Lesson, Project } from '../../types';
+
+const CHECKED = '2026-11-14';
+
+const DOCS = {
+  concepts: { label: 'PostgreSQL 18 docs: Tutorial, Concepts', url: 'https://www.postgresql.org/docs/18/tutorial-concepts.html' },
+  versioning: { label: 'PostgreSQL: Versioning policy', url: 'https://www.postgresql.org/support/versioning/' },
+  order: { label: 'PostgreSQL 18 docs: Sorting rows (ORDER BY)', url: 'https://www.postgresql.org/docs/18/queries-order.html' },
+  limit: { label: 'PostgreSQL 18 docs: LIMIT and OFFSET', url: 'https://www.postgresql.org/docs/18/queries-limit.html' },
+  like: { label: 'PostgreSQL 18 docs: Pattern matching (LIKE, ILIKE)', url: 'https://www.postgresql.org/docs/18/functions-matching.html' },
+  aggregates: { label: 'PostgreSQL 18 docs: Aggregate functions', url: 'https://www.postgresql.org/docs/18/functions-aggregate.html' },
+  numeric: { label: 'PostgreSQL 18 docs: Numeric types', url: 'https://www.postgresql.org/docs/18/datatype-numeric.html' },
+  datetime: { label: 'PostgreSQL 18 docs: Date/time types', url: 'https://www.postgresql.org/docs/18/datatype-datetime.html' },
+  character: { label: 'PostgreSQL 18 docs: Character types', url: 'https://www.postgresql.org/docs/18/datatype-character.html' },
+  constraints: { label: 'PostgreSQL 18 docs: Constraints', url: 'https://www.postgresql.org/docs/18/ddl-constraints.html' },
+  identity: { label: 'PostgreSQL 18 docs: Identity columns', url: 'https://www.postgresql.org/docs/18/ddl-identity-columns.html' },
+  insert: { label: 'PostgreSQL 18 docs: INSERT', url: 'https://www.postgresql.org/docs/18/sql-insert.html' },
+  merge: { label: 'PostgreSQL 18 docs: MERGE', url: 'https://www.postgresql.org/docs/18/sql-merge.html' },
+  isolation: { label: 'PostgreSQL 18 docs: Transaction isolation', url: 'https://www.postgresql.org/docs/18/transaction-iso.html' },
+  release18: { label: 'PostgreSQL 18 release notes', url: 'https://www.postgresql.org/docs/18/release-18.html' },
+  release17: { label: 'PostgreSQL 17 release notes', url: 'https://www.postgresql.org/docs/17/release-17.html' },
+  release15: { label: 'PostgreSQL 15 release notes', url: 'https://www.postgresql.org/docs/15/release-15.html' },
+  joins: { label: 'PostgreSQL 18 docs: Joined tables', url: 'https://www.postgresql.org/docs/18/queries-table-expressions.html' },
+  subquery: { label: 'PostgreSQL 18 docs: Subquery expressions', url: 'https://www.postgresql.org/docs/18/functions-subquery.html' },
+  release12: { label: 'PostgreSQL 12 release notes', url: 'https://www.postgresql.org/docs/12/release-12.html' },
+  with: { label: 'PostgreSQL 18 docs: WITH queries (CTEs)', url: 'https://www.postgresql.org/docs/18/queries-with.html' },
+  window: { label: 'PostgreSQL 18 docs: Window functions tutorial', url: 'https://www.postgresql.org/docs/18/tutorial-window.html' },
+  usingExplain: { label: 'PostgreSQL 18 docs: Using EXPLAIN', url: 'https://www.postgresql.org/docs/18/using-explain.html' },
+  indexMulti: { label: 'PostgreSQL 18 docs: Multicolumn indexes', url: 'https://www.postgresql.org/docs/18/indexes-multicolumn.html' },
+  explain: { label: 'PostgreSQL 18 docs: EXPLAIN', url: 'https://www.postgresql.org/docs/18/sql-explain.html' },
+  indexTypes: { label: 'PostgreSQL 18 docs: Index types', url: 'https://www.postgresql.org/docs/18/indexes-types.html' },
+  trigger: { label: 'PostgreSQL 18 docs: Trigger functions in PL/pgSQL', url: 'https://www.postgresql.org/docs/18/plpgsql-trigger.html' },
+  matview: { label: 'PostgreSQL 18 docs: CREATE MATERIALIZED VIEW', url: 'https://www.postgresql.org/docs/18/sql-creatematerializedview.html' },
+  json: { label: 'PostgreSQL 18 docs: JSON types', url: 'https://www.postgresql.org/docs/18/datatype-json.html' },
+  fts: { label: 'PostgreSQL 18 docs: Full text search introduction', url: 'https://www.postgresql.org/docs/18/textsearch-intro.html' },
+  ftsControls: { label: 'PostgreSQL 18 docs: Controlling text search', url: 'https://www.postgresql.org/docs/18/textsearch-controls.html' },
+  prepare: { label: 'PostgreSQL 18 docs: PREPARE', url: 'https://www.postgresql.org/docs/18/sql-prepare.html' },
+  owaspInjection: { label: 'OWASP: SQL Injection Prevention Cheat Sheet', url: 'https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html' },
+  grant: { label: 'PostgreSQL 18 docs: GRANT', url: 'https://www.postgresql.org/docs/18/sql-grant.html' },
+  rls: { label: 'PostgreSQL 18 docs: Row security policies', url: 'https://www.postgresql.org/docs/18/ddl-rowsecurity.html' },
+  pgdump: { label: 'PostgreSQL 18 docs: pg_dump', url: 'https://www.postgresql.org/docs/18/app-pgdump.html' },
+};
+
+/**
+ * The canteen database, the same in every lesson. These strings build the practice database for the in-app SQL sandbox
+ * (SQLite) and run unchanged on PostgreSQL, so every `sql-challenge` below uses a slice of them.
+ */
+const PRODUCTS = `CREATE TABLE products (
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL,
+  category TEXT NOT NULL,
+  price NUMERIC(6,2) NOT NULL,
+  stock INTEGER
+);
+INSERT INTO products VALUES
+  (1, 'Chicken adobo rice', 'meal', 55.00, 40),
+  (2, 'Pork sinigang', 'meal', 60.00, 25),
+  (3, 'Fried rice with egg', 'meal', 40.00, 50),
+  (4, 'Spaghetti', 'meal', 45.00, 30),
+  (5, 'Banana cue', 'snack', 15.00, 60),
+  (6, 'Turon', 'snack', 12.50, 45),
+  (7, 'Siopao', 'snack', 25.00, 20),
+  (8, 'Fishball cup', 'snack', 20.00, 0),
+  (9, 'Bottled water', 'drink', 15.00, 100),
+  (10, 'Iced tea', 'drink', 20.00, 70),
+  (11, 'Buko juice', 'drink', 25.00, 35),
+  (12, 'Halo-halo', 'dessert', 35.00, 15),
+  (13, 'Leche flan', 'dessert', 30.00, NULL);
+`;
+
+const STUDENTS = `CREATE TABLE students (
+  id INTEGER PRIMARY KEY,
+  name TEXT NOT NULL,
+  grade INTEGER NOT NULL,
+  joined_on DATE NOT NULL
+);
+INSERT INTO students VALUES
+  (1, 'Ana Reyes', 7, '2025-06-02'),
+  (2, 'Ben Santos', 8, '2024-06-03'),
+  (3, 'Carla Dizon', 7, '2025-06-02'),
+  (4, 'Dan Bautista', 9, '2023-06-05'),
+  (5, 'Ella Cruz', 10, '2022-06-06'),
+  (6, 'Faye Lim', 8, '2024-06-03'),
+  (7, 'Gino Ramos', 9, '2023-06-05'),
+  (8, 'Hana Torres', 10, '2022-06-06');
+`;
+
+const ORDERS = `CREATE TABLE orders (
+  id INTEGER PRIMARY KEY,
+  student_id INTEGER NOT NULL REFERENCES students (id),
+  ordered_on DATE NOT NULL,
+  status TEXT NOT NULL
+);
+INSERT INTO orders VALUES
+  (1, 1, '2026-11-02', 'paid'),
+  (2, 2, '2026-11-02', 'paid'),
+  (3, 1, '2026-11-03', 'paid'),
+  (4, 3, '2026-11-03', 'unpaid'),
+  (5, 4, '2026-11-03', 'paid'),
+  (6, 5, '2026-11-04', 'paid'),
+  (7, 2, '2026-11-04', 'paid'),
+  (8, 6, '2026-11-04', 'unpaid'),
+  (9, 1, '2026-11-05', 'paid'),
+  (10, 5, '2026-11-05', 'paid'),
+  (11, 8, '2026-11-06', 'paid'),
+  (12, 3, '2026-11-06', 'paid');
+`;
+
+const ORDER_ITEMS = `CREATE TABLE order_items (
+  order_id INTEGER NOT NULL REFERENCES orders (id),
+  product_id INTEGER NOT NULL REFERENCES products (id),
+  quantity INTEGER NOT NULL,
+  PRIMARY KEY (order_id, product_id)
+);
+INSERT INTO order_items VALUES
+  (1, 1, 1), (1, 9, 1),
+  (2, 3, 1), (2, 10, 1),
+  (3, 1, 1), (3, 5, 2),
+  (4, 4, 1), (4, 11, 1),
+  (5, 2, 1), (5, 9, 1),
+  (6, 1, 1), (6, 12, 1),
+  (7, 6, 4), (7, 10, 1),
+  (8, 7, 2),
+  (9, 3, 1), (9, 10, 1), (9, 13, 1),
+  (10, 4, 1), (10, 9, 2),
+  (11, 1, 1), (11, 11, 1),
+  (12, 5, 3), (12, 12, 1);
+`;
+
+/** The whole canteen, for challenges that need every table. */
+const CANTEEN = PRODUCTS + STUDENTS + ORDERS + ORDER_ITEMS;
+
+const lessons: Lesson[] = [
+  {
+    id: 'postgresql-sql-01',
+    day: 1,
+    title: 'Relational databases and your first queries',
+    summary: 'Meet tables, rows and columns, then ask a database your first questions with SELECT.',
+    intro: {
+      objectives: [
+        'Explain what a table, a row and a column are, and what SQL and PostgreSQL each do',
+        'Write a SELECT query that returns chosen columns from a table',
+        'Rename a result column with AS and calculate a new value from existing ones',
+      ],
+      why: 'Almost every app you use keeps its data in a database, and SQL is how you ask for it. Reading data is the first skill every developer, analyst and tester needs, and the one you will use every working day.',
+    },
+    minutes: 25,
+    skills: ['sql-basics'],
+    body: [
+      { type: 'paragraph', text: 'Think of the canteen at your school. The staff keep a list of everything they sell: the name, the price, how many are left. Written on paper it is a long list. Put into a spreadsheet it becomes a grid: one row per item, one column per fact. A **database** is that idea made reliable. It keeps lots of data organised, lets many people use it at the same time without overwriting each other, and answers questions about it in a fraction of a second.' },
+      { type: 'heading', text: 'Tables, rows and columns' },
+      { type: 'paragraph', text: 'PostgreSQL is a **relational database**: it keeps data in **tables**. A table is a named grid. Each **column** holds one kind of fact and has a data type (text, whole number, date…). Each **row** is one thing, such as one product. The official docs describe exactly this: a table is a named collection of rows, and every row has the same set of named columns. They add one important detail: SQL does not promise any particular order for the rows. Remember that, because it comes back in the next lesson.' },
+      {
+        type: 'table',
+        headers: ['In a spreadsheet', 'In a database', 'In our canteen'],
+        rows: [
+          ['A sheet', 'A table', '`products`'],
+          ['A column heading', 'A column', '`name`, `price`, `stock`'],
+          ['One line', 'A row', 'Pork sinigang, 60.00, 25 left'],
+          ['One cell', 'A value', '`60.00`'],
+        ],
+        caption: 'The same ideas under different names',
+      },
+      { type: 'paragraph', text: 'Throughout this course you will work with one small database, the canteen of a school. It has four tables: `products` (what is sold), `students`, `orders` and `order_items` (what each order contained). Today we only need `products`, whose columns are `id`, `name`, `category`, `price` and `stock`.' },
+      { type: 'heading', text: 'SQL is the language, PostgreSQL is the program' },
+      { type: 'paragraph', text: '**SQL** (Structured Query Language, often said "sequel") is the language you use to talk to a database. **PostgreSQL** (say "post-gress-Q-L", often just "Postgres") is a free, open-source program that stores the data and understands SQL. Other programs, such as SQLite, MySQL and SQL Server, also speak SQL with small differences. Your app is the **client**: it sends a SQL text to the PostgreSQL **server**, the server reads its tables and sends back a result.' },
+      {
+        type: 'diagram',
+        format: 'mermaid',
+        source: `sequenceDiagram
+  participant App as Your app or psql
+  participant PG as PostgreSQL server
+  participant T as products table
+  App->>PG: SELECT name, price FROM products;
+  PG->>T: read the name and price columns
+  T-->>PG: 13 rows
+  PG-->>App: result: a new table of rows`,
+        caption: 'A query is a question; the answer is another table',
+      },
+      { type: 'heading', text: 'Your first query' },
+      { type: 'paragraph', text: 'The command for reading is `SELECT`. After it you list the columns you want, then `FROM`, then the table. Say it out loud like a sentence: "select name and price from products".' },
+      {
+        type: 'code',
+        language: 'sql',
+        label: 'Two columns from one table',
+        code: `SELECT name, price
+FROM products;`,
+      },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'What PostgreSQL answers (first rows)',
+        code: `        name         | price
+---------------------+-------
+ Chicken adobo rice  | 55.00
+ Pork sinigang       | 60.00
+ Fried rice with egg | 40.00
+ Spaghetti           | 45.00
+ ...
+(13 rows)`,
+      },
+      { type: 'paragraph', text: 'Three small rules. A query ends with a semicolon `;`. Keywords such as `SELECT` and `FROM` are not case-sensitive, but writing them in capitals and putting each clause on its own line makes a query easier to read. Text values are written in single quotes (`\'Turon\'`), which you will use from the next lesson on. To get every column, write `*` instead of a list (`SELECT * FROM products;`). That is handy for a quick look, but in real programs name the columns you need, so the query still means the same thing when someone adds a column later.' },
+      { type: 'heading', text: 'Giving a column a new name, and calculating' },
+      { type: 'paragraph', text: 'A result can hold more than stored values. You can calculate with `+`, `-`, `*` and `/`, and call functions such as `upper(text)` (capital letters) and `length(text)` (how many characters). Because a calculated column has no name of its own, you give it one with `AS`. This is called an **alias**. It only renames the column in the answer; the table is never changed.' },
+      {
+        type: 'code',
+        language: 'sql',
+        label: 'A price after a 5-peso increase',
+        code: `SELECT name, price + 5 AS new_price
+FROM products
+LIMIT 2;`,
+      },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'Result',
+        code: `        name        | new_price
+--------------------+-----------
+ Chicken adobo rice |     60.00
+ Pork sinigang      |     65.00
+(2 rows)`,
+      },
+      { type: 'paragraph', text: '`LIMIT 2` keeps only two rows. It is useful when a table is huge and you only want a peek. Without a sorting instruction the two rows are an unpredictable pair; the next lesson fixes that with `ORDER BY`.' },
+      { type: 'warning', text: 'Forget the comma in `SELECT name price FROM products` and PostgreSQL does not complain. It reads `price` as an alias, and you get one column holding the names, labelled "price". If a result looks wrong, check your commas first.' },
+      { type: 'heading', text: 'Where to practise' },
+      { type: 'paragraph', text: 'The SQL practice boxes in this app run on SQLite, a small database that understands the everyday SQL taught here, so you can practise anywhere. Everything marked "PostgreSQL" in a lesson is for a real server. Install PostgreSQL on your laptop, open its command-line tool `psql`, and try `\\dt` (list tables), `\\d products` (describe one table) and `\\q` (quit).' },
+      {
+        type: 'version',
+        text: 'PostgreSQL 18 is the current major version (18.7 at the time of writing). A major version is supported for five years after its first release, and the project recommends always running the latest minor release of your major version. This course is checked against PostgreSQL 18 and says so wherever a feature needs a newer or older version.',
+        checked: CHECKED,
+        sources: [DOCS.versioning, DOCS.concepts],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'A relational database stores data in tables: each column is one kind of fact, each row is one thing.',
+          'SQL is the language; PostgreSQL is the server program that stores the data and answers SQL.',
+          '`SELECT columns FROM table;` reads data; `*` means every column, `AS` renames a result column, `LIMIT` keeps only some rows.',
+          'A query never changes the table: its answer is a new, temporary table.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-01-sql-1',
+          kind: 'sql-challenge',
+          title: 'What does the canteen sell?',
+          prompt: 'Show the `name` and `price` of every product.',
+          concept: 'select columns',
+          setup: PRODUCTS,
+          starter: 'SELECT *\nFROM products;',
+          expected: {
+            columns: ['name', 'price'],
+            rows: [
+              ['Chicken adobo rice', 55],
+              ['Pork sinigang', 60],
+              ['Fried rice with egg', 40],
+              ['Spaghetti', 45],
+              ['Banana cue', 15],
+              ['Turon', 12.5],
+              ['Siopao', 25],
+              ['Fishball cup', 20],
+              ['Bottled water', 15],
+              ['Iced tea', 20],
+              ['Buko juice', 25],
+              ['Halo-halo', 35],
+              ['Leche flan', 30],
+            ],
+          },
+          solution: 'SELECT name, price\nFROM products;',
+          hints: [
+            'The starter returns every column. You only want two.',
+            'After SELECT, list the column names you want, separated by commas.',
+            'Replace the `*` with `name, price`.',
+          ],
+          explanation: 'Listing the columns after SELECT chooses which ones appear in the answer. `*` would return all five, including id, category and stock.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-01-sql-2',
+          kind: 'sql-challenge',
+          title: 'A price after the increase',
+          story: 'The canteen is raising every price by 5 pesos.',
+          prompt: 'Show each product\'s `name` and its price plus 5, with the second column named `new_price`.',
+          concept: 'alias and calculation',
+          setup: PRODUCTS,
+          starter: 'SELECT name, price\nFROM products;',
+          expected: {
+            columns: ['name', 'new_price'],
+            rows: [
+              ['Chicken adobo rice', 60],
+              ['Pork sinigang', 65],
+              ['Fried rice with egg', 45],
+              ['Spaghetti', 50],
+              ['Banana cue', 20],
+              ['Turon', 17.5],
+              ['Siopao', 30],
+              ['Fishball cup', 25],
+              ['Bottled water', 20],
+              ['Iced tea', 25],
+              ['Buko juice', 30],
+              ['Halo-halo', 40],
+              ['Leche flan', 35],
+            ],
+          },
+          solution: 'SELECT name, price + 5 AS new_price\nFROM products;',
+          hints: [
+            'You can calculate inside the SELECT list, just like on a calculator.',
+            'Write `price + 5`, then give it a name with AS.',
+            'The whole second column is `price + 5 AS new_price`.',
+          ],
+          explanation: '`price + 5` is calculated for every row, and `AS new_price` names the result column. The products table itself still holds the old prices.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-01-predict-1',
+          kind: 'predict-output',
+          title: 'Predict the row',
+          concept: 'expressions and functions',
+          prompt: 'This query has no FROM, so it returns a single row. What does it return? Write the values separated by " | ".',
+          language: 'sql',
+          code: "SELECT upper('adobo'), 10 + 5 * 2, length('halo-halo');",
+          expected: 'ADOBO | 20 | 9',
+          choices: ['ADOBO | 20 | 9', 'ADOBO | 30 | 9', 'adobo | 20 | 9', 'ADOBO | 20 | 8'],
+          wrongNotes: {
+            'ADOBO | 30 | 9': 'SQL does multiplication before addition, like arithmetic class: 5 * 2 = 10, then 10 + 10 = 20.',
+            'adobo | 20 | 9': '`upper` turns letters into capitals, so the first value is ADOBO.',
+            'ADOBO | 20 | 8': 'Count the characters again, including the hyphen: h-a-l-o, -, h-a-l-o is 9.',
+          },
+          hints: [
+            'Work through the three values one at a time.',
+            '`upper` makes capitals, `*` happens before `+`, and `length` counts every character.',
+            '10 + (5 * 2) is 20, and "halo-halo" has 4 + 1 + 4 characters.',
+          ],
+          explanation: 'upper(\'adobo\') is ADOBO, multiplication comes first so 10 + 5 * 2 is 20, and \'halo-halo\' has 9 characters including the hyphen. Verified on PostgreSQL.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-01-fix-1',
+          kind: 'fix-bug',
+          title: 'Where did the names go?',
+          concept: 'select list commas',
+          prompt: 'The cashier wanted the name and the price, but the answer has only one column, labelled "price", full of names. Find the buggy line.',
+          language: 'sql',
+          code: 'SELECT name price\nFROM products;',
+          bugLine: 1,
+          fixes: [
+            { line: 'SELECT name, price', correct: true, why: 'The comma separates two columns. Without it, PostgreSQL read `price` as an alias for `name`.' },
+            { line: 'SELECT name AND price', correct: false, why: '`AND` joins conditions, not columns, so this is an error here.' },
+            { line: 'SELECT (name price)', correct: false, why: 'Brackets do not make two columns; this is a syntax error.' },
+          ],
+          lineNote: 'The problem is in the SELECT list on the first line, not in the table name.',
+          hints: [
+            'Run it in your head: how many columns come back?',
+            'Two column names in a row with nothing between them are read as "a column and its alias".',
+            'Separate the two columns with a comma.',
+          ],
+          explanation: 'In a SELECT list, columns are separated by commas. `name price` is a legal way to write "name, renamed to price", so SQL gives a wrong answer instead of an error. Always check your commas.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'postgresql-sql-01-q1',
+        prompt: 'In the `products` table, what does one row represent?',
+        choices: ['One kind of fact, such as every price in the table', 'One product, with a value for each column', 'One saved query that someone ran against the table', 'The name of the database that holds the tables'],
+        answer: 1,
+        explanation: 'A row is one thing (one product); the columns are the facts about it. One kind of fact across all rows is a column.',
+      },
+      {
+        id: 'postgresql-sql-01-q2',
+        prompt: 'What is the relationship between SQL and PostgreSQL?',
+        choices: ['They are two names for the same program, made by the same company', 'PostgreSQL is a language and SQL is the server that runs it', 'SQL is the language; PostgreSQL is a program that understands it', 'SQL only works on PostgreSQL, while other databases use other languages'],
+        answer: 2,
+        explanation: 'SQL is the language. PostgreSQL, SQLite, MySQL and others are programs that understand it, with small differences between them.',
+      },
+      {
+        id: 'postgresql-sql-01-q3',
+        prompt: 'What does `SELECT name, price * 2 AS double_price FROM products;` do to the table?',
+        choices: ['Nothing: the result has a column called double_price, the table is unchanged', 'It doubles every price stored in the table and saves the new values permanently', 'It adds a new column named double_price to the products table for later queries', 'It renames the price column to double_price everywhere in the database'],
+        answer: 0,
+        explanation: 'SELECT only reads. The calculation and the alias exist only in the answer you get back.',
+      },
+      {
+        id: 'postgresql-sql-01-q4',
+        prompt: 'Why is `SELECT name, price FROM products` usually better in an app than `SELECT * FROM products`?',
+        choices: ['`*` is not allowed in PostgreSQL, so every real query has to list its columns by name', 'Naming columns returns only what you need and keeps working when columns are added', 'Named columns are always returned in sorted order, which makes the query faster', 'It makes the stored table smaller on disk, which saves storage space for the school'],
+        answer: 1,
+        explanation: 'Naming columns is clearer, sends less data and does not break when someone adds a column. `*` is allowed and fine for a quick look.',
+      },
+    ],
+    task: {
+      title: 'Ask your first questions',
+      steps: [
+        'Open the SQL practice in this lesson and run `SELECT * FROM products;`. Count the rows and the columns.',
+        'Change it to show only `name` and `stock`, then add a third column `stock * 2 AS double_stock`.',
+        'Write one query of your own that you would like the canteen to answer (for example, prices only), run it, and note the result.',
+      ],
+      minutes: 10,
+    },
+  },
+  {
+    id: 'postgresql-sql-02',
+    day: 2,
+    title: 'Filtering and sorting',
+    summary: 'Keep only the rows you want with WHERE, handle missing values (NULL), and put the answer in order.',
+    intro: {
+      objectives: [
+        'Filter rows with WHERE using comparisons, AND, OR, IN, BETWEEN and LIKE',
+        'Test for missing values correctly with IS NULL',
+        'Sort results with ORDER BY and take the top few rows with LIMIT',
+      ],
+      why: 'Real tables hold thousands of rows and you almost never want all of them. Filtering and sorting turn a pile of data into the one answer someone asked for, and they are in nearly every query you will ever write.',
+    },
+    minutes: 25,
+    skills: ['sql-basics', 'filtering-sorting'],
+    body: [
+      { type: 'paragraph', text: 'Last lesson every query returned the whole table. A cashier does not want that. She wants "the drinks", or "what is sold out", or "the three most expensive meals". A **WHERE** clause is a filter: for every row, PostgreSQL checks your condition and keeps the row only when the condition is true. It goes after FROM.' },
+      {
+        type: 'code',
+        language: 'sql',
+        label: 'Only the drinks',
+        code: `SELECT name, price
+FROM products
+WHERE category = 'drink';`,
+      },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'Result',
+        code: `     name      | price
+---------------+-------
+ Bottled water | 15.00
+ Iced tea      | 20.00
+ Buko juice    | 25.00
+(3 rows)`,
+      },
+      { type: 'paragraph', text: 'Note the single `=` (SQL has no `==`) and the single quotes around the text value. Numbers are written plainly, text in single quotes. The comparison operators are `=`, `<>` (not equal; `!=` also works), `<`, `>`, `<=` and `>=`.' },
+      { type: 'heading', text: 'Combining conditions' },
+      { type: 'paragraph', text: '`AND` keeps a row when both conditions are true, `OR` when at least one is, and `NOT` flips a condition. `AND` is stronger than `OR`, like multiplication is stronger than addition, so brackets matter. These two queries differ only by brackets:' },
+      {
+        type: 'code',
+        language: 'sql',
+        code: `-- Without brackets: snacks, OR (drinks that cost under 20)
+SELECT name, category, price FROM products
+WHERE category = 'snack' OR category = 'drink' AND price < 20
+ORDER BY name;
+
+-- With brackets: (snacks or drinks) that cost under 20
+SELECT name, category, price FROM products
+WHERE (category = 'snack' OR category = 'drink') AND price < 20
+ORDER BY name;`,
+      },
+      { type: 'paragraph', text: 'The first returns five rows (it includes the ₱25 Siopao and the ₱20 Fishball cup, because every snack passes). The second returns three: Banana cue, Bottled water and Turon. When you mix AND with OR, always add brackets so the next reader does not have to guess.' },
+      { type: 'heading', text: 'Shortcuts: IN, BETWEEN and LIKE' },
+      {
+        type: 'list',
+        items: [
+          '`category IN (\'drink\', \'dessert\')` means "equal to any of these", a tidy replacement for several ORs.',
+          '`price BETWEEN 20 AND 30` includes both ends, so it means `price >= 20 AND price <= 30`.',
+          '`name LIKE \'%rice%\'` matches a pattern: `%` stands for any run of characters (even none) and `_` for exactly one character. LIKE must match the whole text, so the `%` at both ends means "contains".',
+        ],
+      },
+      { type: 'paragraph', text: 'In PostgreSQL, `LIKE` cares about capital letters: `name LIKE \'b%\'` finds nothing, because every name starts with a capital B. PostgreSQL adds `ILIKE`, a case-insensitive version, so `name ILIKE \'b%\'` finds Banana cue, Bottled water and Buko juice. `ILIKE` is a PostgreSQL extension, not standard SQL. The practice boxes in this app run on SQLite, where plain `LIKE` already ignores case for ordinary letters, so a query that depends on the difference can behave differently there.' },
+      { type: 'heading', text: 'Missing values: NULL' },
+      { type: 'paragraph', text: 'Leche flan is made fresh each day, so the canteen never records its stock: that cell holds **NULL**. NULL does not mean zero or an empty text. It means "unknown". Because an unknown value is not equal to anything, not even to another NULL, `stock = NULL` is never true and returns no rows. Test for it with `IS NULL` (or `IS NOT NULL`). The `psql` tool shows a NULL as an empty cell.' },
+      {
+        type: 'code',
+        language: 'sql',
+        label: 'Items that need attention: out of stock, or no stock recorded',
+        code: `SELECT name, stock
+FROM products
+WHERE stock IS NULL OR stock = 0
+ORDER BY name;`,
+      },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'Result',
+        code: `     name     | stock
+--------------+-------
+ Fishball cup |     0
+ Leche flan   |
+(2 rows)`,
+      },
+      { type: 'tip', text: 'A comparison with NULL gives "unknown", not true or false, and WHERE keeps only rows where the condition is true. That is why `stock < 30` skips Leche flan: we do not know that its stock is below 30.' },
+      { type: 'heading', text: 'Sorting and taking the top rows' },
+      { type: 'paragraph', text: 'Remember that a table has no built-in row order. If the order matters, say so with **ORDER BY**, the last clause before `LIMIT`. The default is ascending (smallest first); add `DESC` for the reverse. You can sort by several columns, and the second one breaks ties in the first. Note that `DESC` applies to the column right before it only.' },
+      {
+        type: 'code',
+        language: 'sql',
+        label: 'The three most expensive items, ties broken by name',
+        code: `SELECT name, price
+FROM products
+ORDER BY price DESC, name
+LIMIT 3;`,
+      },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'Result',
+        code: `        name        | price
+--------------------+-------
+ Pork sinigang      | 60.00
+ Chicken adobo rice | 55.00
+ Spaghetti          | 45.00
+(3 rows)`,
+      },
+      { type: 'paragraph', text: '`LIMIT 3 OFFSET 3` skips three rows and then returns three, which is how pages of results work ("page 2"). `SELECT DISTINCT category FROM products` returns each category once instead of once per row. The docs warn that LIMIT without ORDER BY gives an unpredictable subset, and that a big OFFSET is slow because the skipped rows are still computed.' },
+      { type: 'warning', text: 'NULLs sort in different places in different databases. PostgreSQL treats NULL as larger than any value, so `ORDER BY stock` puts Leche flan last and `ORDER BY stock DESC` puts it first. SQLite does the opposite. Write `NULLS LAST` or `NULLS FIRST` after a column when it matters; both databases understand it.' },
+      {
+        type: 'version',
+        text: 'In PostgreSQL 18, ASC is the default sort order, NULLs sort as if larger than any value (NULLS LAST for ASC, NULLS FIRST for DESC), and ILIKE is documented as a PostgreSQL extension that is not in the SQL standard. LIMIT and OFFSET behave as described; the docs recommend a unique ORDER BY so pages are stable.',
+        checked: CHECKED,
+        sources: [DOCS.order, DOCS.like, DOCS.limit],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'WHERE keeps only the rows whose condition is true; use AND, OR, NOT, IN, BETWEEN and LIKE, and add brackets when mixing AND with OR.',
+          'NULL means unknown: test it with IS NULL or IS NOT NULL, never with `= NULL`.',
+          'Rows have no order unless you add ORDER BY; DESC reverses, and a second column breaks ties.',
+          'LIMIT (and OFFSET) take a slice of the sorted result; DISTINCT removes repeated rows.',
+          'PostgreSQL has ILIKE for case-insensitive matching, and it sorts NULLs as the largest value.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-02-sql-1',
+          kind: 'sql-challenge',
+          title: 'Cheap snacks for the break',
+          story: 'Students at the break want something small.',
+          prompt: 'Show the `name` and `price` of every **snack** that costs **20 or less**, cheapest first.',
+          concept: 'where with and, order by',
+          setup: PRODUCTS,
+          starter: "SELECT name, price\nFROM products\nWHERE category = 'snack';",
+          expected: {
+            columns: ['name', 'price'],
+            rows: [
+              ['Turon', 12.5],
+              ['Banana cue', 15],
+              ['Fishball cup', 20],
+            ],
+            ordered: true,
+          },
+          solution: "SELECT name, price\nFROM products\nWHERE category = 'snack' AND price <= 20\nORDER BY price;",
+          hints: [
+            'You need two conditions in WHERE at the same time, plus a sort.',
+            'Join the conditions with AND, then finish with ORDER BY price.',
+            "WHERE category = 'snack' AND price <= 20, then ORDER BY price.",
+          ],
+          explanation: 'AND keeps only rows that pass both tests, `<= 20` includes the Fishball cup at exactly 20, and ORDER BY price sorts from cheapest up.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-02-sql-2',
+          kind: 'sql-challenge',
+          title: 'Items that need attention',
+          prompt: 'The starter misses the item whose stock is not recorded. Show the `name` of every product whose `stock` is **0 or unknown (NULL)**, sorted by name.',
+          concept: 'is null',
+          setup: PRODUCTS,
+          starter: 'SELECT name\nFROM products\nWHERE stock = 0 OR stock = NULL\nORDER BY name;',
+          expected: { columns: ['name'], rows: [['Fishball cup'], ['Leche flan']], ordered: true },
+          solution: 'SELECT name\nFROM products\nWHERE stock = 0 OR stock IS NULL\nORDER BY name;',
+          hints: [
+            'Run the starter and notice how many rows it returns.',
+            '`= NULL` is never true, because NULL is unknown.',
+            'Change `stock = NULL` to `stock IS NULL`.',
+          ],
+          explanation: 'NULL is not equal to anything, not even NULL, so `stock = NULL` never matches. `IS NULL` is the test that works.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-02-sql-3',
+          kind: 'sql-challenge',
+          title: 'Top three',
+          prompt: 'Show the `name` and `price` of the **three most expensive** products, most expensive first.',
+          concept: 'order by desc limit',
+          setup: PRODUCTS,
+          starter: 'SELECT name, price\nFROM products\nORDER BY price\nLIMIT 3;',
+          expected: {
+            columns: ['name', 'price'],
+            rows: [
+              ['Pork sinigang', 60],
+              ['Chicken adobo rice', 55],
+              ['Spaghetti', 45],
+            ],
+            ordered: true,
+          },
+          solution: 'SELECT name, price\nFROM products\nORDER BY price DESC\nLIMIT 3;',
+          hints: [
+            'The starter gives the three cheapest. Which direction do you need?',
+            'Add DESC after the column you sort by.',
+            'ORDER BY price DESC, then LIMIT 3.',
+          ],
+          explanation: 'Sorting descending puts the biggest prices first, and LIMIT 3 keeps only the first three rows of that sorted answer. LIMIT always works on the sorted rows.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-02-predict-1',
+          kind: 'predict-output',
+          title: 'Case matters in PostgreSQL',
+          prompt: 'What does this query return on PostgreSQL? Each row on its own line.',
+          concept: 'like and ilike',
+          language: 'sql',
+          code: "SELECT name\nFROM products\nWHERE name ILIKE 'b%'\nORDER BY name;",
+          expected: 'Banana cue\nBottled water\nBuko juice',
+          choices: ['Banana cue\nBottled water\nBuko juice', '(no rows)', 'Banana cue\nBottled water\nBuko juice\nChicken adobo rice', 'Banana cue'],
+          wrongNotes: {
+            '(no rows)': 'That is what plain LIKE \'b%\' returns in PostgreSQL. ILIKE ignores case, so the capital B matches.',
+            'Banana cue\nBottled water\nBuko juice\nChicken adobo rice': 'The pattern b% needs the name to START with b. Chicken adobo rice contains a b, but does not begin with one.',
+            'Banana cue': 'LIKE \'b%\' matches the beginning of the text only, but Bottled water and Buko juice also begin with B.',
+          },
+          hints: [
+            'ILIKE ignores capital letters, so the pattern b% matches names that start with B or b.',
+            'Go down the 13 names and keep those whose first letter is B.',
+            'Banana cue, Bottled water and Buko juice, in name order.',
+          ],
+          explanation: 'ILIKE is case-insensitive and `b%` means "starts with b". Three names start with B. Plain LIKE would return nothing on PostgreSQL, since the stored names begin with a capital letter. Verified on PostgreSQL 14 (ILIKE is unchanged in 18).',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-02-fix-1',
+          kind: 'fix-bug',
+          title: 'The missing dessert',
+          prompt: 'This query should list products with no stock count recorded, but it returns nothing. Find the buggy line and fix it.',
+          concept: 'null comparison',
+          language: 'sql',
+          code: 'SELECT name\nFROM products\nWHERE stock = NULL;',
+          bugLine: 3,
+          fixes: [
+            { line: 'WHERE stock IS NULL;', correct: true, why: 'IS NULL is the way to ask "is this value missing?". It returns Leche flan.' },
+            { line: 'WHERE stock == NULL;', correct: false, why: 'SQL has no `==`. PostgreSQL stops with "operator does not exist: integer == unknown".' },
+            { line: "WHERE stock = 'NULL';", correct: false, why: "'NULL' in quotes is the text N-U-L-L, and PostgreSQL refuses to read it as a number: invalid input syntax for type integer." },
+          ],
+          hints: [
+            'Think about what NULL means: a value we do not know.',
+            'Comparing with `=` against an unknown value is never true.',
+            'SQL has a special test for it that starts with IS.',
+          ],
+          explanation: 'A normal comparison with NULL gives "unknown", which WHERE treats as not true. `IS NULL` is the dedicated test.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-02-match-1',
+          kind: 'match',
+          title: 'Which tool for which question?',
+          prompt: 'The canteen manager asks for different things. Match each request to the WHERE tool that answers it.',
+          concept: 'choosing a filter',
+          labels: { terms: 'Request', meanings: 'Tool' },
+          pairs: [
+            { term: 'Everything made fresh, with no stock number saved', definition: 'stock IS NULL' },
+            { term: 'Anything with "rice" somewhere in its name', definition: "name LIKE '%rice%'" },
+            { term: 'Drinks and desserts only', definition: "category IN ('drink', 'dessert')" },
+            { term: 'Prices from ₱20 to ₱30, both included', definition: 'price BETWEEN 20 AND 30' },
+          ],
+          hints: [
+            'Start with the one about a missing number: what does it mean for a value to be unknown?',
+            'A word that can sit anywhere in the text needs a pattern with % on both sides.',
+            'Two exact categories want a list; two numbers as the ends of a range want BETWEEN.',
+          ],
+          explanation: 'Missing value: IS NULL. Contains a word: LIKE with %. One of a few exact values: IN. A range that includes both ends: BETWEEN.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'postgresql-sql-02-q1',
+        prompt: "What does `WHERE category = 'snack' OR category = 'drink' AND price < 20` return?",
+        choices: ['Snacks and drinks that both cost under 20', 'Only drinks under 20', 'All snacks, plus drinks that cost under 20', 'An error, because AND and OR cannot be mixed'],
+        answer: 2,
+        explanation: 'AND binds before OR, so it reads `snack OR (drink AND price < 20)`. To get "snacks or drinks, all under 20", put brackets around the OR.',
+      },
+      {
+        id: 'postgresql-sql-02-q2',
+        prompt: 'Why does `WHERE stock = NULL` return no rows even though Leche flan has a NULL stock?',
+        choices: ['NULL is unknown, so `= NULL` is never true; IS NULL is the right test', 'PostgreSQL does not allow comparisons with NULL at all, so the query is quietly skipped', 'The comparison works, but only when the stock column has the text data type', 'NULL must be written in lower case, otherwise PostgreSQL treats it as a column name'],
+        answer: 0,
+        explanation: 'A comparison with NULL results in "unknown", and WHERE keeps only rows where the condition is true. `IS NULL` asks the right question.',
+      },
+      {
+        id: 'postgresql-sql-02-q3',
+        prompt: 'A page of results must always show the same rows for "page 2" of the product list. What makes that reliable?',
+        choices: ['Using OFFSET alone, since OFFSET numbers the rows', 'Using DISTINCT, which removes repeated rows from the pages', 'Adding a LIMIT of at least 100 rows to every page', 'An ORDER BY that fixes every row\'s position, plus LIMIT and OFFSET'],
+        answer: 3,
+        explanation: 'SQL does not promise any row order unless you sort. Without a stable ORDER BY (ideally including a unique column such as id) the rows on each page can change.',
+      },
+      {
+        id: 'postgresql-sql-02-q4',
+        prompt: "On PostgreSQL, `WHERE name LIKE 'b%'` returns no rows for this table, but a case-insensitive match would find three. What should you use?",
+        choices: ['`WHERE name = \'b%\'`', '`WHERE name ILIKE \'b%\'`', '`WHERE name IN \'b%\'`', '`WHERE name BETWEEN \'b\' AND \'b\'`'],
+        answer: 1,
+        explanation: "PostgreSQL's LIKE is case-sensitive and every name starts with a capital B. ILIKE, a PostgreSQL extension, ignores case.",
+      },
+    ],
+    task: {
+      title: 'Answer the manager\'s questions',
+      steps: [
+        'Write a query for products that cost between 20 and 40 pesos, cheapest first.',
+        'Write a query for products whose name contains the letter "a" and whose stock is more than 30 (watch the NULL row).',
+        'Change one of your queries to use ORDER BY stock NULLS LAST and see where Leche flan lands.',
+      ],
+      minutes: 10,
+    },
+  },
+  {
+    id: 'postgresql-sql-03',
+    day: 3,
+    title: 'Aggregating and grouping',
+    summary: 'Count, add up and average rows, then do it for each group with GROUP BY and HAVING.',
+    intro: {
+      objectives: [
+        'Summarise a table with COUNT, SUM, AVG, MIN and MAX',
+        'Group rows with GROUP BY and filter the groups with HAVING',
+        'Explain why WHERE and HAVING are different, and how NULL affects aggregates',
+      ],
+      why: 'Managers rarely ask for rows; they ask for totals, averages and "how many per category". Aggregation is how a database answers those questions, and it is the base of every report and dashboard.',
+    },
+    minutes: 25,
+    skills: ['aggregation'],
+    body: [
+      { type: 'paragraph', text: 'So far each query returned one result row per table row. Often you want one number about many rows: "how many products do we sell?" or "what is the average price?". An **aggregate function** takes many rows and boils them down to one value. The common ones are `count`, `sum`, `avg` (average), `min` and `max`.' },
+      {
+        type: 'code',
+        language: 'sql',
+        label: 'Summaries of the whole table',
+        code: `SELECT count(*) AS products,
+       count(stock) AS with_stock,
+       min(price) AS cheapest,
+       max(price) AS dearest
+FROM products;`,
+      },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'Result',
+        code: ` products | with_stock | cheapest | dearest
+----------+------------+----------+---------
+       13 |         12 |    12.50 |   60.00
+(1 row)`,
+      },
+      { type: 'paragraph', text: 'Look at the first two columns. `count(*)` counts rows, so it says 13. `count(stock)` counts only the rows where `stock` is not NULL, so it says 12 (Leche flan has no recorded stock). This is the rule for all the others too: `sum`, `avg`, `min` and `max` ignore NULLs. And on an empty set of rows, `count` gives 0 while `sum`, `avg`, `min` and `max` give NULL, not zero. To show a 0 instead, wrap it in `coalesce(value, 0)`, which returns its first argument that is not NULL.' },
+      { type: 'heading', text: 'One answer per group: GROUP BY' },
+      { type: 'paragraph', text: 'Imagine the canteen staff sorting the menu cards into piles, one pile per category, and then counting each pile. That is **GROUP BY**: it splits the rows into groups that share the same value, and the aggregate functions then run once per group.' },
+      {
+        type: 'code',
+        language: 'sql',
+        label: 'Per category: how many items and the cheapest',
+        code: `SELECT category,
+       count(*) AS items,
+       min(price) AS cheapest
+FROM products
+GROUP BY category
+ORDER BY category;`,
+      },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'Result',
+        code: ` category | items | cheapest
+----------+-------+----------
+ dessert  |     2 |    30.00
+ drink    |     3 |    15.00
+ meal     |     4 |    40.00
+ snack    |     4 |    12.50
+(4 rows)`,
+      },
+      { type: 'paragraph', text: 'There is one strict rule. Every column in the SELECT list must either appear in GROUP BY or be inside an aggregate function. It makes sense: if you group meals together, which single `name` should the group show? There are four. PostgreSQL stops you with an error instead of guessing:' },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'Error from PostgreSQL',
+        code: `SELECT name, category, count(*) FROM products GROUP BY category;
+ERROR:  column "products.name" must appear in the GROUP BY clause or be used in an aggregate function`,
+      },
+      { type: 'heading', text: 'WHERE or HAVING?' },
+      { type: 'paragraph', text: 'Both filter, but at different moments. `WHERE` filters **rows before** they are grouped. `HAVING` filters **groups after** they are counted or added up, so only HAVING can use an aggregate such as `sum(stock)`.' },
+      {
+        type: 'diagram',
+        format: 'mermaid',
+        source: `flowchart TD
+  A[FROM: pick the table] --> B[WHERE: keep matching rows]
+  B --> C[GROUP BY: make piles]
+  C --> D[HAVING: keep matching piles]
+  D --> E[SELECT: calculate the columns]
+  E --> F[ORDER BY: sort]
+  F --> G[LIMIT: take the first rows]`,
+        caption: 'The logical order a query is evaluated in (not the order you write it)',
+      },
+      {
+        type: 'code',
+        language: 'sql',
+        label: 'Categories with more than 130 items in stock',
+        code: `SELECT category, sum(stock) AS units
+FROM products
+GROUP BY category
+HAVING sum(stock) > 130
+ORDER BY category;`,
+      },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'Result',
+        code: ` category | units
+----------+-------
+ drink    |   205
+ meal     |   145
+(2 rows)`,
+      },
+      { type: 'paragraph', text: 'If you moved `sum(stock) > 130` into WHERE, PostgreSQL would answer "aggregate functions are not allowed in WHERE", because at that moment no group exists yet. A good habit: put row conditions (`category = \'meal\'`, `price >= 20`) in WHERE, because filtering early means less work, and only conditions about a whole group in HAVING.' },
+      { type: 'heading', text: 'Two handy extras' },
+      {
+        type: 'list',
+        items: [
+          '`count(DISTINCT category)` counts each different value once (4 categories, not 13 rows).',
+          '`count(*) FILTER (WHERE stock = 0)` counts only the rows that pass a condition, inside one query, so one pass over the table gives several numbers. PostgreSQL and recent SQLite both support it.',
+          '`string_agg(name, \', \' ORDER BY name)` glues the values of a group into one text, e.g. "Halo-halo, Leche flan". It is a PostgreSQL function; SQLite calls its version `group_concat`.',
+        ],
+      },
+      { type: 'tip', text: '`avg` of whole numbers is not rounded: `avg(price)` over this table gives 30.5769230769230769. Wrap it in `round(avg(price), 2)` to show two decimals.' },
+      {
+        type: 'version',
+        text: 'In PostgreSQL 18, `count(*)` counts rows and `count(expression)` counts rows where the value is not NULL. `sum`, `avg`, `min` and `max` skip NULLs, and all of them except `count` return NULL when no rows are selected (so `sum` of no rows is NULL, not 0). The `FILTER` clause and `string_agg` are available in every supported version.',
+        checked: CHECKED,
+        sources: [DOCS.aggregates],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'Aggregate functions (count, sum, avg, min, max) turn many rows into one value; GROUP BY does it once per group.',
+          '`count(*)` counts rows; `count(column)` skips NULLs; sum, avg, min and max also skip NULLs, and give NULL for no rows.',
+          'Every selected column must be grouped or aggregated.',
+          'WHERE filters rows before grouping; HAVING filters groups afterwards, so only HAVING can use an aggregate.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-03-sql-1',
+          kind: 'sql-challenge',
+          title: 'Stock-taking',
+          prompt: 'In one row, show how many products there are as `products` and how many of them have a recorded stock number as `with_stock`.',
+          concept: 'count and null',
+          setup: PRODUCTS,
+          starter: 'SELECT count(*) AS products\nFROM products;',
+          expected: { columns: ['products', 'with_stock'], rows: [[13, 12]] },
+          solution: 'SELECT count(*) AS products, count(stock) AS with_stock\nFROM products;',
+          hints: [
+            'You need two counts in the same SELECT list.',
+            'One of them should ignore NULL values, so count a column instead of `*`.',
+            '`count(stock) AS with_stock` skips the NULL stock.',
+          ],
+          explanation: '`count(*)` counts every row (13). `count(stock)` counts only rows whose stock is not NULL (12).',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-03-sql-2',
+          kind: 'sql-challenge',
+          title: 'A summary per category',
+          prompt: 'For each `category`, show the number of products as `items` and the lowest price as `cheapest`. Sort by category.',
+          concept: 'group by',
+          setup: PRODUCTS,
+          starter: 'SELECT category, count(*) AS items\nFROM products\nGROUP BY category\nORDER BY category;',
+          expected: {
+            columns: ['category', 'items', 'cheapest'],
+            rows: [
+              ['dessert', 2, 30],
+              ['drink', 3, 15],
+              ['meal', 4, 40],
+              ['snack', 4, 12.5],
+            ],
+            ordered: true,
+          },
+          solution: 'SELECT category, count(*) AS items, min(price) AS cheapest\nFROM products\nGROUP BY category\nORDER BY category;',
+          hints: [
+            'The starter already groups. What is missing from the answer?',
+            'Add another aggregate to the SELECT list.',
+            '`min(price) AS cheapest` gives the lowest price in each group.',
+          ],
+          explanation: 'GROUP BY makes one group per category, and each aggregate function in the SELECT list is calculated once per group.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-03-sql-3',
+          kind: 'sql-challenge',
+          title: 'Well-stocked categories',
+          prompt: 'Show each `category` whose **total** stock is **more than 130**, with the total as `units`, sorted by category. The starter breaks because an aggregate is in the wrong clause.',
+          concept: 'having',
+          setup: PRODUCTS,
+          starter: 'SELECT category, sum(stock) AS units\nFROM products\nWHERE sum(stock) > 130\nGROUP BY category\nORDER BY category;',
+          expected: {
+            columns: ['category', 'units'],
+            rows: [
+              ['drink', 205],
+              ['meal', 145],
+            ],
+            ordered: true,
+          },
+          solution: 'SELECT category, sum(stock) AS units\nFROM products\nGROUP BY category\nHAVING sum(stock) > 130\nORDER BY category;',
+          hints: [
+            'Run the starter and read the error: no group exists yet when WHERE runs.',
+            'A condition on a total belongs after GROUP BY.',
+            'Move it to a HAVING clause: `HAVING sum(stock) > 130`.',
+          ],
+          explanation: 'WHERE runs before grouping, so it cannot know a group total. HAVING runs on the finished groups and can use `sum(stock)`.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-03-predict-1',
+          kind: 'predict-output',
+          title: 'Count the dessert rows',
+          prompt: 'There are two dessert products: Halo-halo with stock 15 and Leche flan whose stock is NULL. What does this return? Write the values separated by " | ".',
+          concept: 'aggregates and null',
+          language: 'sql',
+          code: "SELECT count(*), count(stock), sum(stock)\nFROM products\nWHERE category = 'dessert';",
+          expected: '2 | 1 | 15',
+          choices: ['2 | 1 | 15', '2 | 2 | 15', '2 | 1 | NULL', '1 | 1 | 15'],
+          wrongNotes: {
+            '2 | 2 | 15': 'count(stock) skips NULL values, so it counts only Halo-halo.',
+            '2 | 1 | NULL': 'sum skips the NULL and adds the rest, so the total is 15. It would only be NULL if no row had a stock value.',
+            '1 | 1 | 15': '`count(*)` counts every row that passes WHERE, including the one with a NULL stock.',
+          },
+          hints: [
+            'First decide which rows pass the WHERE filter.',
+            '`count(*)` counts rows; `count(stock)` and `sum(stock)` ignore NULL.',
+            'Two rows, one real stock value (15).',
+          ],
+          explanation: 'Two rows pass the filter. Only one has a stock value, so count(stock) is 1 and sum(stock) is 15. Verified on PostgreSQL.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-03-fix-1',
+          kind: 'fix-bug',
+          title: 'The ungrouped name',
+          prompt: 'The manager wants the number of products per category, but PostgreSQL says `column "products.name" must appear in the GROUP BY clause or be used in an aggregate function`. Which line is the problem?',
+          concept: 'group by rule',
+          language: 'sql',
+          code: 'SELECT name, category, count(*) AS items\nFROM products\nGROUP BY category;',
+          bugLine: 1,
+          fixes: [
+            { line: 'SELECT category, count(*) AS items', correct: true, why: 'Now every selected column is either grouped (category) or aggregated (count), and the question "how many per category" is answered.' },
+            { line: 'SELECT name, category, count(name) AS items', correct: false, why: '`name` is still selected without being grouped or aggregated, so the same error remains.' },
+            { line: 'SELECT DISTINCT name, category, count(*) AS items', correct: false, why: 'DISTINCT does not fix the grouping rule: `name` still has no single value per category.' },
+          ],
+          lineNote: 'The GROUP BY line is fine for the question. The error mentions a column in the SELECT list.',
+          hints: [
+            'The error names the column `name`. Does one category have one name?',
+            'The question was about categories, so `name` should not be in the answer.',
+            'Remove `name` from the SELECT list.',
+          ],
+          explanation: 'A group of four meals has four different names, so a single `name` per group makes no sense. Select only what the group defines (category) and the aggregates.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'postgresql-sql-03-q1',
+        prompt: 'A column `stock` has 13 rows, one of them NULL. What do `count(*)` and `count(stock)` return?',
+        choices: ['13 and 13', '12 and 12', '13 and 1', '13 and 12'],
+        answer: 3,
+        explanation: '`count(*)` counts rows, so 13. `count(stock)` counts only rows where stock is not NULL, so 12.',
+      },
+      {
+        id: 'postgresql-sql-03-q2',
+        prompt: 'You want only categories whose total stock is above 130. Where does that condition go?',
+        choices: ['In a HAVING clause after GROUP BY, because it is about a group total', 'In WHERE, before GROUP BY, because WHERE is where every condition belongs', 'In ORDER BY, because the totals are sorted before they are shown', 'In the SELECT list, with an AS alias that PostgreSQL then uses as a filter'],
+        answer: 0,
+        explanation: 'WHERE runs before groups exist. A condition on an aggregate such as sum(stock) must go in HAVING.',
+      },
+      {
+        id: 'postgresql-sql-03-q3',
+        prompt: 'Why does `SELECT name, category, count(*) FROM products GROUP BY category` fail?',
+        choices: ['count(*) cannot be used together with a category column in one query', 'GROUP BY must always be written before FROM in a PostgreSQL query', '`name` is not grouped or aggregated, so a group has no single name to show', 'The table has a NULL in it, and grouping is not allowed on such tables'],
+        answer: 2,
+        explanation: 'Every selected column must be in GROUP BY or inside an aggregate. A category has many names, so PostgreSQL refuses to pick one.',
+      },
+      {
+        id: 'postgresql-sql-03-q4',
+        prompt: "What does `SELECT sum(stock) FROM products WHERE category = 'toys'` return when there are no toys?",
+        choices: ['0, because count and sum both give 0 for no rows', 'NULL, which you can turn into 0 with coalesce', 'An error, because the group of rows is empty and cannot be added', 'An empty result with no rows at all, so the client shows nothing'],
+        answer: 1,
+        explanation: 'An aggregate without GROUP BY always returns one row. With no matching rows, sum is NULL (only count returns 0). `coalesce(sum(stock), 0)` shows 0.',
+      },
+    ],
+    task: {
+      title: 'Build a canteen report',
+      steps: [
+        'Write a query that shows, for each category, the number of items and the average price rounded to 2 decimals (`round(avg(price), 2)`).',
+        'Add a HAVING clause so it keeps only categories with at least 3 items.',
+        'Add a column `count(*) FILTER (WHERE stock = 0) AS sold_out` and see which category has a sold-out item.',
+      ],
+      minutes: 10,
+    },
+  },
+  {
+    id: 'postgresql-sql-04',
+    day: 4,
+    title: 'Creating tables: data types and constraints',
+    summary: 'Design a table with the right data types and let constraints refuse bad data before it is stored.',
+    intro: {
+      objectives: [
+        'Write a CREATE TABLE statement with sensible data types',
+        'Use PRIMARY KEY, identity columns, NOT NULL, UNIQUE, CHECK, DEFAULT and FOREIGN KEY',
+        'Choose numeric for money and timestamptz for moments in time, and say why',
+      ],
+      why: 'A database is only as trustworthy as its rules. When the table itself refuses a rating of 9 or an order for a student who does not exist, bugs in your app cannot quietly corrupt your data.',
+    },
+    minutes: 30,
+    skills: ['schema-design'],
+    body: [
+      { type: 'paragraph', text: 'Until now the canteen tables already existed. Now you build one. Suppose the canteen wants to keep a list of its **suppliers**, the people who deliver eggs, fish and rice. Before writing any SQL, decide what each row must contain and what must never be allowed. Constraints are the "never allowed" part: rules that PostgreSQL checks on every INSERT and UPDATE, whoever or whatever program sends it. Think of a security guard at the door of the table.' },
+      {
+        type: 'code',
+        language: 'postgresql',
+        label: 'The suppliers table',
+        code: `CREATE TABLE suppliers (
+  id       integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+  name     text NOT NULL UNIQUE,
+  city     text NOT NULL DEFAULT 'Naga',
+  rating   smallint CHECK (rating BETWEEN 1 AND 5),
+  active   boolean NOT NULL DEFAULT true,
+  added_at timestamptz NOT NULL DEFAULT now()
+);`,
+      },
+      { type: 'paragraph', text: 'Each line inside the brackets is a column: its name, its **data type**, then any constraints. Let us read them one by one.' },
+      { type: 'heading', text: 'Choosing data types' },
+      {
+        type: 'table',
+        headers: ['Type', 'Use it for', 'Watch out for'],
+        rows: [
+          ['`integer`, `bigint`, `smallint`', 'Whole numbers: counts, ids, stock', 'Integer division: `5 / 2` is 2, not 2.5'],
+          ['`numeric(10,2)`', 'Money and anything that must be exact', 'Slower than float, but never off by a fraction of a centavo'],
+          ['`double precision`', 'Measurements where tiny rounding is fine', '`0.1 + 0.2` gives 0.30000000000000004'],
+          ['`text`', 'Any text, any length', 'The docs see no performance reason to prefer varchar(n) over text'],
+          ['`boolean`', 'Yes/no flags: true, false, or NULL', 'psql prints `t` and `f`'],
+          ['`date`', 'A calendar day with no time', 'Invalid days such as 2026-02-30 are rejected'],
+          ['`timestamptz`', 'A moment in time (an order, a login)', 'Stored as UTC, shown in the session time zone'],
+        ],
+        caption: 'The types you will use most',
+      },
+      { type: 'paragraph', text: 'Two choices deserve a reason. For **money**, use `numeric`: the docs recommend it for monetary amounts because its arithmetic is exact, while floating-point numbers store approximations (in PostgreSQL, `0.1::float8 + 0.2::float8` really prints 0.30000000000000004). `numeric(10,2)` means up to 10 digits in total, 2 of them after the decimal point. For **time**, use `timestamptz` ("timestamp with time zone"): it converts every value to UTC for storage and shows it in whatever time zone the session uses, so `2026-11-14 12:00+08` is the same moment for a user in Manila or in London. A plain `timestamp` silently ignores any offset you give it.' },
+      { type: 'heading', text: 'Constraints, one problem each' },
+      {
+        type: 'list',
+        items: [
+          '**PRIMARY KEY** makes a column the unique name of each row. It implies NOT NULL and UNIQUE and creates an index for fast look-ups.',
+          '**Identity column** (`GENERATED ALWAYS AS IDENTITY`) makes PostgreSQL fill the number in for you, 1, 2, 3… With `ALWAYS`, trying to insert your own value is refused unless you write `OVERRIDING SYSTEM VALUE`; `BY DEFAULT` lets your own value win. The older `serial` type does a similar job, and the docs name identity columns as the SQL-standard alternative.',
+          '**NOT NULL** forbids missing values. **DEFAULT** supplies a value when you leave the column out.',
+          '**UNIQUE** forbids two rows with the same value. **CHECK** forbids any row where its condition is not true.',
+          '**FOREIGN KEY** (`student_id integer REFERENCES students (id)`) says a value must exist in another table. It stops an order from pointing at a student that does not exist, and by default it stops you deleting a student who still has orders. You can choose another behaviour: `ON DELETE CASCADE` deletes the dependent rows too, and `ON DELETE SET NULL` clears the link.',
+        ],
+      },
+      { type: 'paragraph', text: 'Here is what the guard says when a bad row arrives. PostgreSQL stops the statement, stores nothing, and tells you which rule was broken:' },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'Real error messages from PostgreSQL',
+        code: `INSERT INTO suppliers (name) VALUES (NULL);
+ERROR:  null value in column "name" of relation "suppliers" violates not-null constraint
+
+INSERT INTO suppliers (name) VALUES ('Aling Rosa Eggs');   -- already there
+ERROR:  duplicate key value violates unique constraint "suppliers_name_key"
+
+INSERT INTO suppliers (name, rating) VALUES ('Bad Rating Farm', 9);
+ERROR:  new row for relation "suppliers" violates check constraint "suppliers_rating_check"
+
+INSERT INTO orders (id, student_id, ordered_on, status) VALUES (99, 123, '2026-11-07', 'paid');
+ERROR:  insert or update on table "orders" violates foreign key constraint "orders_student_id_fkey"`,
+      },
+      { type: 'tip', text: 'Rows that fail still use up identity numbers, so ids can have gaps (1, 2, 5…). That is normal. Never rely on an id being "the next number"; its only job is to be unique.' },
+      { type: 'heading', text: 'Changing a table later' },
+      { type: 'paragraph', text: 'Real tables change. `ALTER TABLE suppliers ADD COLUMN phone text;` adds a column (existing rows get NULL), `ALTER TABLE suppliers DROP COLUMN phone;` removes it and its data, and `DROP TABLE suppliers;` removes the table. These are permanent, so design carefully and keep the statements in a file you can re-run. That file is called a **migration**.' },
+      {
+        type: 'version',
+        text: 'This is PostgreSQL 18 behaviour. The docs describe identity columns as GENERATED ALWAYS (a user value is only accepted with OVERRIDING SYSTEM VALUE) or BY DEFAULT, implicitly NOT NULL but not automatically unique, so add PRIMARY KEY or UNIQUE. PostgreSQL 18 also adds virtual generated columns (computed when read, now the default kind of generated column) and a `uuidv7()` function for timestamp-ordered UUID keys.',
+        checked: CHECKED,
+        sources: [DOCS.identity, DOCS.numeric, DOCS.datetime, DOCS.constraints, DOCS.character, DOCS.release18],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'A CREATE TABLE lists each column with a data type and its constraints; constraints are rules the database enforces for every writer.',
+          'Use numeric(p,s) for money, integer or bigint for counts, text for words, boolean for flags, date for days and timestamptz for moments.',
+          'PRIMARY KEY names a row; an identity column numbers rows for you; NOT NULL, UNIQUE and CHECK reject bad values; DEFAULT fills in missing ones.',
+          'A FOREIGN KEY ties a column to a row in another table, so related data cannot be orphaned.',
+          'A failed INSERT stores nothing, though it may still use up an identity number.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-04-predict-1',
+          kind: 'predict-output',
+          title: 'Defaults and identity at work',
+          prompt: 'The suppliers table already holds suppliers 1 to 3, all with `active` true, and the next identity number is 4. What does this statement print? Write the three values separated by " | " (psql shows true as t).',
+          concept: 'default and identity',
+          language: 'postgresql',
+          code: "INSERT INTO suppliers (name)\nVALUES ('Mang Tomas Veggies')\nRETURNING id, city, active;",
+          expected: '4 | Naga | t',
+          choices: ['4 | Naga | t', '4 |  | t', '4 | Naga | f', '1 | Naga | t'],
+          wrongNotes: {
+            '4 |  | t': 'city is NOT NULL with DEFAULT \'Naga\', so leaving it out stores Naga, not an empty value.',
+            '4 | Naga | f': 'active has DEFAULT true, and psql prints true as t.',
+            '1 | Naga | t': 'The identity keeps counting where it left off, so the new row gets 4, not 1.',
+          },
+          hints: [
+            'Which columns did the INSERT give a value for? Only name.',
+            'The other columns use their DEFAULT or their identity.',
+            'id continues from 3, city defaults to Naga, and active defaults to true.',
+          ],
+          explanation: 'The identity gives the next number (4), DEFAULT fills city with Naga and active with true, and RETURNING sends back the stored values. Verified on PostgreSQL.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-04-fix-1',
+          kind: 'fix-bug',
+          title: 'A broken CHECK',
+          prompt: 'PostgreSQL answers this statement with `syntax error at or near "price"`. Find the buggy line.',
+          concept: 'check constraint syntax',
+          language: 'postgresql',
+          code: 'CREATE TABLE drinks (\n  id integer GENERATED ALWAYS AS IDENTITY PRIMARY KEY,\n  name text NOT NULL,\n  price numeric(5,2) CHECK price > 0\n);',
+          bugLine: 4,
+          fixes: [
+            { line: '  price numeric(5,2) CHECK (price > 0)', correct: true, why: 'A CHECK condition must be written inside brackets.' },
+            { line: '  price numeric(5,2) CHECK = price > 0', correct: false, why: 'There is no `=` after CHECK; the condition still has no brackets, so this is also a syntax error.' },
+            { line: '  price numeric(5,2) WHERE price > 0', correct: false, why: 'WHERE filters rows when reading. It cannot be used to define a rule on a column.' },
+          ],
+          hints: [
+            'The error points at the word right after CHECK.',
+            'What shape does PostgreSQL expect after the word CHECK?',
+            'Put the condition in round brackets.',
+          ],
+          explanation: 'A CHECK needs its condition in parentheses: `CHECK (price > 0)`. With it, a price of 0 or less is rejected on every insert and update. Verified on PostgreSQL.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-04-match-1',
+          kind: 'match',
+          title: 'Which rule stops it?',
+          prompt: 'For each problem the canteen is worried about, pick the constraint that prevents it.',
+          concept: 'choosing constraints',
+          labels: { terms: 'The problem', meanings: 'The constraint' },
+          pairs: [
+            { term: 'Two supplier rows both named "Aling Rosa Eggs"', definition: 'UNIQUE on name' },
+            { term: 'A supplier saved without any name', definition: 'NOT NULL on name' },
+            { term: 'A rating of 9 on a 1 to 5 scale', definition: 'CHECK (rating BETWEEN 1 AND 5)' },
+            { term: 'An order for student 123, who does not exist', definition: 'FOREIGN KEY to students' },
+          ],
+          hints: [
+            'Ask what exactly is wrong in each case: repeated, missing, out of range, or pointing at nothing.',
+            'The student example is about a link between two tables.',
+            'Repeated value: UNIQUE. Missing: NOT NULL. Out of range: CHECK. Link to nothing: FOREIGN KEY.',
+          ],
+          explanation: 'Each constraint answers one kind of mistake: duplicates, missing values, impossible values, and broken links between tables.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-04-scenario-1',
+          kind: 'scenario',
+          title: 'A column for prices',
+          prompt: 'Choose the best data type for the new `unit_price` column.',
+          concept: 'numeric for money',
+          situation: 'You are adding a `unit_price` column to a table that will hold the price of every item sold, to be summed into daily and monthly totals that the owner compares with the cash drawer to the centavo.',
+          options: [
+            { text: '`numeric(10,2)`', consequence: 'Prices are stored and added exactly, so totals match the cash drawer. This is what the PostgreSQL docs recommend for money.', quality: 'best' },
+            { text: '`double precision`', consequence: 'Prices are stored as binary approximations. Sums can drift by tiny fractions and may not match the drawer exactly.', quality: 'poor' },
+            { text: '`text`, e.g. \'55.00\'', consequence: 'You cannot add or compare the values, and "9.50" sorts after "10.00" as text.', quality: 'poor' },
+            { text: '`integer` holding centavos (5500)', consequence: 'Exact and common in payment systems, but every query and report must remember to divide by 100.', quality: 'acceptable' },
+          ],
+          hints: [
+            'The owner wants totals that match to the centavo.',
+            'Which type does the PostgreSQL documentation recommend for monetary amounts?',
+            'Exact decimal arithmetic means numeric.',
+          ],
+          explanation: '`numeric(10,2)` is exact and readable. Storing centavos in an integer also works, but it pushes the conversion into every query.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'postgresql-sql-04-q1',
+        prompt: 'Which column type is the best fit for the amount of a payment, such as 55.00 pesos?',
+        choices: ['real, which is small and quick for decimals', 'text, so the number keeps its two decimals exactly', 'numeric(10,2), whose arithmetic is exact to two decimals', 'timestamptz, because a payment happens at a moment'],
+        answer: 2,
+        explanation: 'numeric is exact, so sums match to the centavo. Floating-point types such as real store approximations, and text cannot be added.',
+      },
+      {
+        id: 'postgresql-sql-04-q2',
+        prompt: 'A column is `GENERATED ALWAYS AS IDENTITY`. What happens if you run `INSERT INTO suppliers (id, name) VALUES (10, \'X\')`?',
+        choices: ['PostgreSQL refuses it, unless you add OVERRIDING SYSTEM VALUE', 'The row is stored with id 10 and the counter jumps to 11', 'The 10 is ignored and the next number is used instead', 'The row is stored with id 10 and the old rows are renumbered'],
+        answer: 0,
+        explanation: 'With ALWAYS, a user-supplied value is only accepted with OVERRIDING SYSTEM VALUE. GENERATED BY DEFAULT would let your value win.',
+      },
+      {
+        id: 'postgresql-sql-04-q3',
+        prompt: 'What does `student_id integer NOT NULL REFERENCES students (id)` protect you from?',
+        choices: ['Two students sharing the same name', 'Orders that point to a student who does not exist in the students table', 'Students with a missing grade', 'Orders placed on a date in the past'],
+        answer: 1,
+        explanation: 'A foreign key forces every student_id to match an existing students.id (and NOT NULL forbids leaving it empty). It does not check names, grades or dates.',
+      },
+      {
+        id: 'postgresql-sql-04-q4',
+        prompt: 'You store `TIMESTAMPTZ \'2026-11-14 12:00+08\'`. A colleague whose session uses UTC reads it. What do they see?',
+        choices: ['2026-11-14 12:00:00+08, because the stored offset is kept', 'An error, because the zones differ', '2026-11-14 12:00:00+00, because only the clock digits are stored', '2026-11-14 04:00:00+00, the same moment shown in their zone'],
+        answer: 3,
+        explanation: 'timestamptz stores one absolute moment (UTC) and displays it in the session\'s time zone. Noon in Manila is 04:00 UTC.',
+      },
+    ],
+    task: {
+      title: 'Create your own table',
+      steps: [
+        'In psql (or any PostgreSQL), create a table `reviews` with an identity primary key, `product_id integer REFERENCES products (id)`, `stars smallint CHECK (stars BETWEEN 1 AND 5)` and `written_at timestamptz DEFAULT now()`.',
+        'Insert one valid row, then try to break each rule on purpose (a 7 for stars, a product_id of 999) and read each error message.',
+        'Run `\\d reviews` and find your constraints in the output.',
+      ],
+      minutes: 15,
+    },
+  },
+  {
+    id: 'postgresql-sql-05',
+    day: 5,
+    title: 'Inserting, updating and deleting; transactions',
+    summary: 'Add, change and remove rows, and group several changes into a transaction that happens completely or not at all.',
+    intro: {
+      objectives: [
+        'Write INSERT, UPDATE and DELETE statements, and use RETURNING to see what changed',
+        'Add a row or update the existing one with INSERT ... ON CONFLICT',
+        'Wrap related changes in BEGIN, COMMIT and ROLLBACK, and explain what a transaction guarantees',
+      ],
+      why: 'Reading data is safe; changing it is where mistakes cost money. Knowing how to write precise changes, and how to make a group of them succeed or fail together, is what keeps a real shop\'s numbers correct.',
+    },
+    minutes: 30,
+    skills: ['transactions'],
+    body: [
+      { type: 'paragraph', text: 'The statements you have used so far only read. Three more change data: **INSERT** adds rows, **UPDATE** changes existing rows and **DELETE** removes them. Together with SELECT they are the four everyday operations, often called CRUD (create, read, update, delete). Each one changes the table permanently, so each deserves a little care. Unlike SELECT, you cannot undo them with Ctrl+Z, unless you used a transaction (see below).' },
+      { type: 'heading', text: 'INSERT: add rows' },
+      {
+        type: 'code',
+        language: 'postgresql',
+        label: 'Two new products in one statement',
+        code: `INSERT INTO products (id, name, category, price, stock)
+VALUES (14, 'Lugaw', 'meal', 30.00, 25),
+       (15, 'Calamansi juice', 'drink', 18.00, 40)
+RETURNING id, name;`,
+      },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'Result',
+        code: ` id |      name
+----+-----------------
+ 14 | Lugaw
+ 15 | Calamansi juice
+(2 rows)`,
+      },
+      { type: 'paragraph', text: 'List the columns, then one bracket of values per row. Any column you leave out gets its DEFAULT (or NULL). `RETURNING` is a PostgreSQL feature that sends back the rows that were actually written, so you can read the id that the database generated without a second query. It works on INSERT, UPDATE and DELETE.' },
+      { type: 'heading', text: 'UPDATE and DELETE: always with WHERE' },
+      { type: 'paragraph', text: '`UPDATE` has a SET clause (the new values) and a WHERE clause that picks the rows. The right-hand side can use the old value, which is how you "add 2 to the price".' },
+      {
+        type: 'code',
+        language: 'postgresql',
+        code: `UPDATE products
+SET price = price + 2
+WHERE category = 'snack';      -- UPDATE 4: four snack rows changed
+
+DELETE FROM products
+WHERE id = 15
+RETURNING name;                -- Calamansi juice`,
+      },
+      { type: 'warning', text: 'Leave out WHERE and the statement applies to **every row**: `UPDATE products SET price = 0;` makes the whole menu free, and PostgreSQL will not ask "are you sure?". Habit for safety: write the WHERE first, or run it as a SELECT with the same WHERE to see which rows it would touch. Also remember that a FOREIGN KEY protects its rows: `DELETE FROM products WHERE id = 1` fails because order items still refer to the adobo rice.' },
+      { type: 'heading', text: 'Upsert: insert, or update if it already exists' },
+      { type: 'paragraph', text: 'Supplier names are UNIQUE. If you insert "Fresh Fish Co." again, you get a duplicate-key error. With `ON CONFLICT` you decide what happens instead. `DO NOTHING` skips the row; `DO UPDATE` changes the existing row, and the special name `EXCLUDED` means "the row I tried to insert".' },
+      {
+        type: 'code',
+        language: 'postgresql',
+        code: `INSERT INTO suppliers (name, city, rating)
+VALUES ('Fresh Fish Co.', 'Legazpi', 5)
+ON CONFLICT (name)
+DO UPDATE SET city = EXCLUDED.city, rating = EXCLUDED.rating
+RETURNING id, name, city, rating;`,
+      },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'Result: the existing row (id 2) was updated, not duplicated',
+        code: ` id |      name      |  city   | rating
+----+----------------+---------+--------
+  2 | Fresh Fish Co. | Legazpi |      5
+(1 row)`,
+      },
+      { type: 'paragraph', text: 'For bigger "sync this table with that one" jobs there is `MERGE`, which joins a source to a target and says what to do when rows match and when they do not. Here is the shape (it needs PostgreSQL 15 or newer):' },
+      {
+        type: 'code',
+        language: 'postgresql',
+        label: 'MERGE: restock a delivery (PostgreSQL 15+)',
+        code: `MERGE INTO products p
+USING (VALUES (14, 'Lugaw', 30.00, 20)) AS d(id, name, price, qty)
+  ON p.id = d.id
+WHEN MATCHED THEN
+  UPDATE SET stock = p.stock + d.qty
+WHEN NOT MATCHED THEN
+  INSERT (id, name, category, price, stock)
+  VALUES (d.id, d.name, 'meal', d.price, d.qty);`,
+      },
+      { type: 'heading', text: 'Transactions: all or nothing' },
+      { type: 'paragraph', text: 'Selling Siopao is not one change but three: record the order, record what was in it, and reduce the stock. If the app crashes after the second one, the numbers lie. A **transaction** groups statements so they take effect together, or not at all. You start with `BEGIN`, and end with `COMMIT` (keep everything) or `ROLLBACK` (throw it all away). Other users never see your half-finished work.' },
+      {
+        type: 'diagram',
+        format: 'mermaid',
+        source: `flowchart TD
+  A[BEGIN] --> B[INSERT the order]
+  B --> C[INSERT the order item]
+  C --> D[UPDATE the stock]
+  D --> E{Did everything work?}
+  E -->|yes| F[COMMIT: all changes become permanent]
+  E -->|no| G[ROLLBACK: nothing changed]`,
+        caption: 'A sale as one transaction',
+      },
+      {
+        type: 'code',
+        language: 'postgresql',
+        label: 'A failure in the middle undoes the whole sale',
+        code: `BEGIN;
+INSERT INTO orders (id, student_id, ordered_on, status)
+VALUES (13, 7, '2026-11-09', 'paid');
+INSERT INTO order_items (order_id, product_id, quantity)
+VALUES (13, 99, 1);   -- there is no product 99
+-- ERROR: insert or update on table "order_items" violates foreign key constraint
+-- ERROR: current transaction is aborted, commands ignored until end of transaction block
+ROLLBACK;
+SELECT count(*) FROM orders WHERE id = 13;   -- 0: the order never happened`,
+      },
+      { type: 'paragraph', text: 'Once a statement fails inside a transaction, PostgreSQL refuses further commands until you `ROLLBACK`. Outside a transaction, each statement is its own tiny transaction that commits at once (called autocommit). The rules a transaction follows are summarised as **ACID**: Atomic (all or nothing), Consistent (constraints always hold), Isolated (others do not see unfinished work) and Durable (once committed, it survives a crash).' },
+      { type: 'heading', text: 'How isolated is isolated?' },
+      { type: 'paragraph', text: 'Two cashiers can sell the same item at the same moment, so the database has to decide what one transaction may see of the other. PostgreSQL\'s default level is **Read Committed**: each statement sees everything committed before that statement began. So two identical SELECTs in the same transaction can return different answers if someone else commits in between. **Repeatable Read** takes one snapshot at the transaction\'s first query, so every statement sees the same data; **Serializable** also detects patterns that could not have happened one after the other. At the stricter levels PostgreSQL may abort a transaction with a serialization failure (SQLSTATE 40001), and your code must be ready to run it again.' },
+      {
+        type: 'version',
+        text: 'Checked against PostgreSQL 18. `INSERT ... ON CONFLICT` and `RETURNING` are documented on the INSERT page. `MERGE` arrived in PostgreSQL 15; PostgreSQL 17 added `WHEN NOT MATCHED BY SOURCE` and `RETURNING` for MERGE; PostgreSQL 18 added `OLD` and `NEW` aliases in `RETURNING` for INSERT, UPDATE, DELETE and MERGE. The default isolation level is Read Committed, and Read Uncommitted behaves exactly like it.',
+        checked: CHECKED,
+        sources: [DOCS.insert, DOCS.merge, DOCS.isolation, DOCS.release15, DOCS.release17, DOCS.release18],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'INSERT adds rows, UPDATE changes rows, DELETE removes rows; RETURNING shows what was written.',
+          'UPDATE and DELETE without WHERE touch every row: write the WHERE first and test it with a SELECT.',
+          'INSERT ... ON CONFLICT adds a row or updates/skips the existing one; MERGE does the same for whole sets (PostgreSQL 15+).',
+          'A transaction (BEGIN ... COMMIT or ROLLBACK) makes several changes succeed or fail together.',
+          'PostgreSQL defaults to Read Committed; stricter levels can abort a transaction, so code must be able to retry.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-05-predict-1',
+          kind: 'predict-output',
+          title: 'What survives the rollback?',
+          prompt: 'The adobo rice (product 1) has stock 40. What does the last statement print?',
+          concept: 'rollback',
+          language: 'postgresql',
+          code: 'BEGIN;\nUPDATE products SET stock = stock - 5 WHERE id = 1;\nROLLBACK;\nSELECT stock FROM products WHERE id = 1;',
+          expected: '40',
+          choices: ['40', '35', '45', 'An error: the transaction is aborted'],
+          wrongNotes: {
+            '35': 'That would be the value inside the transaction before the ROLLBACK. ROLLBACK throws the change away.',
+            '45': 'The UPDATE subtracts 5, and then ROLLBACK cancels it; it never adds.',
+            'An error: the transaction is aborted': 'Nothing failed, and ROLLBACK ends the transaction normally. The next SELECT runs on its own.',
+          },
+          hints: [
+            'What does ROLLBACK do to the UPDATE?',
+            'The SELECT after ROLLBACK reads committed data only.',
+            'The change was cancelled, so the old stock is back.',
+          ],
+          explanation: 'ROLLBACK discards every change made since BEGIN, so the stock is still 40. Verified on PostgreSQL.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-05-arrange-1',
+          kind: 'arrange',
+          title: 'Order a sale',
+          prompt: 'Put these lines in an order that records a sale of 2 Siopao (product 7) safely as one transaction. The order row must exist before its items.',
+          concept: 'transaction order',
+          language: 'postgresql',
+          solution: [
+            'BEGIN;',
+            "INSERT INTO orders (id, student_id, ordered_on, status) VALUES (13, 7, '2026-11-09', 'paid');",
+            'INSERT INTO order_items (order_id, product_id, quantity) VALUES (13, 7, 2);',
+            'UPDATE products SET stock = stock - 2 WHERE id = 7;',
+            'COMMIT;',
+          ],
+          alternatives: [
+            [
+              'BEGIN;',
+              'UPDATE products SET stock = stock - 2 WHERE id = 7;',
+              "INSERT INTO orders (id, student_id, ordered_on, status) VALUES (13, 7, '2026-11-09', 'paid');",
+              'INSERT INTO order_items (order_id, product_id, quantity) VALUES (13, 7, 2);',
+              'COMMIT;',
+            ],
+            [
+              'BEGIN;',
+              "INSERT INTO orders (id, student_id, ordered_on, status) VALUES (13, 7, '2026-11-09', 'paid');",
+              'UPDATE products SET stock = stock - 2 WHERE id = 7;',
+              'INSERT INTO order_items (order_id, product_id, quantity) VALUES (13, 7, 2);',
+              'COMMIT;',
+            ],
+          ],
+          reasons: [
+            'BEGIN opens the transaction before any change.',
+            'The order row comes first, because order_items refers to it by a foreign key.',
+            'The item needs the order to exist already.',
+            'Reducing the stock can sit anywhere between BEGIN and COMMIT.',
+            'COMMIT makes all three changes permanent together, so it goes last.',
+          ],
+          hints: [
+            'Which line starts a transaction, and which one finishes it?',
+            'order_items has a foreign key to orders, so one INSERT must come before the other.',
+            'BEGIN, order, order item, stock update, COMMIT.',
+          ],
+          explanation: 'BEGIN first and COMMIT last wrap the three changes. The order must be inserted before its item because of the foreign key; the stock update can be anywhere in between. Each accepted order was run on PostgreSQL.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-05-fix-1',
+          kind: 'fix-bug',
+          title: 'Raise the snack prices',
+          prompt: 'The canteen wants to raise only snack prices by 2 pesos. PostgreSQL answers `column "snack" does not exist`. Find the buggy line.',
+          concept: 'update where text value',
+          language: 'postgresql',
+          code: 'UPDATE products\nSET price = price + 2\nWHERE category = snack;',
+          bugLine: 3,
+          fixes: [
+            { line: "WHERE category = 'snack';", correct: true, why: 'Text values go in single quotes. Without them, PostgreSQL looks for a column called snack.' },
+            { line: 'WHERE category = "snack";', correct: false, why: 'Double quotes mean a column or table name in PostgreSQL, so it fails with the same error.' },
+            { line: "WHERE category IS 'snack';", correct: false, why: 'IS is for NULL and true/false tests. For text equality, use `=`.' },
+          ],
+          hints: [
+            'Read the error: PostgreSQL thinks `snack` is a column.',
+            'How do you write a piece of text in SQL?',
+            'Put the word in single quotes.',
+          ],
+          explanation: 'Single quotes make a text value; double quotes make an identifier (a name). So the value must be \'snack\'. Verified on PostgreSQL.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-05-scenario-1',
+          kind: 'scenario',
+          title: 'Before the big update',
+          prompt: 'Pick the safest way to apply the change.',
+          concept: 'safe updates',
+          situation: 'It is Friday afternoon and you must change the category of 40 products on the live database with a single UPDATE. You wrote the WHERE condition, but you are not completely sure it matches only the right rows.',
+          options: [
+            { text: 'Run BEGIN, run the UPDATE, check the number of rows it reports and a SELECT of the result, then COMMIT or ROLLBACK', consequence: 'Nothing is permanent until you are sure, and a wrong WHERE is undone with one command.', quality: 'best' },
+            { text: 'Run the UPDATE directly and fix it later if it was wrong', consequence: 'In autocommit the change is permanent at once. Undoing it means restoring a backup or reconstructing old values.', quality: 'poor' },
+            { text: 'Run it without WHERE first, so you can see what it changes', consequence: 'That changes every row on the live database immediately. A SELECT with the same WHERE shows the affected rows without changing anything.', quality: 'poor' },
+            { text: 'Run a SELECT with the same WHERE first, then run the UPDATE directly', consequence: 'Good, you see the rows first. But the UPDATE is still permanent at once if something differs, so a transaction is safer.', quality: 'acceptable' },
+          ],
+          hints: [
+            'You want to be able to look at the result before it becomes permanent.',
+            'Which command gives you a way to undo?',
+            'BEGIN lets you ROLLBACK if the result looks wrong.',
+          ],
+          explanation: 'A transaction gives you a safety net: you inspect the real result inside it and then decide to COMMIT or ROLLBACK.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'postgresql-sql-05-q1',
+        prompt: 'What does `UPDATE products SET price = 0;` do?',
+        choices: ['It sets the price of the first product to 0', 'It fails, because UPDATE always needs a WHERE clause', 'It asks you to confirm before changing anything', 'It sets the price of every product to 0 immediately'],
+        answer: 3,
+        explanation: 'Without WHERE, an UPDATE applies to every row, and outside a transaction it is committed at once. PostgreSQL does not ask for confirmation.',
+      },
+      {
+        id: 'postgresql-sql-05-q2',
+        prompt: 'Inside a transaction, the second of three statements fails. What is the right next step, and what is the state of the first statement\'s change?',
+        choices: ['ROLLBACK; the first change is discarded together with everything else', 'Run the third statement anyway; the first change stays', 'COMMIT; the first change is saved and the second is skipped', 'Nothing; PostgreSQL rolls back by itself and allows new commands'],
+        answer: 0,
+        explanation: 'After an error, the transaction is in an aborted state and ignores commands until you ROLLBACK. Atomicity means the first change is not kept either.',
+      },
+      {
+        id: 'postgresql-sql-05-q3',
+        prompt: 'At the default isolation level, you run the same SELECT twice in one transaction while another user commits a change in between. What can happen?',
+        choices: ['You always see the same data, because all transactions are fully isolated', 'The second SELECT fails with a serialization error', 'The second SELECT can show the other user\'s committed change, because Read Committed takes a fresh view for each statement', 'The other user is blocked until you finish'],
+        answer: 2,
+        explanation: 'Read Committed is PostgreSQL\'s default: each statement sees data committed before it began. Repeatable Read would keep one snapshot for the whole transaction.',
+      },
+      {
+        id: 'postgresql-sql-05-q4',
+        prompt: 'In `INSERT ... ON CONFLICT (name) DO UPDATE SET rating = EXCLUDED.rating`, what is EXCLUDED?',
+        choices: ['The old row that is already in the table', 'The row you attempted to insert, whose values you can use in the update', 'A list of rows that were deleted by the statement', 'The column that caused the conflict'],
+        answer: 1,
+        explanation: 'EXCLUDED is the proposed row from the VALUES list. It lets the update copy the new values onto the existing row.',
+      },
+    ],
+    task: {
+      title: 'Practise a safe change',
+      steps: [
+        'In psql, run BEGIN, then UPDATE one product\'s stock, then SELECT it to see the new value.',
+        'Run ROLLBACK and SELECT again to see the old value return.',
+        'Now repeat it with COMMIT instead, and finally put the stock back with another UPDATE.',
+      ],
+      minutes: 15,
+    },
+  },
+  {
+    id: 'postgresql-sql-06',
+    day: 6,
+    title: 'Joins',
+    summary: 'Combine rows from related tables with INNER JOIN and LEFT JOIN, and answer questions that need two or more tables.',
+    intro: {
+      objectives: [
+        'Explain why related data is split across tables and linked by keys',
+        'Write INNER JOIN and LEFT JOIN queries with ON and table aliases',
+        'Join three or four tables and combine joins with GROUP BY',
+      ],
+      why: 'Real questions ("how much did each student spend?") never live in one table. Joins are how SQL connects tables, and they are the skill that most separates someone who can read a table from someone who can answer questions with a database.',
+    },
+    minutes: 30,
+    skills: ['joins'],
+    body: [
+      { type: 'paragraph', text: 'Look at the canteen\'s `orders` table. It does not contain the student\'s name, only a `student_id` such as 3. The name lives once, in `students`. This is deliberate: if Ana changes her name, one row changes, not fifty orders. The price of a product lives once in `products`, and `order_items` only says which product and how many. A **join** puts the pieces back together when you ask a question.' },
+      {
+        type: 'diagram',
+        format: 'mermaid',
+        source: `erDiagram
+  students ||--o{ orders : places
+  orders ||--|{ order_items : contains
+  products ||--o{ order_items : appears_in
+  students {
+    int id PK
+    text name
+    int grade
+  }
+  orders {
+    int id PK
+    int student_id FK
+    date ordered_on
+    text status
+  }
+  order_items {
+    int order_id FK
+    int product_id FK
+    int quantity
+  }
+  products {
+    int id PK
+    text name
+    numeric price
+  }`,
+        caption: 'The canteen schema: one student places many orders; each order contains many items; each item is one product',
+      },
+      { type: 'paragraph', text: 'Read the lines as sentences: a student places zero or many orders; an order contains one or many items; a product appears in zero or many items. The link is always a **foreign key** (`orders.student_id` points to `students.id`) matched with the **primary key** it refers to.' },
+      { type: 'heading', text: 'INNER JOIN: only the rows that match' },
+      {
+        type: 'code',
+        language: 'sql',
+        label: 'Each order with the student\'s name',
+        code: `SELECT o.id, s.name, o.ordered_on, o.status
+FROM orders AS o
+JOIN students AS s ON s.id = o.student_id
+ORDER BY o.id
+LIMIT 4;`,
+      },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'Result',
+        code: ` id |    name     | ordered_on | status
+----+-------------+------------+--------
+  1 | Ana Reyes   | 2026-11-02 | paid
+  2 | Ben Santos  | 2026-11-02 | paid
+  3 | Ana Reyes   | 2026-11-03 | paid
+  4 | Carla Dizon | 2026-11-03 | unpaid
+(4 rows)`,
+      },
+      { type: 'paragraph', text: 'Read it as: for each order, find the student whose `id` equals the order\'s `student_id`, and put them side by side. `JOIN` on its own means `INNER JOIN`: an order with no matching student (which the foreign key forbids anyway) would be dropped. `o` and `s` are **aliases**, short names for the tables, so you can write `s.name` and `o.id`. Qualify a column with its table whenever two tables share a column name such as `id`; otherwise PostgreSQL answers "column reference is ambiguous".' },
+      { type: 'heading', text: 'LEFT JOIN: keep everything from the left table' },
+      { type: 'paragraph', text: 'Gino Ramos has never ordered anything. An INNER JOIN between students and orders would not list him at all, because no order matches. When you also want the lonely rows, use **LEFT JOIN**: every row of the left table (the one before JOIN) is kept, and where nothing matches, the right table\'s columns are filled with NULL.' },
+      {
+        type: 'code',
+        language: 'sql',
+        label: 'How many orders has each student placed, including none?',
+        code: `SELECT s.name, count(o.id) AS orders
+FROM students AS s
+LEFT JOIN orders AS o ON o.student_id = s.id
+GROUP BY s.id, s.name
+ORDER BY orders DESC, s.name;`,
+      },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'Result',
+        code: `     name     | orders
+--------------+--------
+ Ana Reyes    |      3
+ Ben Santos   |      2
+ Carla Dizon  |      2
+ Ella Cruz    |      2
+ Dan Bautista |      1
+ Faye Lim     |      1
+ Hana Torres  |      1
+ Gino Ramos   |      0
+(8 rows)`,
+      },
+      { type: 'paragraph', text: 'Notice `count(o.id)`, not `count(*)`. For Gino the order columns are NULL, `count(o.id)` skips NULLs and gives 0, while `count(*)` would count his one joined row and say 1. A classic trick follows from this: to find rows with **no** match, LEFT JOIN and then keep `WHERE o.id IS NULL`. That lists exactly the students who never ordered.' },
+      {
+        type: 'table',
+        headers: ['Join', 'Keeps', 'Typical question'],
+        rows: [
+          ['`JOIN` (INNER)', 'Only rows with a match on both sides', 'What did each student order?'],
+          ['`LEFT JOIN`', 'All left rows, matches or NULLs from the right', 'Which students have not ordered at all?'],
+          ['`RIGHT JOIN`', 'All right rows (a LEFT JOIN with the tables swapped)', 'Rarely needed: swap the tables instead'],
+          ['`FULL JOIN`', 'All rows from both sides', 'Compare two lists and see what is missing from each'],
+          ['`CROSS JOIN`', 'Every left row with every right row (8 x 13 = 104)', 'All combinations, e.g. every student with every product'],
+        ],
+      },
+      { type: 'heading', text: 'Joining three or four tables' },
+      { type: 'paragraph', text: 'A join produces a table, so you can join another table to it, and another. Each JOIN gets its own ON. To get each order line with its product and total, walk the diagram: orders to order_items to products.' },
+      {
+        type: 'code',
+        language: 'sql',
+        label: 'What students paid in total (paid orders only)',
+        code: `SELECT s.name, sum(oi.quantity * p.price) AS spent
+FROM students AS s
+JOIN orders AS o ON o.student_id = s.id
+JOIN order_items AS oi ON oi.order_id = o.id
+JOIN products AS p ON p.id = oi.product_id
+WHERE o.status = 'paid'
+GROUP BY s.id, s.name
+ORDER BY spent DESC, s.name;`,
+      },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'Result',
+        code: `     name     | spent
+--------------+--------
+ Ana Reyes    | 245.00
+ Ella Cruz    | 165.00
+ Ben Santos   | 130.00
+ Carla Dizon  |  80.00
+ Hana Torres  |  80.00
+ Dan Bautista |  75.00
+(6 rows)`,
+      },
+      { type: 'paragraph', text: 'Faye Lim and Gino Ramos are missing, and that is correct: Faye\'s only order is unpaid and Gino has none. If you wanted them listed with 0, you would need LEFT JOINs and move the status test into the ON condition. Be careful with the ON condition: if you write `ON s.id = o.id` by mistake, PostgreSQL happily matches students to orders with the same number, which makes no sense, and returns plausible-looking wrong rows. And a JOIN with no ON condition at all multiplies every row by every row.' },
+      { type: 'tip', text: 'Build joins step by step. Run `SELECT * FROM students JOIN orders ON ...` first and look at the rows. Then add the next table. Add GROUP BY and sums last.' },
+      { type: 'visual', id: 'web-database-joins', caption: 'Try how a foreign key links two tables' },
+      {
+        type: 'version',
+        text: 'Joins work the same way in every supported PostgreSQL version, and the practice boxes in this app (SQLite) accept all of this lesson\'s JOIN, LEFT JOIN and GROUP BY queries. PostgreSQL also supports `FULL JOIN` and `USING (column)` as a shorthand when the two column names are the same. The PostgreSQL docs also note that for an outer join a condition in ON is applied before the NULL rows are added, while the same condition in WHERE is applied afterwards and can remove them.',
+        checked: CHECKED,
+        sources: [DOCS.joins],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'Related data is split across tables and linked by a foreign key that matches a primary key; a join puts it back together.',
+          '`JOIN ... ON a.key = b.key` keeps only matching rows; LEFT JOIN also keeps unmatched left rows with NULLs.',
+          'To find rows with no match, LEFT JOIN and test `WHERE right_table.id IS NULL`.',
+          'Join one table at a time, qualify column names with aliases, and aggregate with GROUP BY at the end.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-06-sql-1',
+          kind: 'sql-challenge',
+          title: 'Who has not paid?',
+          prompt: 'Show the student\'s `name` and the `ordered_on` date of every **unpaid** order, sorted by date and then name.',
+          concept: 'inner join',
+          setup: STUDENTS + ORDERS,
+          starter: "SELECT status, ordered_on\nFROM orders\nWHERE status = 'unpaid';",
+          expected: {
+            columns: ['name', 'ordered_on'],
+            rows: [
+              ['Carla Dizon', '2026-11-03'],
+              ['Faye Lim', '2026-11-04'],
+            ],
+            ordered: true,
+          },
+          solution: "SELECT s.name, o.ordered_on\nFROM orders AS o\nJOIN students AS s ON s.id = o.student_id\nWHERE o.status = 'unpaid'\nORDER BY o.ordered_on, s.name;",
+          hints: [
+            'The order has only a student_id. Where does the name live?',
+            'Join orders to students, matching orders.student_id with students.id.',
+            'JOIN students AS s ON s.id = o.student_id, then filter on the order\'s status.',
+          ],
+          explanation: 'The join turns each order\'s student_id into a name. WHERE then keeps the unpaid orders, and ORDER BY sorts them.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-06-sql-2',
+          kind: 'sql-challenge',
+          title: 'Orders per student, even zero',
+          prompt: 'Show every student\'s `name` and the number of orders they placed as `orders`, including 0 for students with none. Sort by `orders` (highest first), then name.',
+          concept: 'left join',
+          setup: STUDENTS + ORDERS,
+          starter: 'SELECT s.name, count(o.id) AS orders\nFROM students AS s\nJOIN orders AS o ON o.student_id = s.id\nGROUP BY s.id, s.name\nORDER BY orders DESC, s.name;',
+          expected: {
+            columns: ['name', 'orders'],
+            rows: [
+              ['Ana Reyes', 3],
+              ['Ben Santos', 2],
+              ['Carla Dizon', 2],
+              ['Ella Cruz', 2],
+              ['Dan Bautista', 1],
+              ['Faye Lim', 1],
+              ['Hana Torres', 1],
+              ['Gino Ramos', 0],
+            ],
+            ordered: true,
+          },
+          solution: 'SELECT s.name, count(o.id) AS orders\nFROM students AS s\nLEFT JOIN orders AS o ON o.student_id = s.id\nGROUP BY s.id, s.name\nORDER BY orders DESC, s.name;',
+          hints: [
+            'Run the starter: which student is missing?',
+            'An inner JOIN drops students with no orders. Which join keeps them?',
+            'Change JOIN to LEFT JOIN.',
+          ],
+          explanation: 'LEFT JOIN keeps every student. For Gino the order columns are NULL, and `count(o.id)` ignores NULLs, so he gets 0.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-06-sql-3',
+          kind: 'sql-challenge',
+          title: 'Total spent per student',
+          prompt: 'For **paid** orders only, show each student\'s `name` and the total they spent as `spent` (quantity times price, added up). Sort by `spent`, highest first, then name.',
+          concept: 'multi-table join with group by',
+          setup: PRODUCTS + STUDENTS + ORDERS + ORDER_ITEMS,
+          starter: "SELECT s.name, count(*) AS spent\nFROM students AS s\nJOIN orders AS o ON o.student_id = s.id\nWHERE o.status = 'paid'\nGROUP BY s.id, s.name;",
+          expected: {
+            columns: ['name', 'spent'],
+            rows: [
+              ['Ana Reyes', 245],
+              ['Ella Cruz', 165],
+              ['Ben Santos', 130],
+              ['Carla Dizon', 80],
+              ['Hana Torres', 80],
+              ['Dan Bautista', 75],
+            ],
+            ordered: true,
+          },
+          solution: "SELECT s.name, sum(oi.quantity * p.price) AS spent\nFROM students AS s\nJOIN orders AS o ON o.student_id = s.id\nJOIN order_items AS oi ON oi.order_id = o.id\nJOIN products AS p ON p.id = oi.product_id\nWHERE o.status = 'paid'\nGROUP BY s.id, s.name\nORDER BY spent DESC, s.name;",
+          hints: [
+            'You need the price and the quantity, which live in two more tables.',
+            'Follow the diagram: orders to order_items to products. Each JOIN needs its own ON.',
+            'JOIN order_items AS oi ON oi.order_id = o.id, then JOIN products AS p ON p.id = oi.product_id, and sum(oi.quantity * p.price).',
+          ],
+          explanation: 'Each extra JOIN brings in one more table. Multiplying quantity by price gives each line\'s total, and sum() with GROUP BY adds them up per student.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-06-predict-1',
+          kind: 'predict-output',
+          title: 'Count the joined rows',
+          prompt: 'There are 8 students and 12 orders, and one student (Gino) has no orders. What does this query print?',
+          concept: 'left join row count',
+          language: 'sql',
+          code: 'SELECT count(*)\nFROM students AS s\nLEFT JOIN orders AS o ON o.student_id = s.id;',
+          expected: '13',
+          choices: ['13', '12', '8', '96'],
+          wrongNotes: {
+            '12': 'That would be an INNER JOIN. A LEFT JOIN also keeps Gino, who has no order, as one extra row with NULLs.',
+            '8': 'There are 8 students, but students with several orders appear once per order.',
+            '96': 'That is 8 x 12, every student with every order. The ON condition only pairs a student with their own orders.',
+          },
+          hints: [
+            'Think about how many result rows there are: one per matching order, plus something for students with no order.',
+            'Twelve orders each match exactly one student.',
+            'Twelve matched rows, plus one row for Gino.',
+          ],
+          explanation: 'Twelve rows come from the matching orders. A LEFT JOIN adds one more row for Gino, whose order columns are NULL, and count(*) counts that row. Verified on PostgreSQL.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-06-fix-1',
+          kind: 'fix-bug',
+          title: 'Names that make no sense',
+          prompt: 'This query runs without errors, but Ana is listed with the wrong orders. Find the buggy line.',
+          concept: 'join condition',
+          language: 'sql',
+          code: 'SELECT s.name, o.id AS order_id\nFROM students AS s\nJOIN orders AS o ON s.id = o.id\nORDER BY s.name, o.id;',
+          bugLine: 3,
+          fixes: [
+            { line: 'JOIN orders AS o ON s.id = o.student_id', correct: true, why: 'The foreign key is orders.student_id; it is what points at the student.' },
+            { line: 'JOIN orders AS o ON s.name = o.status', correct: false, why: 'A name and a status can never be related; this returns nothing useful.' },
+            { line: 'JOIN orders AS o ON s.grade = o.id', correct: false, why: 'A grade level is not a key. It would pair students with random orders.' },
+          ],
+          hints: [
+            'Which column in orders points at a student?',
+            'ON should compare a foreign key with the primary key it refers to.',
+            'Compare s.id with o.student_id, not o.id.',
+          ],
+          explanation: '`s.id = o.id` pairs student 1 with order 1, student 2 with order 2, and so on by coincidence. The relation is defined by the foreign key `o.student_id`.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-06-match-1',
+          kind: 'match',
+          title: 'Pick the join',
+          prompt: 'Match each question about the canteen to the join that answers it.',
+          concept: 'choosing a join',
+          labels: { terms: 'Question', meanings: 'Join to use' },
+          pairs: [
+            { term: 'Which students have never ordered anything?', definition: 'LEFT JOIN, then WHERE the order id IS NULL' },
+            { term: 'List each order with its student\'s name', definition: 'INNER JOIN on student_id = id' },
+            { term: 'Make a sheet of every student paired with every product', definition: 'CROSS JOIN' },
+            { term: 'How much has each student spent in total, counting only matching purchases?', definition: 'Several JOINs plus GROUP BY and sum' },
+          ],
+          hints: [
+            'Which question is about something that is missing?',
+            'Which one needs every possible pair, with no condition linking them?',
+            'A total per student needs the price from another table, so it needs more than one join.',
+          ],
+          explanation: 'Missing rows call for LEFT JOIN plus an IS NULL test; ordinary lookups use INNER JOIN; "every combination" is CROSS JOIN; totals per group need joins and aggregation together.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'postgresql-sql-06-q1',
+        prompt: 'Why does the `orders` table store `student_id` instead of the student\'s name?',
+        choices: ['The name lives once in students, so a change is made in one place', 'SQL cannot store text in a table that also holds dates, so text must be moved out', 'Numbers are faster to read than text, so every text column should be a number instead', 'PostgreSQL requires each table to hold exactly one foreign key to another table'],
+        answer: 0,
+        explanation: 'Storing each fact once avoids copies that can disagree. The id links the order to the single student row, and a join retrieves the name when needed.',
+      },
+      {
+        id: 'postgresql-sql-06-q2',
+        prompt: 'Which query lists the students who have no orders?',
+        choices: ['SELECT s.name FROM students s JOIN orders o ON o.student_id = s.id WHERE o.id IS NULL', 'SELECT s.name FROM orders o LEFT JOIN students s ON o.student_id = s.id', 'SELECT s.name FROM students s LEFT JOIN orders o ON o.student_id = s.id WHERE o.id IS NULL', 'SELECT s.name FROM students s CROSS JOIN orders o WHERE o.id IS NULL'],
+        answer: 2,
+        explanation: 'The LEFT JOIN keeps students with no matching order and fills the order columns with NULL; the WHERE then keeps just those rows. An inner join never produces such rows.',
+      },
+      {
+        id: 'postgresql-sql-06-q3',
+        prompt: 'A LEFT JOIN query uses `count(*)` per student, and Gino (no orders) shows 1 instead of 0. Why?',
+        choices: ['He really has one order stored in the orders table, with no products in it', 'Counting after a join is always off by one for the first row of the table', 'His row survives the join with NULL order columns, and count(*) counts that row', 'LEFT JOIN adds one blank row for every student, whether or not they ordered'],
+        answer: 2,
+        explanation: '`count(*)` counts rows, and Gino has one (with NULLs). `count(o.id)` counts only non-NULL order ids, so it gives 0.',
+      },
+      {
+        id: 'postgresql-sql-06-q4',
+        prompt: 'What happens if you write a JOIN with no ON condition at all (a plain CROSS JOIN) between students (8 rows) and products (13 rows)?',
+        choices: ['104 rows, every student paired with every product', 'The 8 students that have at least one matching product row in the other table', '21 rows, because the two tables are simply stacked on top of each other', 'No rows at all: PostgreSQL refuses to run a join without an ON condition'],
+        answer: 0,
+        explanation: 'Without a condition, every row is paired with every row: 8 x 13 = 104. That is why forgetting an ON clause can produce huge, wrong results.',
+      },
+    ],
+    task: {
+      title: 'Join the canteen',
+      steps: [
+        'Write a query that lists each product\'s name with the total quantity sold, including products never sold (use LEFT JOIN from products to order_items and coalesce the sum to 0).',
+        'Add a WHERE that finds the one product that was never sold.',
+        'Extend a join to show which student bought each Halo-halo (join students, orders, order_items and products).',
+      ],
+      minutes: 15,
+    },
+  },
+  {
+    id: 'postgresql-sql-07',
+    day: 7,
+    title: 'Subqueries and common table expressions',
+    summary: 'Put one query inside another, then name the steps of a long query with WITH so it reads top to bottom.',
+    intro: {
+      objectives: [
+        'Use a subquery as a single value, a list (IN) or a yes/no test (EXISTS)',
+        'Explain why NOT IN can silently return nothing when NULLs are involved',
+        'Break a complex question into named steps with WITH (common table expressions)',
+      ],
+      why: 'Many real questions have two steps: "above the average", "customers who bought X". Subqueries and CTEs let you write each step as its own small query, so complicated reports stay readable and checkable.',
+    },
+    minutes: 30,
+    skills: ['advanced-queries'],
+    body: [
+      { type: 'paragraph', text: 'Some questions cannot be answered in one pass. "Which products cost more than the average product?" needs the average first, then a comparison. You could run two queries and copy the number across, but the answer would go stale the moment a price changes. SQL lets you do both in one statement: a **subquery** is a SELECT written inside another statement, in brackets. The inner query runs first and hands its result to the outer one.' },
+      { type: 'heading', text: 'A subquery that returns one value' },
+      {
+        type: 'code',
+        language: 'sql',
+        label: 'Products that cost more than average',
+        code: `SELECT name, price
+FROM products
+WHERE price > (SELECT avg(price) FROM products)
+ORDER BY price DESC, name;`,
+      },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'Result (the average price is about 30.58)',
+        code: `        name         | price
+---------------------+-------
+ Pork sinigang       | 60.00
+ Chicken adobo rice  | 55.00
+ Spaghetti           | 45.00
+ Fried rice with egg | 40.00
+ Halo-halo           | 35.00
+(5 rows)`,
+      },
+      { type: 'paragraph', text: 'Used like this, the subquery is **scalar**: it must give exactly one column and at most one row. If it returns several rows, PostgreSQL stops with "more than one row returned by a subquery used as an expression". If it returns no rows, the value is simply NULL.' },
+      { type: 'heading', text: 'A subquery that returns a list: IN' },
+      { type: 'paragraph', text: '`IN (subquery)` is true when the value matches any row of the subquery. Which products were ever sold? `SELECT name FROM products WHERE id IN (SELECT product_id FROM order_items);` returns 12 of the 13 products; the Fishball cup is the one that never appeared in an order. The subquery must return exactly one column.' },
+      { type: 'heading', text: 'EXISTS and the NOT IN trap' },
+      { type: 'paragraph', text: '`EXISTS (subquery)` is true when the subquery returns at least one row, whatever the row contains, so by convention people write `SELECT 1`. The inner query may refer to the outer row (it is **correlated**), which is how you say "for each student, is there an order?":' },
+      {
+        type: 'code',
+        language: 'sql',
+        label: 'Students with no orders',
+        code: `SELECT name
+FROM students AS s
+WHERE NOT EXISTS (
+  SELECT 1 FROM orders AS o WHERE o.student_id = s.id
+);`,
+      },
+      { type: 'paragraph', text: 'It returns Gino Ramos, just like the LEFT JOIN in the last lesson. You might be tempted to write `WHERE id NOT IN (SELECT student_id FROM orders)`, and today it works. But if the subquery ever contains a NULL (say an order saved with no student), then `NOT IN` returns **no rows at all**. The PostgreSQL docs explain why: for a value that matches nothing, comparing it with the NULL gives "unknown" rather than true, so the whole NOT IN is unknown and the row is filtered out. `NOT EXISTS` has no such trap, so prefer it for "has no matching row".' },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'The trap, on PostgreSQL',
+        code: `SELECT name FROM students WHERE id NOT IN (SELECT NULL::int);
+ name
+------
+(0 rows)`,
+      },
+      { type: 'heading', text: 'Subqueries in FROM, and then WITH' },
+      { type: 'paragraph', text: 'A subquery can also stand in for a table, if you give it an alias: `FROM (SELECT * FROM products WHERE stock > 20) AS well_stocked`. Once you nest two or three levels the query becomes hard to read from the inside out. A **common table expression** (CTE) fixes that. `WITH name AS (query)` defines a temporary named result that exists for this one statement, and the main query then uses it like a table. You can define several, separated by commas, and later ones can use earlier ones.' },
+      {
+        type: 'code',
+        language: 'sql',
+        label: 'Students who spent more than the average student',
+        code: `WITH student_totals AS (
+  SELECT o.student_id, sum(oi.quantity * p.price) AS spent
+  FROM orders AS o
+  JOIN order_items AS oi ON oi.order_id = o.id
+  JOIN products AS p ON p.id = oi.product_id
+  WHERE o.status = 'paid'
+  GROUP BY o.student_id
+)
+SELECT s.name, t.spent
+FROM student_totals AS t
+JOIN students AS s ON s.id = t.student_id
+WHERE t.spent > (SELECT avg(spent) FROM student_totals)
+ORDER BY t.spent DESC;`,
+      },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'Result (the average total is about 129.17)',
+        code: `    name    | spent
+------------+--------
+ Ana Reyes  | 245.00
+ Ella Cruz  | 165.00
+ Ben Santos | 130.00
+(3 rows)`,
+      },
+      { type: 'paragraph', text: 'Read it top to bottom like a recipe: step 1 builds `student_totals` (one row per student), step 2 uses it twice (to show the rows and to compute their average). Each step can be tested on its own by running just the inner SELECT. CTEs do not make a query slower: PostgreSQL treats a simple, once-used CTE as part of the main query, and you can force either behaviour with `MATERIALIZED` or `NOT MATERIALIZED`.' },
+      { type: 'heading', text: 'A glimpse of recursion' },
+      { type: 'paragraph', text: 'Add `RECURSIVE` and a CTE may refer to itself. It is written as a starting row, `UNION ALL`, and a step that uses the previous round. This is how PostgreSQL walks hierarchies such as an organisation chart or a category tree. The practice boxes in this app do not allow recursion, so here is a tiny one to run on PostgreSQL:' },
+      {
+        type: 'code',
+        language: 'postgresql',
+        code: `WITH RECURSIVE countdown(n) AS (
+  VALUES (3)
+  UNION ALL
+  SELECT n - 1 FROM countdown WHERE n > 1
+)
+SELECT n FROM countdown;
+-- 3, 2, 1`,
+      },
+      {
+        type: 'version',
+        text: 'Checked against PostgreSQL 18. Since PostgreSQL 12 a non-recursive, side-effect-free CTE that is referenced once is folded into the outer query automatically, while one referenced more than once is computed once and reused; `MATERIALIZED` and `NOT MATERIALIZED` override this. The docs also state that a scalar subquery with several rows is an error, and that `NOT IN` returns null (not true) when the subquery yields a NULL.',
+        checked: CHECKED,
+        sources: [DOCS.with, DOCS.subquery, DOCS.release12],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'A subquery is a SELECT inside brackets: a single value (comparison), a list (IN), a yes/no test (EXISTS) or a temporary table (in FROM).',
+          'A single-value subquery must return one column and at most one row.',
+          'Prefer NOT EXISTS to NOT IN: one NULL in the subquery makes NOT IN return nothing.',
+          'WITH names a step of the query (a CTE) so a long query reads top to bottom and each step can be tested alone.',
+          'WITH RECURSIVE lets a CTE refer to itself, for hierarchies and sequences.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-07-sql-1',
+          kind: 'sql-challenge',
+          title: 'Above the average',
+          prompt: 'Show the `name` and `price` of every product that costs **more than the average price**, most expensive first (then by name). Do not type the average yourself: calculate it with a subquery.',
+          concept: 'scalar subquery',
+          setup: PRODUCTS,
+          starter: 'SELECT name, price\nFROM products\nWHERE price > 40\nORDER BY price DESC, name;',
+          expected: {
+            columns: ['name', 'price'],
+            rows: [
+              ['Pork sinigang', 60],
+              ['Chicken adobo rice', 55],
+              ['Spaghetti', 45],
+              ['Fried rice with egg', 40],
+              ['Halo-halo', 35],
+            ],
+            ordered: true,
+          },
+          solution: 'SELECT name, price\nFROM products\nWHERE price > (SELECT avg(price) FROM products)\nORDER BY price DESC, name;',
+          hints: [
+            'The starter compares with a typed number. Replace the number with a query that calculates it.',
+            'A subquery goes inside brackets, right where the value would be.',
+            'WHERE price > (SELECT avg(price) FROM products)',
+          ],
+          explanation: 'The inner query returns one value, the average price, and the outer query compares every price with it. If prices change, the answer updates by itself.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-07-sql-2',
+          kind: 'sql-challenge',
+          title: 'Products in unpaid orders',
+          prompt: 'Show the `name` of every product that appears in at least one **unpaid** order, sorted by name. Use a subquery (IN or EXISTS).',
+          concept: 'in and exists',
+          setup: CANTEEN,
+          starter: 'SELECT name\nFROM products\nORDER BY name;',
+          expected: { columns: ['name'], rows: [['Buko juice'], ['Siopao'], ['Spaghetti']], ordered: true },
+          solution: "SELECT name\nFROM products\nWHERE id IN (\n  SELECT oi.product_id\n  FROM order_items AS oi\n  JOIN orders AS o ON o.id = oi.order_id\n  WHERE o.status = 'unpaid'\n)\nORDER BY name;",
+          hints: [
+            'First write the inner query alone: the product ids found in unpaid orders.',
+            'It needs order_items joined to orders, filtered on the status.',
+            'Then use WHERE id IN (that query) on products.',
+          ],
+          explanation: 'The subquery produces the list of product ids that belong to unpaid orders; IN keeps the products whose id is in that list.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-07-sql-3',
+          kind: 'sql-challenge',
+          title: 'Big spenders with a CTE',
+          prompt: 'The starter lists every student\'s total on **paid** orders. Change it to keep only the students whose total is **above the average of those totals**, so that the result has `name` and `spent`, biggest first. Reuse the `student_totals` step.',
+          concept: 'cte',
+          setup: CANTEEN,
+          starter: "WITH student_totals AS (\n  SELECT o.student_id, sum(oi.quantity * p.price) AS spent\n  FROM orders AS o\n  JOIN order_items AS oi ON oi.order_id = o.id\n  JOIN products AS p ON p.id = oi.product_id\n  WHERE o.status = 'paid'\n  GROUP BY o.student_id\n)\nSELECT s.name, t.spent\nFROM student_totals AS t\nJOIN students AS s ON s.id = t.student_id\nORDER BY t.spent DESC;",
+          expected: {
+            columns: ['name', 'spent'],
+            rows: [
+              ['Ana Reyes', 245],
+              ['Ella Cruz', 165],
+              ['Ben Santos', 130],
+            ],
+            ordered: true,
+          },
+          solution: "WITH student_totals AS (\n  SELECT o.student_id, sum(oi.quantity * p.price) AS spent\n  FROM orders AS o\n  JOIN order_items AS oi ON oi.order_id = o.id\n  JOIN products AS p ON p.id = oi.product_id\n  WHERE o.status = 'paid'\n  GROUP BY o.student_id\n)\nSELECT s.name, t.spent\nFROM student_totals AS t\nJOIN students AS s ON s.id = t.student_id\nWHERE t.spent > (SELECT avg(spent) FROM student_totals)\nORDER BY t.spent DESC;",
+          hints: [
+            'Run the starter first: six students come back, you need only the above-average ones.',
+            'A CTE can be used more than once, including inside a subquery.',
+            'Add WHERE t.spent > (SELECT avg(spent) FROM student_totals).',
+          ],
+          explanation: 'student_totals is defined once and used twice: as the main source of rows and inside the subquery that calculates their average.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-07-predict-1',
+          kind: 'predict-output',
+          title: 'Walk the recursion',
+          prompt: 'What does this recursive query print on PostgreSQL? Write one value per line.',
+          concept: 'recursive cte',
+          language: 'postgresql',
+          code: 'WITH RECURSIVE countdown(n) AS (\n  VALUES (3)\n  UNION ALL\n  SELECT n - 1 FROM countdown WHERE n > 1\n)\nSELECT n FROM countdown;',
+          expected: '3\n2\n1',
+          choices: ['3\n2\n1', '3\n2\n1\n0', '1\n2\n3', '3'],
+          wrongNotes: {
+            '3\n2\n1\n0': 'The recursive step only runs while n > 1. When n is 1 it produces no new row, so 0 never appears.',
+            '1\n2\n3': 'Rows come out in the order they are generated: the starting row 3 first, then 2, then 1.',
+            '3': 'The starting row is only the first round. The recursive step then adds 2 and 1 until n > 1 is no longer true.',
+          },
+          hints: [
+            'Start with the row VALUES (3). Then ask: what does the recursive part add?',
+            'The step is `n - 1`, but only while the previous n is greater than 1.',
+            'Round 1: 3. Round 2: 2. Round 3: 1. Round 4: the condition fails.',
+          ],
+          explanation: 'The CTE starts with 3, then repeatedly adds n - 1 while the last n is above 1, giving 3, 2, 1, and then stops. Verified on PostgreSQL.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-07-fix-1',
+          kind: 'fix-bug',
+          title: 'More than one row',
+          prompt: 'PostgreSQL stops this query with `more than one row returned by a subquery used as an expression`. The goal is to list the products that cost the same as any drink. Find the buggy line.',
+          concept: 'subquery returns many rows',
+          language: 'sql',
+          code: "SELECT name\nFROM products\nWHERE price = (SELECT price FROM products WHERE category = 'drink')\nORDER BY name;",
+          bugLine: 3,
+          fixes: [
+            { line: "WHERE price IN (SELECT price FROM products WHERE category = 'drink')", correct: true, why: 'IN accepts a list. The three drink prices (15, 20, 25) are compared with each product.' },
+            { line: "WHERE price = (SELECT price FROM products WHERE category = 'drink' LIMIT 1)", correct: false, why: 'It runs, but compares with one arbitrary drink only, so it misses most matches.' },
+            { line: "WHERE price LIKE (SELECT price FROM products WHERE category = 'drink')", correct: false, why: 'LIKE is for text patterns, and the subquery still returns several rows. PostgreSQL rejects it.' },
+          ],
+          hints: [
+            'There are three drinks, so the subquery returns three prices.',
+            '`=` compares with one value. Which operator compares with a list?',
+            'Use IN instead of =.',
+          ],
+          explanation: 'A subquery after `=` must give one value. When it gives many, use IN (or `= ANY`), which means "equal to any of these".',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-07-scenario-1',
+          kind: 'scenario',
+          title: 'Which style for the report?',
+          prompt: 'Pick the best way to write the report query.',
+          concept: 'readable queries with cte',
+          situation: 'A weekly report needs total spent per student, then the average of those totals, then the students above that average, then their rank. A teammate has already written it as four nested subqueries. Nobody can tell which level is wrong when the numbers look off.',
+          options: [
+            { text: 'Rewrite it with WITH: one CTE per step, each one testable alone', consequence: 'Each step has a name and can be run on its own, so a wrong number is found quickly. The planner treats simple CTEs like subqueries anyway.', quality: 'best' },
+            { text: 'Keep the nesting but add comments to every level', consequence: 'Comments help a little, but you still cannot run one level alone without copying it out.', quality: 'acceptable' },
+            { text: 'Split it into four separate queries and copy the numbers between them by hand', consequence: 'The copied numbers go stale and mistakes creep in; the database can do this in one statement.', quality: 'poor' },
+            { text: 'Replace every subquery with a temporary table the whole team shares', consequence: 'Overkill for a read-only report, and shared tables can be overwritten by someone else.', quality: 'poor' },
+          ],
+          hints: [
+            'What makes a deeply nested query hard to debug?',
+            'You want to look at the output of each step by itself.',
+            'Name each step with WITH.',
+          ],
+          explanation: 'CTEs give each step a name and make it testable independently. For readability they usually beat deeply nested subqueries with no cost in speed.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'postgresql-sql-07-q1',
+        prompt: 'What happens if a subquery used with `=` returns three rows?',
+        choices: ['PostgreSQL compares with the first row it finds and ignores the other two rows', 'PostgreSQL silently returns an empty result for the outer query, with no message', 'PostgreSQL treats the comparison as true if any one of the three rows matches', 'It fails: more than one row returned by a subquery used as an expression'],
+        answer: 3,
+        explanation: 'A scalar subquery must return one value. For a list of values, use IN or `= ANY`.',
+      },
+      {
+        id: 'postgresql-sql-07-q2',
+        prompt: 'Why is `WHERE NOT EXISTS (SELECT 1 FROM orders o WHERE o.student_id = s.id)` safer than `WHERE s.id NOT IN (SELECT student_id FROM orders)`?',
+        choices: ['One NULL in the list makes NOT IN return no rows; NOT EXISTS is unaffected', 'NOT EXISTS always runs about ten times faster than NOT IN, whatever the data is', 'NOT IN is not valid PostgreSQL syntax for a subquery, so it always raises an error', 'NOT EXISTS can also return columns from the orders table, which NOT IN cannot do'],
+        answer: 0,
+        explanation: 'With a NULL in the list, `x NOT IN (...)` becomes unknown for every non-matching x, so nothing is returned. NOT EXISTS only checks whether a matching row exists.',
+      },
+      {
+        id: 'postgresql-sql-07-q3',
+        prompt: 'In `WITH totals AS (...) SELECT ... FROM totals`, what is `totals`?',
+        choices: ['A permanent table stored in the database, visible to other users', 'A temporary named result that exists only for this one statement', 'An index PostgreSQL builds to speed up the query', 'A view that stays in the schema until you drop it'],
+        answer: 1,
+        explanation: 'A common table expression is a named step inside one statement. It is not stored, and it disappears when the statement ends.',
+      },
+      {
+        id: 'postgresql-sql-07-q4',
+        prompt: 'A recursive CTE has a starting row and a recursive step. What decides when the recursion stops?',
+        choices: ['PostgreSQL stops after exactly 100 rounds, a fixed limit built into the server', 'You must write LIMIT inside the CTE, otherwise the recursion would never end', 'A round produces no new rows, e.g. because the WHERE condition is false', 'The recursion stops when the temporary table runs out of memory on the server'],
+        answer: 2,
+        explanation: 'Each round runs on the rows from the previous round. When a round produces nothing (here, when n > 1 is false), the recursion ends.',
+      },
+    ],
+    task: {
+      title: 'Break a question into steps',
+      steps: [
+        'Write a CTE `sold` that gives the total quantity sold per product (from order_items), then join it to products to list each product with its quantity, including products never sold (use LEFT JOIN and coalesce).',
+        'Add a subquery or second CTE to keep only products sold more than the average quantity.',
+        'Run each CTE alone first to check its numbers.',
+      ],
+      minutes: 15,
+    },
+  },
+  {
+    id: 'postgresql-sql-08',
+    day: 8,
+    title: 'Window functions',
+    summary: 'Calculate rankings, running totals and comparisons across related rows without collapsing them into groups.',
+    intro: {
+      objectives: [
+        'Explain how a window function differs from GROUP BY',
+        'Rank rows with ROW_NUMBER, RANK and DENSE_RANK, within groups using PARTITION BY',
+        'Write a running total and compare a row with the previous one using LAG',
+      ],
+      why: '"Top 3 per category", "running total", "change since yesterday" are everyday report requests that GROUP BY alone cannot answer. Window functions are what analysts and backend developers reach for, and they come up often in interviews.',
+    },
+    minutes: 30,
+    skills: ['advanced-queries'],
+    body: [
+      { type: 'paragraph', text: 'GROUP BY squashes many rows into one per group. That is fine for "the average price per category", but what if you want every product **and** the average of its category next to it, so you can see which items are above or below it? With GROUP BY you would have to join the summary back in. A **window function** does it in one step: it calculates something across a set of related rows (the "window") but keeps every row in the result.' },
+      { type: 'paragraph', text: 'The recognisable part is `OVER (...)` after a function. Inside the brackets you describe the window: `PARTITION BY` splits the rows into groups (like GROUP BY would), and `ORDER BY` sorts the rows inside each group. Both are optional.' },
+      {
+        type: 'code',
+        language: 'sql',
+        label: 'Each product beside its category\'s average price',
+        code: `SELECT name, category, price,
+       avg(price) OVER (PARTITION BY category) AS category_avg
+FROM products
+ORDER BY category, price DESC, name;`,
+      },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'Result (first rows; PostgreSQL shows 13 rows)',
+        code: `        name         | category | price | category_avg
+---------------------+----------+-------+--------------
+ Halo-halo           | dessert  | 35.00 |        32.50
+ Leche flan          | dessert  | 30.00 |        32.50
+ Buko juice          | drink    | 25.00 |        20.00
+ Iced tea            | drink    | 20.00 |        20.00
+ Bottled water       | drink    | 15.00 |        20.00
+ ...`,
+      },
+      { type: 'paragraph', text: 'Every product keeps its own row, and `category_avg` repeats the same figure for all rows of one category. Any aggregate you know (`sum`, `avg`, `count`, `min`, `max`) can become a window function by adding OVER.' },
+      { type: 'heading', text: 'Ranking' },
+      { type: 'paragraph', text: 'Three functions number rows in a window. They differ only on ties. Look at the products priced 25 or less: two of them share each of the prices 25, 20 and 15.' },
+      {
+        type: 'code',
+        language: 'sql',
+        code: `SELECT name, price,
+       row_number() OVER (ORDER BY price DESC, name) AS rn,
+       rank()       OVER (ORDER BY price DESC)       AS rnk,
+       dense_rank() OVER (ORDER BY price DESC)       AS dense
+FROM products
+WHERE price <= 25
+ORDER BY price DESC, name;`,
+      },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'Result',
+        code: `     name      | price | rn | rnk | dense
+---------------+-------+----+-----+-------
+ Buko juice    | 25.00 |  1 |   1 |     1
+ Siopao        | 25.00 |  2 |   1 |     1
+ Fishball cup  | 20.00 |  3 |   3 |     2
+ Iced tea      | 20.00 |  4 |   3 |     2
+ Banana cue    | 15.00 |  5 |   5 |     3
+ Bottled water | 15.00 |  6 |   5 |     3
+ Turon         | 12.50 |  7 |   7 |     4
+(7 rows)`,
+      },
+      {
+        type: 'table',
+        headers: ['Function', 'Ties', 'Example (prices 25, 25, 20)'],
+        rows: [
+          ['`row_number()`', 'Never tie: each row gets its own number (tied rows are numbered in an unspecified order unless you add more to ORDER BY)', '1, 2, 3'],
+          ['`rank()`', 'Ties share a number, and the next number skips ahead', '1, 1, 3'],
+          ['`dense_rank()`', 'Ties share a number, and the next number does not skip', '1, 1, 2'],
+        ],
+      },
+      { type: 'heading', text: 'Top row per group' },
+      { type: 'paragraph', text: 'Add PARTITION BY and the numbering restarts inside each category. A window function may not be used in WHERE (it runs after WHERE, GROUP BY and HAVING), so to keep only rank 1, wrap the query in a CTE or subquery from the last lesson:' },
+      {
+        type: 'code',
+        language: 'sql',
+        label: 'The most expensive product in each category',
+        code: `WITH ranked AS (
+  SELECT name, category, price,
+         rank() OVER (PARTITION BY category ORDER BY price DESC) AS price_rank
+  FROM products
+)
+SELECT category, name, price
+FROM ranked
+WHERE price_rank = 1
+ORDER BY category;`,
+      },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'Result',
+        code: ` category |     name      | price
+----------+---------------+-------
+ dessert  | Halo-halo     | 35.00
+ drink    | Buko juice    | 25.00
+ meal     | Pork sinigang | 60.00
+ snack    | Siopao        | 25.00
+(4 rows)`,
+      },
+      { type: 'heading', text: 'Running totals and "previous row"' },
+      { type: 'paragraph', text: 'When the window has an ORDER BY, an aggregate becomes a running total: by default it adds the rows from the start up to the current row (plus any rows that tie with it). `lag(value)` reads the same column from the previous row, and `lead(value)` from the next one. Here is the canteen\'s paid revenue per day, with a running total and the change from the day before:' },
+      {
+        type: 'code',
+        language: 'sql',
+        code: `WITH daily AS (
+  SELECT o.ordered_on, sum(oi.quantity * p.price) AS revenue
+  FROM orders AS o
+  JOIN order_items AS oi ON oi.order_id = o.id
+  JOIN products AS p ON p.id = oi.product_id
+  WHERE o.status = 'paid'
+  GROUP BY o.ordered_on
+)
+SELECT ordered_on, revenue,
+       sum(revenue) OVER (ORDER BY ordered_on) AS running_total,
+       revenue - lag(revenue) OVER (ORDER BY ordered_on) AS change
+FROM daily
+ORDER BY ordered_on;`,
+      },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'Result',
+        code: ` ordered_on | revenue | running_total | change
+------------+---------+---------------+--------
+ 2026-11-02 |  130.00 |        130.00 |
+ 2026-11-03 |  160.00 |        290.00 |  30.00
+ 2026-11-04 |  160.00 |        450.00 |   0.00
+ 2026-11-05 |  165.00 |        615.00 |   5.00
+ 2026-11-06 |  160.00 |        775.00 |  -5.00
+(5 rows)`,
+      },
+      { type: 'paragraph', text: 'The first day has no previous row, so `lag` returns NULL and `change` is NULL (shown blank). Note that two layers of grouping were needed: the CTE does the GROUP BY (one row per day), and the window functions then run on those daily rows. Window functions always run after grouping.' },
+      { type: 'tip', text: 'Think in two steps: the query first produces its rows (FROM, WHERE, GROUP BY, HAVING), and only then do the window functions add their columns. That is why you cannot filter on a window function in WHERE.' },
+      {
+        type: 'version',
+        text: 'The PostgreSQL 18 tutorial describes window functions as running over the rows left after WHERE, GROUP BY and HAVING, allowed only in the SELECT list and ORDER BY. The default frame with an ORDER BY runs from the start of the partition to the current row and its peers (rows tied on the sort key); without ORDER BY the frame is the whole partition. The SQL practice boxes in this app run on SQLite, which ran every window query in this lesson when it was checked.',
+        checked: CHECKED,
+        sources: [DOCS.window],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'A window function calculates across related rows but keeps every row, unlike GROUP BY.',
+          '`OVER (PARTITION BY ... ORDER BY ...)` defines the window: groups, and the order inside each group.',
+          'row_number never ties, rank leaves gaps after ties, dense_rank does not.',
+          'With ORDER BY in the window, sum() gives a running total; lag() and lead() read the previous and next rows.',
+          'Window functions cannot be used in WHERE; compute them in a CTE or subquery, then filter.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-08-sql-1',
+          kind: 'sql-challenge',
+          title: 'Compare with the category',
+          prompt: 'Show every product\'s `name`, `category`, `price` and the average price of its category as `category_avg`, without collapsing any rows.',
+          concept: 'partition by',
+          setup: PRODUCTS,
+          starter: 'SELECT name, category, price\nFROM products;',
+          expected: {
+            columns: ['name', 'category', 'price', 'category_avg'],
+            rows: [
+              ['Chicken adobo rice', 'meal', 55, 50],
+              ['Pork sinigang', 'meal', 60, 50],
+              ['Fried rice with egg', 'meal', 40, 50],
+              ['Spaghetti', 'meal', 45, 50],
+              ['Banana cue', 'snack', 15, 18.125],
+              ['Turon', 'snack', 12.5, 18.125],
+              ['Siopao', 'snack', 25, 18.125],
+              ['Fishball cup', 'snack', 20, 18.125],
+              ['Bottled water', 'drink', 15, 20],
+              ['Iced tea', 'drink', 20, 20],
+              ['Buko juice', 'drink', 25, 20],
+              ['Halo-halo', 'dessert', 35, 32.5],
+              ['Leche flan', 'dessert', 30, 32.5],
+            ],
+          },
+          solution: 'SELECT name, category, price,\n       avg(price) OVER (PARTITION BY category) AS category_avg\nFROM products;',
+          hints: [
+            'GROUP BY would collapse the rows. You need an average that keeps them.',
+            'Use an aggregate followed by OVER and a window definition.',
+            'avg(price) OVER (PARTITION BY category) AS category_avg',
+          ],
+          explanation: 'OVER turns avg into a window function: the average is calculated per category and attached to every row of that category.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-08-sql-2',
+          kind: 'sql-challenge',
+          title: 'The priciest per category',
+          prompt: 'Show the most expensive product of each category as `category`, `name` and `price`, sorted by category. The starter ranks the products; keep only rank 1. (A window function cannot be used in WHERE.)',
+          concept: 'top row per group',
+          setup: PRODUCTS,
+          starter: 'WITH ranked AS (\n  SELECT name, category, price,\n         rank() OVER (PARTITION BY category ORDER BY price DESC) AS price_rank\n  FROM products\n)\nSELECT category, name, price\nFROM ranked\nORDER BY category, price DESC;',
+          expected: {
+            columns: ['category', 'name', 'price'],
+            rows: [
+              ['dessert', 'Halo-halo', 35],
+              ['drink', 'Buko juice', 25],
+              ['meal', 'Pork sinigang', 60],
+              ['snack', 'Siopao', 25],
+            ],
+            ordered: true,
+          },
+          solution: 'WITH ranked AS (\n  SELECT name, category, price,\n         rank() OVER (PARTITION BY category ORDER BY price DESC) AS price_rank\n  FROM products\n)\nSELECT category, name, price\nFROM ranked\nWHERE price_rank = 1\nORDER BY category;',
+          hints: [
+            'The ranking already exists in the CTE as price_rank.',
+            'Filtering on it is allowed in the outer query, not inside the CTE where it is calculated.',
+            'Add WHERE price_rank = 1 to the outer SELECT.',
+          ],
+          explanation: 'The CTE calculates a rank inside each category. The outer query can then filter on that column like on any other.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-08-sql-3',
+          kind: 'sql-challenge',
+          title: 'Revenue so far',
+          prompt: 'The `daily` step already gives the paid revenue per day. Show `ordered_on`, `revenue` and the running total of revenue as `running_total`, oldest day first.',
+          concept: 'running total',
+          setup: CANTEEN,
+          starter: "WITH daily AS (\n  SELECT o.ordered_on, sum(oi.quantity * p.price) AS revenue\n  FROM orders AS o\n  JOIN order_items AS oi ON oi.order_id = o.id\n  JOIN products AS p ON p.id = oi.product_id\n  WHERE o.status = 'paid'\n  GROUP BY o.ordered_on\n)\nSELECT ordered_on, revenue\nFROM daily\nORDER BY ordered_on;",
+          expected: {
+            columns: ['ordered_on', 'revenue', 'running_total'],
+            rows: [
+              ['2026-11-02', 130, 130],
+              ['2026-11-03', 160, 290],
+              ['2026-11-04', 160, 450],
+              ['2026-11-05', 165, 615],
+              ['2026-11-06', 160, 775],
+            ],
+            ordered: true,
+          },
+          solution: "WITH daily AS (\n  SELECT o.ordered_on, sum(oi.quantity * p.price) AS revenue\n  FROM orders AS o\n  JOIN order_items AS oi ON oi.order_id = o.id\n  JOIN products AS p ON p.id = oi.product_id\n  WHERE o.status = 'paid'\n  GROUP BY o.ordered_on\n)\nSELECT ordered_on, revenue,\n       sum(revenue) OVER (ORDER BY ordered_on) AS running_total\nFROM daily\nORDER BY ordered_on;",
+          hints: [
+            'A running total is a sum whose window grows row by row.',
+            'Give the window an ORDER BY and no PARTITION BY.',
+            'sum(revenue) OVER (ORDER BY ordered_on) AS running_total',
+          ],
+          explanation: 'With ORDER BY in the window, sum() adds the rows from the first up to the current one, which is exactly a running total.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-08-predict-1',
+          kind: 'predict-output',
+          title: 'Ties and ranks',
+          prompt: 'Fishball cup and Iced tea both cost 20.00, and Banana cue costs 15.00. What does this print on PostgreSQL? Each row on its own line, values separated by " | ".',
+          concept: 'rank and dense_rank',
+          language: 'postgresql',
+          code: "SELECT name,\n       rank() OVER (ORDER BY price DESC) AS r,\n       dense_rank() OVER (ORDER BY price DESC) AS d\nFROM products\nWHERE name IN ('Iced tea', 'Fishball cup', 'Banana cue')\nORDER BY name;",
+          expected: 'Banana cue | 3 | 2\nFishball cup | 1 | 1\nIced tea | 1 | 1',
+          choices: ['Banana cue | 3 | 2\nFishball cup | 1 | 1\nIced tea | 1 | 1', 'Banana cue | 3 | 3\nFishball cup | 1 | 1\nIced tea | 1 | 1', 'Banana cue | 2 | 2\nFishball cup | 1 | 1\nIced tea | 1 | 1', 'Banana cue | 3 | 2\nFishball cup | 1 | 1\nIced tea | 2 | 2'],
+          wrongNotes: {
+            'Banana cue | 3 | 3\nFishball cup | 1 | 1\nIced tea | 1 | 1': 'dense_rank does not skip numbers after a tie, so Banana cue is 2 there.',
+            'Banana cue | 2 | 2\nFishball cup | 1 | 1\nIced tea | 1 | 1': 'rank leaves a gap after a tie: two rows are rank 1, so the next row is rank 3.',
+            'Banana cue | 3 | 2\nFishball cup | 1 | 1\nIced tea | 2 | 2': 'Equal prices get the same rank, so Iced tea ties with Fishball cup at 1.',
+          },
+          hints: [
+            'Sort the three products by price from high to low first.',
+            'Two products tie at the top. rank() gives the next row 3; dense_rank() gives it 2.',
+            'Fishball cup and Iced tea are 1 | 1. Banana cue is 3 for rank and 2 for dense_rank.',
+          ],
+          explanation: 'Tied rows share a rank. After two rows tied at 1, rank() continues at 3 (a gap), while dense_rank() continues at 2. Verified on PostgreSQL.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-08-fix-1',
+          kind: 'fix-bug',
+          title: 'Ranks across the whole menu',
+          prompt: 'The manager wanted each product ranked by price **within its own category** (1 = most expensive in that category). The query runs, but the ranks go 1 to 13 across the whole menu. Find the buggy line.',
+          concept: 'missing partition by',
+          language: 'sql',
+          code: 'SELECT name, category, price,\n       rank() OVER (ORDER BY price DESC) AS price_rank\nFROM products\nORDER BY category, price_rank;',
+          bugLine: 2,
+          fixes: [
+            { line: '       rank() OVER (PARTITION BY category ORDER BY price DESC) AS price_rank', correct: true, why: 'PARTITION BY category restarts the ranking inside each category.' },
+            { line: '       rank() OVER (PARTITION BY price ORDER BY category) AS price_rank', correct: false, why: 'This groups rows by price and ranks by category name, which has nothing to do with the question.' },
+            { line: '       rank() OVER (GROUP BY category ORDER BY price DESC) AS price_rank', correct: false, why: 'GROUP BY cannot be used inside OVER. The keyword for splitting a window is PARTITION BY.' },
+          ],
+          hints: [
+            'Without anything splitting the rows, the window is the whole table.',
+            'Which keyword inside OVER splits the rows into groups?',
+            'Add PARTITION BY category before ORDER BY.',
+          ],
+          explanation: 'An OVER without PARTITION BY treats all rows as one window, so the ranking runs over the entire menu. PARTITION BY category makes it restart for each category.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-08-match-1',
+          kind: 'match',
+          title: 'Which window function?',
+          prompt: 'Match each request to the window function that gives it.',
+          concept: 'choosing window functions',
+          labels: { terms: 'Request', meanings: 'Function' },
+          pairs: [
+            { term: 'Give each student a unique ticket number, even when two spent the same', definition: 'row_number()' },
+            { term: 'A league table where two equal scores share 1st place and the next is 3rd', definition: 'rank()' },
+            { term: 'Show how much more today\'s revenue is than yesterday\'s', definition: 'lag()' },
+            { term: 'Add each day\'s revenue to everything earned before', definition: 'sum() OVER (ORDER BY date)' },
+          ],
+          hints: [
+            'Which request needs to look at another row of the result?',
+            'Which two are about numbering, and which one skips after a tie?',
+            'Unique numbers: row_number. Shared with a gap: rank. Previous row: lag. Adding as you go: sum with ORDER BY.',
+          ],
+          explanation: 'row_number is always unique; rank shares numbers and skips; lag looks back one row; an ordered sum accumulates.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'postgresql-sql-08-q1',
+        prompt: 'What is the main difference between `avg(price) OVER (PARTITION BY category)` and `avg(price) ... GROUP BY category`?',
+        choices: ['The window version is only available for numeric columns, such as price or stock', 'The window version needs a HAVING clause to filter the average it calculates', 'They always return the same rows, only in a different order on the screen', 'Window: every row stays and gets the average; GROUP BY: one row per group'],
+        answer: 3,
+        explanation: 'GROUP BY collapses rows into one per group. A window function adds the value to each original row.',
+      },
+      {
+        id: 'postgresql-sql-08-q2',
+        prompt: 'Three students tie for the highest total. What does `rank() OVER (ORDER BY total DESC)` give the student with the next-highest total?',
+        choices: ['2, because rank counts distinct scores', '4, because rank skips the numbers used by the tied rows', '1, because ties pull the next row up too', 'NULL, because ties make the rank undefined'],
+        answer: 1,
+        explanation: 'rank leaves a gap after ties: three rows share 1, so the next row is 4. dense_rank would give 2.',
+      },
+      {
+        id: 'postgresql-sql-08-q3',
+        prompt: 'Why does `SELECT name FROM products WHERE rank() OVER (ORDER BY price) = 1` fail in PostgreSQL?',
+        choices: ['rank() needs a PARTITION BY clause before its result can be compared with a number', 'Comparisons with = are not allowed on integers that a function returned', 'Window functions are not allowed in WHERE; it runs before they are calculated', 'The ORDER BY inside OVER must come last in the whole query, after the WHERE'],
+        answer: 2,
+        explanation: 'Window functions run after WHERE, GROUP BY and HAVING, so they can only appear in SELECT and ORDER BY. Compute the rank in a subquery/CTE, then filter in the outer query.',
+      },
+      {
+        id: 'postgresql-sql-08-q4',
+        prompt: 'In `sum(revenue) OVER (ORDER BY ordered_on)`, what does the result on the third day contain?',
+        choices: ['The sum of the first three days (the running total)', 'The revenue of the third day only', 'The sum of all days in the table', 'The sum of the previous two days, without the current one'],
+        answer: 0,
+        explanation: 'With ORDER BY in the window, the default frame runs from the first row up to the current row (and its ties), so each row shows the total so far.',
+      },
+    ],
+    task: {
+      title: 'Rank and compare',
+      steps: [
+        'Rank all products by price within each category (rank() with PARTITION BY) and list the second most expensive product of each category.',
+        'Compute the paid revenue per day and add a column with the percentage of the whole week\'s revenue (revenue divided by sum(revenue) OVER ()).',
+        'Use lead() to show tomorrow\'s revenue next to today\'s.',
+      ],
+      minutes: 15,
+    },
+  },
+  {
+    id: 'postgresql-sql-09',
+    day: 9,
+    title: 'Indexes and reading a query plan',
+    summary: 'Use EXPLAIN to see how PostgreSQL runs a query, and add an index when it reads far more than it returns.',
+    intro: {
+      objectives: [
+        'Read the main parts of an EXPLAIN plan: node type, estimated cost, and actual time',
+        'Explain when an index helps, and when it does not',
+        'Create single-column and multicolumn indexes and check that a query uses them',
+      ],
+      why: 'A query that is instant on 50 rows can take seconds on 5 million. Knowing how to ask PostgreSQL "how are you running this?" turns "the database is slow" from a mystery into a one-line fix.',
+    },
+    minutes: 30,
+    skills: ['indexes-performance'],
+    body: [
+      { type: 'paragraph', text: 'Imagine finding "receipt number 123456" in a stack of 200,000 paper receipts that are in no particular order. You would have to go through the pile one by one. If the receipts were sorted, or if you had a small index at the back of a ledger saying "123456 is on page 87", you would go straight to it. A database index is exactly that ledger: a separate, sorted structure that points to where rows are.' },
+      { type: 'paragraph', text: 'Use a bigger table to see the effect. The canteen kept a `sales_log` with every item sold this year. Here is a way to make 200,000 fake rows on PostgreSQL (`generate_series` produces the numbers 1 to 200000):' },
+      {
+        type: 'code',
+        language: 'postgresql',
+        code: `CREATE TABLE sales_log AS
+SELECT g                         AS receipt_no,
+       (g % 8) + 1               AS student_id,
+       (g % 13) + 1              AS product_id,
+       DATE '2026-01-01' + (g % 300) AS sold_on,
+       ((g % 7) + 1) * 15.00     AS amount
+FROM generate_series(1, 200000) AS g;
+
+ANALYZE sales_log;   -- refresh the statistics the planner relies on`,
+      },
+      { type: 'heading', text: 'EXPLAIN: ask how it will run' },
+      { type: 'paragraph', text: 'Put `EXPLAIN` in front of any query and PostgreSQL shows its **plan**, the steps it would take, instead of running it. The planner estimates the cost of several ways and picks the cheapest.' },
+      {
+        type: 'code',
+        language: 'postgresql',
+        code: `EXPLAIN SELECT * FROM sales_log WHERE receipt_no = 123456;`,
+      },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'Plan without an index (captured on PostgreSQL 14; your numbers may differ)',
+        code: `                         QUERY PLAN
+-------------------------------------------------------------
+ Seq Scan on sales_log  (cost=0.00..3774.00 rows=1 width=21)
+   Filter: (receipt_no = 123456)`,
+      },
+      {
+        type: 'list',
+        items: [
+          '**Seq Scan** (sequential scan) reads every row of the table, then applies the `Filter`. It is the "go through the pile" strategy.',
+          '**cost=0.00..3774.00**: two estimates in arbitrary units, the cost before the first row can be returned and the total cost. Only compare them with each other, never with seconds.',
+          '**rows=1**: how many rows the planner expects this step to produce; **width=21** is the average row size in bytes.',
+        ],
+      },
+      { type: 'paragraph', text: 'Add `ANALYZE` inside the brackets, `EXPLAIN (ANALYZE) ...`, and PostgreSQL actually runs the query and adds what really happened:' },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'EXPLAIN (ANALYZE), no index',
+        code: ` Seq Scan on sales_log  (cost=0.00..3774.00 rows=1 width=21) (actual time=4.267..6.891 rows=1 loops=1)
+   Filter: (receipt_no = 123456)
+   Rows Removed by Filter: 199999
+ Planning Time: 0.012 ms
+ Execution Time: 6.896 ms`,
+      },
+      { type: 'paragraph', text: '"Rows Removed by Filter: 199999" is the giveaway: PostgreSQL read 200,000 rows to return one. Times here are real milliseconds. Remember that EXPLAIN ANALYZE executes the statement, so never run it on an INSERT, UPDATE or DELETE without wrapping it in `BEGIN; ... ROLLBACK;`.' },
+      { type: 'heading', text: 'Create an index' },
+      {
+        type: 'code',
+        language: 'postgresql',
+        code: `CREATE INDEX sales_log_receipt_no_idx ON sales_log (receipt_no);
+ANALYZE sales_log;
+EXPLAIN (ANALYZE) SELECT * FROM sales_log WHERE receipt_no = 123456;`,
+      },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'The same query with the index',
+        code: ` Index Scan using sales_log_receipt_no_idx on sales_log  (cost=0.42..8.44 rows=1 width=21) (actual time=0.015..0.015 rows=1 loops=1)
+   Index Cond: (receipt_no = 123456)
+ Planning Time: 0.009 ms
+ Execution Time: 0.018 ms`,
+      },
+      { type: 'paragraph', text: 'The plan changed to an **Index Scan**, the estimated cost fell from 3774 to 8.44, and the real time from about 6.9 ms to 0.02 ms on this laptop run. The default index type is a **B-tree**, which suits `=`, `<`, `>`, `BETWEEN` and sorting. PostgreSQL also has Hash, GIN (for arrays, JSONB and text search, see lesson 12), GiST, SP-GiST and BRIN indexes for other jobs.' },
+      { type: 'heading', text: 'When an index does not help' },
+      {
+        type: 'list',
+        items: [
+          '**Tiny tables.** On the 13-row `products` table PostgreSQL still chooses a Seq Scan for `WHERE id = 5`, even though `id` is a primary key. Reading one page is cheaper than visiting an index. That is correct behaviour, not a bug.',
+          '**Low selectivity.** An index on `student_id` (8 different values) would match one row in eight. Reading a big fraction of the table through an index is slower than a plain scan, so the planner skips it.',
+          '**Calculations on the column.** `WHERE receipt_no + 1 = 123456` cannot use the index on `receipt_no`, because the index stores receipt numbers, not receipt numbers plus one. Rewrite it as `WHERE receipt_no = 123455`. In the checked run the plan for the calculated version was a parallel Seq Scan.',
+          '**Patterns that start with a wildcard.** `LIKE \'%rice\'` cannot walk a B-tree; `LIKE \'rice%\'` can, if the database uses the right operator class or the C locale.',
+        ],
+      },
+      { type: 'heading', text: 'Indexes with two columns' },
+      { type: 'paragraph', text: 'A multicolumn index sorts by the first column, then the second inside it, like a phone book sorted by surname then first name. `CREATE INDEX ON sales_log (student_id, sold_on)` serves `WHERE student_id = 3 AND sold_on = DATE \'2026-03-01\'` well, because the equality on the leading column narrows the part of the index PostgreSQL has to read. Conditions on later columns alone do not narrow it as well. PostgreSQL 18 adds **skip scan** to use such an index more often when the first column has few distinct values. Keep indexes few, because every one has a cost.' },
+      {
+        type: 'table',
+        headers: ['An index gives you', 'An index costs you'],
+        rows: [
+          ['Fast look-ups, range searches and sorted output on its columns', 'Extra disk space (here about 4 MB for a 10 MB table)'],
+          ['Enforcement of UNIQUE and PRIMARY KEY', 'Slower INSERT, UPDATE and DELETE, since every index must be updated'],
+          ['Quicker joins on the indexed key', 'Time to build; `CREATE INDEX CONCURRENTLY` avoids blocking writes while it builds'],
+        ],
+      },
+      { type: 'tip', text: 'A workflow that works: (1) find a slow query, (2) `EXPLAIN (ANALYZE)` it and look for Seq Scans with a big "Rows Removed by Filter", (3) add the smallest index that fits the WHERE, (4) run ANALYZE and EXPLAIN again. If the estimated rows and actual rows are far apart, update the statistics with `ANALYZE` first.' },
+      {
+        type: 'version',
+        text: 'Checked against PostgreSQL 18. In 18, EXPLAIN ANALYZE includes BUFFERS output automatically (older versions need `EXPLAIN (ANALYZE, BUFFERS)`), B-tree skip scan lets multicolumn indexes help in more cases, and actual row counts in plans are shown with decimals (rows=1.00). The plans printed in this lesson were captured on PostgreSQL 14, so exact numbers and some line formats differ from what you will see on 18. CREATE INDEX makes a B-tree unless you add USING.',
+        checked: CHECKED,
+        sources: [DOCS.explain, DOCS.usingExplain, DOCS.indexTypes, DOCS.indexMulti, DOCS.release18],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'An index is a separate sorted structure that lets PostgreSQL find rows without reading the whole table.',
+          '`EXPLAIN` shows the plan; `EXPLAIN (ANALYZE)` runs the query and shows real times, so wrap writes in BEGIN/ROLLBACK.',
+          'Seq Scan with a large "Rows Removed by Filter" on a big table is the classic sign that an index could help.',
+          'Indexes are not used on tiny tables, for low-selectivity filters or when the column is calculated in the WHERE.',
+          'Every index costs disk space and slows writes: add the few that matter.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-09-predict-1',
+          kind: 'predict-output',
+          title: 'Read the plan',
+          prompt: '`sales_log` has 200,000 rows and a B-tree index named `sales_log_receipt_no_idx` on `receipt_no`, and its statistics are up to date. What plan does PostgreSQL print for this statement (no costs shown)?',
+          concept: 'index scan plan',
+          language: 'postgresql',
+          code: 'EXPLAIN (COSTS OFF)\nSELECT * FROM sales_log WHERE receipt_no = 123455;',
+          expected: 'Index Scan using sales_log_receipt_no_idx on sales_log\n  Index Cond: (receipt_no = 123455)',
+          choices: ['Index Scan using sales_log_receipt_no_idx on sales_log\n  Index Cond: (receipt_no = 123455)', 'Seq Scan on sales_log\n  Filter: (receipt_no = 123455)', 'Index Scan using sales_log_receipt_no_idx on sales_log\n  Filter: (receipt_no = 123455)', 'Seq Scan on sales_log\n  Index Cond: (receipt_no = 123455)'],
+          wrongNotes: {
+            'Seq Scan on sales_log\n  Filter: (receipt_no = 123455)': 'That is the plan without an index. With a selective equality on an indexed column of a big table, the planner prefers the index.',
+            'Index Scan using sales_log_receipt_no_idx on sales_log\n  Filter: (receipt_no = 123455)': 'With an index scan the condition is shown as `Index Cond`, because the index itself finds the rows. `Filter` is for checks done after reading a row.',
+            'Seq Scan on sales_log\n  Index Cond: (receipt_no = 123455)': 'A Seq Scan does not use an index, so it cannot show an `Index Cond`.',
+          },
+          hints: [
+            'One row out of 200,000 is wanted, and there is an index on the column in the condition.',
+            'An index scan reports the lookup as `Index Cond`, a sequential scan reports a `Filter`.',
+            'Index Scan using sales_log_receipt_no_idx, with an Index Cond line.',
+          ],
+          explanation: 'A selective equality on an indexed column of a big table is the ideal case for an Index Scan, and the lookup condition appears as Index Cond. Verified on PostgreSQL 14 with exactly this setup.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-09-fix-1',
+          kind: 'fix-bug',
+          title: 'The index that is ignored',
+          prompt: 'There is an index on `receipt_no`, yet PostgreSQL scans the whole table for this query. Find the line that stops the index from being used.',
+          concept: 'sargable conditions',
+          language: 'postgresql',
+          code: 'SELECT *\nFROM sales_log\nWHERE receipt_no + 1 = 123456;',
+          bugLine: 3,
+          fixes: [
+            { line: 'WHERE receipt_no = 123455;', correct: true, why: 'The bare column is compared with a constant, so the B-tree on receipt_no can be used.' },
+            { line: 'WHERE receipt_no * 1 = 123455;', correct: false, why: 'Still a calculation on the column. The index stores receipt_no, not receipt_no * 1.' },
+            { line: 'WHERE CAST(receipt_no AS text) = \'123455\';', correct: false, why: 'The conversion to text changes the column, so the integer index cannot be used.' },
+          ],
+          hints: [
+            'The index stores the values of receipt_no as they are.',
+            'Any calculation on the column hides it from the index.',
+            'Move the arithmetic to the other side of the comparison: 123456 - 1.',
+          ],
+          explanation: 'Keep the indexed column alone on one side of the comparison and do the arithmetic on the constant side. All three variants were checked with EXPLAIN on PostgreSQL 14: only the bare comparison uses the index.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-09-scenario-1',
+          kind: 'scenario',
+          title: 'Which index?',
+          prompt: 'Choose the best way to speed this up.',
+          concept: 'choosing an index',
+          situation: 'The canteen app often runs `WHERE student_id = ? AND sold_on BETWEEN ? AND ?` against `sales_log`, which receives thousands of new rows an hour. Each query currently reads the whole table.',
+          options: [
+            { text: 'Create one multicolumn index on (student_id, sold_on)', consequence: 'The equality on the leading column plus the range on the second narrows the index scan to just that student\'s dates. The write cost is one index.', quality: 'best' },
+            { text: 'Create a separate index on every column of the table', consequence: 'Most of them will never be used, and every insert now has to update all of them, slowing the heavy write load.', quality: 'poor' },
+            { text: 'Create two single-column indexes, one on student_id and one on sold_on', consequence: 'It can help, and PostgreSQL can combine them, but a single matching multicolumn index is usually more efficient for this exact query.', quality: 'acceptable' },
+            { text: 'Leave the table alone and run the query more often so the cache warms up', consequence: 'Caching does not change that the query reads every row. It gets slower as the table grows.', quality: 'poor' },
+          ],
+          hints: [
+            'The query filters on two columns together.',
+            'Every extra index slows writes, and this table is write-heavy.',
+            'One index that matches the whole WHERE: student_id first, then sold_on.',
+          ],
+          explanation: 'A multicolumn index whose leading column has the equality condition and whose second column has the range fits the query exactly, at the price of a single extra index.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'postgresql-sql-09-match-1',
+          kind: 'match',
+          title: 'What does the plan tell you?',
+          prompt: 'You are reading EXPLAIN (ANALYZE) output. Match each observation to the conclusion you would draw.',
+          concept: 'reading plans',
+          labels: { terms: 'You see in the plan', meanings: 'You conclude' },
+          pairs: [
+            { term: 'Seq Scan on a 200,000-row table, Rows Removed by Filter: 199999', definition: 'An index on the filtered column would probably help' },
+            { term: 'Seq Scan on a 13-row table that has a primary key index', definition: 'Nothing is wrong: reading the whole tiny table is cheapest' },
+            { term: 'Estimated rows=10, actual rows=48000', definition: 'The planner\'s statistics are stale: run ANALYZE' },
+            { term: 'EXPLAIN ANALYZE on an UPDATE, with no BEGIN', definition: 'The update really ran: wrap it in BEGIN and ROLLBACK' },
+          ],
+          hints: [
+            'Which observation is about reading far more rows than needed?',
+            'Which one is about a table so small that an index cannot pay off?',
+            'A big gap between estimated and actual rows points to out-of-date statistics.',
+          ],
+          explanation: 'Plans are evidence: a huge filter-removed count on a big table suggests an index; tiny tables rightly use scans; wrong estimates mean stale statistics; and ANALYZE really executes the statement.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'postgresql-sql-09-q1',
+        prompt: 'The 13-row `products` table has a primary key, but `EXPLAIN SELECT * FROM products WHERE id = 5` shows a Seq Scan. What does that mean?',
+        choices: ['The primary key index is broken and must be rebuilt', 'PostgreSQL ignores primary keys on all tables with text columns', 'ANALYZE must be run before any index can be used', 'On a table this small, reading it all costs less than using the index, so the planner correctly chose the scan'],
+        answer: 3,
+        explanation: 'The planner compares estimated costs. For a table that fits in a page or two, a sequential scan is cheaper than visiting an index.',
+      },
+      {
+        id: 'postgresql-sql-09-q2',
+        prompt: 'Why not create an index on every column of every table, just in case?',
+        choices: ['PostgreSQL allows only one index per table', 'Each index uses disk space and must be updated on every INSERT, UPDATE and DELETE, so unused ones slow writes for no benefit', 'Indexes on text columns are never used', 'More than two indexes make PostgreSQL ignore all of them'],
+        answer: 1,
+        explanation: 'Indexes speed up reads but add maintenance work to every write and take space. Add those that real queries need.',
+      },
+      {
+        id: 'postgresql-sql-09-q3',
+        prompt: 'You want to see the real run time of a DELETE with EXPLAIN (ANALYZE) on a live table, without losing rows. What do you do?',
+        choices: ['Nothing special: EXPLAIN (ANALYZE) never changes data', 'Run it inside BEGIN ... ROLLBACK, because ANALYZE really executes the statement', 'Use EXPLAIN (COSTS OFF), which also gives real times', 'Add LIMIT 1 so that only one row is deleted'],
+        answer: 1,
+        explanation: 'EXPLAIN ANALYZE executes the statement for real. Wrapping a data-changing statement in a transaction you roll back keeps the data.',
+      },
+      {
+        id: 'postgresql-sql-09-q4',
+        prompt: 'A plan shows `rows=10` as the estimate but `actual ... rows=48000`. What is the usual first step?',
+        choices: ['Run ANALYZE on the table so the planner\'s statistics are refreshed, then check the plan again', 'Delete the index', 'Add ORDER BY to the query', 'Change every column to text'],
+        answer: 0,
+        explanation: 'The planner chooses plans from estimates. Large gaps often mean statistics are missing or out of date, and ANALYZE refreshes them.',
+      },
+    ],
+    task: {
+      title: 'Make a slow query fast',
+      steps: [
+        'In a scratch PostgreSQL database, create `sales_log` with the statement from the lesson (200,000 rows) and run `EXPLAIN (ANALYZE) SELECT * FROM sales_log WHERE receipt_no = 123456;`. Note the plan type and the execution time.',
+        'Create the index on receipt_no, run ANALYZE, repeat the EXPLAIN and compare.',
+        'Try `WHERE receipt_no + 1 = 123456` with EXPLAIN and write down why it does not use the index.',
+      ],
+      minutes: 15,
+    },
+  },
+  // @@MORE_LESSONS@@
+];
+
+const projects: Project[] = [];
+
+export const postgresqlSqlCourse: Course = {
+  id: 'postgresql-sql',
+  kind: 'standard',
+  title: 'PostgreSQL and SQL Masterclass',
+  level: 'beginner',
+  tagline: 'Learn SQL from your first SELECT to indexes, transactions and a real schema on PostgreSQL.',
+  description: 'Start with no database experience and finish able to design tables, write joins, subqueries and window functions, read a query plan and use PostgreSQL safely from an app. Every lesson works on one small canteen database, and the PostgreSQL-only features come with code to run on a real server.',
+  finishLine: ['You can query, join and summarise data with SQL', 'You can design a normalised schema with the right constraints and indexes', 'You can use PostgreSQL safely from application code'],
+  objectives: [
+    'Write SELECT queries that filter, sort, group and join data',
+    'Design tables with data types, constraints and relationships',
+    'Change data safely with transactions',
+    'Read an EXPLAIN plan and choose a useful index',
+    'Use JSONB, views, functions and triggers when they fit',
+    'Connect to PostgreSQL from an app with parameterised queries and least-privilege roles',
+  ],
+  audiences: ['fresh-grad', 'career-changer', 'builder'],
+  skills: [
+    { id: 'sql-basics', label: 'SQL basics' },
+    { id: 'filtering-sorting', label: 'Filtering and sorting' },
+    { id: 'aggregation', label: 'Aggregating and grouping' },
+    { id: 'schema-design', label: 'Tables, constraints and schema design' },
+    { id: 'transactions', label: 'Changing data and transactions' },
+    { id: 'joins', label: 'Joins' },
+    { id: 'advanced-queries', label: 'Subqueries, CTEs and window functions' },
+    { id: 'indexes-performance', label: 'Indexes and query plans' },
+    { id: 'postgres-features', label: 'Views, functions, JSONB and search' },
+    { id: 'secure-apps', label: 'Using PostgreSQL safely from apps' },
+  ],
+  lessons,
+  projects,
+  icon: 'database',
+  updated: '2026-11-14',
+};

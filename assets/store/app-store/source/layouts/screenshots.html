@@ -1,0 +1,60 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- App Store screenshots for every device set. Open as
+       screenshots.html?set=iphone&id=01   in a window of the export size
+     (render.py does it: iPhone 1206 × 2622, 1179 × 2556, 1320 × 2868; iPad 2064 × 2752, 2048 × 2732;
+     Duo inner display 2007 × 2853). `set` is iphone, ipad or duo; the capture is
+     captures/<set>/<id>-<name>.png. The device follows the capture's own orientation: a landscape
+     iPad or Duo capture is drawn landscape, centered under the headline in the portrait canvas.
+     `cap` overrides the captures folder (render.py --captures). -->
+<link rel="stylesheet" href="kit.css">
+<script src="kit.js"></script>
+</head>
+<body>
+<script>
+const SHOTS = {
+  '01-journey': ['Your AI Journey, Level by Level', 'From Beginner to Expert, every course in the order that builds your skills.'],
+  '02-discover': ['58 Courses for Every Path', 'Learn AI tools, coding, freelancing and how to build your own app.'],
+  '03-lesson': ['Read It or Listen to It', 'Lessons read aloud while every word lights up.'],
+  '04-practice': ['Practice That Sticks', 'Quizzes, activities and projects after every lesson.'],
+  '05-tali': ['Ask Tali, Your AI Career Coach', 'Plan what to learn, what to build and what to do next.'],
+  '06-career': ['Track Every Application', 'Jobs, freelance gigs, follow&#8209;ups and income in one place.'],
+  '07-resume': ['Build a Résumé With AI', 'Pick a look, edit it live, and export a PDF or Word file.'],
+  '08-portfolio': ['Show Your Work', 'A portfolio page with your projects and screenshots.'],
+  '09-job-boards': ['Find Work Faster', '19 job boards for tech, remote and freelance work.'],
+  '10-profile': ['See Your Progress', 'Streaks, XP, badges and certificates, all in one profile.'],
+};
+// Layout numbers per set, all in rem: the brand row, the headline block, the widest/bottom of the device.
+const LAYOUT = {
+  iphone: { kind: 'phone', brandY: 6.5, brandSize: 6, wordSize: 4.6, headY: 16, headSize: 7.8, supportSize: 3.8, textW: 88, devW: 74, bottom: 6, align: 'bottom' },
+  ipad: { kind: 'ipad', brandY: 5, brandSize: 5, wordSize: 3.8, headY: 12.5, headSize: 6.6, supportSize: 3.1, textW: 86, devW: 92, bottom: 5, align: 'top' },
+  duo: { kind: 'duo', brandY: 5.5, brandSize: 5.4, wordSize: 4.1, headY: 13.5, headSize: 6.8, supportSize: 3.2, textW: 84, devW: 92, bottom: 5.5, align: 'top' },
+};
+(async () => {
+  await loadFonts();
+  const set = PARAMS.get('set') ?? 'iphone';
+  const id = PARAMS.get('id');
+  const [headline, support] = SHOTS[id];
+  const L = LAYOUT[set];
+  const H = canvasHeight();
+  glow(50, 26, 130);
+  glow(80, H - 16, 70, true);
+  sparks([[6, 10, 2.8, 0], [92, 12, 2.2, 10], [3, 44, 1.5, 0], [96, 52, 1.7, 0], [4, H - 30, 2.2, 10], [94, H - 38, 1.5, 0], [96, H - 10, 2, 0]]);
+  const groupStart = document.body.children.length;
+  brand({ x: 0, y: L.brandY, width: 100, size: L.brandSize, wordSize: L.wordSize });
+  const block = text({ x: (100 - L.textW) / 2, y: L.headY, width: L.textW, headline, headlineSize: L.headSize, support, supportSize: L.supportSize, gap: L.headSize * 0.26 });
+  const top = bottomOf(block) + L.supportSize * 1.1;
+  const shown = await device(L.kind, capUrl(set, id), { x: (100 - L.devW) / 2, y: top, w: L.devW, h: H - L.bottom - top, valign: L.align });
+  // A landscape iPad or Duo leaves room in the portrait canvas: the brand, headline and device sit
+  // right under each other and move down together so the space is split above and below.
+  if (shown && L.align === 'top') {
+    const free = H - L.bottom - (shown.top + shown.h);
+    if (free > 0) [...document.body.children].slice(groupStart).forEach((node) => { node.style.translate = `0 ${free / 2}rem`; });
+  }
+  await ready();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,112 @@
+#!/usr/bin/env node
+/**
+ * Uploads the finished Kokoro recordings to the public Supabase Storage bucket `talino-audio`, where store builds download them
+ * (`EXPO_PUBLIC_AUDIO_ORIGIN=<SUPABASE_URL>/storage/v1/object/public/talino-audio`; the app asks for `<origin>/<voice>/<lessonId>.m4a`,
+ * `.peaks.json` and `.timing.json`). A lesson is sent only when it has its recording AND its timing (the same rule generate.py uses);
+ * a file already there with the same size is skipped, so it is safe to run again after each batch.
+ *
+ *   node --env-file=.env scripts/audio/upload-supabase.mjs                      both voices, every finished lesson
+ *   node --env-file=.env scripts/audio/upload-supabase.mjs am_puck              one voice
+ *   node --env-file=.env scripts/audio/upload-supabase.mjs --dry-run            say what would be sent
+ *   node --env-file=.env scripts/audio/upload-supabase.mjs --budget-mb=300      stop when the bucket would pass this size (default 400)
+ *
+ * Needs SUPABASE_URL and SUPABASE_SECRET_KEY (the project shared with the other apps; the secret key stays on this Mac).
+ * The free plan holds 1 GB for ALL apps in that project (CarMind, Pawfetti and the others), and going over it can restrict the project for
+ * all of them. A voice is about 1.2 GB for all 580 lessons, so this script stops at a budget (400 MB by default, never more than this
+ * bucket) and says so; hosting the rest needs a bigger plan or another host (Cloudflare R2), after which raise the budget or change the origin.
+ */
+import { existsSync, readFileSync, statSync } from 'node:fs';
+import { join } from 'node:path';
+
+const BUCKET = 'talino-audio';
+const ROOT = new URL('.', import.meta.url).pathname;
+const OUT = join(ROOT, 'out');
+const { SUPABASE_URL, SUPABASE_SECRET_KEY } = process.env;
+if (!SUPABASE_URL || !SUPABASE_SECRET_KEY) {
+  console.error('SUPABASE_URL and SUPABASE_SECRET_KEY are not set (run with: node --env-file=.env scripts/audio/upload-supabase.mjs).');
+  process.exit(1);
+}
+const args = process.argv.slice(2);
+const dryRun = args.includes('--dry-run');
+const voices = args.filter((arg) => !arg.startsWith('--'));
+const budgetMb = Number(args.find((arg) => arg.startsWith('--budget-mb='))?.split('=')[1] ?? 400);
+const budgetBytes = budgetMb * 1048576;
+const useVoices = voices.length > 0 ? voices : ['am_puck', 'af_heart'];
+const ids = JSON.parse(readFileSync(join(OUT, 'scripts/_manifest.json'), 'utf8')).map((entry) => entry.id);
+
+const headers = { apikey: SUPABASE_SECRET_KEY, Authorization: `Bearer ${SUPABASE_SECRET_KEY}` };
+const publicUrl = (path) => `${SUPABASE_URL}/storage/v1/object/public/${BUCKET}/${path}`;
+const TYPES = { '.m4a': 'audio/mp4', '.json': 'application/json' };
+
+async function remoteSize(path) {
+  const response = await fetch(publicUrl(path), { method: 'HEAD' });
+  return response.ok ? Number(response.headers.get('content-length')) : null;
+}
+
+async function upload(path, file) {
+  const type = TYPES[file.slice(file.lastIndexOf('.'))] ?? 'application/octet-stream';
+  const response = await fetch(`${SUPABASE_URL}/storage/v1/object/${BUCKET}/${path}`, {
+    method: 'POST',
+    headers: { ...headers, 'content-type': type, 'x-upsert': 'true' },
+    body: readFileSync(file),
+  });
+  if (!response.ok) throw new Error(`${path}: ${response.status} ${await response.text()}`);
+}
+
+/** What the bucket already holds, in bytes (every object under every voice folder). */
+async function bucketBytes() {
+  let total = 0;
+  for (const voice of ['am_puck', 'af_heart']) {
+    for (let offset = 0; ; offset += 1000) {
+      const response = await fetch(`${SUPABASE_URL}/storage/v1/object/list/${BUCKET}`, {
+        method: 'POST',
+        headers: { ...headers, 'content-type': 'application/json' },
+        body: JSON.stringify({ prefix: voice, limit: 1000, offset }),
+      });
+      if (!response.ok) throw new Error(`listing ${voice}: ${response.status}`);
+      const page = await response.json();
+      total += page.reduce((sum, entry) => sum + (entry.metadata?.size ?? 0), 0);
+      if (page.length < 1000) break;
+    }
+  }
+  return total;
+}
+
+let used = await bucketBytes();
+let overBudget = false;
+let sent = 0;
+let skipped = 0;
+let bytes = 0;
+for (const voice of useVoices) {
+  for (const id of ids) {
+    const base = join(OUT, 'audio', voice, id);
+    if (!existsSync(`${base}.m4a`) || !existsSync(`${base}.timing.json`)) continue;
+    // The recording first: its size says whether the lesson changed. The small JSON files are compressed by the CDN (so their size
+    // can't be compared): they are sent when missing, or when the recording was sent again.
+    let changed = false;
+    for (const suffix of ['.m4a', '.timing.json', '.peaks.json']) {
+      const file = `${base}${suffix}`;
+      if (!existsSync(file)) continue;
+      const path = `${voice}/${id}${suffix}`;
+      const size = statSync(file).size;
+      const there = await remoteSize(path);
+      if (suffix === '.m4a' ? there === size : there !== null && !changed) {
+        skipped += 1;
+        continue;
+      }
+      if (used + size > budgetBytes) {
+        overBudget = true;
+        break;
+      }
+      if (!dryRun) await upload(path, file);
+      if (suffix === '.m4a') changed = true;
+      used += size;
+      sent += 1;
+      bytes += size;
+      console.log(`${dryRun ? 'would send' : 'sent'} ${path} (${(size / 1024).toFixed(0)} KB)`);
+    }
+  }
+}
+console.log(`\n${dryRun ? 'Would send' : 'Sent'} ${sent} files (${(bytes / 1048576).toFixed(1)} MB), ${skipped} already there.`);
+if (overBudget) console.log(`Stopped at the ${budgetMb} MB budget (the bucket holds ${(used / 1048576).toFixed(0)} MB): the rest is not uploaded. See the note at the top of this script.`);
+console.log(`EXPO_PUBLIC_AUDIO_ORIGIN=${SUPABASE_URL}/storage/v1/object/public/${BUCKET}`);

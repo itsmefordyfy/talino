@@ -1,0 +1,2071 @@
+import type { Course, Lesson, Project } from '../../types';
+
+const CHECKED = '2026-11-14';
+
+const DOCS = {
+  vite: { label: 'Tailwind CSS docs: Installing with Vite', url: 'https://tailwindcss.com/docs/installation/using-vite' },
+  cli: { label: 'Tailwind CSS docs: Tailwind CLI installation', url: 'https://tailwindcss.com/docs/installation/tailwind-cli' },
+  playCdn: { label: 'Tailwind CSS docs: Play CDN', url: 'https://tailwindcss.com/docs/installation/play-cdn' },
+  upgrade: { label: 'Tailwind CSS docs: Upgrade guide (v4)', url: 'https://tailwindcss.com/docs/upgrade-guide' },
+  compat: { label: 'Tailwind CSS docs: Compatibility', url: 'https://tailwindcss.com/docs/compatibility' },
+  utilityFirst: { label: 'Tailwind CSS docs: Styling with utility classes', url: 'https://tailwindcss.com/docs/styling-with-utility-classes' },
+  preflight: { label: 'Tailwind CSS docs: Preflight', url: 'https://tailwindcss.com/docs/preflight' },
+  blogV4: { label: 'Tailwind CSS blog: Tailwind CSS v4.0', url: 'https://tailwindcss.com/blog/tailwindcss-v4' },
+  display: { label: 'Tailwind CSS docs: display', url: 'https://tailwindcss.com/docs/display' },
+  gridCols: { label: 'Tailwind CSS docs: grid-template-columns', url: 'https://tailwindcss.com/docs/grid-template-columns' },
+  justify: { label: 'Tailwind CSS docs: justify-content', url: 'https://tailwindcss.com/docs/justify-content' },
+  items: { label: 'Tailwind CSS docs: align-items', url: 'https://tailwindcss.com/docs/align-items' },
+  gap: { label: 'Tailwind CSS docs: gap', url: 'https://tailwindcss.com/docs/gap' },
+  margin: { label: 'Tailwind CSS docs: margin', url: 'https://tailwindcss.com/docs/margin' },
+  padding: { label: 'Tailwind CSS docs: padding', url: 'https://tailwindcss.com/docs/padding' },
+  width: { label: 'Tailwind CSS docs: width', url: 'https://tailwindcss.com/docs/width' },
+  fontSize: { label: 'Tailwind CSS docs: font-size', url: 'https://tailwindcss.com/docs/font-size' },
+  colors: { label: 'Tailwind CSS docs: Colors', url: 'https://tailwindcss.com/docs/colors' },
+  radius: { label: 'Tailwind CSS docs: border-radius', url: 'https://tailwindcss.com/docs/border-radius' },
+  shadow: { label: 'Tailwind CSS docs: box-shadow', url: 'https://tailwindcss.com/docs/box-shadow' },
+  states: { label: 'Tailwind CSS docs: Hover, focus, and other states', url: 'https://tailwindcss.com/docs/hover-focus-and-other-states' },
+  dark: { label: 'Tailwind CSS docs: Dark mode', url: 'https://tailwindcss.com/docs/dark-mode' },
+  transition: { label: 'Tailwind CSS docs: transition-property', url: 'https://tailwindcss.com/docs/transition-property' },
+  responsive: { label: 'Tailwind CSS docs: Responsive design', url: 'https://tailwindcss.com/docs/responsive-design' },
+  theme: { label: 'Tailwind CSS docs: Theme variables', url: 'https://tailwindcss.com/docs/theme' },
+  detecting: { label: 'Tailwind CSS docs: Detecting classes in source files', url: 'https://tailwindcss.com/docs/detecting-classes-in-source-files' },
+  custom: { label: 'Tailwind CSS docs: Adding custom styles', url: 'https://tailwindcss.com/docs/adding-custom-styles' },
+  directives: { label: 'Tailwind CSS docs: Functions and directives', url: 'https://tailwindcss.com/docs/functions-and-directives' },
+  wcag: { label: 'W3C: Understanding Success Criterion 1.4.3 Contrast (Minimum)', url: 'https://www.w3.org/WAI/WCAG22/Understanding/contrast-minimum.html' },
+};
+
+const lessons: Lesson[] = [
+  {
+    id: 'tailwind-css-01',
+    day: 1,
+    title: 'Utility-first thinking and setup',
+    summary: 'Style a page by combining small single-purpose classes instead of writing a stylesheet, and set Tailwind CSS v4 up three ways.',
+    intro: {
+      objectives: [
+        'Explain what a utility class is and how it differs from an inline style',
+        'Read a class list such as `rounded-xl bg-white p-6 shadow-lg` and say what each class does',
+        'Choose between the Play CDN, the Vite plugin and the Tailwind CLI for a given job',
+      ],
+      why: 'Tailwind is the most common way modern teams style web interfaces, so job posts, templates and tutorials all assume you can read its classes. Once you can, you build a clean page without leaving your HTML file.',
+    },
+    minutes: 25,
+    skills: ['utility-first', 'tailwind-setup'],
+    body: [
+      { type: 'paragraph', text: "In the HTML and CSS course you styled a page the traditional way: you invented a class name such as `.product-card`, wrote its rules in a stylesheet, then added the class to your HTML. That works, but a lot of time goes into naming things (is it `.card`, `.product-card` or `.card--big`?), into hopping between two files, and into worrying that changing one rule will break a page you forgot about. Tailwind CSS removes most of that by giving you a different tool." },
+      { type: 'heading', text: 'The idea: small classes, each with one job' },
+      { type: 'paragraph', text: "Tailwind is a collection of **utility classes**: tiny classes that each set one thing, named after what they do. `p-6` adds padding, `font-bold` makes text bold, `rounded-xl` rounds the corners. You do not write the CSS for them. Tailwind already knows them, and you combine them on an element to build the look you want. This style is called **utility-first**." },
+      { type: 'paragraph', text: "Think of building with LEGO bricks instead of moulding a custom toy. A custom mould (your own `.product-card` class) fits exactly one thing and has to be designed from scratch. Bricks are small and ordinary, you already know what each one does, and the same bricks build a card today and a navigation bar tomorrow." },
+      { type: 'paragraph', text: 'Here is the same card written both ways. First the traditional way, with a stylesheet:' },
+      {
+        type: 'code',
+        language: 'css',
+        label: 'Traditional CSS',
+        code: `.product-card {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 0.75rem;
+  box-shadow: 0 10px 15px -3px rgb(0 0 0 / 0.1);
+}`,
+      },
+      {
+        type: 'code',
+        language: 'html',
+        label: 'The same card with Tailwind utilities',
+        code: `<div class="rounded-xl bg-white p-6 shadow-lg">
+  <h2 class="text-lg font-semibold">Pandesal</h2>
+  <p class="text-sm text-gray-500">12 pieces per bag</p>
+</div>`,
+      },
+      { type: 'paragraph', text: 'Read the class list left to right and it explains itself: `rounded-xl` rounds the corners a lot, `bg-white` sets a white background, `p-6` adds padding on all sides, `shadow-lg` adds a large soft shadow. On the heading, `text-lg` makes the text larger and `font-semibold` makes it a little bolder. On the paragraph, `text-sm` makes it smaller and `text-gray-500` colours it mid-grey. There is no stylesheet to open and no class name to invent.' },
+      { type: 'heading', text: 'Is this not just inline styles?' },
+      { type: 'paragraph', text: 'It looks similar to `style="padding: 1.5rem"`, but three things make it different, and they are the reason people choose it.' },
+      {
+        type: 'list',
+        items: [
+          '**A shared design system.** `p-6` is not a random number. Every spacing, colour and font size comes from one scale, so your page stays consistent without you remembering exact values.',
+          '**States and screen sizes.** An inline style cannot say "darker on hover" or "two columns on a wide screen". A utility can, by adding a prefix such as `hover:bg-gray-100` or `md:flex`. The next lessons teach these.',
+          '**One place to look.** The structure and the styling live in the same line of HTML, so changing a button means editing that button, and only that button.',
+        ],
+      },
+      {
+        type: 'version',
+        text: 'The official docs (Tailwind CSS v4.3) list the same benefits: speed, safer changes, easier maintenance, portability and a CSS file that stops growing as the project grows. They also describe how a class that only exists for one state, like `hover:bg-sky-700`, does nothing until the element is hovered.',
+        checked: CHECKED,
+        sources: [DOCS.utilityFirst],
+      },
+      { type: 'heading', text: 'The honest trade-offs' },
+      {
+        type: 'table',
+        headers: ['What people like', 'What costs you'],
+        rows: [
+          ['No time spent naming classes or switching files', 'Class lists get long, so you read HTML with many classes'],
+          ['A change on one element cannot break another page', 'The same group of classes can repeat in many places; lesson 6 shows how to handle that'],
+          ['Colours, sizes and spacing stay consistent', 'You have to learn the class names, which takes a few days of practice'],
+        ],
+        caption: 'Utility-first is a trade, not a magic fix',
+      },
+      { type: 'heading', text: 'Setting Tailwind up: three ways' },
+      { type: 'paragraph', text: 'Tailwind needs to find the classes you used and produce a CSS file with just those. There are three common ways to run it, and which one you pick depends on what you are doing.' },
+      {
+        type: 'table',
+        headers: ['Way', 'Best for', 'Needs Node.js?'],
+        rows: [
+          ['Play CDN: one `<script>` tag', 'Trying classes out, learning, small demos', 'No'],
+          ['Vite plugin', 'Real projects, and framework apps such as React', 'Yes'],
+          ['Tailwind CLI', 'A plain HTML site with no build tool', 'Yes'],
+        ],
+        caption: 'The Play CDN is for experiments only',
+      },
+      { type: 'paragraph', text: 'The quickest start is the Play CDN. Put one script tag in the `<head>` of an HTML file, save it, and open it in your browser. Nothing to install.' },
+      {
+        type: 'code',
+        language: 'html',
+        label: 'index.html with the Play CDN',
+        code: `<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+  </head>
+  <body>
+    <h1 class="text-3xl font-bold underline">Hello, Tailwind!</h1>
+  </body>
+</html>`,
+      },
+      {
+        type: 'version',
+        text: 'The Play CDN script for Tailwind CSS v4 is `@tailwindcss/browser@4`, loaded from jsDelivr as shown. The docs say it is "designed for development purposes only, and is not intended for production", so use it to learn and to prototype, then switch to a real build.',
+        checked: CHECKED,
+        sources: [DOCS.playCdn],
+      },
+      { type: 'paragraph', text: 'For a real project, install Tailwind with npm. With Vite (the build tool behind most React and plain JavaScript starters), there are four steps. This is the setup the official docs show for Tailwind CSS v4.3:' },
+      {
+        type: 'code',
+        language: 'bash',
+        label: '1. Install',
+        code: `npm create vite@latest my-project
+cd my-project
+npm install tailwindcss @tailwindcss/vite`,
+      },
+      {
+        type: 'code',
+        language: 'ts',
+        label: '2. vite.config.ts: add the plugin',
+        code: `import { defineConfig } from 'vite'
+import tailwindcss from '@tailwindcss/vite'
+
+export default defineConfig({
+  plugins: [tailwindcss()],
+})`,
+      },
+      {
+        type: 'code',
+        language: 'css',
+        label: '3. src/style.css: one line',
+        code: `@import "tailwindcss";`,
+      },
+      { type: 'paragraph', text: 'Step 4 is to make sure that CSS file is loaded by your page (a `<link>` tag in a plain HTML page, or an `import` in a framework), then run `npm run dev`. If you have no build tool at all, the Tailwind CLI does the same job: install `tailwindcss` and `@tailwindcss/cli`, put `@import "tailwindcss";` in `src/input.css`, and run `npx @tailwindcss/cli -i ./src/input.css -o ./src/output.css --watch`. It reads your files and writes the finished CSS to `output.css`, which you link in your HTML.' },
+      {
+        type: 'version',
+        text: 'Verified against the Tailwind CSS v4.3 docs: the Vite setup is `npm install tailwindcss @tailwindcss/vite` plus the plugin in `vite.config`, and the CLI setup is `npm install tailwindcss @tailwindcss/cli` and the `npx @tailwindcss/cli -i ... -o ... --watch` command above. Both use the single line `@import "tailwindcss";` in the CSS file.',
+        checked: CHECKED,
+        sources: [DOCS.vite, DOCS.cli],
+      },
+      { type: 'heading', text: 'Old tutorials: what changed in version 4' },
+      { type: 'paragraph', text: 'Tailwind moves fast, and the internet is full of tutorials for version 3. If a guide tells you to create `tailwind.config.js` or to write three `@tailwind` lines, it is describing the older way. Version 4 (released in January 2025) simplified things:' },
+      {
+        type: 'list',
+        items: [
+          'One line replaces the old directives: `@import "tailwindcss";`',
+          'Customising happens in your CSS file, not in a JavaScript config file. Lesson 6 shows how.',
+          'Tailwind finds your template files by itself, ignoring anything listed in `.gitignore`.',
+          'It targets modern browsers: the docs name Safari 16.4, Chrome 111 and Firefox 128 as the baseline, so choose version 3.4 if you must support older ones.',
+        ],
+      },
+      {
+        type: 'version',
+        text: 'Checked against the v4 upgrade guide and the v4.0 announcement (22 January 2025): `@import "tailwindcss";` replaces `@tailwind base; @tailwind components; @tailwind utilities;`, and a JavaScript config is no longer detected automatically. Support is built for Safari 16.4+, Chrome 111+ and Firefox 128+. The current docs show version 4.3, and we ran a build with Tailwind 4.3.5 to confirm the examples in this course.',
+        checked: CHECKED,
+        sources: [DOCS.upgrade, DOCS.blogV4, DOCS.compat],
+      },
+      { type: 'heading', text: 'Preflight: why your headings look plain' },
+      { type: 'paragraph', text: 'When Tailwind loads, it also resets the browser defaults. This reset is called **Preflight**. It removes the margins from every element, makes headings the same size and weight as normal text, takes the bullets off lists, and makes images and videos `display: block` with a maximum width of 100%. So an `<h1>` with no classes looks like ordinary text. That is on purpose: every size, weight and space then comes from classes you chose, not from the browser. If your heading looks small, add `text-3xl font-bold`.' },
+      {
+        type: 'version',
+        text: 'Preflight is built on modern-normalize and is added automatically when you import `tailwindcss` (docs for v4.3). It resets margins and padding, sets `box-sizing: border-box`, makes headings inherit font size and weight, removes list markers, and makes media elements block-level with `max-width: 100%`.',
+        checked: CHECKED,
+        sources: [DOCS.preflight],
+      },
+      { type: 'warning', text: 'The Play CDN is for learning. Do not ship a real website that loads Tailwind from a script tag in the browser. Use the Vite plugin or the CLI so the visitor downloads one small CSS file.' },
+      {
+        type: 'takeaways',
+        items: [
+          'Utility-first means styling by combining small classes like `p-6` and `font-bold`, each doing one job, straight in your HTML.',
+          'Utilities beat inline styles because they use a shared design system and can respond to hover, focus and screen size.',
+          'The Play CDN is for experiments; the Vite plugin or the CLI is for real projects. Either way the CSS file starts with `@import "tailwindcss";`.',
+          'Tailwind 4 configures in CSS, finds your files automatically and needs a modern browser. Tutorials with `tailwind.config.js` or `@tailwind base;` describe version 3.',
+          'Preflight resets browser defaults, so headings and lists look plain until you style them with classes.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'tailwind-css-01-fix-bug-1',
+          kind: 'fix-bug',
+          title: 'The class that does nothing',
+          story: 'You are styling a card for a bakery page and the text is still squeezed against its edges.',
+          prompt: 'One class on this card does not exist in Tailwind, so it does nothing. Tap the line with the bug, then choose the fix.',
+          concept: 'reading utility names',
+          language: 'html',
+          code: `<div class="rounded-xl bg-white shadow-lg">
+  <h2 class="text-lg font-semibold">Pandesal</h2>
+  <p class="padding-4 text-sm text-gray-500">12 pieces per bag</p>
+</div>`,
+          bugLine: 3,
+          lineNote: 'That line looks fine. Look for a class that is not a Tailwind name.',
+          fixes: [
+            { line: '  <p class="p-4 text-sm text-gray-500">12 pieces per bag</p>', correct: true, why: 'Tailwind names the padding utility `p-` plus a number from its spacing scale. `p-4` adds padding on all four sides.' },
+            { line: '  <p class="pad-4 text-sm text-gray-500">12 pieces per bag</p>', correct: false, why: 'There is no `pad-` utility. Utility names follow a fixed pattern, and padding is just `p`.' },
+            { line: '  <p class="padding:4 text-sm text-gray-500">12 pieces per bag</p>', correct: false, why: 'A class name is not CSS syntax. Writing a property and a colon inside `class` does not generate anything.' },
+            { line: '  <p class="px4 text-sm text-gray-500">12 pieces per bag</p>', correct: false, why: 'Tailwind separates the name and the number with a dash, as in `px-4`. And `px` would only pad left and right.' },
+          ],
+          hints: [
+            'Compare each class with the ones you met in the lesson: `p-6`, `rounded-xl`, `text-sm`.',
+            'One class spells out the word "padding" in full, but Tailwind uses a one or two letter abbreviation.',
+            'Padding on all sides is `p-` followed by a number, so a number 4 spacing is `p-4`.',
+          ],
+          explanation: 'Utility classes follow short, regular patterns: `p-4` for padding, `m-4` for margin, `text-sm` for size. A made-up name is silently ignored, so when a style does not apply, first check the spelling of the class.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'tailwind-css-01-scenario-1',
+          kind: 'scenario',
+          title: 'Which setup for the shop site?',
+          prompt: 'Pick the best next step.',
+          concept: 'choosing a setup',
+          situation: 'You built a landing page for a friend\'s bakery while learning, using the Play CDN script tag. It looks great, and your friend now wants it online for real customers on mobile data.',
+          options: [
+            { text: 'Move to a real build: install Tailwind with the CLI (or Vite), generate one CSS file and link that instead of the script tag.', consequence: 'Visitors download a small CSS file made of only the classes you used, and nothing runs in their browser to style the page.', quality: 'best' },
+            { text: 'Keep the script tag but add a comment saying it is temporary.', consequence: 'The page works, but every visitor\'s browser has to run Tailwind before the page is styled. The docs say the Play CDN is not meant for production.', quality: 'poor' },
+            { text: 'Rewrite all the styling as plain CSS so Tailwind is not needed.', consequence: 'It would work, but you throw away the classes you already wrote when the CLI does the same job in one command.', quality: 'acceptable' },
+          ],
+          hints: [
+            'The Play CDN has a warning on its own docs page.',
+            'You still want to keep the Tailwind classes you wrote.',
+            'A tool that reads your HTML and writes one finished CSS file is the right move.',
+          ],
+          explanation: 'The Play CDN makes the visitor\'s browser do the work, so it is for learning and prototypes. The Tailwind CLI (or the Vite plugin) does that work once, on your machine, and hands visitors a plain CSS file.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'tailwind-css-01-q1',
+        prompt: 'Which of these can a Tailwind utility class do that an inline `style` attribute cannot?',
+        choices: [
+          'Set the colour of the text on the element, for example to a dark grey',
+          'Change the background only while the pointer is over the element',
+          'Make the text of the element bold instead of its normal weight',
+          'Add space inside the box so the text does not touch its edges',
+        ],
+        answer: 1,
+        explanation: 'Prefixes such as `hover:` apply a utility only in a state or at a screen size, which inline styles cannot express. Padding, colour and weight can be set either way.',
+      },
+      {
+        id: 'tailwind-css-01-q2',
+        prompt: 'You open a Tailwind v4 project\'s main CSS file. Which line is the one that loads Tailwind?',
+        choices: [
+          '@tailwind base;',
+          'require("tailwindcss")',
+          '@import "tailwindcss";',
+          '@use "tailwindcss";',
+        ],
+        answer: 2,
+        explanation: 'Version 4 uses one plain CSS import. The `@tailwind` lines belong to version 3, `require` is JavaScript, and Tailwind is not meant to be used with Sass, so `@use` is not part of the setup.',
+      },
+      {
+        id: 'tailwind-css-01-q3',
+        prompt: 'A tutorial tells you to create `tailwind.config.js` and add three `@tailwind` lines to your CSS. What should you conclude?',
+        choices: [
+          'It is the older version 3 way, so find the v4 steps in the official docs',
+          'It is the only correct way, so the version 4 install in the docs must be a mistake',
+          'It is a plugin setup that you must add before Tailwind v4 will work at all',
+        ],
+        answer: 0,
+        explanation: 'Those steps were replaced in version 4 by `@import "tailwindcss";` and CSS-based configuration. When a guide looks different from the official docs, check its date and version.',
+      },
+      {
+        id: 'tailwind-css-01-q4',
+        prompt: 'You add `<h1>Welcome</h1>` to a Tailwind page and it looks like ordinary body text. Why?',
+        choices: [
+          'Tailwind has not finished loading, so the page shows plain browser styles',
+          'Headings only get their size when you give the element the `heading` class',
+          'Browsers stopped styling headings in their default stylesheet years ago',
+          'Preflight resets headings to the same size and weight as normal text',
+        ],
+        answer: 3,
+        explanation: 'Preflight removes the browser defaults on purpose, so you choose every size and weight yourself, for example `text-3xl font-bold`. If Tailwind were not loaded, you would see the browser default large heading.',
+      },
+    ],
+    task: {
+      title: 'Your first Tailwind page',
+      minutes: 15,
+      steps: [
+        'Create a folder with an `index.html` file that includes the Play CDN script tag from the lesson.',
+        'Add the product card from the lesson, then change three things: the colour of the heading, the roundness of the card and how much padding it has.',
+        'Add an `<h1>` with no classes and then give it `text-3xl font-bold`. Note how Preflight made it plain first.',
+        'Open the official Installing with Vite page and write down the four steps in your own words, ready for your first real project.',
+      ],
+    },
+  },
+  {
+    id: 'tailwind-css-02',
+    day: 2,
+    title: 'Layout with flex and grid utilities',
+    summary: 'Line things up in a row or a column with flex, place them on a grid, and space them with gap, all from classes.',
+    intro: {
+      objectives: [
+        'Build a row or a column of items with `flex`, `flex-col`, `justify-*` and `items-*`',
+        'Lay out cards on a grid with `grid`, `grid-cols-*` and `col-span-*`',
+        'Choose flex or grid by asking whether the layout is one-dimensional or two-dimensional',
+      ],
+      why: 'Almost every interface is a set of boxes arranged in rows and columns: a navigation bar, a list of products, a dashboard of tiles. If you can arrange boxes with utilities, you can build most screens you will ever be asked for.',
+    },
+    minutes: 25,
+    skills: ['flex-grid-layout'],
+    body: [
+      { type: 'paragraph', text: 'Layout means deciding where the boxes on a page go: which sit side by side, which stack, and how much room is between them. In the HTML and CSS course you used Flexbox and Grid with properties like `display: flex` and `grid-template-columns`. Tailwind gives each of those properties a short class, so the ideas are the same and only the typing changes. If a word here feels unfamiliar, the HTML and CSS course covers the underlying CSS.' },
+      { type: 'heading', text: 'Flex: items in one line' },
+      { type: 'paragraph', text: 'Picture students lining up for a school canteen. They are in one line, and the only questions are which way the line runs and how they are spaced. That is **flexbox**: it arranges items along a single direction, either a row or a column. Add the class `flex` to a parent and its children sit in a row.' },
+      {
+        type: 'code',
+        language: 'html',
+        label: 'A navigation bar',
+        code: `<header class="flex items-center justify-between p-4">
+  <a href="/" class="font-semibold">Tindahan</a>
+  <nav class="flex gap-4">
+    <a href="/orders">Orders</a>
+    <a href="/products">Products</a>
+  </nav>
+</header>`,
+      },
+      { type: 'paragraph', text: 'Go through it line by line. The `<header>` has `flex`, so its two children (the shop name and the `<nav>`) sit side by side. `justify-between` pushes the first child to the far left and the last to the far right, leaving the free space between them. `items-center` lines them up in the middle vertically. `p-4` is padding. The `<nav>` is also `flex`, so its links form a row, and `gap-4` puts the same space between each link.' },
+      {
+        type: 'table',
+        headers: ['Class', 'What it does', 'CSS'],
+        rows: [
+          ['`flex`', 'Children sit in a row', '`display: flex`'],
+          ['`flex-col`', 'Children stack in a column', '`flex-direction: column`'],
+          ['`justify-start`, `justify-center`, `justify-end`', 'Place items along the main direction', '`justify-content`'],
+          ['`justify-between`', 'First and last at the edges, space between', '`justify-content: space-between`'],
+          ['`items-center`', 'Centre items across the main direction', '`align-items: center`'],
+          ['`flex-wrap`', 'Let items drop to a new line when there is no room', '`flex-wrap: wrap`'],
+          ['`flex-1`', 'Let this item grow to fill free space', '`flex: 1`'],
+          ['`gap-4`', 'Space between children', '`gap: 1rem`'],
+        ],
+        caption: 'The flex classes you will use daily',
+      },
+      {
+        type: 'version',
+        text: 'The class names above match the Tailwind CSS v4.3 reference: `justify-between` is `justify-content: space-between`, `items-center` is `align-items: center`, `flex-1` is `flex: 1`. The docs also list "safe" variants such as `justify-center-safe`, which fall back to the start when the items do not fit.',
+        checked: CHECKED,
+        sources: [DOCS.justify, DOCS.items, DOCS.display],
+      },
+      { type: 'heading', text: 'Gap beats margins between items' },
+      { type: 'paragraph', text: 'To space items in a flex row or a grid, use `gap-*`. It puts space only between items, never before the first or after the last, and it keeps working when items wrap onto a new line. There is also a `space-x-4` and `space-y-4` utility that adds margins, but the docs warn it is not designed for grids, wrapping layouts, or items in a custom order. In version 4 it also changed how it selects elements (all children except the last), so reach for `gap` first.' },
+      {
+        type: 'version',
+        text: 'Gap is `gap: calc(var(--spacing) * <number>)`, with `gap-x-*` and `gap-y-*` for columns and rows. The margin docs say `space-x-*` and `space-y-*` are "really just a shortcut" for margins on all but the last child and are not for wrapping layouts. The v4 upgrade guide notes that their selector changed to `:not(:last-child)`.',
+        checked: CHECKED,
+        sources: [DOCS.gap, DOCS.margin, DOCS.upgrade],
+      },
+      { type: 'heading', text: 'Grid: rows and columns together' },
+      { type: 'paragraph', text: 'A classroom seating chart is different from a canteen line: it has rows and columns at the same time. That is **grid**. `grid` makes the parent a grid, and `grid-cols-3` creates three equal columns. Children fill the cells from left to right, then start a new row by themselves.' },
+      {
+        type: 'code',
+        language: 'html',
+        label: 'A product grid',
+        code: `<div class="grid grid-cols-3 gap-4">
+  <div class="col-span-2 rounded-lg bg-white p-4">Featured: pandesal</div>
+  <div class="rounded-lg bg-white p-4">Kakanin</div>
+  <div class="rounded-lg bg-white p-4">Ensaymada</div>
+  <div class="rounded-lg bg-white p-4">Monay</div>
+  <div class="rounded-lg bg-white p-4">Pan de coco</div>
+</div>`,
+      },
+      { type: 'paragraph', text: '`grid-cols-3` means three equal columns (it is `grid-template-columns: repeat(3, minmax(0, 1fr))` underneath). The first box has `col-span-2`, so it stretches across two of the three columns. That fills the first row with the featured box and Kakanin. Ensaymada, Monay and Pan de coco then fill the second row. You never numbered the rows: the grid created them as it ran out of columns.' },
+      {
+        type: 'version',
+        text: 'In the Tailwind CSS v4.3 docs, `grid-cols-<number>` is `grid-template-columns: repeat(<number>, minmax(0, 1fr))`. Custom column patterns use square brackets, with underscores for spaces: `grid-cols-[200px_1fr_100px]`.',
+        checked: CHECKED,
+        sources: [DOCS.gridCols],
+      },
+      { type: 'heading', text: 'Flex or grid? Ask one question' },
+      { type: 'paragraph', text: 'Choosing between them is easier than it looks. Ask whether you are arranging things along **one line** or across **rows and columns at once**.' },
+      {
+        type: 'diagram',
+        format: 'mermaid',
+        caption: 'A simple way to choose',
+        source: 'flowchart TD\n  A[What are you arranging?] --> B{One line of items, a row or a column?}\n  B -->|Yes| C[Use flex]\n  B -->|No, a table of cells| D[Use grid]\n  C --> E[Add gap, justify and items]\n  D --> F[Add grid-cols, gap and col-span]',
+      },
+      { type: 'paragraph', text: 'A navigation bar, a button with an icon beside text, a row of tags: flex. A gallery of photos, a dashboard of tiles, a pricing table with three plans: grid. Real pages combine them freely, as in the examples above where a grid of cards contains flex rows inside each card.' },
+      { type: 'heading', text: 'Centring a page and showing or hiding' },
+      { type: 'paragraph', text: 'Two more layout habits show up on nearly every page. To keep content from stretching across a very wide screen, give the wrapper a maximum width and centre it: `mx-auto max-w-5xl px-4`. `mx-auto` sets the left and right margins to auto, which centres the block, `max-w-5xl` caps its width, and `px-4` stops text touching the screen edge on a phone. And `hidden` is `display: none`, which removes an element, while `block`, `flex` or `grid` shows it again. You will combine those with screen sizes in lesson 5.' },
+      { type: 'tip', text: 'Build layout from the outside in. First decide the page structure (header, sidebar, main), then give each of them `flex` or `grid`, and only then style the boxes inside.' },
+      {
+        type: 'takeaways',
+        items: [
+          '`flex` lines children up in a row; `flex-col` stacks them; `justify-*` works along the line and `items-*` across it.',
+          '`grid grid-cols-3` makes three equal columns, and `col-span-2` lets one item cover two of them.',
+          'Use `gap-*` for space between items; it handles wrapping and grids better than `space-x-*`.',
+          'Flex is for one direction, grid is for rows and columns together, and you can nest them.',
+          '`mx-auto max-w-5xl` centres a page-width wrapper, and `hidden` removes an element.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'tailwind-css-02-predict-output-1',
+          kind: 'predict-output',
+          title: 'Where do the boxes land?',
+          story: 'A bakery menu page uses the grid from the lesson, with seven boxes.',
+          prompt: 'The boxes are labelled A to G in source order. Predict the rows they form. Write each row on its own line, and write box A twice because it covers two columns.',
+          concept: 'grid placement',
+          language: 'html',
+          code: `<div class="grid grid-cols-3 gap-4">
+  <div class="col-span-2">A</div>
+  <div>B</div>
+  <div>C</div>
+  <div>D</div>
+  <div>E</div>
+  <div>F</div>
+  <div>G</div>
+</div>`,
+          expected: 'A A B\nC D E\nF G',
+          choices: ['A A B\nC D E\nF G', 'A B C\nD E F\nG', 'A A B\nC D\nE F G', 'A A\nB C D\nE F G'],
+          wrongNotes: {
+            'A B C\nD E F\nG': 'This ignores `col-span-2`. A covers two of the three columns, so it counts as two cells in the first row.',
+            'A A B\nC D\nE F G': 'Rows are filled completely before a new row starts. After A, A and B, the second row takes three boxes: C, D and E.',
+            'A A\nB C D\nE F G': 'There is still one free column in the first row after A, so B moves up into it.',
+          },
+          hints: [
+            'There are three columns, and each row holds three cells.',
+            'A covers two cells, so the first row has one cell left for B.',
+            'Then fill rows of three: C, D, E, and the leftover F, G.',
+          ],
+          explanation: 'Grid fills cells row by row. A uses two cells, B fills the third. The next row takes C, D and E, and the last two boxes F and G make a short final row.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'tailwind-css-02-match-1',
+          kind: 'match',
+          title: 'Say what you want, pick the class',
+          prompt: 'Match each layout goal to the utility that does it.',
+          concept: 'layout utilities',
+          labels: { terms: 'What you want', meanings: 'The utility' },
+          pairs: [
+            { term: 'A logo on the far left and a button on the far right, nothing between them', definition: '`justify-between`', note: 'Think about which class moves the first and last item to the edges.' },
+            { term: 'A phone menu where the links stack one under another', definition: '`flex-col`', note: 'Stacking means changing the direction of the flex line.' },
+            { term: 'An icon and a label that should be level with each other vertically', definition: '`items-center`', note: 'Vertical alignment in a row is the cross axis.' },
+            { term: 'A gallery with three equal columns that wraps by itself', definition: '`grid grid-cols-3`', note: 'Rows and columns at once is a grid job.' },
+            { term: 'One search box in a row that should take all the space the buttons leave', definition: '`flex-1`', note: 'The class that lets one item grow to fill free space.' },
+          ],
+          hints: [
+            'Decide first whether each wish is a row/column arrangement (flex) or a rows-and-columns table (grid).',
+            'Start with the one you are surest of, like the gallery with three columns.',
+            '`items-*` aligns across the line, `justify-*` aligns along it.',
+          ],
+          explanation: 'Each wish names a job: spread items apart (`justify-between`), change direction (`flex-col`), align across the line (`items-center`), make columns (`grid-cols-3`) and let an item grow (`flex-1`).',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'tailwind-css-02-arrange-1',
+          kind: 'arrange',
+          title: 'Assemble the header',
+          prompt: 'Put the lines in order to build the navigation bar from the lesson: shop name on the left, two links on the right.',
+          concept: 'flex navigation bar',
+          language: 'html',
+          solution: [
+            '<header class="flex items-center justify-between p-4">',
+            '  <a href="/" class="font-semibold">Tindahan</a>',
+            '  <nav class="flex gap-4">',
+            '    <a href="/orders">Orders</a>',
+            '    <a href="/products">Products</a>',
+            '  </nav>',
+            '</header>',
+          ],
+          alternatives: [
+            [
+              '<header class="flex items-center justify-between p-4">',
+              '  <a href="/" class="font-semibold">Tindahan</a>',
+              '  <nav class="flex gap-4">',
+              '    <a href="/products">Products</a>',
+              '    <a href="/orders">Orders</a>',
+              '  </nav>',
+              '</header>',
+            ],
+          ],
+          reasons: [
+            'The header opens first and is the flex parent that spreads its two children apart.',
+            'The shop name is the first child, so `justify-between` puts it at the left edge.',
+            'The nav is the second child, so it goes to the right edge, and it is its own flex row.',
+            'The first link sits inside the nav.',
+            'The second link comes after it in the row.',
+            'The nav closes before the header does.',
+            'The header closes last.',
+          ],
+          hints: [
+            'HTML is nested: a tag must close after everything inside it.',
+            'The header is the outermost element, so its opening tag is first and its closing tag last.',
+            'Inside the header: the shop name, then the nav; inside the nav: the two links.',
+          ],
+          explanation: 'The header is the flex parent, and it has exactly two children: the shop name and the nav. `justify-between` pushes them to opposite ends. The nav is a second, smaller flex container that lines its links up.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'tailwind-css-02-q1',
+        prompt: 'A toolbar has a title, a search box and a button in a row. You want the title on the left, the button on the right and the search box in the middle taking all the free space. Which approach fits best?',
+        choices: [
+          'Use `grid grid-cols-3` on the toolbar so every item gets a column of equal width',
+          'Use `flex items-center gap-4` on the toolbar, with `flex-1` on the search box',
+          'Use `space-x-4` on the search box to push the title and button to the edges',
+        ],
+        answer: 1,
+        explanation: 'This is one line of items, so flex is the right tool. `flex-1` on the search box lets it grow to fill the space the title and button leave. A three-column grid would make the columns equal instead.',
+      },
+      {
+        id: 'tailwind-css-02-q2',
+        prompt: 'What does `col-span-2` do on a child of `grid grid-cols-3`?',
+        choices: [
+          'It adds two more columns to the grid, so a three-column grid has five columns',
+          'It makes the item twice as tall as the other items in the same row',
+          'It makes the item cover two of the three columns in its row',
+          'It puts two columns of empty space around the item on each side',
+        ],
+        answer: 2,
+        explanation: '`col-span-2` sets how many columns the item occupies. The grid itself still has three columns, and the item uses two cells of the row.',
+      },
+      {
+        id: 'tailwind-css-02-q3',
+        prompt: 'You use `flex` on a list of tags that wrap onto several lines on a phone. Why is `gap-2` a better choice than `space-x-2`?',
+        choices: [
+          'Gap spaces items on every line, but `space-x-*` is not designed for wrapping layouts',
+          'Gap makes the tags bigger, so fewer of them wrap onto the next line on a phone',
+          'The space utilities only work inside a grid, so a flex row cannot use them at all',
+        ],
+        answer: 0,
+        explanation: 'The docs say `space-x-*` is not meant for wrapping layouts. `gap-*` is real CSS gap, so it works between every item and row.',
+      },
+      {
+        id: 'tailwind-css-02-q4',
+        prompt: 'Which description fits `flex-col items-center`?',
+        choices: [
+          'Items stacked in a column and centred across it, so horizontally',
+          'Items in a row and centred vertically, with the first item at the left edge',
+          'Items in a grid with a single column that is centred on the page',
+          'Items stacked in a column and pushed to the left edge of the container',
+        ],
+        answer: 0,
+        explanation: 'With `flex-col` the main direction is vertical, so `items-center` (the cross axis) centres items horizontally. In a row, the same `items-center` would centre vertically.',
+      },
+    ],
+    task: {
+      title: 'Lay out a small shop screen',
+      minutes: 20,
+      steps: [
+        'Make a new HTML file with the Play CDN script from lesson 1.',
+        'Build the navigation bar from this lesson, then change `justify-between` to `justify-center` and `justify-end` and note what moves.',
+        'Add a product grid of six boxes with `grid grid-cols-3 gap-4`, then make one box `col-span-2`.',
+        'Wrap the page content in `mx-auto max-w-5xl px-4` and resize the browser window to see it stay centred.',
+      ],
+    },
+  },
+  {
+    id: 'tailwind-css-03',
+    day: 3,
+    title: 'Spacing, typography and colour',
+    summary: 'Use Tailwind\'s spacing scale, type sizes and colour palette to make an interface that looks consistent and readable.',
+    intro: {
+      objectives: [
+        'Convert a spacing class such as `p-6` or `gap-4` into rem and pixels using the scale',
+        'Choose a text size, weight and line height for headings and body text',
+        'Pick colours from the palette, add transparency with `/50`, and check text contrast',
+      ],
+      why: 'Spacing, type and colour decide whether a page feels professional or messy. Tailwind gives you a scale for each, so you get consistent results by picking a step instead of guessing a number.',
+    },
+    minutes: 30,
+    skills: ['spacing-type-colour'],
+    body: [
+      { type: 'paragraph', text: 'Designers do not choose a random number for every gap. They use a **scale**: a short list of sizes that fit together, so a page feels even. Tailwind builds that idea in. Instead of writing `padding: 13px` and `margin: 22px`, you pick a step on the scale. The result looks consistent, and you stop wasting time deciding between 13 and 14 pixels.' },
+      { type: 'heading', text: 'The spacing scale' },
+      { type: 'paragraph', text: 'Every spacing utility (padding, margin, gap, width, height) counts in one unit: a quarter of a rem. One `rem` is the page\'s base font size, normally 16 pixels, so one step on the scale is 4 pixels. `p-1` is 4 pixels, `p-2` is 8, `p-4` is 16, and `p-8` is 32. Behind the scenes, `p-4` is `padding: calc(var(--spacing) * 4)`, where `--spacing` is that quarter-rem.' },
+      {
+        type: 'table',
+        headers: ['Number', 'rem', 'Pixels (at 16px)', 'Typical use'],
+        rows: [
+          ['1', '0.25rem', '4px', 'Tiny gaps, icon spacing'],
+          ['2', '0.5rem', '8px', 'Inside small buttons and badges'],
+          ['3', '0.75rem', '12px', 'Compact padding'],
+          ['4', '1rem', '16px', 'Normal padding and gaps'],
+          ['6', '1.5rem', '24px', 'Card padding'],
+          ['8', '2rem', '32px', 'Space between sections'],
+          ['12', '3rem', '48px', 'Large section spacing'],
+        ],
+        caption: 'The number times four is the pixel size',
+      },
+      {
+        type: 'version',
+        text: 'In Tailwind CSS v4.3 the default `--spacing` is `0.25rem`, and the numeric utilities (`p-*`, `m-*`, `gap-*`, `w-*`, `size-*`) are computed from it as `calc(var(--spacing) * <number>)`. That is why any number works, not just a fixed list, and why you can change the whole scale with one line in your theme.',
+        checked: CHECKED,
+        sources: [DOCS.padding, DOCS.theme, DOCS.gap],
+      },
+      { type: 'paragraph', text: 'Padding is the space inside a box and margin is the space outside it. Both take a side letter: `p-4` is all sides, `px-4` is left and right, `py-4` is top and bottom, and `pt-4`, `pr-4`, `pb-4`, `pl-4` are one side each. Margin works the same with `m`, and `mx-auto` (auto left and right margins) centres a block. A dash in front makes a margin negative, as in `-mt-2`. When a value is not on the scale, square brackets create it on the spot, like `p-[5px]`, but treat that as a last resort.' },
+      { type: 'heading', text: 'Size: width and height' },
+      { type: 'paragraph', text: 'Sizes use the same numbers: `w-12` is 3rem wide. Fractions give percentages: `w-1/2` is half the width of the parent, and `w-full` is 100%. `size-12` sets width and height at once, handy for avatars and icons. For readable text columns and cards, use named maximum widths: `max-w-sm` is 24rem (384px), and the ladder goes up through `max-w-md`, `max-w-lg` and beyond. `min-h-screen` makes an element at least as tall as the screen.' },
+      {
+        type: 'version',
+        text: 'The v4.3 width docs show `w-<number>` as `calc(var(--spacing) * <number>)`, `w-<fraction>` as `calc(<fraction> * 100%)`, and `size-<number>` as width and height together. Named widths come from the container scale, for example `w-sm` is 24rem (384px) and `w-xl` is 36rem (576px).',
+        checked: CHECKED,
+        sources: [DOCS.width],
+      },
+      { type: 'heading', text: 'Typography' },
+      { type: 'paragraph', text: 'Text has four things you control most: size, weight, line height and alignment. Size classes are named, not numbered: `text-xs`, `text-sm`, `text-base`, `text-lg`, `text-xl`, `text-2xl` and so on. Each one sets a sensible line height with it, so you rarely need to set that yourself.' },
+      {
+        type: 'table',
+        headers: ['Class', 'Size', 'Good for'],
+        rows: [
+          ['`text-xs`', '0.75rem (12px)', 'Fine print and labels'],
+          ['`text-sm`', '0.875rem (14px)', 'Secondary text, table cells'],
+          ['`text-base`', '1rem (16px)', 'Body text'],
+          ['`text-lg`', '1.125rem (18px)', 'Lead paragraphs'],
+          ['`text-2xl`', '1.5rem (24px)', 'Section headings'],
+          ['`text-3xl`', '1.875rem (30px)', 'Page titles and big numbers'],
+        ],
+        caption: 'Text sizes from the Tailwind default theme',
+      },
+      { type: 'paragraph', text: 'Weight classes are `font-normal`, `font-medium`, `font-semibold` and `font-bold`; use semibold for headings and buttons, and keep body text normal. `leading-*` changes the line height (`leading-6` is 1.5rem) and `tracking-tight` or `tracking-wide` adjusts letter spacing. A shortcut sets size and line height together: `text-sm/6` means 14px text with a 1.5rem line height. Alignment is `text-left`, `text-center` and `text-right`.' },
+      {
+        type: 'version',
+        text: 'The sizes above come from the v4.3 `font-size` reference. The slash form `text-sm/6` sets the font size and a line height of 6 steps on the spacing scale, which we confirmed by compiling it with Tailwind 4.3.5 (it generated a 1.5rem line height).',
+        checked: CHECKED,
+        sources: [DOCS.fontSize],
+      },
+      { type: 'heading', text: 'Colour' },
+      { type: 'paragraph', text: 'The default palette has many named colours (red, amber, green, sky, blue, violet, gray and more), and each comes in shades from `50` (almost white) to `950` (almost black). A colour class is a prefix, a colour and a shade: `bg-sky-500` is a sky-blue background, `text-gray-900` is near-black text, `border-gray-200` is a light border. The same colour names work with `bg-`, `text-`, `border-`, `ring-` and `fill-`. Light shades (50 to 200) make good backgrounds, 500 and 600 are brand-like buttons, and 800 to 950 suit text on light backgrounds.' },
+      { type: 'paragraph', text: 'To make a colour see-through, add a slash and a percentage: `bg-black/50` is a half-transparent black, `bg-sky-500/10` is a faint wash of sky blue. This replaces the old `bg-opacity-50` classes, which no longer exist in version 4.' },
+      {
+        type: 'version',
+        text: 'Tailwind CSS v4.3 defines its default palette with `oklch()` colour values. The v4 upgrade guide lists `bg-opacity-*`, `text-opacity-*` and the other opacity utilities as removed, with the slash modifier (`bg-black/50`) as the replacement. It also says `border-*` now defaults to `currentColor` rather than gray-200, so write the colour yourself: `border border-gray-200`.',
+        checked: CHECKED,
+        sources: [DOCS.colors, DOCS.upgrade],
+      },
+      { type: 'warning', text: 'Pretty is not the same as readable. Light grey text on white can look elegant and still be hard to read. The web accessibility standard (WCAG 2.2, level AA) asks for a contrast ratio of at least 4.5:1 for normal text and 3:1 for large text (about 24px, or 18.5px bold). As a rule of thumb, `text-gray-500` is fine for secondary text on white, while `text-gray-400` usually is not. Use a contrast checker for anything you are unsure about.' },
+      {
+        type: 'version',
+        text: 'The 4.5:1 and 3:1 figures are from the W3C\'s explanation of WCAG 2.2 success criterion 1.4.3 (Contrast, Minimum, level AA). The gray shade guidance is our rule of thumb, not part of the standard.',
+        checked: CHECKED,
+        sources: [DOCS.wcag],
+      },
+      { type: 'heading', text: 'Rounded corners, borders and shadows' },
+      { type: 'paragraph', text: 'These three give a box its character. `rounded-md` is 6px, `rounded-lg` 8px, `rounded-xl` 12px and `rounded-full` makes a circle or a pill. `border` adds a 1px border (so write its colour, for example `border border-gray-200`). `shadow-sm` is a subtle shadow for cards, `shadow-md` and `shadow-lg` are for things that float, such as dropdowns.' },
+      {
+        type: 'version',
+        text: 'Version 4 renamed the small steps: `shadow-sm` is now `shadow-xs` and what used to be plain `shadow` is now `shadow-sm`; the same shift applies to `rounded` (now `rounded-sm`), `blur`, and `drop-shadow`. A v3 tutorial that says `shadow` or `rounded` gets a slightly different look in v4. The ring utility also changed: `ring` is now 1px with `currentColor`, and v3\'s 3px ring is `ring-3`.',
+        checked: CHECKED,
+        sources: [DOCS.upgrade, DOCS.radius, DOCS.shadow],
+      },
+      { type: 'heading', text: 'Putting it together: a stat card' },
+      {
+        type: 'code',
+        language: 'html',
+        label: 'A dashboard stat card',
+        code: `<article class="rounded-xl border border-gray-200 bg-white p-5 shadow-xs">
+  <p class="text-sm font-medium text-gray-500">Sales today</p>
+  <p class="mt-2 text-3xl font-semibold tracking-tight text-gray-900">₱12,480</p>
+  <p class="mt-1 text-sm text-green-700">+8% from yesterday</p>
+</article>`,
+      },
+      { type: 'paragraph', text: 'Read the choices. The card has a light border and a faint shadow, `p-5` (20px) of breathing room and round corners. The label is small and grey, the number is large and bold-ish with tight spacing, and the trend uses a dark green. `mt-2` and `mt-1` put a little space above the number and the trend. Every value is a step on a scale, so the card matches any other card built the same way.' },
+      {
+        type: 'takeaways',
+        items: [
+          'One spacing step is a quarter of a rem (4px), so `p-4` is 16px and `gap-6` is 24px; `px`, `py`, `pt`, `mx` and the rest pick the side.',
+          'Widths use the same numbers, fractions (`w-1/2`), `w-full`, `size-12` and named maxima like `max-w-sm`.',
+          'Text size classes (`text-sm`, `text-2xl`) include a line height; `font-semibold` is the usual heading weight.',
+          'Colours are `bg-sky-500`-style names with shades 50 to 950; add transparency with a slash, like `bg-black/50`.',
+          'In v4, `shadow-xs`/`shadow-sm` and `rounded-xs`/`rounded-sm` replaced the old small steps, and borders need an explicit colour.',
+          'Check contrast: 4.5:1 for normal text and 3:1 for large text is the WCAG AA minimum.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'tailwind-css-03-predict-output-1',
+          kind: 'predict-output',
+          title: 'How far from the edge?',
+          story: 'A card holds a box that holds a paragraph, and you want to know how much room the paragraph has.',
+          prompt: 'Assume the default theme and a 16px root font size. Preflight has removed all margins, and there are no borders. How far is the paragraph\'s left edge from the outer box\'s left edge, and how far is its top edge from the outer box\'s top edge? Write the two distances, one per line.',
+          concept: 'spacing scale',
+          language: 'html',
+          code: `<div class="p-4">
+  <div class="px-2 py-6">
+    <p class="text-sm">Total</p>
+  </div>
+</div>`,
+          expected: '24px\n40px',
+          choices: ['24px\n40px', '24px\n24px', '8px\n24px', '12px\n20px'],
+          wrongNotes: {
+            '24px\n24px': 'The top distance adds both boxes\' top padding: 16px from `p-4` plus 24px from `py-6`.',
+            '8px\n24px': 'You counted only the inner box. The outer `p-4` adds 16px on every side as well.',
+            '12px\n20px': 'Multiply by 4: each step is 4px, not 2px.',
+          },
+          hints: [
+            'Each number on the scale is 4px, and the paddings of nested boxes add up.',
+            'Left: the outer box gives `p-4`, the inner gives `px-2`. Top: `p-4` and `py-6`.',
+            'Left is 16 + 8 and top is 16 + 24.',
+          ],
+          explanation: '`p-4` is 16px on all sides, `px-2` adds 8px left and right, and `py-6` adds 24px top and bottom. So the paragraph starts 16 + 8 = 24px from the left and 16 + 24 = 40px from the top.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'tailwind-css-03-fill-blank-1',
+          kind: 'fill-blank',
+          title: 'Style the product card',
+          prompt: 'Complete the three classes: 24px of padding all round (`p-` plus the right number), a semibold heading, and mid-grey secondary text.',
+          concept: 'spacing, weight and colour utilities',
+          language: 'html',
+          code: `<div class="rounded-xl border border-gray-200 bg-white ___">
+  <h3 class="text-lg ___">Pandesal</h3>
+  <p class="mt-1 text-sm ___">12 pieces per bag</p>
+  <p class="mt-4 text-2xl font-semibold">₱85</p>
+</div>`,
+          blanks: [
+            { answers: ['p-6'], feedback: 'Each step is 4px, so 24px is 6 steps. `p-4` would be 16px.' },
+            { answers: ['font-semibold'], feedback: 'Weight utilities start with `font-`. `font-light` would make the heading thinner, not bolder.' },
+            { answers: ['text-gray-500'], feedback: 'Text colour uses the `text-` prefix with a colour and shade. A shade of 500 is mid-tone, 950 is almost black.' },
+          ],
+          bank: ['p-6', 'p-4', 'font-semibold', 'font-light', 'text-gray-500', 'text-gray-950'],
+          hints: [
+            'The padding number times 4 is the pixel size.',
+            'Heading weight: semibold. Secondary text: a mid-tone grey, not near-black.',
+            '24 divided by 4 is 6, so the first blank is `p-6`.',
+          ],
+          explanation: '`p-6` is 6 x 4px = 24px. `font-semibold` is the usual heading weight, and `text-gray-500` is a mid-tone grey that reads as secondary but still has enough contrast on white.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'tailwind-css-03-q1',
+        prompt: 'With the default theme and a 16px root font size, how much padding does `p-6` add?',
+        choices: [
+          '6px on every side',
+          '16px on every side',
+          '24px on every side',
+          '60px on every side',
+        ],
+        answer: 2,
+        explanation: 'One step is a quarter of a rem, 4px, so 6 steps is 24px (1.5rem). The number is a multiplier on the scale, not a pixel count.',
+      },
+      {
+        id: 'tailwind-css-03-q2',
+        prompt: 'You follow an older tutorial that says `shadow` gives a small card shadow. In Tailwind v4, which class gives that same look?',
+        choices: ['`shadow-xs`', '`shadow-md`', '`shadow-lg`', '`shadow-sm`'],
+        answer: 3,
+        explanation: 'Version 4 shifted the names down: the old `shadow` is now `shadow-sm`, and the old `shadow-sm` is `shadow-xs`. That is why you check which version a tutorial uses.',
+      },
+      {
+        id: 'tailwind-css-03-q3',
+        prompt: 'Which class gives a half-transparent black background in Tailwind v4?',
+        choices: [
+          '`bg-black/50`',
+          '`bg-black-50`',
+          '`bg-opacity-50 bg-black`',
+        ],
+        answer: 0,
+        explanation: 'The slash modifier sets the alpha channel. The separate `bg-opacity-*` classes were removed in v4, and `bg-black-50` would look for a shade that black does not have.',
+      },
+      {
+        id: 'tailwind-css-03-q4',
+        prompt: 'A designer asks for light grey body text on white, and the contrast ratio comes out at 3:1 for 16px text. What should you do?',
+        choices: [
+          'Keep it, because 3:1 is enough for any text that is a light grey on white',
+          'Use a darker shade, because normal-size text needs at least 4.5:1 to meet WCAG AA',
+          'Make it bold, which lowers the requirement for 16px text down to 3:1',
+        ],
+        answer: 1,
+        explanation: 'Only large text (about 24px, or 18.5px bold) may go down to 3:1. A 16px body paragraph needs 4.5:1, so pick a darker shade like `text-gray-600`.',
+      },
+    ],
+    task: {
+      title: 'Build and tune a stat card',
+      minutes: 20,
+      steps: [
+        'Add the stat card from the lesson to a page that uses the Play CDN.',
+        'Change `p-5` to `p-3` and `p-8`, then pick the one that looks best. Write down the pixel values using the number times 4 rule.',
+        'Create three variations of the trend line: a positive one in green, a negative one in red and a neutral one in gray, using the 700 shade for each.',
+        'Open a contrast checker, test your gray label text and the trend colours on white, and change any shade that fails 4.5:1.',
+      ],
+    },
+  },
+  {
+    id: 'tailwind-css-04',
+    day: 4,
+    title: 'States and variants: hover, focus and dark mode',
+    summary: 'Make elements react to hover, keyboard focus, disabled state and the dark colour scheme by adding a prefix to any utility.',
+    intro: {
+      objectives: [
+        'Style hover, focus-visible, active and disabled states with variant prefixes',
+        'Use `group` and `peer` to style one element based on the state of another',
+        'Add dark mode with `dark:` and switch it by system setting or by a button',
+      ],
+      why: 'A page that never reacts feels broken: buttons that do not change on hover, links you cannot see when tabbing, a bright white screen at midnight. Variants give you all of that with a few extra words in a class list.',
+    },
+    minutes: 30,
+    skills: ['states-variants', 'dark-mode'],
+    body: [
+      { type: 'paragraph', text: 'So far every class applied all the time. Real interfaces change: a button lightens when your mouse is over it, a link shows an outline when you reach it with the keyboard, a form field turns red when what you typed is wrong, and the whole page can switch to dark colours at night. In plain CSS you write separate rules with selectors like `button:hover`. In Tailwind you add a **variant**: a prefix in front of a utility.' },
+      { type: 'heading', text: 'A variant is a prefix with a condition' },
+      { type: 'paragraph', text: '`bg-sky-500` always sets a background. `hover:bg-sky-700` sets that background only while the element is hovered. The text before the colon is the condition, and the text after it is the normal utility. The two classes live side by side, and the browser applies the second when its condition is true.' },
+      {
+        type: 'code',
+        language: 'html',
+        label: 'A button with states',
+        code: `<button
+  type="button"
+  class="rounded-lg bg-sky-600 px-4 py-2 font-semibold text-white
+         transition-colors
+         hover:bg-sky-700
+         focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-sky-600
+         active:bg-sky-800
+         disabled:opacity-50"
+>
+  Save changes
+</button>`,
+      },
+      { type: 'paragraph', text: 'The first line is the resting button. Then each variant describes one situation. `hover:` is the mouse over it, and `active:` is the moment it is pressed. `focus-visible:` is when a keyboard user has tabbed to it, which is the state that gets a clear outline. `disabled:opacity-50` fades the button when it has the `disabled` attribute. `transition-colors` makes the colour change glide instead of jump.' },
+      {
+        type: 'table',
+        headers: ['Variant', 'Applies when'],
+        rows: [
+          ['`hover:`', 'The pointer is over the element (on devices that can hover)'],
+          ['`focus:` / `focus-visible:`', 'The element has focus / has focus from the keyboard'],
+          ['`active:`', 'The element is being pressed'],
+          ['`disabled:`', 'A form control is disabled'],
+          ['`first:` `last:` `odd:` `even:`', 'The element\'s position among its siblings'],
+          ['`dark:`', 'Dark mode is on'],
+        ],
+        caption: 'A few of the many variants',
+      },
+      { type: 'warning', text: 'Never remove the focus outline without replacing it. People who navigate with a keyboard rely on it to see where they are. Prefer `focus-visible:` styles like the ones above, which appear for keyboard users and stay out of the way for mouse clicks.' },
+      {
+        type: 'version',
+        text: 'In version 4, `hover:` only applies inside `@media (hover: hover)`, so on touch-only screens a tap no longer leaves a "stuck" hover style. If you need the old behaviour, the upgrade guide shows a `@custom-variant hover (&:hover);` override. Also in v4 `outline-none` now sets `outline-style: none`, and the old behaviour moved to `outline-hidden`. We confirmed the hover media query by compiling `hover:bg-sky-700` with Tailwind 4.3.5.',
+        checked: CHECKED,
+        sources: [DOCS.upgrade, DOCS.states],
+      },
+      { type: 'heading', text: 'Stacking variants' },
+      { type: 'paragraph', text: 'Variants combine. `md:hover:bg-sky-700` means hover colour, but only on medium screens and up. `dark:hover:bg-sky-500` means hover colour in dark mode. In version 4 the prefixes apply from left to right, which matters only in rare cases such as `*:first:pt-0`; the upgrade guide explains it if you meet an old class list that breaks.' },
+      { type: 'heading', text: 'Reacting to another element: group and peer' },
+      { type: 'paragraph', text: 'Sometimes the thing that changes is not the element being hovered. Hovering over a whole list row should reveal its edit icon. Typing a bad email should make an error message appear. Tailwind handles these with two marker classes.' },
+      {
+        type: 'list',
+        items: [
+          '**`group`:** put `group` on a parent, then use `group-hover:` (or `group-focus:`) on any child. When the parent is hovered, the child reacts.',
+          '**`peer`:** put `peer` on an element, then use `peer-invalid:` or `peer-checked:` on a **later sibling**. When the peer is invalid or checked, the sibling reacts.',
+        ],
+      },
+      {
+        type: 'code',
+        language: 'html',
+        label: 'Group and peer',
+        code: `<li class="group flex items-center justify-between p-3 hover:bg-gray-50">
+  <span>Pandesal</span>
+  <button type="button" class="invisible group-hover:visible">Edit</button>
+</li>
+
+<label class="block">
+  <input type="email" class="peer rounded-lg border border-gray-300 px-3 py-2" />
+  <p class="invisible text-sm text-red-700 peer-invalid:visible">Enter a valid email.</p>
+</label>`,
+      },
+      { type: 'paragraph', text: 'In the list row, the Edit button is invisible until the `group` (the whole `<li>`) is hovered. In the form, the message under the email field is invisible until the field is invalid. The browser decides what is a valid email, so you write no JavaScript. The one rule to remember: a `peer` styles only siblings that come **after** it in the HTML, because CSS cannot look backwards.' },
+      {
+        type: 'version',
+        text: 'The `group`, `peer`, `group-hover:`, `peer-invalid:` and `peer-checked:` behaviour above is from the v4.3 states page, which also notes that `peer` only works for previous siblings. The page lists many more variants, including `aria-*:`, `data-*:`, `has-*:` and `*:` for direct children.',
+        checked: CHECKED,
+        sources: [DOCS.states],
+      },
+      { type: 'heading', text: 'Dark mode' },
+      { type: 'paragraph', text: 'The `dark:` variant applies a utility in dark mode. You write the light style first as normal, then add the dark one beside it: `bg-white dark:bg-gray-800 text-gray-900 dark:text-white`. By default, "dark mode" means the visitor\'s phone or computer is set to dark, which the browser reports through `prefers-color-scheme`. You write nothing else, and a visitor who switches their system to dark sees your dark styles.' },
+      { type: 'paragraph', text: 'Many sites also offer their own light/dark toggle. For that you change what `dark:` listens to, using one line in your CSS, so that it responds to a `dark` class on the `<html>` element:' },
+      {
+        type: 'code',
+        language: 'css',
+        label: 'style.css',
+        code: `@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));`,
+      },
+      {
+        type: 'code',
+        language: 'html',
+        label: 'The toggle',
+        code: `<html lang="en">
+  <head>
+    <script>
+      // Run early so the page doesn't flash the wrong colours
+      document.documentElement.classList.toggle(
+        "dark",
+        localStorage.theme === "dark" ||
+          (!("theme" in localStorage) &&
+            window.matchMedia("(prefers-color-scheme: dark)").matches)
+      );
+    </script>
+  </head>
+  <body class="bg-white text-gray-900 dark:bg-gray-950 dark:text-gray-100">
+    <button id="theme-toggle" type="button">Toggle theme</button>
+    <script>
+      document.getElementById("theme-toggle").addEventListener("click", () => {
+        const isDark = document.documentElement.classList.toggle("dark");
+        localStorage.theme = isDark ? "dark" : "light";
+      });
+    </script>
+  </body>
+</html>`,
+      },
+      { type: 'paragraph', text: 'The first script runs before the page paints. It adds the `dark` class if the visitor chose dark before (saved in `localStorage`), or if they never chose and their system prefers dark. The button flips the class and remembers the choice. With the `@custom-variant` line, `dark:` now means "an element inside something with the class `dark`", so adding the class to `<html>` darkens the whole page.' },
+      {
+        type: 'diagram',
+        format: 'mermaid',
+        caption: 'Which dark mode is on depends on one line of CSS',
+        source: 'flowchart TD\n  A[Page loads] --> B{Did you add the custom variant line?}\n  B -->|No, default| C[dark: follows the system setting]\n  B -->|Yes| D{Does html have the dark class?}\n  D -->|Yes| E[dark: styles apply]\n  D -->|No| F[Light styles apply, even if the system is dark]',
+      },
+      {
+        type: 'version',
+        text: 'In the v4.3 docs, `dark:` uses the `prefers-color-scheme` media query by default. To control it yourself, add `@custom-variant dark (&:where(.dark, .dark *));` (a `data-theme` attribute works the same way) and toggle the class from JavaScript. The docs\' system-preference script, which stores `localStorage.theme`, is what our example adapts.',
+        checked: CHECKED,
+        sources: [DOCS.dark],
+      },
+      { type: 'tip', text: 'Design dark mode on purpose. Do not just invert the colours. A common pairing is `bg-white` with `dark:bg-gray-900` for cards, text from `text-gray-900` to `dark:text-gray-100`, and borders from `border-gray-200` to `dark:border-gray-800`. Check contrast again in dark mode.' },
+      {
+        type: 'takeaways',
+        items: [
+          'A variant is a prefix: `hover:bg-sky-700` applies that utility only while hovered.',
+          'Use `focus-visible:` for keyboard outlines, `disabled:` for disabled controls and `transition-colors` to smooth changes.',
+          '`group` lets a parent\'s state style its children; `peer` lets an element style the siblings after it.',
+          '`dark:` follows the system setting by default; one `@custom-variant dark` line makes it follow a `dark` class that your toggle controls.',
+          'In v4, `hover:` applies only on devices that can hover, and `outline-none` was renamed `outline-hidden` for the old behaviour.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'tailwind-css-04-match-1',
+          kind: 'match',
+          title: 'Which variant for this situation?',
+          prompt: 'Match each situation to the variant that handles it.',
+          concept: 'choosing variants',
+          labels: { terms: 'Situation', meanings: 'Variant' },
+          pairs: [
+            { term: 'A button should lighten while the mouse is over it', definition: '`hover:`', note: 'Pointer over an element has its own variant.' },
+            { term: 'A link should get a clear outline when someone tabs to it with the keyboard', definition: '`focus-visible:`', note: 'The keyboard-only focus state.' },
+            { term: 'A Submit button should fade while the form is being sent and the button is disabled', definition: '`disabled:`', note: 'It reacts to the disabled attribute.' },
+            { term: 'A row\'s Edit icon should appear when any part of the row is hovered', definition: '`group-hover:`', note: 'The state belongs to the parent, the style to the child.' },
+            { term: 'An error message under a text box should show only while the box content is invalid', definition: '`peer-invalid:`', note: 'The message is a sibling after the input.' },
+          ],
+          hints: [
+            'Ask which element is in the state: the same element, a parent, or a sibling before it.',
+            'Parent state styles a child with `group-*`; a sibling\'s state styles a later sibling with `peer-*`.',
+            'Keyboard focus is `focus-visible`, a disabled button uses `disabled`.',
+          ],
+          explanation: 'The prefix names the condition and where it comes from: the element itself (`hover:`, `focus-visible:`, `disabled:`), its parent (`group-hover:`), or a sibling before it (`peer-invalid:`).',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'tailwind-css-04-fix-bug-1',
+          kind: 'fix-bug',
+          title: 'The error that never shows',
+          story: 'Your signup form should show a red message when the email is invalid, but the message never appears.',
+          prompt: 'Tap the line with the bug, then choose the fix.',
+          concept: 'peer variants',
+          language: 'html',
+          code: `<label class="block">
+  <input type="email" class="rounded-lg border border-gray-300 px-3 py-2" />
+  <p class="invisible text-sm text-red-700 peer-invalid:visible">Enter a valid email.</p>
+</label>`,
+          bugLine: 2,
+          lineNote: 'That line is fine. The problem is in the element that the message is supposed to react to.',
+          fixes: [
+            { line: '  <input type="email" class="peer rounded-lg border border-gray-300 px-3 py-2" />', correct: true, why: '`peer-invalid:` only works when the earlier sibling carries the `peer` class. Adding it connects the message to the input.' },
+            { line: '  <input type="email" class="group rounded-lg border border-gray-300 px-3 py-2" />', correct: false, why: '`group` pairs with `group-*` variants on children. The message uses `peer-invalid:`, so it needs `peer`.' },
+            { line: '  <input type="email" class="peer-invalid rounded-lg border border-gray-300 px-3 py-2" />', correct: false, why: '`peer-invalid` is a variant for the sibling, not a class for the input. The input needs the plain `peer` marker.' },
+            { line: '  <input type="email" class="invalid:peer rounded-lg border border-gray-300 px-3 py-2" />', correct: false, why: 'A variant prefix goes in front of a utility, and `peer` is a marker, not a utility with states.' },
+          ],
+          hints: [
+            'The message uses `peer-invalid:`, so something has to be marked as the peer.',
+            'The input is the element whose validity matters, and it comes before the message.',
+            'Add a marker class named `peer` to the input.',
+          ],
+          explanation: '`peer-*` variants look for an earlier sibling with the class `peer`. Without it the condition never matches, so the message stays invisible no matter what the visitor types.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'tailwind-css-04-predict-output-1',
+          kind: 'predict-output',
+          title: 'Light or dark?',
+          story: 'A visitor\'s phone is set to dark mode. Your CSS file contains the custom variant line from the lesson, and your HTML is not using a toggle yet.',
+          prompt: 'Here is the CSS and the HTML. What background and text colour does the box get? Write them as two lines: `background: ...` then `text: ...`.',
+          concept: 'dark mode selector',
+          language: 'html',
+          code: `<!-- CSS: @custom-variant dark (&:where(.dark, .dark *)); -->
+<html lang="en">
+  <body>
+    <div class="bg-white text-gray-900 dark:bg-gray-800 dark:text-white">Hello</div>
+  </body>
+</html>`,
+          expected: 'background: white\ntext: gray-900',
+          choices: ['background: white\ntext: gray-900', 'background: gray-800\ntext: white', 'background: white\ntext: white', 'background: gray-800\ntext: gray-900'],
+          wrongNotes: {
+            'background: gray-800\ntext: white': 'That is what the default `prefers-color-scheme` behaviour would give. The custom variant replaced it, and `<html>` has no `dark` class.',
+            'background: white\ntext: white': 'Both pairs apply together or not at all. With no `dark` class, neither `dark:` class matches.',
+            'background: gray-800\ntext: gray-900': 'The two `dark:` classes share one condition, so they apply together or not at all.',
+          },
+          hints: [
+            'The `@custom-variant` line replaced the default way `dark:` is decided.',
+            'Now `dark:` needs an element with the class `dark` on it or above it.',
+            'The `<html>` tag has no class, so the dark styles do not apply, whatever the phone setting is.',
+          ],
+          explanation: 'With the custom variant, `dark:` follows the `dark` class, not the system setting. No element has it, so the light classes win: white background, gray-900 text. Adding `class="dark"` to `<html>` would flip both.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'tailwind-css-04-q1',
+        prompt: 'What does `hover:bg-sky-700` do?',
+        choices: [
+          'Sets the background to sky-700 permanently, whether or not it is hovered',
+          'Sets the background to sky-700 only while the pointer is over the element',
+          'Sets the background of the parent element to sky-700 when it is hovered',
+        ],
+        answer: 1,
+        explanation: 'The `hover:` prefix is a condition. The utility after it is applied only when that condition is true.',
+      },
+      {
+        id: 'tailwind-css-04-q2',
+        prompt: 'Why do the focus styles in the lesson use `focus-visible:` instead of removing the outline?',
+        choices: [
+          'Outlines are always ugly, so designers prefer to hide them for everyone',
+          'Keyboard users need to see focus, and it shows an outline for them only',
+          '`focus-visible:` makes the page load faster because it skips the outline paint',
+          'It is required for dark mode, which hides the default browser outline',
+        ],
+        answer: 1,
+        explanation: 'People who tab through a page depend on seeing where focus is. `focus-visible:` targets exactly those moments, so you can style a clear outline.',
+      },
+      {
+        id: 'tailwind-css-04-q3',
+        prompt: 'Your page uses `bg-white dark:bg-gray-900` and no custom variant. A visitor switches their phone to dark mode. What happens?',
+        choices: [
+          'Nothing, because you must add a `dark` class by hand before dark styles can apply',
+          'The page stays white until you add a toggle button that switches the colours',
+          'It switches to `gray-900`, because by default `dark:` follows the system',
+        ],
+        answer: 2,
+        explanation: 'The default `dark:` uses the browser\'s `prefers-color-scheme` media query, so it follows the system. The class-based approach is the one that needs your own toggle.',
+      },
+      {
+        id: 'tailwind-css-04-q4',
+        prompt: 'Where must the element with the `peer` class be placed for `peer-checked:` to work on another element?',
+        choices: [
+          'Before the other element, as an earlier sibling',
+          'After the other element, as a later sibling in the same parent',
+          'Anywhere on the page, as long as it is in the same HTML file',
+          'Inside the other element, as one of its children',
+        ],
+        answer: 0,
+        explanation: 'CSS can only look at following siblings, so the `peer` must come first and the styled element after it.',
+      },
+    ],
+    task: {
+      title: 'Make a button and a card feel alive',
+      minutes: 20,
+      steps: [
+        'Copy the button from the lesson into a page, then tab to it with your keyboard and hover it with the mouse. Note what changes.',
+        'Add `disabled` to the button in HTML and confirm that the faded style appears.',
+        'Add the `@custom-variant dark` line and the toggle script, give your body and a card `dark:` classes, and check that the toggle works and survives a page refresh.',
+        'Open your browser\'s dev tools, find the "emulate prefers-color-scheme" option and try both settings with the toggle removed and then with it present.',
+      ],
+    },
+  },
+  {
+    id: 'tailwind-css-05',
+    day: 5,
+    title: 'Responsive design with Tailwind',
+    summary: 'Design for the phone first and add breakpoint prefixes like `md:` and `lg:` to adapt the layout as the screen grows.',
+    intro: {
+      objectives: [
+        'Apply the mobile-first rule: unprefixed classes for every size, prefixed classes from a breakpoint up',
+        'Build a layout that changes columns, direction and visibility at different widths',
+        'Use a container query when a component should respond to its own space, not the whole screen',
+      ],
+      why: 'Most visitors to the sites you build will be on a phone, and a client will also check on a laptop. Responsive utilities let one page serve both without two versions of the HTML.',
+    },
+    minutes: 25,
+    skills: ['responsive-design'],
+    body: [
+      { type: 'paragraph', text: 'A page is opened on screens from a 360px phone to a 1920px monitor, and it has to look right on all of them. The Responsive Web Design course covers the CSS ideas in depth (fluid layouts, media queries and responsive images). This lesson shows the Tailwind way, where each media query becomes a prefix on a class you already know.' },
+      { type: 'heading', text: 'One requirement first: the viewport tag' },
+      { type: 'paragraph', text: 'Phones pretend to be wide unless you tell them not to. Make sure your `<head>` contains this tag, or the responsive classes will seem not to work on a real phone:' },
+      {
+        type: 'code',
+        language: 'html',
+        label: 'In every page\'s head',
+        code: `<meta name="viewport" content="width=device-width, initial-scale=1.0" />`,
+      },
+      { type: 'heading', text: 'Mobile-first: start small, add as you grow' },
+      { type: 'paragraph', text: 'Tailwind is **mobile-first**. A class with no prefix applies at every screen size. A prefixed class such as `md:flex-row` applies at that breakpoint **and wider**. So you design the phone layout first with plain classes, then add prefixes that adjust it for bigger screens. It is like packing a bag: you start with the essentials for a trip, then add extras when there is more room.' },
+      {
+        type: 'table',
+        headers: ['Prefix', 'Applies from', 'In pixels (at 16px root)'],
+        rows: [
+          ['(none)', 'Every width', 'all'],
+          ['`sm:`', '40rem', '640px'],
+          ['`md:`', '48rem', '768px'],
+          ['`lg:`', '64rem', '1024px'],
+          ['`xl:`', '80rem', '1280px'],
+          ['`2xl:`', '96rem', '1536px'],
+        ],
+        caption: 'Tailwind\'s default breakpoints',
+      },
+      {
+        type: 'diagram',
+        format: 'mermaid',
+        caption: 'Prefixed classes add up as the screen grows',
+        source: 'flowchart LR\n  A[Under 640px: plain classes only] --> B[640px and up: plus sm: classes]\n  B --> C[768px and up: plus md: classes]\n  C --> D[1024px and up: plus lg: classes]\n  D --> E[1280px and up: plus xl: classes]',
+      },
+      {
+        type: 'version',
+        text: 'The default breakpoints in the Tailwind CSS v4.3 docs are `sm` 40rem (640px), `md` 48rem (768px), `lg` 64rem (1024px), `xl` 80rem (1280px) and `2xl` 96rem (1536px), each compiled to a `@media (width >= ...)` query. The docs also require the viewport meta tag shown above.',
+        checked: CHECKED,
+        sources: [DOCS.responsive],
+      },
+      { type: 'warning', text: 'The most common beginner mistake: `sm:` does not mean "on small screens". It means "from the small breakpoint up". To centre text on a phone and left-align it from 640px up, write `text-center sm:text-left`, not `sm:text-center`.' },
+      { type: 'heading', text: 'Worked example: a product grid' },
+      {
+        type: 'code',
+        language: 'html',
+        label: 'Columns that grow',
+        code: `<ul class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+  <li class="rounded-xl bg-white p-4 shadow-xs">Pandesal</li>
+  <li class="rounded-xl bg-white p-4 shadow-xs">Kakanin</li>
+  <li class="rounded-xl bg-white p-4 shadow-xs">Ensaymada</li>
+  <li class="rounded-xl bg-white p-4 shadow-xs">Monay</li>
+</ul>`,
+      },
+      { type: 'paragraph', text: 'On a phone only `grid-cols-1` applies, so the cards form one column. At 640px `sm:grid-cols-2` takes over: two columns. At 1024px `lg:grid-cols-4` takes over: four across. The same list serves all three sizes, and you can test it by dragging your browser window narrower and wider.' },
+      { type: 'paragraph', text: 'The same approach changes direction, hides things and scales text and spacing. This header stacks its parts on a phone and puts them in a row from 768px:' },
+      {
+        type: 'code',
+        language: 'html',
+        label: 'A header that adapts',
+        code: `<header class="flex flex-col gap-3 p-4 md:flex-row md:items-center md:justify-between md:p-8">
+  <h1 class="text-2xl font-bold md:text-4xl">Tindahan</h1>
+  <nav class="hidden gap-4 md:flex">
+    <a href="/orders">Orders</a>
+    <a href="/products">Products</a>
+  </nav>
+  <button type="button" class="md:hidden">Menu</button>
+</header>`,
+      },
+      { type: 'paragraph', text: 'Read it as phone first. The header is a column (`flex flex-col`), the title is `text-2xl`, the nav is `hidden`, and a Menu button shows. From 768px, `md:flex-row` turns the header into a row, the title grows to `text-4xl`, the padding doubles, the nav switches from `hidden` to `md:flex`, and the Menu button vanishes with `md:hidden`. Notice there is no class for "phone": the plain classes are the phone.' },
+      { type: 'heading', text: 'Below a breakpoint, and ranges' },
+      { type: 'paragraph', text: 'Sometimes you need the opposite: a style only below a size. Every breakpoint has a `max-` twin: `max-md:hidden` applies under 768px. Combine two to target a band, like `md:max-lg:flex`, which applies from 768px up to just under 1024px. You can also write a one-off size with square brackets, such as `min-[600px]:grid-cols-2`. Reach for these only when mobile-first prefixes are not enough.' },
+      { type: 'heading', text: 'Container queries: respond to the parent, not the screen' },
+      { type: 'paragraph', text: 'Breakpoints look at the whole screen. But consider a product card that appears in a narrow sidebar on one page and in a wide main column on another. The screen is the same size in both cases, yet the card has very different room. A **container query** solves this: the card responds to the width of its parent.' },
+      {
+        type: 'code',
+        language: 'html',
+        label: 'A card that adapts to its container',
+        code: `<div class="@container">
+  <article class="flex flex-col gap-3 @md:flex-row">
+    <img src="pandesal.jpg" alt="Pandesal" class="@md:w-40" />
+    <div>
+      <h3 class="font-semibold">Pandesal</h3>
+      <p class="text-sm text-gray-500">12 pieces per bag</p>
+    </div>
+  </article>
+</div>`,
+      },
+      { type: 'paragraph', text: '`@container` marks the wrapper as a container to measure. Inside it, `@md:flex-row` applies when that wrapper is at least 28rem (448px) wide, whatever the screen size. In a narrow sidebar the card stacks; in a wide column it becomes a row.' },
+      {
+        type: 'version',
+        text: 'Container queries are built into Tailwind v4 core (no plugin). In the v4.3 docs, `@container` marks a container and variants like `@sm:` and `@md:` respond to its width; the defaults run from `@3xs` (16rem) to `@7xl` (80rem), with `@md` at 28rem. `@max-md:` and named containers (`@container/main`, `@sm/main:`) also exist. Compiling with Tailwind 4.3.5 produced `@container (width >= 28rem)` for `@md:`.',
+        checked: CHECKED,
+        sources: [DOCS.responsive, DOCS.blogV4],
+      },
+      { type: 'heading', text: 'Your own breakpoints' },
+      { type: 'paragraph', text: 'Breakpoints live in your CSS as theme variables. Add one named `3xl`, or change an existing one, with `@theme`:' },
+      {
+        type: 'code',
+        language: 'css',
+        label: 'style.css',
+        code: `@import "tailwindcss";
+
+@theme {
+  --breakpoint-3xl: 120rem;
+}`,
+      },
+      { type: 'paragraph', text: 'Now `3xl:grid-cols-6` works. Keep to the same unit as the defaults (rem), because the docs warn that mixing units can order the generated CSS unexpectedly. Lesson 6 explains `@theme` properly.' },
+      { type: 'tip', text: 'Test with real tools. In your browser\'s dev tools, turn on the device toolbar and drag the width. Then open the page on your own phone, because emulators miss things like touch sizes.' },
+      {
+        type: 'takeaways',
+        items: [
+          'Unprefixed classes apply at every width; `sm:`, `md:`, `lg:` apply from 640px, 768px and 1024px up. Design the phone layout first.',
+          '`sm:` means "from small up", so use `text-center sm:text-left`, not `sm:text-center`, to centre on phones only.',
+          'Show and hide with `hidden md:flex` and `md:hidden`; change columns with `grid-cols-1 sm:grid-cols-2 lg:grid-cols-4`.',
+          '`max-md:` targets below a breakpoint, and stacking `md:max-lg:` targets a range.',
+          'Use `@container` and `@md:` when a component should adapt to the space it is given, not the whole screen.',
+          'Add custom breakpoints with `--breakpoint-*` in `@theme`, and keep the viewport meta tag in the page head.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'tailwind-css-05-predict-output-1',
+          kind: 'predict-output',
+          title: 'How many columns?',
+          story: 'You test the product grid from the lesson at three window widths.',
+          prompt: 'For widths of 500px, 700px and 1100px (default breakpoints), how many columns does the list show? Write one number per line, in that order.',
+          concept: 'breakpoints',
+          language: 'html',
+          code: `<ul class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
+  ...
+</ul>`,
+          expected: '1\n2\n4',
+          choices: ['1\n2\n4', '1\n1\n4', '2\n2\n4', '1\n2\n2'],
+          wrongNotes: {
+            '1\n1\n4': '700px is wider than 640px, so `sm:grid-cols-2` already applies there.',
+            '2\n2\n4': 'At 500px the window is under the `sm` breakpoint of 640px, so only `grid-cols-1` applies.',
+            '1\n2\n2': 'At 1100px the window is wider than 1024px, so `lg:grid-cols-4` applies. Larger prefixes win when they match.',
+          },
+          hints: [
+            'Compare each width to 640px (`sm`) and 1024px (`lg`).',
+            '500 is under 640. 700 is over 640 but under 1024. 1100 is over 1024.',
+            'The last matching prefix sets the columns: none, then `sm:`, then `lg:`.',
+          ],
+          explanation: 'At 500px nothing prefixed matches, so there is 1 column. At 700px `sm:` matches (2 columns). At 1100px `lg:` matches as well and, as the later rule, sets 4 columns.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'tailwind-css-05-fix-bug-1',
+          kind: 'fix-bug',
+          title: 'Centred on tablets, not on phones',
+          story: 'You want the title centred on phones and left-aligned from 640px up. On a real phone it is left-aligned and only centres on bigger screens.',
+          prompt: 'Tap the line with the bug, then choose the fix.',
+          concept: 'mobile-first prefixes',
+          language: 'html',
+          code: `<section class="p-4">
+  <h1 class="text-2xl font-bold sm:text-center">Tindahan</h1>
+  <p class="text-gray-600">Fresh bread every morning.</p>
+</section>`,
+          bugLine: 2,
+          lineNote: 'That line is fine. The problem is in how the heading is aligned.',
+          fixes: [
+            { line: '  <h1 class="text-2xl font-bold text-center sm:text-left">Tindahan</h1>', correct: true, why: 'The plain `text-center` is the phone style, and `sm:text-left` overrides it from 640px up.' },
+            { line: '  <h1 class="text-2xl font-bold sm:text-center md:text-left">Tindahan</h1>', correct: false, why: 'Still no plain class, so phones stay left-aligned. And now it would be centred only between 640px and 768px.' },
+            { line: '  <h1 class="text-2xl font-bold max-sm:text-left">Tindahan</h1>', correct: false, why: '`max-sm:` applies below 640px, and left is what phones already have, so this changes nothing and inverts the intent.' },
+            { line: '  <h1 class="text-2xl font-bold small:text-center">Tindahan</h1>', correct: false, why: 'There is no `small:` variant. The prefixes are `sm:`, `md:`, `lg:` and so on.' },
+          ],
+          hints: [
+            'Which classes apply to a 400px phone? Only the ones with no prefix.',
+            '`sm:text-center` is skipped on phones, because 400px is under 640px.',
+            'Make centring the default (no prefix), then undo it at `sm:` with `sm:text-left`.',
+          ],
+          explanation: 'Mobile-first means the phone style is the plain class. `text-center` applies everywhere, and `sm:text-left` overrides it from 640px up.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'tailwind-css-05-scenario-1',
+          kind: 'scenario',
+          title: 'The same card in two places',
+          prompt: 'Pick the best approach.',
+          concept: 'container queries',
+          situation: 'Your product card is used in the narrow sidebar of the shop page and in the wide main column of a catalogue page. On a 1280px screen, it should be a stacked layout in the sidebar and an image-beside-text row in the wide column.',
+          options: [
+            { text: 'Wrap the card in `@container` and switch it with `@md:flex-row`, so it responds to the space its parent gives it.', consequence: 'In the sidebar the container is narrow, so the card stays stacked; in the wide column it turns into a row. One component, two outcomes.', quality: 'best' },
+            { text: 'Make two versions of the card and place the right one on each page.', consequence: 'It works, but you maintain two nearly identical cards and must remember to update both.', quality: 'acceptable' },
+            { text: 'Use `lg:flex-row` on the card.', consequence: 'On a 1280px screen both places match `lg`, so both cards become rows and the sidebar one is squeezed.', quality: 'poor' },
+          ],
+          hints: [
+            'On the same 1280px screen, the two cards live in places of different width.',
+            'Screen breakpoints cannot tell the two places apart.',
+            'A prefix that measures the parent is what you need.',
+          ],
+          explanation: 'Breakpoints compare against the screen, which is the same in both places. A container query compares against the parent, so the same markup adapts to its slot.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'tailwind-css-05-q1',
+        prompt: 'What happens to `md:flex-row` on a screen that is 600px wide (default breakpoints)?',
+        choices: [
+          'It applies, because 600px counts as a medium screen',
+          'It applies only when the phone is held in landscape orientation',
+          'It does not apply yet, because `md:` only starts at 768px and 600px is below it',
+        ],
+        answer: 2,
+        explanation: 'Prefixed classes apply from their breakpoint upward, and `md` is 768px. Below that, the element keeps its plain classes.',
+      },
+      {
+        id: 'tailwind-css-05-q2',
+        prompt: 'You want one column on phones, two from 768px and three from 1024px. Which class list does that?',
+        choices: [
+          '`grid-cols-3 md:grid-cols-2 lg:grid-cols-1`',
+          '`mobile:grid-cols-1 tablet:grid-cols-2 desktop:grid-cols-3`',
+          '`grid-cols-1 md:grid-cols-2 lg:grid-cols-3`',
+        ],
+        answer: 2,
+        explanation: 'Start with the phone layout as the plain class and add each larger layout with its breakpoint prefix. The default prefixes are `sm`, `md`, `lg`, `xl` and `2xl`, not device names.',
+      },
+      {
+        id: 'tailwind-css-05-q3',
+        prompt: 'A card must change from stacked to a row depending on the width of the column it sits in, not the screen width. What do you use?',
+        choices: [
+          '`@container` on the parent and `@md:flex-row` on the card',
+          '`md:flex-row` on the card, which compares against the parent column width',
+          '`max-md:flex-row` on the card, so it switches below the medium width',
+        ],
+        answer: 0,
+        explanation: 'Only container queries measure the parent. `md:` and `max-md:` are screen breakpoints, so they cannot tell a sidebar from a wide column.',
+      },
+      {
+        id: 'tailwind-css-05-q4',
+        prompt: 'Which classes hide a nav on phones and show it as a flex row from 768px up?',
+        choices: [
+          '`md:hidden flex`',
+          '`hidden md:flex`',
+          '`max-md:flex hidden`',
+          '`sm:hidden md:flex`',
+        ],
+        answer: 1,
+        explanation: '`hidden` is the phone style, and `md:flex` turns on flex from 768px. In `md:hidden flex` the nav is shown on phones and hidden on larger screens.',
+      },
+    ],
+    task: {
+      title: 'Make a page that adapts',
+      minutes: 20,
+      steps: [
+        'Take your bakery page from earlier lessons. Make sure the viewport meta tag is in its head.',
+        'Build the product grid so it shows 1, 2 and 4 columns, then drag the browser window to confirm each switch.',
+        'Add a header that stacks on a phone and becomes a row from `md`, with a menu button that is hidden from `md` up.',
+        'Open the page on your own phone (or the dev tools device toolbar) and fix anything that is cramped.',
+      ],
+    },
+  },
+  {
+    id: 'tailwind-css-06',
+    day: 6,
+    title: 'Reusable components and design tokens',
+    summary: 'Stop repeating long class lists by extracting components, and keep colours, fonts and radii consistent with theme variables.',
+    intro: {
+      objectives: [
+        'Choose how to reuse a repeated class list: a loop, a component or a small custom class',
+        'Explain why class names must be written out in full and fix a dynamic class name',
+        'Define design tokens with `@theme` and use them as utilities',
+      ],
+      why: 'A real project repeats the same button and card a hundred times. If you copy class lists everywhere, one design change means a hundred edits. Components and tokens let you change it once.',
+    },
+    minutes: 30,
+    skills: ['component-reuse', 'design-tokens'],
+    body: [
+      { type: 'paragraph', text: 'After a few days with Tailwind a worry appears. A button needs twelve classes, and your app has fourteen buttons. Copying the same long list fourteen times looks wrong, and it is: when the designer asks for rounder corners you would edit fourteen places. The good news is that Tailwind\'s own advice for this is plain and practical, and it does not mean going back to naming every class.' },
+      { type: 'heading', text: 'Reuse in the right order' },
+      { type: 'paragraph', text: 'Before you extract anything, ask where the repetition is. The official docs suggest these approaches, roughly from simplest to heaviest:' },
+      {
+        type: 'list',
+        ordered: true,
+        items: [
+          '**A loop.** If the repeats are items rendered from a list (products, users), the class list is written once inside the loop. Nothing to extract.',
+          '**Multi-cursor editing.** For repeats within one file, your editor can change every copy at once. No new abstraction.',
+          '**A component.** For repeats across files, make a component (or a template partial in a server language). The classes live in one place.',
+          '**A small custom class.** For simple cases, write one CSS class such as `.btn-primary` that holds the shared styles.',
+        ],
+      },
+      {
+        type: 'version',
+        text: 'This ordering follows the "Managing duplication" section of the Tailwind CSS v4.3 docs, which recommend components and template partials over custom CSS for anything more complex than a single element.',
+        checked: CHECKED,
+        sources: [DOCS.utilityFirst],
+      },
+      { type: 'heading', text: 'A component with variants' },
+      { type: 'paragraph', text: 'Components are the answer most of the time. Here is a React button, small enough to read. If you have not met React yet, the React course teaches it; here only the class handling matters. It keeps the shared classes in one place and the differences between button types in a lookup table.' },
+      {
+        type: 'code',
+        language: 'jsx',
+        label: 'Button.jsx',
+        code: `const variants = {
+  primary: "bg-brand-600 text-white hover:bg-brand-700",
+  secondary: "bg-white text-gray-900 ring-1 ring-gray-300 hover:bg-gray-50",
+  danger: "bg-red-600 text-white hover:bg-red-700",
+};
+
+export function Button({ variant = "primary", children, ...props }) {
+  return (
+    <button
+      type="button"
+      className={\`rounded-lg px-4 py-2 text-sm font-semibold transition-colors disabled:opacity-50 \${variants[variant]}\`}
+      {...props}
+    >
+      {children}
+    </button>
+  );
+}`,
+      },
+      { type: 'paragraph', text: 'The `variants` object holds three **complete** class lists. The component picks one by name and adds it after the shared classes. Using `<Button variant="danger">Delete</Button>` anywhere in the app gives the same button. Change `rounded-lg` once and every button changes.' },
+      { type: 'heading', text: 'The one rule: write class names in full' },
+      { type: 'paragraph', text: 'Here is how Tailwind finds your classes, and why the lookup table above is written the way it is. Tailwind does not understand your code. It reads your files as plain text, finds anything that looks like a class name, and writes CSS for those it recognises. It never runs your code, so it cannot work out what a template would produce at runtime.' },
+      {
+        type: 'code',
+        language: 'jsx',
+        label: 'Broken: Tailwind never sees the full class',
+        code: `function Badge({ tone }) {
+  return <span className={\`bg-\${tone}-100 text-\${tone}-800\`}>New</span>;
+}`,
+      },
+      {
+        type: 'code',
+        language: 'jsx',
+        label: 'Works: every class is written out',
+        code: `const tones = {
+  green: "bg-green-100 text-green-800",
+  red: "bg-red-100 text-red-800",
+};
+
+function Badge({ tone }) {
+  return <span className={\`rounded-full px-2 \${tones[tone]}\`}>New</span>;
+}`,
+      },
+      { type: 'paragraph', text: 'In the broken version the text `bg-green-100` never appears in the file, only pieces of it, so no CSS is made and the badge has no colour. In the fixed version the full class names sit in the file as plain strings, so Tailwind finds them. The rule in one line: **map to complete class names, never assemble them.**' },
+      {
+        type: 'version',
+        text: 'The v4.3 docs state the rule as "Don\'t construct class names dynamically" and "Always use complete class names", with this mapping pattern as the fix. By default Tailwind scans all project files except those in `.gitignore`, `node_modules`, binary files and CSS files. For something it skips, such as a UI library in `node_modules`, add `@source "../node_modules/@acmecorp/ui-lib";` to your CSS.',
+        checked: CHECKED,
+        sources: [DOCS.detecting],
+      },
+      { type: 'heading', text: 'Design tokens with @theme' },
+      { type: 'paragraph', text: 'Look at the Button above: it uses `bg-brand-600`, but Tailwind has no colour called brand. You defined it. A **design token** is a named design decision, such as "our main colour" or "our card corner radius", stored in one place so every component shares it. In Tailwind v4 you declare tokens in your CSS with `@theme`.' },
+      {
+        type: 'code',
+        language: 'css',
+        label: 'style.css',
+        code: `@import "tailwindcss";
+
+@theme {
+  --color-brand-50: oklch(0.97 0.02 178);
+  --color-brand-500: oklch(0.65 0.12 178);
+  --color-brand-600: oklch(0.56 0.11 178);
+  --color-brand-700: oklch(0.48 0.09 178);
+  --font-display: "Poppins", sans-serif;
+  --radius-card: 0.75rem;
+}`,
+      },
+      { type: 'paragraph', text: 'Each line is a CSS variable whose **name starts with a namespace**, and that prefix tells Tailwind what to generate. Anything starting with `--color-` becomes colour utilities, so `--color-brand-500` gives you `bg-brand-500`, `text-brand-500` and `border-brand-500`. `--font-display` gives `font-display`, and `--radius-card` gives `rounded-card`. No other file changes, and no JavaScript config is needed.' },
+      {
+        type: 'diagram',
+        format: 'mermaid',
+        caption: 'One variable becomes both utilities and a CSS variable',
+        source: 'flowchart LR\n  A["@theme: --color-brand-500"] --> B[bg-brand-500]\n  A --> C[text-brand-500]\n  A --> D[border-brand-500]\n  A --> E["var(--color-brand-500) in your own CSS"]',
+      },
+      {
+        type: 'table',
+        headers: ['Namespace', 'Creates', 'Example'],
+        rows: [
+          ['`--color-*`', 'Colour utilities', '`--color-brand-500` gives `bg-brand-500`'],
+          ['`--font-*`', 'Font family utilities', '`--font-display` gives `font-display`'],
+          ['`--text-*`', 'Font size utilities', '`--text-huge` gives `text-huge`'],
+          ['`--radius-*`', 'Border radius utilities', '`--radius-card` gives `rounded-card`'],
+          ['`--shadow-*`', 'Box shadow utilities', '`--shadow-card` gives `shadow-card`'],
+          ['`--breakpoint-*`', 'Responsive variants', '`--breakpoint-3xl` gives `3xl:`'],
+        ],
+        caption: 'The prefix of a theme variable decides what it creates',
+      },
+      { type: 'paragraph', text: 'Defining a new name adds to Tailwind\'s default theme, so `bg-red-500` still works. Redefining an existing name replaces it: `--breakpoint-sm: 30rem;` moves the `sm:` breakpoint. And `--color-*: initial;` wipes the whole default palette, so only the colours you list afterwards exist, which is how a team enforces its brand.' },
+      {
+        type: 'version',
+        text: 'Theme variables are special CSS variables declared with `@theme`: they create utilities and are also emitted as normal CSS variables, so `var(--color-brand-500)` works in your own CSS. Plain `:root` variables do not create utilities. Variables must be declared at the top level of `@theme`, not nested. We verified the `bg-brand-500`, `font-display` and `rounded-card` outputs by compiling with Tailwind 4.3.5.',
+        checked: CHECKED,
+        sources: [DOCS.theme],
+      },
+      { type: 'heading', text: 'Custom CSS, when you need it' },
+      { type: 'paragraph', text: 'Sometimes a utility does not exist, or you are styling markup you do not control. Tailwind lets you write regular CSS next to its classes. Use `@utility` to add your own utility that also works with variants, and `@apply` to pull existing utilities into a CSS rule:' },
+      {
+        type: 'code',
+        language: 'css',
+        label: 'style.css',
+        code: `@utility scrollbar-hidden {
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+.markdown-link {
+  @apply font-medium text-brand-600 underline hover:text-brand-700;
+}`,
+      },
+      { type: 'paragraph', text: '`scrollbar-hidden` can now be used as a class, and `hover:scrollbar-hidden` would work too. `.markdown-link` is useful for links inside blog text that your HTML does not let you add classes to. Use these sparingly. If you find yourself turning every component into an `@apply` class, you have gone back to naming everything, which is what utilities were meant to save you from.' },
+      {
+        type: 'version',
+        text: 'In v4 the old `@layer utilities` and `@layer components` approach for custom utilities is replaced by `@utility`; `@apply`, `@theme`, `@source` and `@custom-variant` are CSS directives documented on the Functions and directives page. A `tailwind.config.js` file is no longer detected automatically (it can be loaded with `@config`), which is why this course keeps everything in CSS.',
+        checked: CHECKED,
+        sources: [DOCS.directives, DOCS.custom, DOCS.upgrade],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'Reuse in order: a loop, multi-cursor editing, a component, then a small custom class. Components are the usual answer.',
+          'Tailwind reads files as plain text, so write class names in full or map props to complete class strings; never build `bg-${color}-600`.',
+          'Design tokens live in `@theme` in your CSS: `--color-brand-500` creates `bg-brand-500`, and the prefix decides which utilities appear.',
+          'New names add to the default theme, existing names replace it, and `--color-*: initial` clears a whole namespace.',
+          '`@utility` adds your own variant-friendly utilities and `@apply` inlines utilities into CSS, but use them sparingly.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'tailwind-css-06-predict-output-1',
+          kind: 'predict-output',
+          title: 'Which classes get CSS?',
+          story: 'Tailwind scans the badge below as plain text. The project uses this component in one place, `<Badge tone="green" />`, and no other file writes out a green background or text class.',
+          prompt: 'For each class below, will Tailwind generate CSS for it? Write one line per class in this order: `rounded-full`, `px-2`, `bg-green-100`, `text-green-800`, using `yes` or `no`.',
+          concept: 'class detection',
+          language: 'jsx',
+          code: `function Badge({ tone }) {
+  return (
+    <span className={\`rounded-full px-2 bg-\${tone}-100 text-\${tone}-800\`}>
+      New
+    </span>
+  );
+}`,
+          expected: 'rounded-full: yes\npx-2: yes\nbg-green-100: no\ntext-green-800: no',
+          choices: [
+            'rounded-full: yes\npx-2: yes\nbg-green-100: no\ntext-green-800: no',
+            'rounded-full: yes\npx-2: yes\nbg-green-100: yes\ntext-green-800: yes',
+            'rounded-full: no\npx-2: no\nbg-green-100: no\ntext-green-800: no',
+          ],
+          wrongNotes: {
+            'rounded-full: yes\npx-2: yes\nbg-green-100: yes\ntext-green-800: yes': 'Tailwind does not run the template, so `${tone}` is never replaced by "green" while scanning.',
+            'rounded-full: no\npx-2: no\nbg-green-100: no\ntext-green-800: no': '`rounded-full` and `px-2` are written out in full in the file, so they are found.',
+          },
+          hints: [
+            'Tailwind reads the file as plain text and never runs it.',
+            'Look for a complete class name in the file for each of the four.',
+            '`rounded-full` and `px-2` appear whole; the two colour classes are built from pieces.',
+          ],
+          explanation: 'The whole words `rounded-full` and `px-2` are in the file, so they are generated. The colour classes only exist after `${tone}` is filled in at runtime, which Tailwind never sees, so nothing is generated and the badge has no colour.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'tailwind-css-06-fill-blank-1',
+          kind: 'fill-blank',
+          title: 'Name the namespaces',
+          prompt: 'Complete the theme so it creates the utilities `bg-brand-500`, `font-display` and `rounded-card`. Each blank is the namespace that makes that utility exist.',
+          concept: 'theme namespaces',
+          language: 'css',
+          code: `@theme {
+  --___-brand-500: oklch(0.65 0.12 178);
+  --___-display: "Poppins", sans-serif;
+  --___-card: 0.75rem;
+}`,
+          blanks: [
+            { answers: ['color'], feedback: 'A background colour class like `bg-brand-500` comes from the `--color-*` namespace.' },
+            { answers: ['font'], feedback: 'Font family utilities such as `font-display` come from `--font-*`. `--text-*` is for font sizes.' },
+            { answers: ['radius'], feedback: 'Corner utilities like `rounded-card` come from `--radius-*`.' },
+          ],
+          bank: ['color', 'font', 'radius', 'text', 'spacing', 'shadow'],
+          hints: [
+            'The word after the two dashes is the namespace.',
+            '`bg-` works with colours, `font-` with font families and `rounded-` with corner radius.',
+            'The three answers are color, font and radius.',
+          ],
+          explanation: 'The start of a theme variable\'s name decides which utilities it makes: `--color-*` for colours, `--font-*` for font families and `--radius-*` for rounded corners.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'tailwind-css-06-arrange-1',
+          kind: 'arrange',
+          title: 'Build the theme file',
+          prompt: 'Put these lines in order to make a valid Tailwind stylesheet that adds two brand colours.',
+          concept: 'the theme file',
+          language: 'css',
+          solution: [
+            '@import "tailwindcss";',
+            '@theme {',
+            '  --color-brand-500: oklch(0.65 0.12 178);',
+            '  --color-brand-600: oklch(0.56 0.11 178);',
+            '}',
+          ],
+          alternatives: [
+            [
+              '@import "tailwindcss";',
+              '@theme {',
+              '  --color-brand-600: oklch(0.56 0.11 178);',
+              '  --color-brand-500: oklch(0.65 0.12 178);',
+              '}',
+            ],
+          ],
+          reasons: [
+            'Tailwind itself must be imported first so the theme has something to extend.',
+            'The theme block opens after the import.',
+            'Variables go inside the block.',
+            'A second variable in the same block.',
+            'The block closes last.',
+          ],
+          hints: [
+            'The import line sets up Tailwind, so it comes first.',
+            'The braces wrap the variables.',
+            'Import, open the block, two variables, close the block.',
+          ],
+          explanation: 'Every Tailwind v4 stylesheet starts with `@import "tailwindcss";`. The `@theme` block follows and holds the variables, and it adds `bg-brand-500` and `bg-brand-600` without any JavaScript config.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'tailwind-css-06-q1',
+        prompt: 'A component builds its class with `bg-${color}-600`. The colour never shows up. Why?',
+        choices: [
+          'Tailwind only supports its blue colours, so a built name never matches a real one',
+          'The number 600 is not a valid shade, so the whole class is dropped',
+          'JavaScript cannot use template strings inside a `className` attribute',
+          'Tailwind reads plain text and never sees the finished name `bg-red-600`',
+        ],
+        answer: 3,
+        explanation: 'Tailwind scans source text and cannot evaluate the template. Map each value to a full class string, for example `{ red: "bg-red-600" }`.',
+      },
+      {
+        id: 'tailwind-css-06-q2',
+        prompt: 'You add `--color-mint-500: oklch(0.8 0.1 170);` inside `@theme`. Which class can you now use?',
+        choices: [
+          '`bg-mint-500`',
+          '`mint-500` with nothing in front of it',
+          '`color-mint` as a class of its own',
+          '`bg-[mint]` as an arbitrary value',
+        ],
+        answer: 0,
+        explanation: 'The `--color-*` namespace creates colour utilities, so the name after it (`mint-500`) is combined with a prefix such as `bg-`, `text-` or `border-`.',
+      },
+      {
+        id: 'tailwind-css-06-q3',
+        prompt: 'What is the difference between a variable declared in `@theme` and one in `:root`?',
+        choices: [
+          'There is none; both only create plain CSS variables that nothing else uses',
+          '`@theme` variables only work in dark mode, while `:root` ones work everywhere',
+          'A `@theme` variable also makes utility classes; a `:root` one does not',
+        ],
+        answer: 2,
+        explanation: 'Tailwind reads the namespace of `@theme` variables to generate utilities, and it also outputs them as normal CSS variables. Plain `:root` variables are just variables.',
+      },
+      {
+        id: 'tailwind-css-06-q4',
+        prompt: 'The same 12-class button appears in 14 places across 6 files. According to the approach in the lesson, what should you do first?',
+        choices: [
+          'Write a `.btn` class with `@apply` and use it everywhere without further thought',
+          'Make a Button component that holds the classes, so there is one place to edit later',
+          'Use multi-cursor editing in each of the six files when the design changes',
+          'Switch to inline styles so every button carries its own copy of the CSS',
+        ],
+        answer: 1,
+        explanation: 'For repetition across files, a component (or template partial) is the recommended tool. Multi-cursor editing helps within one file, and a custom class is for simple cases.',
+      },
+    ],
+    task: {
+      title: 'Tokens and a Button component',
+      minutes: 20,
+      steps: [
+        'Add the `@theme` block from the lesson to a CSS file and change the hue (the last number in each `oklch()`) to make your own brand colour.',
+        'Use `bg-brand-600` and `rounded-card` on a few elements and watch them follow your tokens when you edit the CSS.',
+        'Write a Button component (React, or an HTML partial if you have not met React) with `primary` and `secondary` variants that map to complete class names.',
+        'On purpose, break one variant by building a class name from pieces. Check in the browser that it has no style, then fix it.',
+      ],
+    },
+  },
+  {
+    id: 'tailwind-css-07',
+    day: 7,
+    title: 'Project: a dashboard UI kit',
+    summary: 'Combine everything into a themed, responsive, dark-mode-ready set of dashboard components and a page that shows them off.',
+    intro: {
+      objectives: [
+        'Plan a small UI kit as tokens, components and one demonstration page',
+        'Assemble a responsive dashboard layout with a sidebar, header and stat cards',
+        'Review the kit for accessibility, light and dark contrast and production readiness',
+      ],
+      why: 'A small kit you built and can show is stronger proof than a list of classes you know. It also gives you a base to reuse on your next client site.',
+    },
+    minutes: 30,
+    skills: ['ui-kit', 'design-tokens', 'component-reuse'],
+    body: [
+      { type: 'paragraph', text: 'This is the lesson where the pieces come together. Over six lessons you learned to read utilities, build layouts, use the spacing and colour scales, handle states and dark mode, go responsive and define your own tokens. Now you will build a **UI kit**: a small set of consistent, reusable parts, plus a page that shows them working together. The example is the dashboard of a sari-sari store called Tindahan. You can theme it for any business you like.' },
+      { type: 'heading', text: 'Plan before you code' },
+      { type: 'paragraph', text: 'A kit is three layers, and building them in this order saves you from rework: decisions first (tokens), then parts that use them (components), then a page that arranges the parts.' },
+      {
+        type: 'diagram',
+        format: 'mermaid',
+        caption: 'The kit has three layers; each one uses only the layer before it',
+        source: 'flowchart TD\n  A["Tokens in style.css: brand colours, radius, dark variant"] --> B["Components: button, badge, stat card, form field, nav link"]\n  B --> C["Dashboard page: sidebar, header and a grid of cards"]\n  C --> D["Build: one minified CSS file for production"]',
+      },
+      {
+        type: 'table',
+        headers: ['Part', 'What it needs', 'Lessons it uses'],
+        rows: [
+          ['Tokens', 'A brand colour scale, a card radius, and a dark mode switch', '4 and 6'],
+          ['Button and badge', 'Variants, hover and focus-visible styles, a disabled look', '3, 4 and 6'],
+          ['Stat card', 'Spacing, type and colour that work in both light and dark', '3 and 4'],
+          ['Form field', 'A label, an input, and an error message driven by `peer`', '4'],
+          ['Layout shell', 'A sidebar that appears from `md`, a header, and a card grid', '2 and 5'],
+        ],
+        caption: 'The kit\'s parts and where you learned them',
+      },
+      { type: 'heading', text: 'Step 1: the tokens' },
+      { type: 'paragraph', text: 'Start with the one file that decides how everything looks. It imports Tailwind, switches dark mode to class-based so a toggle can control it, and defines your colours and radius once.' },
+      {
+        type: 'code',
+        language: 'css',
+        label: 'src/input.css',
+        code: `@import "tailwindcss";
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --color-brand-50: oklch(0.97 0.02 178);
+  --color-brand-100: oklch(0.93 0.05 178);
+  --color-brand-500: oklch(0.65 0.12 178);
+  --color-brand-600: oklch(0.56 0.11 178);
+  --color-brand-700: oklch(0.48 0.09 178);
+  --radius-card: 0.75rem;
+}`,
+      },
+      { type: 'paragraph', text: 'The brand scale uses the same hue (178, a teal) across lightness steps, which is how Tailwind\'s own palettes work: 50 and 100 for backgrounds, 500 and 600 for buttons, 700 for text on light backgrounds. To rebrand the whole kit later, you change these numbers and nothing else.' },
+      { type: 'heading', text: 'Step 2: the components' },
+      { type: 'paragraph', text: 'Build each part once, then reuse it by copying the markup (or wrapping it in a component if you use React). Start with a button and a badge:' },
+      {
+        type: 'code',
+        language: 'html',
+        label: 'Button and badge',
+        code: `<button type="button" class="rounded-lg bg-brand-600 px-4 py-2 text-sm font-semibold text-white transition-colors hover:bg-brand-700 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-brand-600 disabled:opacity-50">
+  New order
+</button>
+
+<span class="rounded-full bg-brand-100 px-2.5 py-0.5 text-xs font-medium text-brand-700 dark:bg-brand-700/20 dark:text-brand-100">
+  Paid
+</span>`,
+      },
+      { type: 'paragraph', text: 'Then the stat card from lesson 3, now with its dark pairings. Every light colour has a dark partner on the same line, so the card works either way:' },
+      {
+        type: 'code',
+        language: 'html',
+        label: 'Stat card',
+        code: `<article class="rounded-card border border-gray-200 bg-white p-5 shadow-xs dark:border-gray-800 dark:bg-gray-900">
+  <p class="text-sm font-medium text-gray-500 dark:text-gray-400">Sales today</p>
+  <p class="mt-2 text-3xl font-semibold tracking-tight">₱12,480</p>
+  <p class="mt-1 text-sm text-brand-700 dark:text-brand-500">+8% from yesterday</p>
+</article>`,
+      },
+      { type: 'paragraph', text: 'Finally a form field. The label is connected to its input with `for` and `id`, so clicking the label focuses the field and screen readers announce it. The error message is a sibling after the input, shown only when the input is invalid, using the `peer` trick from lesson 4:' },
+      {
+        type: 'code',
+        language: 'html',
+        label: 'Form field',
+        code: `<div>
+  <label for="customer-email" class="block text-sm font-medium text-gray-700 dark:text-gray-300">Customer email</label>
+  <input id="customer-email" type="email" class="peer mt-1 block w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-gray-900 focus-visible:outline-2 focus-visible:outline-brand-600 dark:border-gray-700 dark:bg-gray-900 dark:text-gray-100" />
+  <p class="invisible mt-1 text-sm text-red-700 peer-invalid:visible dark:text-red-400">Enter a valid email address.</p>
+</div>`,
+      },
+      { type: 'heading', text: 'Step 3: the layout shell' },
+      { type: 'paragraph', text: 'Now arrange the parts. The page is a horizontal flex: a sidebar and the main area. The sidebar is hidden on phones and appears from `md`. Inside the main area, the stat cards sit in a grid that goes from one column to two to four as the screen widens.' },
+      {
+        type: 'code',
+        language: 'html',
+        label: 'Layout shell (shortened)',
+        code: `<div class="flex min-h-screen">
+  <aside class="hidden w-56 shrink-0 flex-col gap-1 border-r border-gray-200 bg-white p-4 md:flex dark:border-gray-800 dark:bg-gray-900">
+    <a href="#" aria-current="page" class="rounded-lg bg-brand-50 px-3 py-2 text-sm font-medium text-brand-700 dark:bg-brand-700/20 dark:text-brand-100">Overview</a>
+    <a href="#" class="rounded-lg px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-100 dark:text-gray-300 dark:hover:bg-gray-800">Orders</a>
+  </aside>
+  <div class="flex-1">
+    <header class="flex items-center justify-between border-b border-gray-200 bg-white px-4 py-3 sm:px-6 dark:border-gray-800 dark:bg-gray-900">
+      <h1 class="text-xl font-semibold">Overview</h1>
+      <!-- the button goes here -->
+    </header>
+    <main class="p-4 sm:p-6">
+      <div class="grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <!-- four stat cards go here -->
+      </div>
+    </main>
+  </div>
+</div>`,
+      },
+      { type: 'paragraph', text: 'Trace the responsive behaviour. On a phone: the sidebar is `hidden`, the card grid has no column classes so each card is full width (a grid with no `grid-cols` is one column), and padding is `p-4`. From 640px (`sm`): two columns and roomier padding. From 768px (`md`): the sidebar appears. From 1280px (`xl`): four cards in a row. We built a version of this page with Tailwind 4.3.5 and checked it in a real browser: wide and in light mode, and at phone width in dark mode.' },
+      { type: 'heading', text: 'Step 4: the review' },
+      { type: 'paragraph', text: 'A kit is not done when it looks right on your screen. Before you call it finished, walk through this checklist:' },
+      {
+        type: 'list',
+        items: [
+          '**Keyboard:** press Tab through the page. Can you always see where focus is, and does the order make sense?',
+          '**Contrast:** check text colours in light **and** dark mode, aiming for 4.5:1 for normal text.',
+          '**Semantics:** use `<header>`, `<nav>`, `<main>`, `<button>` and `<label>` for their purpose, and mark the current page with `aria-current="page"`.',
+          '**Responsive:** test at about 360px, 768px and 1280px, and on a real phone.',
+          '**Dark mode:** switch it, refresh, and check that your choice is remembered.',
+        ],
+      },
+      { type: 'heading', text: 'Step 5: build it for real' },
+      { type: 'paragraph', text: 'While you built, the Play CDN or `--watch` was fine. To ship, produce one small CSS file and link it instead of the script tag:' },
+      {
+        type: 'code',
+        language: 'bash',
+        label: 'Production build',
+        code: `npx @tailwindcss/cli -i ./src/input.css -o ./dist/output.css --minify`,
+      },
+      {
+        type: 'version',
+        text: 'The Tailwind CLI command with `-i`, `-o` and `--watch` is from the v4.3 installation guide. The `--minify` flag (short form `-m`) is listed in the CLI\'s own `--help` output for version 4.3.5, which we ran; it is not shown on the docs page we read. The Play CDN is documented as development-only.',
+        checked: CHECKED,
+        sources: [DOCS.cli, DOCS.playCdn],
+      },
+      { type: 'tip', text: 'When you finish, write a short README with a screenshot of the light and dark views, the list of components, and how to run the build. A reviewer or client reads that before the code.' },
+      {
+        type: 'takeaways',
+        items: [
+          'Build a kit in three layers: tokens in CSS, components that use them, then a page that arranges the components.',
+          'Pair every light colour with a `dark:` colour on the same element, and keep brand colours as tokens like `bg-brand-600`.',
+          'A responsive shell hides the sidebar on phones (`hidden md:flex`) and grows the card grid (`sm:grid-cols-2 xl:grid-cols-4`).',
+          'Review with the keyboard, in both colour modes, at three widths and on a real phone.',
+          'Ship one minified CSS file from the Tailwind CLI or the Vite build, not the Play CDN.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'tailwind-css-07-tap-reveal-1',
+          kind: 'tap-reveal',
+          title: 'Review the dashboard',
+          prompt: 'Read each question about the dashboard, answer it in your head, then tap to check.',
+          concept: 'reviewing a UI kit',
+          cards: [
+            { front: 'Why do the button, badge and stat card use `brand` colours instead of `teal`?', back: 'Because `brand` is a token in `@theme`. Changing the token values re-themes every part of the kit at once.' },
+            { front: 'How do four stat cards become one, two and four columns?', back: 'The grid is `grid gap-4 sm:grid-cols-2 xl:grid-cols-4`. With no column class it is one column on phones, two from `sm`, and four from `xl`.' },
+            { front: 'Why is the active nav link marked with `aria-current="page"`?', back: 'It tells screen readers which page you are on, and you can also style the active link, which is what the lighter background does.' },
+            { front: 'The email error message is below the input in the HTML. Why does that matter?', back: '`peer-invalid:` only works on siblings after the `peer`, so the message must come after the input it watches.' },
+          ],
+          hints: [
+            'Think about which lesson each part came from.',
+            'Tokens, responsive prefixes and `peer` were all lessons 4 to 6.',
+            'Tap each card and compare it with your answer.',
+          ],
+          explanation: 'Each answer connects a choice in the kit to a lesson: tokens for rebranding, mobile-first prefixes for layout, ARIA for accessibility, and the `peer` ordering rule for form feedback.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'tailwind-css-07-scenario-1',
+          kind: 'scenario',
+          title: 'The client wants orange',
+          prompt: 'Pick the best approach.',
+          concept: 'tokens and rebranding',
+          situation: 'The day before launch, the client says the teal brand colour must become orange. Your kit has 30 uses of `bg-brand-600`, `text-brand-700` and similar classes across the page.',
+          options: [
+            { text: 'Change the values of the `--color-brand-*` variables in `@theme` to orange hues.', consequence: 'Every `brand` class now shows orange. You change one block of CSS, rebuild and re-check contrast.', quality: 'best' },
+            { text: 'Search and replace `brand` with `orange` in all the markup.', consequence: 'It works, but you edited 30 places, and next time the colour changes you must do it again. The token is no longer used.', quality: 'acceptable' },
+            { text: 'Add `!important` orange styles in a new CSS file on top of the teal ones.', consequence: 'You now have two competing colour systems and rules that are hard to debug.', quality: 'poor' },
+          ],
+          hints: [
+            'Which file holds the decision about what "brand" looks like?',
+            'You defined the brand colour once. You should only have to edit it once.',
+            'Edit the theme variables, then re-check contrast, since orange text may need a different shade.',
+          ],
+          explanation: 'The reason for tokens is exactly this. All the markup refers to the name `brand`, and the theme decides what it is. After changing it, recheck contrast, because a new hue can need darker or lighter shades.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'tailwind-css-07-q1',
+        prompt: 'In what order should you build the kit?',
+        choices: [
+          'The dashboard page first, then the components, then the tokens as the last step',
+          'Components first, and add the tokens afterwards if there is time left',
+          'Everything at once in a single HTML file, then split it up later',
+          'Tokens, then the components that use them, then the page that arranges them',
+        ],
+        answer: 3,
+        explanation: 'Each layer depends on the one before it. If you decide colours and radii first, the components and the page pick them up automatically.',
+      },
+      {
+        id: 'tailwind-css-07-q2',
+        prompt: 'The dashboard is finished and about to be deployed. Which step is still missing?',
+        choices: [
+          'Remove all the `dark:` classes so the stylesheet is smaller to download',
+          'Add the Play CDN script to every page so visitors get the newest classes',
+          'Add `!important` to all utilities so nothing can override your styles',
+          'Run a build that outputs one minified CSS file, and link that file',
+        ],
+        answer: 3,
+        explanation: 'The Play CDN is for development only. A build with the CLI or Vite gives visitors one small CSS file containing just the classes you used.',
+      },
+      {
+        id: 'tailwind-css-07-q3',
+        prompt: 'Why does the stat card keep `bg-white dark:bg-gray-900` on the same element?',
+        choices: [
+          'So the markup is right in both colour modes, each light class with a dark partner',
+          'Because Tailwind refuses to build a colour class unless a second one comes with it',
+          'So the card can never change colour when the visitor changes system settings',
+        ],
+        answer: 0,
+        explanation: 'Dark mode is a variant on a utility, not a separate page. Pairing the colours on the same element keeps the component self-contained.',
+      },
+      {
+        id: 'tailwind-css-07-q4',
+        prompt: 'Which check catches a problem that looks fine on your own screen but fails for some users?',
+        choices: [
+          'Looking at the page in one browser window on your own screen, at one size',
+          'Tabbing through the whole page and checking contrast in both light and dark mode',
+          'Counting how many utility classes each element has to compare with others',
+        ],
+        answer: 1,
+        explanation: 'Keyboard focus and contrast are things you cannot see from a mouse and a good monitor. Test them deliberately in both modes.',
+      },
+    ],
+    task: {
+      title: 'Build your dashboard kit',
+      minutes: 20,
+      steps: [
+        'Create the project with the Vite plugin or the Tailwind CLI, and put the tokens from step 1 into `src/input.css`.',
+        'Build the button, badge, stat card and form field, then assemble them in the layout shell and check them at 360px, 768px and 1280px.',
+        'Add the dark mode toggle from lesson 4, then fix any text that is hard to read in dark mode.',
+        'Run the production build, open the page using the built CSS file, and write a short README with two screenshots.',
+      ],
+    },
+  },
+];
+
+const projects: Project[] = [
+  {
+    id: 'tailwind-css-p1',
+    title: 'Themed pricing cards',
+    summary: 'Build a responsive pricing section with three plan cards, a highlighted middle plan, hover and focus states, and a dark mode switch, all themed with your own brand tokens.',
+    outcome: 'A small landing-page section that shows you can lay out, theme and make a Tailwind interface responsive.',
+    unlockAfterDay: 5,
+    steps: [
+      { id: 'tailwind-css-p1-s1', text: 'Set up Tailwind v4 with the Vite plugin or the CLI, and define a brand colour scale and a card radius in `@theme`.', link: 'https://tailwindcss.com/docs/installation/using-vite' },
+      { id: 'tailwind-css-p1-s2', text: 'Build three plan cards (name, price, a short feature list and a button). Make the middle one stand out with a border or a ring in your brand colour.' },
+      { id: 'tailwind-css-p1-s3', text: 'Lay the cards out in one column on phones and three columns from `lg`, using `grid` and breakpoint prefixes.' },
+      { id: 'tailwind-css-p1-s4', text: 'Add hover and `focus-visible` styles to the buttons and give every colour a `dark:` partner, then add a light/dark toggle that remembers the choice.' },
+      { id: 'tailwind-css-p1-s5', text: 'Test at 360px, 768px and 1280px, tab through the page, and check text contrast in both modes.' },
+    ],
+    submission: {
+      kind: 'url',
+      label: 'Link to your repository or live page',
+      placeholder: 'https://github.com/yourname/pricing-cards',
+      hint: 'A repository or hosted link with a README that has a screenshot in light and dark mode and says how to run the build.',
+    },
+    rubric: [
+      'Tailwind v4 is set up with `@import "tailwindcss";` and brand tokens in `@theme`, with no `tailwind.config.js`',
+      'The layout is mobile-first and changes columns with breakpoint prefixes',
+      'Hover, focus-visible and dark mode styles are present and readable',
+      'Class names are written in full, with no `bg-${color}` style construction',
+    ],
+  },
+  {
+    id: 'tailwind-css-p2',
+    title: 'Dashboard UI kit',
+    summary: 'Create a small, themed UI kit (buttons, badges, stat cards, a form field and a responsive layout shell) and a dashboard page that uses it, in light and dark mode.',
+    outcome: 'A reusable kit and a polished dashboard page to show a client or employer, built with current Tailwind CSS v4.',
+    unlockAfterDay: 6,
+    steps: [
+      { id: 'tailwind-css-p2-s1', text: 'Write `src/input.css` with the import, the class-based `dark` variant and your brand tokens, following lesson 7.', link: 'https://tailwindcss.com/docs/theme' },
+      { id: 'tailwind-css-p2-s2', text: 'Build the button (primary, secondary, disabled), a badge, a stat card and a form field with an error message driven by `peer`.' },
+      { id: 'tailwind-css-p2-s3', text: 'Assemble a layout shell: a sidebar that appears from `md`, a header, and a grid of stat cards that goes from one to two to four columns.' },
+      { id: 'tailwind-css-p2-s4', text: 'Add the dark mode toggle, then review with the keyboard, in both colour modes and at three widths. Fix anything that fails.' },
+      { id: 'tailwind-css-p2-s5', text: 'Run the production build with the Tailwind CLI or Vite and link the built CSS file, not the Play CDN.', link: 'https://tailwindcss.com/docs/installation/tailwind-cli' },
+      { id: 'tailwind-css-p2-s6', text: 'Write a README with screenshots of light and dark, a list of the components and the build command.' },
+    ],
+    submission: {
+      kind: 'url',
+      label: 'Link to your repository or live dashboard',
+      placeholder: 'https://github.com/yourname/dashboard-ui-kit',
+      hint: 'A repository or hosted page that includes the built CSS, a README with light and dark screenshots, and a list of the components.',
+    },
+    rubric: [
+      'Brand colours and radius are tokens in `@theme`, and components use them instead of fixed palette names',
+      'The dashboard is responsive at 360px, 768px and 1280px, with a sidebar that appears on larger screens',
+      'Every component works in both light and dark mode with acceptable contrast',
+      'Interactive elements have visible focus styles, and the form field, nav and landmarks use correct semantic HTML',
+      'The page uses a production CSS build rather than the Play CDN, and the README explains how to build it',
+    ],
+  },
+];
+
+export const tailwindCssCourse: Course = {
+  id: 'tailwind-css',
+  kind: 'standard',
+  title: 'Tailwind CSS and Modern UI Development',
+  level: 'beginner',
+  tagline: 'Style real interfaces with utility classes, then package them as a small dashboard UI kit.',
+  description: 'Build clean, responsive interfaces by combining small utility classes instead of writing a stylesheet. You learn layout, spacing, colour, states, dark mode and responsive design with Tailwind CSS v4, then turn your styles into reusable components and design tokens. You finish with a dashboard UI kit you can show.',
+  finishLine: [
+    'A themed dashboard UI kit: buttons, cards, a form field, a stat tile and a responsive layout',
+    'A page that works on phones and desktops and switches between light and dark mode',
+    'The ability to read any Tailwind class list and to set up Tailwind v4 in a project',
+  ],
+  objectives: [
+    'Style pages with Tailwind utility classes instead of hand-written CSS',
+    'Build flexbox and grid layouts with utilities',
+    'Apply the spacing, type and colour scales to make consistent interfaces',
+    'Add hover, focus and dark mode styles with variants',
+    'Make layouts responsive with a mobile-first approach',
+    'Create reusable components and design tokens with CSS-based theme variables',
+  ],
+  audiences: ['fresh-grad', 'career-changer', 'builder'],
+  skills: [
+    { id: 'utility-first', label: 'Utility-first styling' },
+    { id: 'tailwind-setup', label: 'Setting up Tailwind' },
+    { id: 'flex-grid-layout', label: 'Flex and grid layout' },
+    { id: 'spacing-type-colour', label: 'Spacing, type and colour' },
+    { id: 'states-variants', label: 'States and variants' },
+    { id: 'dark-mode', label: 'Dark mode' },
+    { id: 'responsive-design', label: 'Responsive design' },
+    { id: 'design-tokens', label: 'Design tokens' },
+    { id: 'component-reuse', label: 'Reusable components' },
+    { id: 'ui-kit', label: 'Building a UI kit' },
+  ],
+  lessons,
+  projects,
+  icon: 'palette',
+  updated: '2026-11-14',
+};

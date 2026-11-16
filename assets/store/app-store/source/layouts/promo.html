@@ -1,0 +1,84 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- App Store creative assets (iOS 27+): the product page header and the search results artwork.
+       promo.html?id=header-21x9                          3840 × 1646
+       promo.html?id=universal-16x9                       5244 × 2950 (header and search, PNG only)
+       promo.html?id=search-3x2&message=01-learn-ai       3840 × 2560 or 1920 × 1280
+       promo.html?id=search-16x9&message=03-tali          5244 × 2950
+     messages: 01-learn-ai, 02-career-coach, 03-tali, 04-resume. Captures come from captures/iphone
+     (and captures/ipad for the headers: a header leaves out a device whose capture is missing).
+     Apple publishes no safe-area numbers outside its templates, so key content stays centered: the
+     21:9 header keeps the brand, the message and Tali in the middle third (phones crop its sides);
+     the 16:9 art keeps everything inside the middle 84% × 76%, which survives a crop to 3:2 or 21:9.
+     Tali is never drawn larger than the art's own pixel height (kit.js caps it). -->
+<link rel="stylesheet" href="kit.css">
+<script src="kit.js"></script>
+</head>
+<body>
+<script>
+const id = PARAMS.get('id') ?? 'header-21x9';
+const message = PARAMS.get('message') ?? '01-learn-ai';
+const H = canvasHeight();
+
+const MESSAGES = {
+  '01-learn-ai': { headline: 'Learn AI for a Tech Career', support: '58 courses from first prompt to shipped app', capture: '01-journey', pose: 'learning' },
+  '02-career-coach': { headline: 'Your AI Career Coach', support: 'Courses, a coach and a job hunt tracker in one app', capture: '06-career', pose: 'confident' },
+  '03-tali': { headline: 'Ask Tali Anything', support: 'Plan your learning, your portfolio and your next move', capture: '05-tali', pose: 'happy' },
+  '04-resume': { headline: 'Résumés and Portfolios', support: 'Build both with AI help and export in one tap', capture: '07-resume', pose: 'proud' },
+};
+
+async function headerWide() {
+  glow(50, 16, 60);
+  glow(50, H, 50, true);
+  sparks([[3, 5, 1.2, 0], [30.5, 4, 1, 10], [68.5, 6, 0.9, 0], [96, 8, 1.1, 0], [32, 33, 0.7, 0], [67, 31, 0.8, 10], [4, 36, 0.8, 0], [95.5, 37, 0.7, 0]]);
+  // Sides: a phone on the left, an iPad on the right (each left out if its capture is missing).
+  await device('phone', capUrl('iphone', '01-journey'), { x: 9, y: 3.2, w: 17, h: H - 6.4, rotate: -4, z: 2 });
+  await device('ipad', capUrl('ipad', '02-discover'), { x: 72, y: 4, w: 20, h: H - 8, rotate: 3, z: 2 });
+  // Middle third: the brand, the line, Tali.
+  brand({ x: 33.3, y: 3.6, width: 33.4, size: 4.6, wordSize: 3.6 });
+  text({ x: 33.3, y: 10.4, width: 33.4, headline: 'AI Career Coach for Tech', headlineSize: 3.6, support: 'Courses, a coach and a job hunt tracker in one app.', supportSize: 1.4, gap: 0.8 });
+  tali('happy', { cx: 50, bottom: H - 0.8, height: 14.6 });
+}
+
+async function universal() {
+  glow(72, 22, 80);
+  glow(25, H, 50, true);
+  sparks([[6, 8, 1.6, 0], [52, 6, 1.1, 10], [94, 10, 1.4, 0], [47, 49, 1.2, 0], [95, 47, 1, 10], [41, 14, 0.8, 0]]);
+  brand({ x: 9.5, y: 9.5, width: 40, align: 'left', size: 5, wordSize: 4 });
+  text({ x: 9.5, y: 16.2, width: 36, align: 'left', headline: 'AI Career Coach for Tech', headlineSize: 5, support: '58 courses, a personal coach, résumé and portfolio builders and a job hunt tracker, all in one app.', supportSize: 1.7, gap: 1.3 });
+  tali('happy', { x: 9, bottom: H - 6.8, height: 16 });
+  await device('ipad', capUrl('ipad', '02-discover'), { x: 47, y: 8, w: 30, h: 41, rotate: -3, z: 2 });
+  await device('phone', capUrl('iphone', '01-journey'), { x: 72, y: 8, w: 20, h: 41.5, rotate: 4, z: 3 });
+}
+
+/** One search-results message, laid out for 3:2 or 16:9 (`tall` is 3:2). */
+async function search(tall) {
+  const m = MESSAGES[message];
+  const scale = tall ? 1 : 0.86;
+  const top = tall ? 9 : 8;
+  glow(74, 24, tall ? 90 : 80);
+  glow(24, H, 60, true);
+  sparks(tall
+    ? [[5, 5, 1.8, 0], [48, 6, 1.3, 10], [95, 7, 1.5, 0], [6, 61, 1.1, 0], [50, 60, 1.4, 10], [96, 58, 1, 0]]
+    : [[5, 5, 1.6, 0], [48, 5, 1.2, 10], [95, 6, 1.4, 0], [6, 50, 1, 0], [50, 50, 1.2, 10], [96, 48, 0.9, 0]]);
+  brand({ x: 9, y: top, width: 42, align: 'left', size: 4.2 * scale, wordSize: 3.3 * scale });
+  text({ x: 9, y: top + 7 * scale, width: 42, align: 'left', headline: m.headline, headlineSize: 5.6 * scale, support: m.support, supportSize: 2.2 * scale, gap: 1.6 * scale });
+  const bottom = H - (tall ? 5 : 6.5);
+  // Tali's art is 646 px tall: 16.8rem is exactly 1x at 3840 wide and 12.3rem at 5244, so the same
+  // height in rem keeps every size of one ratio identical (the cap in kit.js only guards against more).
+  tali(m.pose, { x: 9, bottom, height: tall ? 16.8 : 12.3 });
+  await device('phone', capUrl('iphone', m.capture), { x: tall ? 62 : 64, y: tall ? 8 : 7.5, w: 29, h: bottom - (tall ? 8 : 7.5), valign: 'top', rotate: 3, z: 2 });
+}
+
+(async () => {
+  await loadFonts();
+  if (id === 'header-21x9') await headerWide();
+  else if (id === 'universal-16x9') await universal();
+  else await search(id === 'search-3x2');
+  await ready();
+})();
+</script>
+</body>
+</html>

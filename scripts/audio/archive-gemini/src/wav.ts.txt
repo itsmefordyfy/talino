@@ -1,0 +1,79 @@
+/**
+ * Server-only helpers for the WAV audio Gemini's text-to-speech returns. Pure, and no Node `Buffer`, so they run wherever the routes do.
+ *
+ * Gemini's WAV is `fmt ` + `data` and then a `C2PA` chunk: about 8 KB of Content Credentials (provenance) metadata, inside the RIFF
+ * container but after the audio. A reader that treats "everything after the 44-byte header" as samples plays that metadata as a burst of
+ * loud static at the end of every clip (heard in the Settings "Hear Tali / Hear Tala" samples). Reading the chunks properly, and sending
+ * on only the audio, avoids it for every player and makes the file smaller.
+ */
+
+const text = (bytes: Uint8Array, at: number) => String.fromCharCode(bytes[at], bytes[at + 1], bytes[at + 2], bytes[at + 3]);
+const u32 = (bytes: Uint8Array, at: number) => (bytes[at] | (bytes[at + 1] << 8) | (bytes[at + 2] << 16) | (bytes[at + 3] << 24)) >>> 0;
+
+export type WavParts = { format: Uint8Array; audio: Uint8Array };
+
+/** The `fmt ` chunk's body and the audio of the `data` chunk (no more than the chunk declares), or null if this isn't a readable WAV. */
+export function wavParts(bytes: Uint8Array): WavParts | null {
+  if (bytes.length < 12 || text(bytes, 0) !== 'RIFF' || text(bytes, 8) !== 'WAVE') return null;
+  let format: Uint8Array | null = null;
+  let at = 12;
+  while (at + 8 <= bytes.length) {
+    const id = text(bytes, at);
+    const size = u32(bytes, at + 4);
+    const body = at + 8;
+    if (id === 'fmt ' && size >= 16 && body + size <= bytes.length) format = bytes.subarray(body, body + size);
+    if (id === 'data') {
+      if (!format) return null;
+      // A data chunk that claims more than the file holds (a cut-off download) is read to the end of the file.
+      return { format, audio: bytes.subarray(body, Math.min(bytes.length, body + size)) };
+    }
+    at = body + size + (size & 1);
+  }
+  return null;
+}
+
+/** A WAV made of just the format and the audio: nothing after it, sizes that match. The input unchanged is returned when it can't be read. */
+export function cleanWav(bytes: Uint8Array): Uint8Array {
+  const parts = wavParts(bytes);
+  if (!parts) return bytes;
+  const { format, audio } = parts;
+  const out = new Uint8Array(12 + 8 + format.length + 8 + audio.length);
+  const view = new DataView(out.buffer);
+  const tag = (at: number, value: string) => [...value].forEach((char, index) => (out[at + index] = char.charCodeAt(0)));
+  tag(0, 'RIFF');
+  view.setUint32(4, out.length - 8, true);
+  tag(8, 'WAVE');
+  tag(12, 'fmt ');
+  view.setUint32(16, format.length, true);
+  out.set(format, 20);
+  const dataAt = 20 + format.length;
+  tag(dataAt, 'data');
+  view.setUint32(dataAt + 4, audio.length, true);
+  out.set(audio, dataAt + 8);
+  return out;
+}
+
+export function decodeBase64(value: string): Uint8Array {
+  const binary = atob(value);
+  const bytes = new Uint8Array(binary.length);
+  for (let index = 0; index < binary.length; index += 1) bytes[index] = binary.charCodeAt(index);
+  return bytes;
+}
+
+export function encodeBase64(bytes: Uint8Array): string {
+  let binary = '';
+  // In slices, so a few megabytes never overflow the call stack.
+  for (let index = 0; index < bytes.length; index += 0x8000) binary += String.fromCharCode(...bytes.subarray(index, index + 0x8000));
+  return btoa(binary);
+}
+
+/** Gemini's base64 WAV, cleaned (see the top of this file); a value that isn't a readable WAV comes back as it was. */
+export function cleanWavBase64(value: string): string {
+  try {
+    const bytes = decodeBase64(value);
+    const cleaned = cleanWav(bytes);
+    return cleaned === bytes ? value : encodeBase64(cleaned);
+  } catch {
+    return value;
+  }
+}

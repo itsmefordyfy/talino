@@ -1,0 +1,34 @@
+import type { CompanionId } from '@/features/companion/lib/companions';
+import { clearClips, clipBytes, savedClip, voiceClip, type ClipIdentity, type ClipStore } from '@/lib/voice-clip';
+
+/**
+ * A lesson sentence in the coach's Gemini voice, for a lesson that has no hosted recording (or whose recording can't be reached): the
+ * server makes one clip per sentence and each is kept on the phone, named by its voice and exact words, so a lesson heard once is heard
+ * again instantly and offline, and a sentence shared by two lessons is made once. Because every clip is exactly one sentence, the
+ * highlight and "tap a sentence to jump there" are tied to the audio that is really playing, not to a guess.
+ *
+ * Own cache folder and size limit: a sentence is about 5 to 15 seconds of 24 kHz audio (roughly 20 MB a lesson), so this keeps about
+ * ten lessons before the oldest clips go (the system may also clear the cache; they are simply made again).
+ */
+const STORE: ClipStore = { folder: 'lesson-voice', maxBytes: 200 * 1024 * 1024, kind: 'lesson', feature: 'courses', step: 'lesson_sentence' };
+
+/** What the listener is given to read a lesson live: how to get a sentence's audio file, and whether one is already on the phone. */
+export type SentenceVoice = {
+  /** The audio file of one sentence (made or fetched, then saved), or null when it can't be had. Never throws. */
+  load: (text: string) => Promise<string | null>;
+  /** Whether this sentence is already on the phone (so it can be heard with no connection). */
+  isSaved: (text: string) => boolean;
+};
+
+export function sentenceVoice(identity: ClipIdentity, companion: CompanionId): SentenceVoice {
+  return {
+    load: (text) => voiceClip(STORE, identity, companion, text),
+    isSaved: (text) => savedClip(STORE, companion, text) !== null,
+  };
+}
+
+/** How much space the saved sentences take, in bytes. */
+export const savedSentenceBytes = (): number => clipBytes(STORE);
+
+/** Deletes every saved sentence (they are made again when needed). */
+export const clearSavedSentences = (): void => clearClips(STORE);

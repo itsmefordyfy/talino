@@ -1,0 +1,91 @@
+/**
+ * Tali's and Tala's voice for chat answers (an Expo Router API route; the Gemini key lives only here). The app sends one short piece of
+ * text at a time and the coach's name; the server picks the voice (`COMPANIONS[...].geminiVoice`), asks Gemini's text-to-speech and returns
+ * the audio as base64 WAV (24 kHz, mono). Short pieces keep the wait for the first words small (speech takes about a third of its own
+ * length to make) and let the app play one while it fetches the next.
+ *
+ * Nothing is stored here: not the text, not the audio. Each person has a rolling 24-hour allowance of pieces (`SPEECH_DAILY_LIMIT`, counted
+ * like Tali's chats under the name `talino-speech`) and, apart from it, of lesson sentences (`kind: 'lesson'`, `LESSON_SPEECH_DAILY_LIMIT`, under
+ * `talino-lesson-speech`); every one counts toward the all-callers cost cap (`AI_GLOBAL_DAILY_LIMIT`).
+ *
+ * Needs `GEMINI_API_KEY`; the allowance needs SUPABASE_URL + SUPABASE_SECRET_KEY in production (without them: `quota_unavailable`).
+ */
+import { companionOf } from '@/features/companion/lib/companions';
+import { beginChat, cleanKeys, completeChat, releaseChat, validConversationId } from '@/lib/server/ai-chat-quota';
+import { refundGlobal, reserveGlobal } from '@/lib/server/global-cap';
+import { callGeminiSpeech, geminiKey } from '@/lib/server/gemini';
+import { cleanWavBase64 } from '@/lib/server/wav';
+
+/** The longest piece the route will voice; the app sends pieces of about 600 characters. */
+export const MAX_SPEECH_CHARS = 900;
+const SPEECH_APP = 'talino-speech';
+/** A lesson read in the coach's voice is one request per sentence (so the highlight is tied to its own audio), about 70 a lesson: its own, larger allowance. */
+const LESSON_SPEECH_APP = 'talino-lesson-speech';
+const DEVICE_ID = /^[\w-]{8,64}$/;
+
+const dailyLimit = (): number => {
+  const parsed = Number.parseInt(process.env.SPEECH_DAILY_LIMIT ?? '', 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 400;
+};
+
+const lessonDailyLimit = (): number => {
+  const parsed = Number.parseInt(process.env.LESSON_SPEECH_DAILY_LIMIT ?? '', 10);
+  return Number.isFinite(parsed) && parsed > 0 ? parsed : 700;
+};
+
+type Body = Record<string, unknown>;
+
+export async function POST(request: Request): Promise<Response> {
+  const apiKey = geminiKey();
+  if (!apiKey) return Response.json({ error: 'unavailable', reason: 'not_configured' }, { status: 503 });
+
+  let body: Body;
+  try {
+    body = (await request.json()) as Body;
+  } catch {
+    return Response.json({ error: 'bad_request' }, { status: 400 });
+  }
+  const appUserId = typeof body.appUserId === 'string' ? body.appUserId : null;
+  const deviceId = typeof body.deviceId === 'string' && DEVICE_ID.test(body.deviceId) ? body.deviceId : null;
+  const keys = cleanKeys([appUserId ? `rc:${appUserId}` : null, deviceId ? `device:${deviceId}` : null]);
+  const text = typeof body.text === 'string' ? body.text.trim() : '';
+  if (!keys || text === '' || text.length > MAX_SPEECH_CHARS || !validConversationId(body.requestId)) return Response.json({ error: 'bad_request' }, { status: 400 });
+  const requestId = body.requestId;
+  const voice = companionOf(body.companion).geminiVoice;
+  // `kind: 'lesson'` is a lesson sentence (read by the live voice when no hosted recording exists); anything else is a chat answer's piece.
+  const app = body.kind === 'lesson' ? LESSON_SPEECH_APP : SPEECH_APP;
+
+  const begun = await beginChat(keys, requestId, 'free', { app, limit: app === LESSON_SPEECH_APP ? lessonDailyLimit() : dailyLimit() });
+  if (begun.status === 'limit') return Response.json({ error: 'speech_limit' }, { status: 429 });
+  if (begun.status === 'unavailable') return Response.json({ error: 'quota_unavailable' }, { status: 503 });
+  if (begun.status === 'in_flight') return Response.json({ error: 'chat_in_progress' }, { status: 409 });
+  const giveBack = async () => {
+    if (begun.status === 'started') await releaseChat(keys, requestId, app);
+  };
+
+  const slot = await reserveGlobal();
+  if (slot === 'full') {
+    await giveBack();
+    return Response.json({ error: 'busy' }, { status: 503 });
+  }
+  let result;
+  try {
+    result = await callGeminiSpeech(apiKey, voice, text);
+  } catch {
+    await refundGlobal(slot);
+    await giveBack();
+    return Response.json({ error: 'busy' }, { status: 503 });
+  }
+  if (result.status !== 200 || !result.audio) {
+    await refundGlobal(slot);
+    await giveBack();
+    console.error(JSON.stringify({ event: 'gemini_failed', route: 'speech', model: result.model ?? null, httpStatus: result.status, refusal: result.refusal ?? null, googleStatus: result.googleStatus ?? null }));
+    if (result.refusal === 'location') return Response.json({ error: 'unavailable', reason: 'region' }, { status: 503 });
+    if (result.status === 400 || result.status === 402 || result.status === 403) return Response.json({ error: 'unavailable' }, { status: 503 });
+    if (result.status === 429 || result.status === 503 || result.status === 500 || result.status === 504) return Response.json({ error: 'busy' }, { status: 503 });
+    return Response.json({ error: 'unknown' }, { status: 502 });
+  }
+  await completeChat(keys, requestId, undefined, app);
+  // Gemini's WAV carries a metadata chunk after the audio, which plays as static: send only the audio (see lib/server/wav.ts).
+  return Response.json({ audio: cleanWavBase64(result.audio), mime: result.mime, voice });
+}

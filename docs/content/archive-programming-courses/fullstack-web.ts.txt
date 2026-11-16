@@ -1,0 +1,2577 @@
+import type { Course, Lesson, Project } from '../../types';
+
+const CHECKED = '2026-11-14';
+
+const DOCS = {
+  nodeReleases: { label: 'Node.js: Previous releases', url: 'https://nodejs.org/en/about/previous-releases' },
+  nodeCli: { label: 'Node.js docs: Command-line API (--env-file)', url: 'https://nodejs.org/docs/latest-v22.x/api/cli.html' },
+  expressMigrate: { label: 'Express: Migrating to Express 5', url: 'https://expressjs.com/en/guide/migrating-5.html' },
+  expressErrors: { label: 'Express: Error handling', url: 'https://expressjs.com/en/guide/error-handling.html' },
+  multer: { label: 'Express: Multer middleware', url: 'https://expressjs.com/en/resources/middleware/multer.html' },
+  viteGuide: { label: 'Vite: Getting started', url: 'https://vite.dev/guide/' },
+  viteServer: { label: 'Vite: Server options', url: 'https://vite.dev/config/server-options' },
+  viteBuild: { label: 'Vite: Build options', url: 'https://vite.dev/config/build-options' },
+  rrModes: { label: 'React Router: Picking a mode', url: 'https://reactrouter.com/start/modes' },
+  tqOptimistic: { label: 'TanStack Query: Optimistic updates', url: 'https://tanstack.com/query/latest/docs/framework/react/guides/optimistic-updates' },
+  reactOptimistic: { label: 'React: useOptimistic', url: 'https://react.dev/reference/react/useOptimistic' },
+  pgRange: { label: 'PostgreSQL docs: Range types', url: 'https://www.postgresql.org/docs/current/rangetypes.html' },
+  pgBtreeGist: { label: 'PostgreSQL docs: btree_gist', url: 'https://www.postgresql.org/docs/current/btree-gist.html' },
+  pgErrcodes: { label: 'PostgreSQL docs: Error codes', url: 'https://www.postgresql.org/docs/current/errcodes-appendix.html' },
+  pgConstraints: { label: 'PostgreSQL docs: Constraints', url: 'https://www.postgresql.org/docs/current/ddl-constraints.html' },
+  mdnCors: { label: 'MDN: Cross-Origin Resource Sharing (CORS)', url: 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS' },
+  mdnCookie: { label: 'MDN: Set-Cookie header', url: 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Headers/Set-Cookie' },
+  owaspPassword: { label: 'OWASP: Password Storage Cheat Sheet', url: 'https://cheatsheetseries.owasp.org/cheatsheets/Password_Storage_Cheat_Sheet.html' },
+  owaspCsrf: { label: 'OWASP: Cross-Site Request Forgery Prevention Cheat Sheet', url: 'https://cheatsheetseries.owasp.org/cheatsheets/Cross-Site_Request_Forgery_Prevention_Cheat_Sheet.html' },
+  owaspBola: { label: 'OWASP API Security: API1 Broken Object Level Authorization', url: 'https://api-security.owasp.org/editions/2023/en/0xa1-broken-object-level-authorization' },
+  nist: { label: 'NIST SP 800-63B-4: Authentication and Authenticator Management', url: 'https://pages.nist.gov/800-63-4/sp800-63b.html' },
+  zod: { label: 'Zod: API reference (Zod 4)', url: 'https://zod.dev/api' },
+  vitestGlobal: { label: 'Vitest: globalSetup', url: 'https://vitest.dev/config/globalsetup' },
+  vitestFiles: { label: 'Vitest: fileParallelism', url: 'https://vitest.dev/config/fileparallelism' },
+  playwrightServer: { label: 'Playwright: Web server', url: 'https://playwright.dev/docs/test-webserver' },
+  ghPostgres: { label: 'GitHub Docs: Creating PostgreSQL service containers', url: 'https://docs.github.com/en/actions/using-containerized-services/creating-postgresql-service-containers' },
+  vercelExpress: { label: 'Vercel: Express on Vercel', url: 'https://vercel.com/docs/frameworks/backend/express' },
+  vercelJson: { label: 'Vercel: vercel.json configuration', url: 'https://vercel.com/docs/project-configuration/vercel-json' },
+  vercelEnv: { label: 'Vercel: System environment variables', url: 'https://vercel.com/docs/environment-variables/system-environment-variables' },
+  vercelLimits: { label: 'Vercel: Vercel Functions limits', url: 'https://vercel.com/docs/functions/limitations' },
+  mdnTimeout: { label: 'MDN: AbortSignal.timeout()', url: 'https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal/timeout_static' },
+  mdnFetch: { label: 'MDN: Using the Fetch API', url: 'https://developer.mozilla.org/en-US/docs/Web/API/Fetch_API/Using_Fetch' },
+  vercelHobby: { label: 'Vercel: Hobby plan', url: 'https://vercel.com/docs/plans/hobby' },
+  supabaseConnect: { label: 'Supabase: Connecting to your database', url: 'https://supabase.com/docs/guides/database/connecting-to-postgres' },
+  supabasePause: { label: 'Supabase: Project pausing', url: 'https://supabase.com/docs/guides/platform/free-project-pausing' },
+  supabaseBilling: { label: 'Supabase: About billing', url: 'https://supabase.com/docs/guides/platform/billing-on-supabase' },
+};
+
+const lessons: Lesson[] = [
+
+  {
+    id: 'fullstack-web-01',
+    day: 1,
+    title: 'Planning a full-stack app: requirements and architecture',
+    summary: 'Turn an idea into stories, rules and a three-tier architecture, and decide which layer enforces which rule before writing any code.',
+    intro: {
+      objectives: [
+        'Write user stories, business rules and non-goals for a small app',
+        'Draw the browser, server and database tiers and say what each one is responsible for',
+        'Decide which layer must enforce each rule, and why the database has the last word',
+      ],
+      why: 'The expensive mistakes in a web app are made in the first week: a rule enforced in the wrong place, an API nobody agreed on, a deployment that cannot work. An hour of planning removes most of them, and it is what employers mean by "can design a feature".',
+    },
+    minutes: 25,
+    skills: ['app-planning'],
+    body: [
+      { type: 'paragraph', text: 'You have met React, Node.js with Express, and PostgreSQL one at a time, and each course ended with something that worked on its own. A real product is different, because the pieces have to agree. The React form must send what Express expects. Express must talk to the database in a way that keeps the data safe. And all three must still behave when two customers press the same button in the same second. This capstone joins them: over twelve lessons you plan, build, test and ship one app, and every listing in the lessons comes from that same running code. The React, Node.js and Express, and PostgreSQL courses teach the individual tools; here we refer to them by name and focus on how they fit together.' },
+      { type: 'heading', text: 'The app: CourtBook' },
+      { type: 'paragraph', text: 'A barangay sports centre rents out two basketball courts by the hour. Today people book through Messenger, and twice a month two families arrive for the same hour. **CourtBook** replaces the chat. Customers create an account, see which hours are already taken, book one to three hours, and upload a screenshot of their GCash payment. The owner, who is an admin, can add courts. It is small enough to finish, and it contains the problems every real app has: sign-in, money, time, concurrency and files.' },
+      { type: 'heading', text: 'Write down what it must do' },
+      { type: 'paragraph', text: 'Start with people, not screens. A **user story** says who wants what and why, in one line. A **business rule** is a fact about the world that the software must never break. Stories tell you what to build; rules tell you what to protect.' },
+      {
+        type: 'list',
+        items: [
+          '**Story:** As a customer, I can see the courts and their hourly rate, so I can choose one.',
+          '**Story:** As a customer, I can see which hours of a day are already booked, so I do not pick a taken hour.',
+          '**Story:** As a customer, I can book a court for one to three whole hours, and later cancel my own booking.',
+          '**Story:** As a customer, I can attach my payment screenshot to a booking, so the owner can confirm it.',
+          '**Story:** As the owner, I can add a court.',
+          '**Rule:** Two confirmed bookings of the same court never overlap. A booking that ends at 12:00 and one that starts at 12:00 are fine.',
+          '**Rule:** The price is the court\'s hourly rate times the hours, and the server works it out.',
+          '**Rule:** A customer can read and change only their own bookings.',
+        ],
+      },
+      { type: 'heading', text: 'And what it will not do' },
+      { type: 'paragraph', text: 'Equally important is the **non-goals** list: things that are tempting but not in version one. CourtBook will not process card payments, send email or SMS, support recurring bookings, or handle several venues. Writing them down protects the deadline, and it turns "can we add...?" into a calm "that is on the later list".' },
+      { type: 'heading', text: 'The architecture in one picture' },
+      { type: 'paragraph', text: 'A full-stack web app has three tiers. The **browser** runs the React app: it draws screens and collects input. The **server** runs Express: it decides what is allowed and talks to the database. The **database** is PostgreSQL: it is where the facts live. The browser never touches the database. It only sends requests to the server, and the server answers with JSON.' },
+      {
+        type: 'diagram',
+        format: 'mermaid',
+        caption: 'The three tiers of CourtBook. In production one Express server hands out the React files and answers /api.',
+        source: 'flowchart LR\n  B[Browser: React app] -- JSON over HTTPS to /api --> E[Express server]\n  E -- SQL through the pg library --> P[(PostgreSQL)]\n  E -- HTTPS request --> W[Forecast service]\n  E -- built React files --> B',
+      },
+      { type: 'paragraph', text: 'Notice that Express serves the built React files as well as the API. That is a deliberate choice: the page and the API share one **origin** (the same scheme, domain and port). The browser then sends the sign-in cookie to the API without any special permission, there is nothing to configure for CORS in production, and there is a single thing to deploy. Lesson 7 shows why this matters, and what you would do if the two had to live on different domains.' },
+      {
+        type: 'table',
+        headers: ['Decision', 'Our choice', 'Why'],
+        rows: [
+          ['How the browser and server talk', 'JSON over HTTP, REST-style paths', 'Simple to test with curl, and every tool understands it'],
+          ['Where the rules live', 'Constraints in PostgreSQL, checks in Express', 'The database is the only place that sees every request, so it can never be bypassed'],
+          ['Who is signed in', 'A signed token in an httpOnly cookie', 'JavaScript on the page cannot read it, which limits what a script injection can steal'],
+          ['Front-end data', 'TanStack Query for server data', 'Caching, loading and error states, and retries are handled once'],
+          ['Language', 'JavaScript on both sides', 'One language to learn; Zod schemas can give you TypeScript types later'],
+          ['Tests', 'Vitest and supertest, plus one Playwright test', 'Fast checks on the API and screens, and one real browser run of the main flow'],
+        ],
+        caption: 'Decisions you can defend in an interview: each one has a reason',
+      },
+      { type: 'heading', text: 'Who enforces each rule?' },
+      { type: 'paragraph', text: 'The most useful planning question is not "what screens do we need" but "if this rule is broken, which layer stops it?" Anyone can send a request with curl and skip your React form entirely, so a rule that lives only in the browser is a suggestion, not a rule.' },
+      {
+        type: 'table',
+        headers: ['Rule', 'React (comfort)', 'Express (authority)', 'PostgreSQL (last word)'],
+        rows: [
+          ['1 to 3 whole hours', 'Offer only valid choices', 'Validate the body, answer 400', 'CHECK that the end is after the start'],
+          ['No overlapping bookings', 'Show taken hours greyed out', 'Turn the database error into a 409', 'Exclusion constraint on court and time range'],
+          ['The server sets the price', 'Display it', 'Compute it from the court\'s rate', 'Store it with the booking'],
+          ['Only your own bookings', 'Show only your list', 'Check the owner on every route', 'Foreign key from bookings to users'],
+        ],
+        caption: 'The same rule is checked in more than one place, for different reasons',
+      },
+      { type: 'paragraph', text: 'React checks to be kind: it spares the user a round trip. Express checks to be authoritative: it refuses bad requests with a clear message. PostgreSQL checks to be correct: two requests arriving at the same moment can both pass an Express check, but only one can pass a constraint. You will see that happen in lesson 2 and prove it with a test in lesson 10.' },
+      { type: 'heading', text: 'Write the API contract first' },
+      { type: 'paragraph', text: 'Before building either side, list the endpoints. This table is the contract between the React app and the server. Two people could build the two halves from it, and a mismatch shows up as a diff in one table instead of a bug in production.' },
+      {
+        type: 'table',
+        headers: ['Method and path', 'Who may call it', 'Answers'],
+        rows: [
+          ['POST /api/auth/register, /login, /logout', 'Anyone', '201 or 200 with the user; 204 on logout'],
+          ['GET /api/auth/me', 'Signed in', 'The current user, or 401'],
+          ['GET /api/courts and /api/courts/:id', 'Anyone', 'Courts and their hourly rate'],
+          ['GET /api/courts/:id/bookings?date=', 'Anyone', 'Booked time ranges only, never who booked'],
+          ['POST /api/courts', 'Admin', '201 with the new court'],
+          ['GET, POST /api/bookings', 'Signed in', 'My bookings; 201 or 409 when the hour is taken'],
+          ['GET, PATCH, DELETE /api/bookings/:id', 'Signed in, owner only', 'One booking; 404 for someone else\'s'],
+          ['POST, GET /api/bookings/:id/proof', 'Signed in, owner only', 'Upload or fetch the payment picture'],
+        ],
+        caption: 'The API contract of CourtBook',
+      },
+      { type: 'visual', id: 'web-frontend-backend', caption: 'Follow a request from the browser to the server and back, then compare it with the CourtBook tiers above.' },
+      {
+        type: 'version',
+        text: 'This course was written and every listing run on 14 November 2026 with Node.js 22 (the Node.js releases page lists lines 22, 24 and 26 as LTS), Express 5 (its migration guide asks for Node.js 18 or higher), React 19, Vite 8 (needs Node.js 20.19 or 22.12 and newer), React Router 8 and TanStack Query 5, against PostgreSQL 14 locally and the PostgreSQL 18 documentation. Package versions move quickly: when you start your own project, run npm install and read the release notes of any major version newer than these.',
+        checked: CHECKED,
+        sources: [DOCS.nodeReleases, DOCS.expressMigrate, DOCS.viteGuide, DOCS.rrModes],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'Plan with user stories, business rules and a written non-goals list before any code.',
+          'Three tiers: the browser draws and collects, Express decides, PostgreSQL stores and guards the facts.',
+          'A rule enforced only in the browser is a suggestion. Decide for each rule which layer has the last word; for "never overlap" it is the database.',
+          'Write the API contract as a table first; it lets the front end and back end be built independently.',
+          'Serving React and the API from one origin removes CORS and cookie problems in production and leaves one thing to deploy.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'fullstack-web-01-scenario-1',
+          kind: 'scenario',
+          title: 'Two families, one hour',
+          prompt: 'Pick the design that makes a double booking impossible, not just unlikely.',
+          concept: 'enforcing rules in the right layer',
+          situation: 'On Saturday morning two customers press Book for 10:00 on Court A within the same few milliseconds. Your Express route first runs a SELECT to see whether the hour is free, and if it is, runs an INSERT. Both customers had been shown 10:00 as free. You want to guarantee that only one of them gets the court.',
+          options: [
+            { text: 'Keep the checks in React and Express for friendly messages, but add a PostgreSQL exclusion constraint as the final authority, and turn its error into a 409 response.', consequence: 'Both requests run, but PostgreSQL accepts only one INSERT and refuses the other. The loser gets a clear "slot taken" answer. No timing can produce two bookings.', quality: 'best' },
+            { text: 'Hold one lock in the Node.js process memory so only one booking request runs at a time.', consequence: 'On a single server this works. The day you run two copies, restart the server, or deploy to a platform that starts servers on demand, each copy has its own lock and the double booking returns.', quality: 'acceptable' },
+            { text: 'Wrap the SELECT and the INSERT in a normal database transaction.', consequence: 'With the default isolation level both transactions can run their SELECT before either INSERT, so both see the hour as free and both insert. A transaction alone does not forbid the overlap.', quality: 'poor' },
+            { text: 'Grey out taken hours in the React date picker.', consequence: 'Both customers\' pages had already loaded 10:00 as free, so nothing changes for them. The picker is a courtesy, not a guarantee.', quality: 'poor' },
+          ],
+          hints: [
+            'Both requests pass the "is it free?" check, because neither has inserted yet.',
+            'You need a rule that is checked at the exact moment of the INSERT, by something that sees every request.',
+            'The database sees every request. A constraint on court and time range refuses the second row.',
+          ],
+          explanation: 'Checks in React and Express happen before the INSERT, so two simultaneous requests can both pass them. Only the database sees both writes, so a constraint there is the one check that cannot be raced. Express then turns the database error into a clean 409 for the user.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'fullstack-web-01-arrange-1',
+          kind: 'arrange',
+          title: 'What happens when Book is pressed',
+          prompt: 'Put the steps of one booking request in the order they happen.',
+          concept: 'request flow across the tiers',
+          language: 'text',
+          solution: [
+            'Browser: React sends POST /api/bookings with a JSON body and the sign-in cookie',
+            'Express: the security-header, JSON and cookie middleware run',
+            'Express: requireAuth checks the cookie and loads the user',
+            'Express: the validate middleware checks the body against its schema',
+            'Express: the route runs an INSERT in PostgreSQL',
+            'PostgreSQL: the exclusion constraint accepts or refuses the row',
+            'Express: answers 201 with the booking, or 409 slot_taken',
+            'Browser: React shows the new booking or a "someone just booked it" message',
+          ],
+          reasons: [
+            'Everything starts with the browser sending a request.',
+            'Express runs its general middleware before any route sees the request.',
+            'The router checks who is calling before it spends effort on the body.',
+            'Only a signed-in caller\'s body is worth validating.',
+            'Valid input reaches the route, which asks the database to store it.',
+            'The database makes the final decision about the overlap.',
+            'Express turns the database\'s answer into an HTTP response.',
+            'The browser can only react once the response has arrived.',
+          ],
+          hints: [
+            'The request travels from the left of the architecture picture to the right and then back.',
+            'Express checks who you are before it checks what you sent.',
+            'The last two steps are the answer travelling back: Express first, then the browser.',
+          ],
+          explanation: 'A request flows browser, general middleware, authentication, validation, the database and then back. Each step can stop the request early with an error, which is why the cheap checks (who are you, is the body valid) come before the expensive one (the database).',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'fullstack-web-01-q1',
+        prompt: 'Why does CourtBook serve the React app and the API from the same origin in production?',
+        choices: [
+          'The sign-in cookie reaches the API on every request without any CORS setup, and there is only one thing to deploy.',
+          'Express is faster than a CDN at delivering static files, so pages load sooner for customers.',
+          'A React app cannot call an API on a different domain, because browsers forbid every cross-origin request.',
+          'PostgreSQL only accepts connections from a server that also serves the front-end files.',
+        ],
+        answer: 0,
+        explanation: 'Same origin means the browser sends the cookie normally and applies no cross-origin rules. Different origins are possible, but they need CORS and careful cookie settings (lesson 7).',
+      },
+      {
+        id: 'fullstack-web-01-q2',
+        prompt: 'A customer\'s phone shows 11:00 as free. By the time they press Book, someone else has taken it. Which part of the system must still keep the data correct?',
+        choices: [
+          'The React page, by refreshing the list of bookings every few seconds.',
+          'Express, by reading the bookings first and inserting only if the hour is free.',
+          'PostgreSQL, through a constraint that refuses the overlapping row.',
+          'The browser, by remembering the last answer the server gave it.',
+        ],
+        answer: 2,
+        explanation: 'Refreshing and read-then-insert checks both leave a gap between the check and the write. The database applies the rule at the moment of the write, so only it can close the gap.',
+      },
+      {
+        id: 'fullstack-web-01-q3',
+        prompt: 'A request to create a booking arrives with `"totalCentavos": 1` in its JSON. Where should the price of the booking come from?',
+        choices: [
+          'From the form, because the customer saw the price before pressing Book.',
+          'From the server, calculated from the court\'s hourly rate and the number of hours.',
+          'From the browser\'s local storage, set the last time the customer booked.',
+          'From whichever is smaller, the form\'s value or the server\'s value.',
+        ],
+        answer: 1,
+        explanation: 'Anything the client sends can be changed by the client. Money is always worked out on the server from data the server trusts.',
+      },
+      {
+        id: 'fullstack-web-01-q4',
+        prompt: 'A teammate suggests adding online card payments to the first release of CourtBook. What does a good plan say?',
+        choices: [
+          'Add it now, because customers will expect it from day one.',
+          'Build it in React only, since the server does not need to know about payments.',
+          'Replace the database with a payment service so there is one less tier.',
+          'It is a listed non-goal: write it on the later list and ship the booking flow first.',
+        ],
+        answer: 3,
+        explanation: 'Non-goals exist to protect scope. The request is recorded, not forgotten, and the first release stays small enough to finish.',
+      },
+    ],
+    task: {
+      title: 'Plan your own small booking app',
+      minutes: 15,
+      steps: [
+        'Pick a small local business (a salon, a van rental, a tutoring centre) and write five user stories for it.',
+        'Write three business rules the software must never break, and for each one say which layer has the last word.',
+        'List three non-goals for version one.',
+        'Draw the three tiers on paper and write your API contract as a table of method, path and who may call it.',
+      ],
+    },
+  },
+
+  {
+    id: 'fullstack-web-02',
+    day: 2,
+    title: 'Data modelling and the database schema',
+    summary: 'Design CourtBook\'s tables, choose column types on purpose, and let PostgreSQL constraints enforce the rules even when requests arrive at the same moment.',
+    intro: {
+      objectives: [
+        'Turn stories and rules into tables, relationships and column types',
+        'Write constraints (including an exclusion constraint) that make bad data impossible',
+        'Explain how migration files keep a database schema in step with the code',
+      ],
+      why: 'Code can be rewritten next week, but data is permanent, and a wrong type or a missing constraint is the hardest mistake to undo because the table is already full of bad rows. A schema that enforces your rules is the strongest part of an app you can show a hiring manager.',
+    },
+    minutes: 30,
+    skills: ['schema-design'],
+    body: [
+      { type: 'paragraph', text: 'Start from the rules you wrote in lesson 1, not from screens. Every noun in the stories (user, court, booking, payment picture) is a candidate table, and every rule is a candidate constraint. The PostgreSQL course taught the syntax of tables, constraints and joins, so here we make the decisions that matter for this app. If you need a refresher on schema design and normalisation, that course has the lessons.' },
+      { type: 'heading', text: 'Entities and relationships' },
+      { type: 'paragraph', text: 'A customer makes many bookings. A court is booked many times. Each booking belongs to exactly one customer and one court, and may have one payment picture. Those are **one-to-many** relationships, and in SQL each is a **foreign key** on the "many" side.' },
+      {
+        type: 'diagram',
+        format: 'mermaid',
+        caption: 'CourtBook\'s entities. The crow\'s foot marks the "many" side.',
+        source: 'erDiagram\n  USERS ||--o{ BOOKINGS : makes\n  COURTS ||--o{ BOOKINGS : "is booked in"\n  BOOKINGS ||--o| BOOKING_PROOFS : "may have"\n  USERS {\n    int id PK\n    string email "unique, ignoring case"\n    string password_hash\n    string role\n  }\n  COURTS {\n    int id PK\n    string name\n    int hourly_rate_centavos\n  }\n  BOOKINGS {\n    int id PK\n    int court_id FK\n    int user_id FK\n    timestamptz starts_at\n    timestamptz ends_at\n    string status\n    int total_centavos\n  }\n  BOOKING_PROOFS {\n    int booking_id PK\n    string content_type\n    bytea data\n  }',
+      },
+      { type: 'heading', text: 'Choose each type on purpose' },
+      { type: 'paragraph', text: 'A column type is a promise about what the column can hold. These are the choices in CourtBook and the reason behind each.' },
+      {
+        type: 'table',
+        headers: ['Fact', 'Type', 'Why'],
+        rows: [
+          ['Row identity', 'integer generated always as identity', 'The database numbers rows itself. The node-postgres driver returns bigint columns to JavaScript as strings, which surprises people; an integer is plenty for this app and arrives as a number'],
+          ['Money', 'integer, in centavos (_centavos in the name)', 'JavaScript floats cannot store most decimals exactly: 0.1 + 0.2 gives 0.30000000000000004. Whole centavos never drift. Convert to pesos only when displaying'],
+          ['When a booking starts', 'timestamptz', 'It stores one exact instant. The screen shows it in Manila time, but the stored value does not depend on anyone\'s time zone'],
+          ['Booking status', 'text with a CHECK', 'Two values today; a CHECK is easy to change in a later migration'],
+          ['Email', 'text plus a unique index on lower(email)', 'Ana@Example.com and ana@example.com must be the same account'],
+          ['Payment picture', 'bytea in its own table', 'Small pictures live safely in the database, and listing bookings never loads image bytes'],
+        ],
+        caption: 'Types are decisions, not defaults',
+      },
+      { type: 'heading', text: 'Let the database say no' },
+      { type: 'paragraph', text: 'Here is the whole first migration. Read it from the top: every `not null`, `check`, `references` and index is a rule that the database now enforces for every request, from every program, forever.' },
+      { type: 'code', language: 'sql', label: 'migrations/001_init.sql', code: `-- Needed so a plain column (court_id) can sit next to a range in one exclusion constraint.
+create extension if not exists btree_gist;
+
+create table users (
+  id            integer generated always as identity primary key,
+  email         text not null,
+  name          text not null,
+  password_hash text not null,
+  role          text not null default 'customer' check (role in ('customer', 'admin')),
+  created_at    timestamptz not null default now()
+);
+-- One account per email, whatever the capital letters.
+create unique index users_email_key on users (lower(email));
+
+create table courts (
+  id                   integer generated always as identity primary key,
+  name                 text not null,
+  surface              text not null,
+  hourly_rate_centavos integer not null check (hourly_rate_centavos > 0),
+  latitude             double precision not null,
+  longitude            double precision not null,
+  is_active            boolean not null default true
+);
+
+create table bookings (
+  id              integer generated always as identity primary key,
+  court_id        integer not null references courts (id),
+  user_id         integer not null references users (id),
+  starts_at       timestamptz not null,
+  ends_at         timestamptz not null,
+  status          text not null default 'confirmed' check (status in ('confirmed', 'cancelled')),
+  total_centavos  integer not null check (total_centavos >= 0),
+  notes           text check (char_length(notes) <= 500),
+  created_at      timestamptz not null default now(),
+  constraint booking_ends_after_start check (ends_at > starts_at),
+  -- The database itself refuses two confirmed bookings of one court whose time ranges overlap.
+  constraint no_double_booking exclude using gist (
+    court_id with =,
+    tstzrange(starts_at, ends_at) with &&
+  ) where (status = 'confirmed')
+);
+create index bookings_user_starts_idx on bookings (user_id, starts_at desc);
+
+-- Kept apart from bookings so listing bookings never drags image bytes along.
+create table booking_proofs (
+  booking_id   integer primary key references bookings (id) on delete cascade,
+  content_type text not null check (content_type in ('image/png', 'image/jpeg', 'image/webp')),
+  data         bytea not null
+);` },
+      { type: 'paragraph', text: 'The most interesting lines are the last constraint of `bookings`. An **exclusion constraint** says: for any two rows, the listed comparisons must not all be true at once. Here the comparisons are "same court" (`court_id with =`) and "time ranges overlap" (`tstzrange(starts_at, ends_at) with &&`). Take them one by one.' },
+      {
+        type: 'list',
+        items: [
+          '`tstzrange(starts_at, ends_at)` builds a range of time from two columns. With two arguments the range includes its start and excludes its end, written `[)`, so a booking that ends at 12:00 does not collide with one that starts at 12:00.',
+          '`&&` is the "overlaps" operator for ranges, and `=` compares the court. A GiST index can normally only handle range operators, so the `btree_gist` extension (created on the first line) teaches it the plain `=`.',
+          '`where (status = \'confirmed\')` makes the rule apply to confirmed bookings only. A cancelled booking stays in the table for history but frees its hour.',
+        ],
+      },
+      { type: 'paragraph', text: 'You can try the idea on a tiny table, using whole hours instead of timestamps. The second insert starts exactly where the first ends and is accepted. The fourth one overlaps the first on the same court, so PostgreSQL refuses it and tells you which row it collides with:' },
+      {
+        type: 'code',
+        language: 'sql',
+        label: 'A small experiment (run in psql)',
+        code: `create extension btree_gist;
+create table slots (
+  court int not null,
+  start_h int not null,
+  end_h int not null,
+  exclude using gist (court with =, int4range(start_h, end_h) with &&)
+);
+insert into slots values (1, 10, 12);   -- ok
+insert into slots values (1, 12, 13);   -- ok: starts where the first ends
+insert into slots values (1, 11, 13);   -- refused
+-- ERROR:  conflicting key value violates exclusion constraint "slots_court_int4range_excl"
+-- DETAIL:  Key (court, int4range(start_h, end_h))=(1, [11,13)) conflicts with existing key (court, int4range(start_h, end_h))=(1, [10,12)).`,
+      },
+      { type: 'paragraph', text: 'That error has a standard code, `23P01` (exclusion_violation), which lesson 5 uses to answer the customer with a friendly 409 instead of a crash. Two different requests inserting at the same instant cannot both succeed: PostgreSQL checks the constraint as part of the write itself.' },
+      {
+        type: 'version',
+        text: 'Checked against the PostgreSQL 18 documentation: a range built with two arguments, such as `tstzrange(a, b)`, includes its lower bound and excludes its upper bound; `EXCLUDE USING GIST (room WITH =, during WITH &&)` is the documented way to combine a plain column with a range overlap, and needs the `btree_gist` extension, which is "trusted" so a non-superuser with CREATE privilege on the database can install it. The error code for a violated exclusion constraint is 23P01. The migration above was run on PostgreSQL 14.18 and uses nothing newer.',
+        checked: CHECKED,
+        sources: [DOCS.pgRange, DOCS.pgBtreeGist, DOCS.pgErrcodes],
+      },
+      { type: 'heading', text: 'Migrations: the schema as files' },
+      { type: 'paragraph', text: 'If you created these tables by clicking in a database tool, nobody (including you next month) could rebuild the database, and a teammate\'s copy would slowly drift away from yours. A **migration** is a numbered SQL file kept in the repository next to the code. A small runner applies the files that have not run yet and records each one in a table, so every environment (your laptop, the test database, production) reaches the same schema.' },
+      { type: 'code', language: 'js', label: 'scripts/migrate.js', code: `import { readdir, readFile } from 'node:fs/promises';
+import { fileURLToPath } from 'node:url';
+import { pool } from '../src/db.js';
+
+const dir = fileURLToPath(new URL('../migrations/', import.meta.url));
+
+export async function migrate() {
+  await pool.query('create table if not exists schema_migrations (name text primary key, applied_at timestamptz not null default now())');
+  const files = (await readdir(dir)).filter((f) => f.endsWith('.sql')).sort();
+  for (const file of files) {
+    const client = await pool.connect();
+    try {
+      await client.query('begin');
+      // One migration at a time, even if two deploys start together.
+      await client.query('select pg_advisory_xact_lock(727274)');
+      const done = await client.query('select 1 from schema_migrations where name = $1', [file]);
+      if (done.rowCount === 0) {
+        await client.query(await readFile(dir + file, 'utf8'));
+        await client.query('insert into schema_migrations (name) values ($1)', [file]);
+        console.log('applied', file);
+      }
+      await client.query('commit');
+    } catch (err) {
+      await client.query('rollback');
+      throw err;
+    } finally {
+      client.release();
+    }
+  }
+}` },
+      { type: 'paragraph', text: 'Read it as a story. It makes sure the bookkeeping table `schema_migrations` exists, lists the `.sql` files in name order, and for each file starts a transaction, takes a lock, skips the file if it is already recorded, and otherwise runs it and records it. The advisory lock (a lock on an arbitrary number, here `727274`) makes two deploys that start together take turns instead of both running the same file. Because each file runs inside a transaction, a migration that fails halfway changes nothing.' },
+      { type: 'warning', text: 'Never edit a migration that has already been applied anywhere. The runner will skip it, so your change silently never reaches those databases. Add a new file instead, such as `002_add_cancel_reason.sql`.' },
+      {
+        type: 'details',
+        summary: 'Why raw SQL files and not an ORM?',
+        body: [
+          'An ORM or query builder can generate migrations and map rows to objects, and many teams use one. CourtBook uses plain SQL on purpose: the interesting rules here, especially the exclusion constraint, are SQL features, and you can see exactly what runs.',
+          'If you adopt a tool later, check whether it can express an exclusion constraint. If it cannot, write that constraint as raw SQL in a migration file; the idea does not change.',
+        ],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'Every rule that can be written as a constraint should be: NOT NULL, CHECK, UNIQUE, FOREIGN KEY, and EXCLUDE for overlaps.',
+          'Store money as whole integer centavos and instants as timestamptz; format for people only at the edge.',
+          'An exclusion constraint on a court and a time range makes double booking impossible, even for simultaneous requests. Ranges are half-open, so back-to-back bookings are allowed.',
+          'Keep the schema as numbered migration files in the repository, run by a script, and never edit one that has been applied.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'fullstack-web-02-predict-output-1',
+          kind: 'predict-output',
+          title: 'Which rows survive?',
+          prompt: 'This script runs in psql, which carries on after an error and skips the failed statement. What does the final select print (one row per line)?',
+          concept: 'exclusion constraints and half-open ranges',
+          language: 'sql',
+          code: `create extension btree_gist;
+create table slots (
+  court int not null,
+  start_h int not null,
+  end_h int not null,
+  exclude using gist (court with =, int4range(start_h, end_h) with &&)
+);
+insert into slots values (1, 10, 12);
+insert into slots values (1, 12, 13);
+insert into slots values (2, 11, 12);
+insert into slots values (1, 11, 13);
+insert into slots values (2, 9, 11);
+select court, start_h, end_h from slots order by court, start_h;`,
+          expected: '1 10 12\n1 12 13\n2 9 11\n2 11 12',
+          choices: [
+            '1 10 12\n1 12 13\n2 9 11\n2 11 12',
+            '1 10 12\n1 11 13\n1 12 13\n2 9 11\n2 11 12',
+            '1 10 12\n2 11 12',
+            '1 10 12\n1 12 13\n2 11 12',
+          ],
+          wrongNotes: {
+            '1 10 12\n1 11 13\n1 12 13\n2 9 11\n2 11 12': 'That would mean the constraint let (1, 11, 13) in. It overlaps (1, 10, 12) on the same court, so PostgreSQL refuses it.',
+            '1 10 12\n2 11 12': 'Ranges include their start and exclude their end, so (1, 12, 13) only touches (1, 10, 12) and is accepted. The same goes for (2, 9, 11) next to (2, 11, 12).',
+            '1 10 12\n1 12 13\n2 11 12': 'The last insert, (2, 9, 11), ends at 11 where (2, 11, 12) starts. Because the end is excluded, they do not overlap.',
+          },
+          hints: [
+            'Only rows with the same court can collide.',
+            'A range such as 10 to 12 contains 10 and 11 but not 12.',
+            'Only (1, 11, 13) overlaps something: it shares hour 11 with (1, 10, 12).',
+          ],
+          explanation: 'The constraint compares rows of the same court. (1, 12, 13) starts where (1, 10, 12) ends, which is allowed because the end is excluded. (1, 11, 13) shares hour 11 with (1, 10, 12), so it is refused. Court 2\'s rows do not touch, so all of them stay.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'fullstack-web-02-fix-bug-1',
+          kind: 'fix-bug',
+          title: 'Two Anas',
+          prompt: 'Two sign-ups, "Ana@Example.com" and "ana@example.com", both succeeded and now one person has two accounts. Tap the line that lets it happen, then choose the fix.',
+          concept: 'unique constraints',
+          language: 'sql',
+          code: `create table users (
+  id integer generated always as identity primary key,
+  email text not null,
+  name text not null
+);
+create unique index users_email_key on users (email);`,
+          bugLine: 6,
+          fixes: [
+            { line: 'create unique index users_email_key on users (lower(email));', correct: true, why: 'The index is built on the lower-case form of the email, so the two spellings become the same value and the second insert is refused.' },
+            { line: 'create unique index users_email_key on users (email, name);', correct: false, why: 'Now the pair of email and name must be unique, so the same email with a different name is accepted: even more duplicates.' },
+            { line: 'create index users_email_key on users (lower(email));', correct: false, why: 'This lower-cases the email but is not unique, so it makes lookups faster and prevents nothing.' },
+          ],
+          lineNote: 'The table itself is fine. The rule "one account per email" is the unique index, and it compares the text exactly as typed.',
+          hints: [
+            'Capital letters make the two values different strings, so a plain unique index treats them as different.',
+            'The index needs to compare a normalised form of the email.',
+            'Build the unique index on lower(email).',
+          ],
+          explanation: 'A unique index compares the exact stored value. Indexing lower(email) makes the database compare the lower-case form, so Ana@Example.com and ana@example.com collide. The app also lower-cases the email on the way in, but the database rule is what guarantees it.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'fullstack-web-02-q1',
+        prompt: 'Why does CourtBook store prices as `total_centavos integer` instead of a decimal number of pesos?',
+        choices: [
+          'Integers take less disk space than any decimal type, which matters for a booking table.',
+          'PostgreSQL cannot store a number with a decimal point in a column.',
+          'Whole centavos never suffer the rounding drift that floating-point numbers do, such as 0.1 + 0.2 giving 0.30000000000000004.',
+          'Peso amounts are always whole numbers, so decimals are never needed.',
+        ],
+        answer: 2,
+        explanation: 'JavaScript numbers are floating point and cannot represent many decimals exactly. Counting whole centavos keeps money exact; you divide by 100 only when displaying.',
+      },
+      {
+        id: 'fullstack-web-02-q2',
+        prompt: 'Court A already has a booking from 10:00 to 12:00. A second booking for the same court runs from 12:00 to 13:00. What happens with `tstzrange(starts_at, ends_at) with &&`?',
+        choices: [
+          'It is accepted, because ranges include their start but exclude their end, so the two only touch.',
+          'It is refused, because both bookings contain the instant 12:00.',
+          'It is refused, because two bookings may not be on the same court on the same day.',
+          'It is accepted only if the second customer is a different person.',
+        ],
+        answer: 0,
+        explanation: 'tstzrange builds a half-open range, `[start, end)`. The first booking stops just before 12:00, so back-to-back bookings do not overlap.',
+      },
+      {
+        id: 'fullstack-web-02-q3',
+        prompt: 'Why is the exclusion constraint declared with `where (status = \'confirmed\')`?',
+        choices: [
+          'So that only administrators can create bookings with that status.',
+          'So that the index is smaller, because PostgreSQL cannot index every row of a table.',
+          'So that bookings can only be confirmed once.',
+          'So that a cancelled booking stays in the table for history but no longer blocks its hour.',
+        ],
+        answer: 3,
+        explanation: 'A partial constraint applies only to the rows that match its condition. Cancelled rows are ignored, so cancelling frees the slot without deleting the record.',
+      },
+      {
+        id: 'fullstack-web-02-q4',
+        prompt: 'A teammate edits `001_init.sql` to add a column after the file has already been applied on the production database. What happens when the app is deployed?',
+        choices: [
+          'The runner notices the change and applies only the new column.',
+          'The runner sees `001_init.sql` is already recorded and skips it, so production never gets the column.',
+          'The runner drops and recreates every table to match the edited file.',
+          'The deployment fails because the file name no longer matches its checksum.',
+        ],
+        answer: 1,
+        explanation: 'This runner records only file names, and skips any name it has seen. A change to an applied file never runs. The fix is a new numbered migration.',
+      },
+    ],
+    task: {
+      title: 'Build the CourtBook schema on your machine',
+      minutes: 20,
+      steps: [
+        'Create an empty PostgreSQL database (locally, or a free one) and run the contents of `001_init.sql` in psql or your database tool.',
+        'Insert one user, one court and one booking by hand, then try to insert a second booking for the same court that overlaps it, and read the error message.',
+        'Change the second booking so it starts exactly when the first ends, and confirm it is accepted.',
+        'Set the first booking\'s status to cancelled and confirm that the overlapping insert now succeeds.',
+      ],
+    },
+  },
+
+  {
+    id: 'fullstack-web-03',
+    day: 3,
+    title: 'Backend project setup and API structure',
+    summary: 'Lay out the Express project, separate HTTP code from SQL, order the middleware on purpose, and fail fast on bad configuration.',
+    intro: {
+      objectives: [
+        'Organise an Express project so routes know HTTP and data modules know SQL',
+        'Build the app with a factory function so tests and hosts can import it without opening a port',
+        'Order middleware deliberately and explain what each position guarantees',
+        'Validate environment variables at start-up so a missing secret stops the app',
+      ],
+      why: 'Structure decisions are cheap on day one and painful on day sixty. A project where the app can be imported by a test, configuration is checked at boot and each file has one job is the difference between code you can extend and code you are afraid to touch.',
+    },
+    minutes: 25,
+    skills: ['api-design'],
+    body: [
+      { type: 'paragraph', text: 'The Node.js and Express course taught routers, middleware and the controller and service layers. This lesson applies those ideas to CourtBook and makes the choices you will have to defend: where files go, how the app starts, and what happens when it is misconfigured. We keep the structure small. A project of this size does not need five layers, but it does need clear ownership of each concern.' },
+      { type: 'heading', text: 'The layout' },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'Project layout',
+        code: `courtbook/
+  package.json
+  migrations/001_init.sql     the schema, as numbered files
+  scripts/                    migrate.js, seed.js
+  src/
+    server.js                 starts listening (the only file that does)
+    app.js                    builds the Express app, never listens
+    config.js                 reads and checks environment variables
+    db.js                     the PostgreSQL connection pool
+    errors.js                 HttpError: an error the client may see
+    schemas.js                Zod schemas for incoming data
+    middleware/               auth.js, validate.js, errors.js
+    routes/                   auth.js, courts.js, bookings.js  (HTTP)
+    data/                     users.js, courts.js, bookings.js (SQL)
+    weather.js, upload.js     the two outside-world integrations
+  client/                     the React app (Vite)
+  test/  e2e/                 API tests, then browser tests
+  public/                     the built React app (generated, not committed)`,
+      },
+      { type: 'heading', text: 'Routes know HTTP, data modules know SQL' },
+      { type: 'paragraph', text: 'A **route** file deals with the web: the path, which middleware runs, which status code to send. A **data** module deals with the database: SQL in, plain objects out, and no mention of `req` or `res`. Keeping them apart pays off three ways. You can change a query without touching a status code, you can test the SQL on its own, and when a route reads badly the cause is almost always that SQL has leaked into it.' },
+      { type: 'heading', text: 'A factory, not a global' },
+      { type: 'paragraph', text: 'The file that builds the app and the file that starts the server are different on purpose. `createApp()` assembles the middleware and routes and returns the app. Only `server.js` calls `listen`. A test can then import `createApp()` and fire requests at it without ever opening a port, and a hosting platform that wants the app as an export can have it.' },
+      { type: 'code', language: 'js', label: 'src/app.js', code: `import { fileURLToPath } from 'node:url';
+import express from 'express';
+import cookieParser from 'cookie-parser';
+import cors from 'cors';
+import helmet from 'helmet';
+import { config } from './config.js';
+import { pool } from './db.js';
+import { errorHandler, notFound } from './middleware/errors.js';
+import { createAuthRouter } from './routes/auth.js';
+import { bookingsRouter } from './routes/bookings.js';
+import { courtsRouter } from './routes/courts.js';
+
+const publicDir = fileURLToPath(new URL('../public/', import.meta.url));
+
+export function createApp({ authAttemptLimit } = {}) {
+  const app = express();
+  // Behind a hosting proxy the real client IP is in X-Forwarded-For; trust exactly as many hops as you have.
+  if (config.TRUST_PROXY > 0) app.set('trust proxy', config.TRUST_PROXY);
+
+  app.use(helmet());
+  if (config.CORS_ORIGINS.length > 0) {
+    // An allow-list of exact origins; "credentials" lets the browser send and accept the cookie.
+    app.use(cors({ origin: config.CORS_ORIGINS, credentials: true }));
+  }
+  app.use(express.json({ limit: '100kb' }));
+  app.use(cookieParser());
+
+  app.get('/api/health', async (_req, res) => {
+    await pool.query('select 1');
+    res.json({ ok: true });
+  });
+  app.use('/api/auth', createAuthRouter({ attemptLimit: authAttemptLimit }));
+  app.use('/api/courts', courtsRouter);
+  app.use('/api/bookings', bookingsRouter);
+  app.use('/api', notFound);
+
+  if (config.NODE_ENV === 'production') {
+    // One origin: the same server hands out the built React app and answers the API.
+    app.use(express.static(publicDir));
+    app.get('/{*splat}', (_req, res) => res.sendFile(publicDir + 'index.html'));
+  }
+
+  app.use(errorHandler);
+  return app;
+}` },
+      { type: 'code', language: 'js', label: 'src/server.js', code: `import { createApp } from './app.js';
+import { config } from './config.js';
+import { pool } from './db.js';
+
+const app = createApp();
+
+// Vercel runs the exported app itself; everywhere else we open the port.
+if (!process.env.VERCEL) {
+  const server = app.listen(config.PORT, () => console.log(\`CourtBook API on :\${config.PORT}\`));
+  const shutdown = () => server.close(() => pool.end().then(() => process.exit(0)));
+  process.on('SIGTERM', shutdown);
+  process.on('SIGINT', shutdown);
+}
+
+export default app;` },
+      { type: 'heading', text: 'Middleware order is part of the logic' },
+      { type: 'paragraph', text: 'Express runs middleware in the order you register it, so the order is a decision. Follow one request through `createApp()`:' },
+      {
+        type: 'diagram',
+        format: 'mermaid',
+        caption: 'The path of a request through createApp(). Errors skip straight to the error handler.',
+        source: 'flowchart TD\n  R(Request) --> H[helmet: security headers on every response]\n  H --> C[cors: only when origins are configured]\n  C --> J[express.json: read the JSON body]\n  J --> K[cookieParser: read the cookies]\n  K --> M{A route matches?}\n  M -- yes --> A[Route: auth, validate, data]\n  M -- no --> N[notFound: a 404 as JSON]\n  A -- throws or rejects --> E[errorHandler]\n  N --> E\n  A -- sends a response --> D(Response)\n  E --> D',
+      },
+      {
+        type: 'list',
+        items: [
+          '**helmet first**, so that even an early error response carries the security headers.',
+          '**cors before the routes**, because a browser sends a preflight `OPTIONS` request first and it must be answered before any route sees it. It is registered only if you listed origins, so production on one origin has no CORS at all.',
+          '**The body and cookie parsers before the routes**, because a route reads `req.body` and `req.cookies`. In Express 5, `req.body` is `undefined` until a parser has run.',
+          '**An `/api` catch-all after the API routes**, so an unknown API path gets a JSON 404 and not the React page.',
+          '**The static files and the React fallback last**, and only in production. The wildcard is written `/{*splat}` because Express 5 requires wildcards to have a name.',
+          '**The error handler very last.** Express recognises it by its four parameters, and it only catches errors from middleware registered before it.',
+        ],
+      },
+      { type: 'heading', text: 'Configuration that fails fast' },
+      { type: 'paragraph', text: 'Secrets and settings come from environment variables, never from the code. The danger is a variable that is missing or wrong, because the app would start and fail later, in a confusing place. So `config.js` checks every variable once, at start-up, and stops with a readable message if something is off.' },
+      { type: 'code', language: 'js', label: 'src/config.js', code: `import { z } from 'zod';
+
+const schema = z.object({
+  NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
+  PORT: z.coerce.number().int().positive().default(3000),
+  DATABASE_URL: z.string().min(1, 'DATABASE_URL is required'),
+  JWT_SECRET: z.string().min(32, 'JWT_SECRET must be at least 32 characters'),
+  // Only needed when the React app is served from a different origin than the API.
+  CORS_ORIGINS: z
+    .string()
+    .default('')
+    .transform((value) => value.split(',').map((origin) => origin.trim()).filter(Boolean)),
+  TRUST_PROXY: z.coerce.number().int().min(0).default(0),
+});
+
+const parsed = schema.safeParse(process.env);
+if (!parsed.success) {
+  // Fail at boot with a readable list, never half-start with a missing secret.
+  console.error('Invalid environment:', z.prettifyError(parsed.error));
+  process.exit(1);
+}
+
+export const config = parsed.data;` },
+      { type: 'paragraph', text: 'Two details matter here. Environment variables are always text, so `z.coerce.number()` turns `"3000"` into the number 3000. And `safeParse` returns a result instead of throwing, which lets us print a tidy list (`z.prettifyError`) and exit with a non-zero code. A process manager or a deployment platform sees that code and knows the release is broken.' },
+      { type: 'paragraph', text: 'In development the values come from a `.env` file that is listed in `.gitignore`. The npm scripts use Node\'s own loader: `node --env-file-if-exists=.env src/server.js`. If the file is missing (as on a host that sets real environment variables) the flag does nothing, and a variable that is already set in the environment wins over the file.' },
+      { type: 'code', language: 'js', label: 'src/db.js', code: `import pg from 'pg';
+import { config } from './config.js';
+
+// One pool for the whole process; every query borrows a connection and gives it back.
+export const pool = new pg.Pool({
+  connectionString: config.DATABASE_URL,
+  max: 10,
+  idleTimeoutMillis: 30_000,
+});
+
+// An idle client can lose its connection (a database restart); without this listener that crashes the process.
+pool.on('error', (err) => console.error('idle client error', err.message));` },
+      { type: 'paragraph', text: 'A **connection pool** keeps a few database connections open and lends one to each query, instead of opening a new connection (slow) for every request. The `error` listener is easy to forget: if an idle connection is dropped, for example when the database restarts, the pool emits an error, and without a listener Node.js crashes the whole process.' },
+      {
+        type: 'version',
+        text: 'Express 5 behaviours used above, from its migration guide: `req.body` is undefined when no body parser ran; a wildcard must be named, so `/{*splat}` replaces `*`; `req.query` is a read-only getter; and a handler that returns a rejected promise (every async handler) forwards the error to the error handler automatically. Node.js\'s `--env-file` flag was added in v20.6.0 and `--env-file-if-exists` in v22.9.0, and per the docs a variable already in the environment takes precedence over the file.',
+        checked: CHECKED,
+        sources: [DOCS.expressMigrate, DOCS.expressErrors, DOCS.nodeCli],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'Routes own HTTP (paths, status codes); data modules own SQL; middleware owns cross-cutting checks.',
+          'Build the app in createApp() and listen only in server.js, so tests and hosts can import the app without a port.',
+          'Middleware runs in registration order: security headers, CORS, parsers, routes, an API 404, then the error handler last.',
+          'Validate environment variables once at boot and exit with a clear message, so a missing secret is a failed start, not a mystery bug.',
+          'Create one connection pool per process and handle its error event.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'fullstack-web-03-arrange-1',
+          kind: 'arrange',
+          title: 'Order the middleware',
+          prompt: 'Arrange the lines of createApp() in the order that makes the app work.',
+          concept: 'middleware order',
+          language: 'js',
+          solution: [
+            'const app = express();',
+            'app.use(helmet());',
+            'app.use(express.json({ limit: \'100kb\' }));',
+            'app.use(cookieParser());',
+            'app.use(\'/api/bookings\', bookingsRouter);',
+            'app.use(\'/api\', notFound);',
+            'app.use(errorHandler);',
+          ],
+          alternatives: [
+            [
+              'const app = express();',
+              'app.use(helmet());',
+              'app.use(cookieParser());',
+              'app.use(express.json({ limit: \'100kb\' }));',
+              'app.use(\'/api/bookings\', bookingsRouter);',
+              'app.use(\'/api\', notFound);',
+              'app.use(errorHandler);',
+            ],
+          ],
+          reasons: [
+            'The app has to exist before anything can be registered on it.',
+            'Security headers go first so that every response, even an early error, carries them.',
+            'The body must be parsed before any route reads req.body.',
+            'Cookies must be parsed before any route or middleware reads req.cookies.',
+            'The real routes come after the parsers they rely on.',
+            'The catch-all comes after the real API routes, or it would answer for them.',
+            'The error handler is last, because it only catches errors from what was registered before it.',
+          ],
+          hints: [
+            'The app must be created before anything is attached to it.',
+            'Parsers prepare req.body and req.cookies, so they come before the routes that read them.',
+            'The catch-all and the error handler are the safety nets, so they come last, in that order.',
+          ],
+          explanation: 'Express runs middleware top to bottom. Parsers must precede the routes that need their results, a catch-all must come after the routes it is a fallback for, and the error handler goes last so it can catch errors from everything above.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'fullstack-web-03-fill-blank-1',
+          kind: 'fill-blank',
+          title: 'Check the environment at boot',
+          prompt: 'Complete config.js so PORT becomes a number and a short secret stops the app.',
+          concept: 'fail-fast configuration',
+          language: 'js',
+          code: `const schema = z.object({
+  PORT: z.___.number().int().positive().default(3000),
+  JWT_SECRET: z.string().___(32, 'JWT_SECRET must be at least 32 characters'),
+});
+
+const parsed = schema.___(process.env);
+if (!parsed.success) {
+  console.error('Invalid environment');
+  process.exit(1);
+}`,
+          blanks: [
+            { answers: ['coerce'], feedback: 'Environment variables are strings. coerce converts the text "3000" to the number 3000 before the number checks run.' },
+            { answers: ['min'], feedback: 'min sets the shortest allowed length of a string. max would limit the opposite end.' },
+            { answers: ['safeParse'], feedback: 'The code then reads parsed.success, so this must return a result object. parse would throw instead of returning one.' },
+          ],
+          bank: ['coerce', 'min', 'safeParse', 'parse', 'max', 'number'],
+          hints: [
+            'Which z helper changes the type of its input before checking it?',
+            'The secret needs a minimum length. The helper that sets it has a three-letter name.',
+            'The code checks parsed.success, so the method must return a result and not throw.',
+          ],
+          explanation: 'z.coerce.number() converts the text in the environment to a number, min(32) enforces a minimum length for the secret, and safeParse returns an object with a success flag so the app can print a message and exit instead of crashing with a stack trace.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'fullstack-web-03-q1',
+        prompt: 'Why does `createApp()` return the Express app instead of calling `listen` itself?',
+        choices: [
+          'Because Express refuses to listen on a port from inside a function.',
+          'So that tests and hosting platforms can import the app without opening a port; only server.js starts listening.',
+          'Because a function that calls listen runs twice in production.',
+          'To make the app load faster by delaying the routes.',
+        ],
+        answer: 1,
+        explanation: 'Separating building from listening lets supertest call the app directly, and lets a platform such as Vercel take the exported app. Nothing about Express forbids calling listen in a function.',
+      },
+      {
+        id: 'fullstack-web-03-q2',
+        prompt: 'Where does `app.use(errorHandler)` belong, and why?',
+        choices: [
+          'First, so it can see every request before the routes.',
+          'Directly after helmet, because it sets headers.',
+          'Next to the routes, in any order, because Express sorts middleware by type.',
+          'Last, because it only catches errors from middleware and routes registered before it.',
+        ],
+        answer: 3,
+        explanation: 'Express walks the stack in order. When something calls next(err), Express looks for the next error-handling middleware (four parameters) after that point, so it must come after everything that can fail.',
+      },
+      {
+        id: 'fullstack-web-03-q3',
+        prompt: 'In production the `JWT_SECRET` variable was forgotten. What should CourtBook do?',
+        choices: [
+          'Refuse to start, printing which variable is missing or too short.',
+          'Start with a built-in default secret and log a warning.',
+          'Start, but reject every sign-in request with a 500.',
+          'Generate a random secret each time it starts.',
+        ],
+        answer: 0,
+        explanation: 'A default secret is public the moment the code is shared, and a random one logs everybody out on every restart and breaks when two copies run. Failing at boot is loud and safe.',
+      },
+      {
+        id: 'fullstack-web-03-q4',
+        prompt: 'A teammate puts a long SQL string inside a route handler. What is the main reason the project keeps SQL in the `data/` modules?',
+        choices: [
+          'Express does not allow strings that contain SQL keywords in route files.',
+          'Route files load before the database pool is ready.',
+          'The HTTP code and the SQL can then change and be tested separately, and routes stay short enough to read.',
+          'It makes the queries run faster than they would inside a route.',
+        ],
+        answer: 2,
+        explanation: 'The separation is about readability and change, not speed. A route that only mentions paths and status codes, and a data function that never sees req or res, can each be understood and tested alone.',
+      },
+    ],
+    task: {
+      title: 'Scaffold the backend skeleton',
+      minutes: 20,
+      steps: [
+        'Create a project with `"type": "module"`, install express, pg and zod, and add the files `src/app.js`, `src/server.js`, `src/config.js` and `src/db.js` from this lesson.',
+        'Add a `GET /api/health` route that runs `select 1` and answers `{ "ok": true }`, and an `/api` catch-all that answers a JSON 404.',
+        'Start the server with `node --env-file-if-exists=.env src/server.js` and call the health route with curl.',
+        'Remove `JWT_SECRET` from your `.env` and confirm the app refuses to start with a readable message.',
+      ],
+    },
+  },
+
+  {
+    id: 'fullstack-web-04',
+    day: 4,
+    title: 'Implementing the CRUD endpoints',
+    summary: 'Write the booking endpoints with parameterised SQL, compute the price on the server, and check ownership on every route.',
+    intro: {
+      objectives: [
+        'Write create, read, update and delete endpoints with the right methods and status codes',
+        'Use parameterised queries, and explain why a template string with user input is an injection hole',
+        'Let the database compute values the client must not choose, such as the price',
+        'Check that the caller owns a record on every route that takes an id',
+      ],
+      why: 'CRUD endpoints are most of what a typical back-end job involves, and they are where the classic vulnerabilities live: SQL injection and "I changed the id in the URL and saw someone else\'s data". Getting them right is a visible mark of a developer who can be trusted with real data.',
+    },
+    minutes: 30,
+    skills: ['api-design'],
+    body: [
+      { type: 'paragraph', text: '**CRUD** stands for create, read, update, delete, the four things you do with a record, and REST maps them to HTTP methods: POST creates, GET reads, PATCH changes part of a record, DELETE removes. The Node.js and Express course taught the mechanics of routes and `req` and `res`. Here we build the bookings resource from lesson 1\'s contract, and look closely at the three things beginners get wrong: how SQL receives values, what the client is allowed to set, and whose record it is.' },
+      { type: 'heading', text: 'Parameterised queries, always' },
+      { type: 'paragraph', text: 'There are two ways to put a value into a query. You can paste it into the SQL text, or you can send the SQL with placeholders (`$1`, `$2`) and the values separately. The second way is not a style preference. When values travel separately, the database never reads them as SQL, so nothing a user types can change what the query does.' },
+      {
+        type: 'code',
+        language: 'js',
+        label: 'Two ways to ask for bookings by status',
+        code: `// DANGEROUS: the user's text becomes part of the SQL
+const { rows } = await pool.query(\`select * from bookings where status = '\${status}'\`);
+
+// SAFE: SQL and values travel separately
+const { rows } = await pool.query('select * from bookings where status = $1', [status]);`,
+      },
+      { type: 'paragraph', text: 'In the first version, a status of `x\' or \'1\'=\'1` turns the condition into one that is true for every row. That is **SQL injection**, and it has been near the top of security lists for decades. The one place you may build SQL text with a template string is for constants that you wrote yourself, never for anything from `req`. CourtBook\'s data module does this with its list of column names, and nothing else.' },
+      { type: 'heading', text: 'Create: let SQL work out the price' },
+      { type: 'paragraph', text: 'The booking the client sends has a court, a start, an end and optional notes. It does not carry a price, because the client must not choose one. So the INSERT takes its values from a `select` over the `courts` table, which lets the database multiply the court\'s rate by the length of the booking in one statement. If the court does not exist (or is switched off), the select returns no row, nothing is inserted, and the function returns `null`.' },
+      { type: 'code', language: 'js', label: 'src/data/bookings.js (create)', code: `// The price is worked out inside the database from the court's rate; the client never sends a price.
+// Zero rows back means the court does not exist (or is switched off).
+export async function createBooking({ courtId, userId, startsAt, endsAt, notes }) {
+  const { rows } = await pool.query(
+    \`insert into bookings (court_id, user_id, starts_at, ends_at, notes, total_centavos)
+     select c.id, $2::integer, $3::timestamptz, $4::timestamptz, $5::text,
+            round(c.hourly_rate_centavos * extract(epoch from ($4::timestamptz - $3::timestamptz)) / 3600)::int
+       from courts c
+      where c.id = $1 and c.is_active
+     returning id\`,
+    [courtId, userId, startsAt, endsAt, notes ?? null],
+  );
+  return rows[0] ? findBooking(rows[0].id) : null;
+}` },
+      { type: 'paragraph', text: 'Read the casts: `$3::timestamptz` tells PostgreSQL what type each placeholder is, which it needs because the same value is used in more than one place. `extract(epoch from (end - start))` gives the booking length in seconds, so rate times seconds divided by 3600 is the price. The route wraps the call:' },
+      { type: 'code', language: 'js', label: 'src/routes/bookings.js (create)', code: `bookingsRouter.post('/', validate(createBookingSchema), async (req, res) => {
+  let booking;
+  try {
+    booking = await createBooking({ ...req.valid.body, userId: req.user.id });
+  } catch (err) {
+    // 23P01 = exclusion_violation: the database refused an overlapping booking.
+    if (err.code === '23P01') throw new HttpError(409, 'slot_taken', 'That court is already booked at that time');
+    throw err;
+  }
+  if (!booking) throw new HttpError(404, 'court_not_found', 'No such court');
+  res.status(201).location(\`/api/bookings/\${booking.id}\`).json({ booking: publicBooking(booking) });
+});` },
+      { type: 'paragraph', text: 'Success answers **201 Created** with a `Location` header that points at the new booking. The `catch` is the link to lesson 2: the database refuses an overlap with error code `23P01`, and the route turns it into **409 Conflict**, which means "your request was fine, but it clashes with the current state". A missing court is a 404. Lesson 5 covers the validation that runs before this code and the error handler that sends these answers.' },
+      { type: 'heading', text: 'Read: lists and single records' },
+      { type: 'code', language: 'js', label: 'src/data/bookings.js (list)', code: `export async function listBookings({ userId, status, limit, offset }) {
+  const { rows } = await pool.query(
+    \`select \${COLUMNS} from \${FROM}
+      where b.user_id = $1 and ($2::text is null or b.status = $2)
+      order by b.starts_at desc
+      limit $3 offset $4\`,
+    [userId, status ?? null, limit, offset],
+  );
+  return rows;
+}` },
+      { type: 'paragraph', text: 'Three habits are visible here. The query names its columns instead of using `select *`, so a new column (say, an internal note) never leaks out by accident. It filters by `user_id` inside the SQL, so a customer cannot even receive someone else\'s rows. And it is paginated: `limit` and `offset` come from the query string, but the route validates them (lesson 5) so a client cannot ask for a million rows. Optional filters such as `status` are written as `($2::text is null or b.status = $2)`, which keeps one query for both "all" and "only cancelled".' },
+      { type: 'heading', text: 'Update and delete' },
+      { type: 'paragraph', text: '**PATCH** changes some fields of a record. CourtBook lets the customer change only the `notes`. The status changes through DELETE, and the price is the server\'s business. The route does not hand `req.body` to the update, it passes the one allowed field. Spreading a whole body into an update is called **mass assignment**, and it is how users end up promoting themselves to admin.' },
+      { type: 'paragraph', text: '**DELETE** does not remove the row. It sets `status = \'cancelled\'`, which keeps the history and, because of the partial constraint from lesson 2, frees the hour. The answer is **204 No Content**: success with nothing to say. Deleting twice is a 409, because the booking is no longer confirmed.' },
+      { type: 'code', language: 'js', label: 'src/routes/bookings.js (read one, update, delete)', code: `bookingsRouter.get('/:id', validate(idParams, 'params'), async (req, res) => {
+  res.json({ booking: publicBooking(await ownBooking(req)) });
+});
+
+bookingsRouter.patch('/:id', validate(idParams, 'params'), validate(updateBookingSchema), async (req, res) => {
+  await ownBooking(req);
+  const booking = await updateNotes(req.valid.params.id, req.user.id, req.valid.body.notes);
+  res.json({ booking: publicBooking(booking) });
+});
+
+bookingsRouter.delete('/:id', validate(idParams, 'params'), async (req, res) => {
+  await ownBooking(req);
+  if (!(await cancelBooking(req.valid.params.id, req.user.id))) {
+    throw new HttpError(409, 'already_cancelled', 'That booking is already cancelled');
+  }
+  res.status(204).end();
+});` },
+      { type: 'heading', text: 'Check ownership on every route' },
+      { type: 'paragraph', text: 'Signing in proves who you are; it does not prove that booking 42 is yours. If the route simply loaded booking 42 for any signed-in user, then changing the number in the URL would show other people\'s bookings. This flaw is so common it has a name, **broken object level authorization**, and it tops OWASP\'s list of API risks. The cure is boring and effective: every route that takes an id checks the owner, through one shared helper.' },
+      { type: 'code', language: 'js', label: 'src/routes/bookings.js (the helper)', code: `// A booking that is not yours looks exactly like one that does not exist.
+async function ownBooking(req) {
+  const booking = await findBooking(req.valid.params.id);
+  if (!booking || booking.userId !== req.user.id) throw new HttpError(404, 'booking_not_found', 'No such booking');
+  return booking;
+}
+
+const publicBooking = ({ userId: _userId, ...booking }) => booking;` },
+      { type: 'paragraph', text: 'Notice the answer for "not yours" is **404**, the same as for "does not exist". A 403 would confirm that booking 42 exists and belongs to someone else, which is information the caller has no business knowing.' },
+      {
+        type: 'version',
+        text: 'The ownership rule follows OWASP\'s API Security Top 10 (2023 edition), risk API1: check access rights "every time client input is used to fetch a record", and write tests that probe the rule (lesson 10 does). PostgreSQL reports an overlap against an exclusion constraint as SQLSTATE 23P01 and a duplicate unique value as 23505; test the code, not the message text.',
+        checked: CHECKED,
+        sources: [DOCS.owaspBola, DOCS.pgErrcodes],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'Send SQL and values separately with $1, $2 placeholders. Never put anything from the request into SQL text.',
+          'Let the server decide what the client may not choose: the price comes from the court\'s rate, in the same SQL statement that inserts.',
+          'Use 201 with a Location header for create, 204 for delete, 404 for missing, and 409 when a valid request clashes with the current state.',
+          'Pass only allowed fields to an update (never the raw body), and "delete" by changing status when history matters.',
+          'Check ownership on every route that takes an id, and answer 404 for records that belong to someone else.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'fullstack-web-04-fix-bug-1',
+          kind: 'fix-bug',
+          title: 'The status filter that leaks',
+          prompt: 'A reviewer found that `?status=x\' or \'1\'=\'1` returns everybody\'s bookings. Tap the line with the hole, then choose the fix.',
+          concept: 'SQL injection',
+          language: 'js',
+          code: `async function listByStatus(userId, status) {
+  const { rows } = await pool.query(\`select id, starts_at from bookings where user_id = \${userId} and status = '\${status}'\`);
+  return rows;
+}`,
+          bugLine: 2,
+          fixes: [
+            { line: '  const { rows } = await pool.query(\'select id, starts_at from bookings where user_id = $1 and status = $2\', [userId, status]);', correct: true, why: 'The SQL text is now fixed, and the values go separately, so the database treats the status as data whatever characters it contains.' },
+            { line: '  const { rows } = await pool.query(`select id, starts_at from bookings where user_id = ${userId} and status = \'${status.replace("\'", "")}\'`);', correct: false, why: 'Stripping one kind of character is a blocklist, and blocklists miss cases. The value is still pasted into the SQL text.' },
+            { line: '  const { rows } = await pool.query(`select id, starts_at from bookings where user_id = ${userId} and status = ${JSON.stringify(status)}`);', correct: false, why: 'JSON quoting is not SQL quoting, and double quotes mean a column name in SQL. It still pastes input into the query, and now it also breaks.' },
+          ],
+          lineNote: 'The function signature is fine. Look for the line where the arguments become part of the SQL text.',
+          hints: [
+            'Where do userId and status end up?',
+            'Inside the SQL text, through ${...}. They should travel separately.',
+            'Use $1 and $2 in the SQL and pass [userId, status] as the second argument to query.',
+          ],
+          explanation: 'With ${status} the user\'s text becomes part of the SQL, so quotes in it can end the string and add a condition. With placeholders, the database receives the query shape and the values separately and never interprets the values as SQL.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'fullstack-web-04-predict-output-1',
+          kind: 'predict-output',
+          title: 'Three deletes',
+          prompt: 'Ana (user 1) has created booking 1. Mia is another signed-in customer. The three calls below run in order, using the routes from this lesson. What are the three status codes?',
+          concept: 'ownership and status codes',
+          language: 'js',
+          code: `// bookingsRouter.delete('/:id') as written above
+const calls = [
+  { as: 'Mia', request: 'DELETE /api/bookings/1' },
+  { as: 'Ana', request: 'DELETE /api/bookings/1' },
+  { as: 'Ana', request: 'DELETE /api/bookings/1' },
+];
+// print the status code of each answer, separated by spaces`,
+          expected: '404 204 409',
+          choices: ['404 204 409', '403 204 204', '404 204 404', '204 204 409'],
+          wrongNotes: {
+            '403 204 204': 'This app answers 404, not 403, for someone else\'s booking, and cancelling twice is refused: the second Ana call finds a booking that is no longer confirmed.',
+            '404 204 404': 'The booking still exists after it is cancelled, and it is still Ana\'s, so the third call passes the ownership check and reaches cancelBooking, which refuses with 409.',
+            '204 204 409': 'Mia must not be able to cancel Ana\'s booking. ownBooking answers 404 for a booking that is not hers.',
+          },
+          hints: [
+            'Mia does not own booking 1. What does ownBooking throw for her?',
+            'Ana\'s first delete works. What status does a successful delete send?',
+            'After cancelling, the booking still exists and is hers, but cancelBooking only updates confirmed bookings.',
+          ],
+          explanation: 'Mia gets 404 because ownBooking treats other people\'s bookings as missing. Ana\'s first delete succeeds with 204 and sets the status to cancelled. Her second delete passes the ownership check, but cancelBooking updates no row because the booking is no longer confirmed, so the route answers 409.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'fullstack-web-04-sql-challenge-1',
+          kind: 'sql-challenge',
+          title: 'Which bookings are in the way?',
+          prompt: 'Court 1 is wanted from 11:00 to 13:00. Return the id of every confirmed booking on court 1 that overlaps that window, ordered by id. A booking that ends at 11:00 or starts at 13:00 only touches the window, it does not overlap.',
+          concept: 'overlap condition',
+          setup: `CREATE TABLE bookings (id INTEGER PRIMARY KEY, court_id INTEGER, starts_at TEXT, ends_at TEXT, status TEXT);
+INSERT INTO bookings VALUES
+ (1, 1, '2026-12-01T10:00', '2026-12-01T12:00', 'confirmed'),
+ (2, 1, '2026-12-01T12:00', '2026-12-01T13:00', 'confirmed'),
+ (3, 1, '2026-12-01T12:00', '2026-12-01T14:00', 'cancelled'),
+ (4, 2, '2026-12-01T11:00', '2026-12-01T12:00', 'confirmed'),
+ (5, 1, '2026-12-01T09:00', '2026-12-01T10:00', 'confirmed'),
+ (6, 1, '2026-12-01T13:00', '2026-12-01T14:00', 'confirmed'),
+ (7, 1, '2026-12-01T08:00', '2026-12-01T11:00', 'confirmed');`,
+          starter: 'SELECT id\nFROM bookings\nWHERE court_id = 1;',
+          expected: { columns: ['id'], rows: [[1], [2]], ordered: true },
+          solution: 'SELECT id\nFROM bookings\nWHERE court_id = 1\n  AND status = \'confirmed\'\n  AND starts_at < \'2026-12-01T13:00\'\n  AND ends_at > \'2026-12-01T11:00\'\nORDER BY id;',
+          hints: [
+            'You need three conditions on top of the court: confirmed, and two about time.',
+            'Two time ranges overlap when each one starts before the other ends.',
+            'The booking must start before 13:00 and end after 11:00, using < and >, not <= and >=.',
+          ],
+          explanation: 'Two ranges overlap when a.start < b.end and a.end > b.start. Using strict comparisons keeps bookings that merely touch the window (7 ends at 11:00, 6 starts at 13:00) out of the result. The cancelled booking and the other court are filtered by status and court_id. This is the same condition the exclusion constraint applies.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'fullstack-web-04-q1',
+        prompt: 'Why does `pool.query(\'... where status = $1\', [status])` protect against SQL injection while a template string does not?',
+        choices: [
+          'PostgreSQL removes quotes from every value before running the query.',
+          'The driver encrypts the values on their way to the database.',
+          'Template strings are always slower, so attackers time out.',
+          'The SQL text and the values are sent separately, so the database never reads a value as part of the SQL.',
+        ],
+        answer: 3,
+        explanation: 'The query shape is fixed before any value arrives. A value can contain quotes or SQL keywords, but it is only ever data.',
+      },
+      {
+        id: 'fullstack-web-04-q2',
+        prompt: 'Mia asks for `GET /api/bookings/1`, which is Ana\'s booking. Why does CourtBook answer 404 rather than 403?',
+        choices: [
+          'Because 403 is reserved for administrators.',
+          'Because a 403 would confirm that booking 1 exists and belongs to someone else; a 404 reveals nothing.',
+          'Because browsers cache 403 answers but never 404 answers.',
+          'Because Express cannot send a 403 from inside an async route.',
+        ],
+        answer: 1,
+        explanation: 'Telling a caller "it exists but you may not see it" leaks information. Treating other people\'s records as missing is the safer answer.',
+      },
+      {
+        id: 'fullstack-web-04-q3',
+        prompt: 'Why does `PATCH /api/bookings/:id` accept only `notes`, and pass just that field to the update?',
+        choices: [
+          'A customer may change only what the rules allow; passing the whole body would let them set fields such as the status or the price (mass assignment).',
+          'PATCH requests are limited to one field by the HTTP standard.',
+          'The notes column is the only one that PostgreSQL allows to change after insert.',
+          'It makes the update faster, because PostgreSQL rewrites fewer columns.',
+        ],
+        answer: 0,
+        explanation: 'The server decides which fields a client may change. Spreading `req.body` into an update hands that decision to the client.',
+      },
+      {
+        id: 'fullstack-web-04-q4',
+        prompt: 'After `DELETE /api/bookings/7` answers 204, what is true?',
+        choices: [
+          'The row is gone, so booking 7 can no longer be found.',
+          'The row is archived into a different table with a trigger.',
+          'The row remains with status \'cancelled\', and its hour is free to book again.',
+          'The row remains confirmed until an administrator approves the cancellation.',
+        ],
+        answer: 2,
+        explanation: 'CourtBook cancels instead of deleting. The history stays, and because the exclusion constraint applies only to confirmed rows, the hour becomes available again.',
+      },
+    ],
+    task: {
+      title: 'Build and attack the booking endpoints',
+      minutes: 20,
+      steps: [
+        'Add the data module and the routes from this lesson to your project, and create a booking with curl, using a cookie from a signed-in session or a temporary hard-coded user while you wait for lesson 6.',
+        'Try to create an overlapping booking and confirm you get a 409. Send a body with `"totalCentavos": 1` and confirm the stored price is still computed by the server.',
+        'Call GET, PATCH and DELETE on a booking that belongs to a different user and confirm all three answer 404.',
+        'Temporarily change one query to use a template string with the status, send an injection string, watch the leak, then restore the placeholders.',
+      ],
+    },
+  },
+
+  {
+    id: 'fullstack-web-05',
+    day: 5,
+    title: 'Validation and error handling',
+    summary: 'Check every request at the edge with Zod schemas, answer mistakes with one consistent error shape, and keep internal details out of responses.',
+    intro: {
+      objectives: [
+        'Describe request data with a Zod schema and run it in a reusable validation middleware',
+        'Choose the right status code for invalid input, clashes, missing records and server faults',
+        'Build one central error handler that never leaks internal details',
+        'Spot a missing await and explain why it produces a wrong answer instead of an error',
+      ],
+      why: 'Every bug report that starts with "it crashed when I typed something odd" is a validation or error-handling gap. A consistent error format also makes the React side much simpler, because there is one shape to read and show.',
+    },
+    minutes: 30,
+    skills: ['validation-errors'],
+    body: [
+      { type: 'paragraph', text: 'Everything that arrives over HTTP is **untrusted input**: the body, the query string, the path parameters, the headers and the cookies. Anyone can send anything, with or without your React form. The safe pattern is to validate once, at the edge, and then trust the validated value inside. Validation has two jobs: reject what is wrong with a message a person can act on, and shape what is right (trim spaces, lower-case an email, convert text to numbers, drop fields you never asked for).' },
+      { type: 'heading', text: 'Describe the data with a schema' },
+      { type: 'paragraph', text: 'A **schema** is a description of valid data, and a library turns it into a checker. CourtBook uses Zod 4, which reads naturally and can also produce TypeScript types later (`z.infer`) if you add TypeScript. Here are the schemas for registering and for creating a booking.' },
+      { type: 'code', language: 'js', label: 'src/schemas.js (excerpt)', code: `import { z } from 'zod';
+
+const email = z.email().max(254).transform((value) => value.toLowerCase());
+
+export const registerSchema = z.object({
+  name: z.string().trim().min(1, 'Name is required').max(80),
+  email,
+  password: z.string().min(15, 'Use at least 15 characters').max(128),
+});
+
+export const loginSchema = z.object({
+  email,
+  password: z.string().min(1).max(128),
+});
+
+export const idParams = z.object({ id: z.coerce.number().int().positive() });
+
+const HOUR = 60 * 60 * 1000;
+
+export const createBookingSchema = z
+  .object({
+    courtId: z.number().int().positive(),
+    startsAt: z.iso.datetime({ offset: true }),
+    endsAt: z.iso.datetime({ offset: true }),
+    notes: z.string().trim().max(500).optional(),
+  })
+  .superRefine((value, ctx) => {
+    const start = new Date(value.startsAt).getTime();
+    const end = new Date(value.endsAt).getTime();
+    const hours = (end - start) / HOUR;
+    if (!(hours >= 1 && hours <= 3 && Number.isInteger(hours))) {
+      ctx.addIssue({ code: 'custom', path: ['endsAt'], message: 'Book 1 to 3 whole hours' });
+    }
+    if (start % HOUR !== 0) {
+      ctx.addIssue({ code: 'custom', path: ['startsAt'], message: 'Start on the hour' });
+    }
+    if (start <= Date.now()) {
+      ctx.addIssue({ code: 'custom', path: ['startsAt'], message: 'Choose a time in the future' });
+    }
+  });` },
+      {
+        type: 'list',
+        items: [
+          '`z.email()` checks the shape of an email, `.max(254)` caps its length, and `.transform` lower-cases it, so everything downstream sees one spelling.',
+          '`z.iso.datetime({ offset: true })` accepts a date and time with a zone, such as `2026-12-01T10:00:00+08:00`, and rejects `"tomorrow"`.',
+          '`z.coerce.number()` (used for the `:id` parameter and the query string) turns the text `"7"` into 7, because everything in a URL is text.',
+          '`.superRefine` runs after the fields pass and can look at several fields together: the length of the booking, whether it starts on the hour, whether it is in the future.',
+          'Fields that are not in the schema, such as a `totalCentavos` somebody sneaks into the body, are removed from the result. The schema is also a whitelist.',
+          'The password limit follows NIST\'s current guidance: at least 15 characters when the password is the only factor, a maximum of at least 64 (we allow 128), and no rules about mixing character types.',
+        ],
+      },
+      { type: 'heading', text: 'One middleware to run any schema' },
+      { type: 'code', language: 'js', label: 'src/middleware/validate.js', code: `import { HttpError } from '../errors.js';
+
+// validate(schema, 'body' | 'query' | 'params'): parse, or answer 400 with a list of problems.
+// The clean result goes on req.valid, because Express 5 makes req.query read-only.
+export const validate = (schema, source = 'body') => (req, _res, next) => {
+  const result = schema.safeParse(req[source]);
+  if (!result.success) {
+    const details = result.error.issues.map((issue) => ({ path: issue.path.join('.'), message: issue.message }));
+    return next(new HttpError(400, 'validation_error', 'Some fields are invalid', details));
+  }
+  req.valid = { ...req.valid, [source]: result.data };
+  next();
+};` },
+      { type: 'paragraph', text: '`validate(schema)` checks the body by default, and `validate(schema, \'query\')` or `\'params\'` checks the other parts. On success the cleaned data goes on `req.valid`. We do not overwrite `req.query`, because in Express 5 it is a read-only getter, and keeping raw and clean data apart is a good habit anyway. A route now reads `req.valid.body.startsAt` and knows it is a real date string.' },
+      { type: 'heading', text: 'One error shape, and the right status code' },
+      { type: 'paragraph', text: 'Clients, including your own React code, should not have to guess what an error looks like. Every error from CourtBook has this shape: `{ "error": { "code": "slot_taken", "message": "...", "details": [...] } }`. The **code** is stable and meant for programs (React switches on it). The **message** is for people. **Details** list which field was wrong. The status code tells everyone the category of the problem:' },
+      {
+        type: 'table',
+        headers: ['Status', 'Meaning', 'CourtBook example'],
+        rows: [
+          ['400', 'The request itself is invalid', 'A booking that ends before it starts; malformed JSON'],
+          ['401', 'Not signed in', 'No cookie, or an expired one'],
+          ['403', 'Signed in but not allowed', 'A customer trying to create a court'],
+          ['404', 'No such thing (or not yours)', 'Someone else\'s booking; an unknown route'],
+          ['409', 'Valid request, but it clashes with the current state', 'Booking an hour that is taken; an email that already has an account'],
+          ['413 / 415', 'Too large / wrong type', 'A 5 MB picture; a text file claiming to be a PNG'],
+          ['429', 'Too many requests', 'Repeated sign-in attempts'],
+          ['500 / 502', 'Our bug / a service we depend on failed', 'An unexpected exception; the forecast provider is down'],
+        ],
+        caption: 'Pick the status for the category; put the detail in the body',
+      },
+      { type: 'code', language: 'js', label: 'src/errors.js', code: `// An error the client is allowed to see: a status, a stable code, a safe message.
+export class HttpError extends Error {
+  constructor(status, code, message, details) {
+    super(message);
+    this.status = status;
+    this.code = code;
+    this.details = details;
+  }
+}` },
+      { type: 'code', language: 'js', label: 'src/middleware/errors.js', code: `import { HttpError } from '../errors.js';
+
+export function notFound(_req, _res, next) {
+  next(new HttpError(404, 'not_found', 'No such route'));
+}
+
+// Four parameters: that is how Express recognises an error handler.
+export function errorHandler(err, req, res, next) {
+  if (res.headersSent) return next(err);
+
+  if (err instanceof HttpError) {
+    return res.status(err.status).json({ error: { code: err.code, message: err.message, details: err.details } });
+  }
+  // Body parser failures (bad JSON, body too large) carry a 4xx status of their own.
+  if (err.type === 'entity.parse.failed') {
+    return res.status(400).json({ error: { code: 'bad_json', message: 'The request body is not valid JSON' } });
+  }
+  if (err.type === 'entity.too.large') {
+    return res.status(413).json({ error: { code: 'too_large', message: 'The request body is too large' } });
+  }
+
+  // Anything else is our bug: log the detail for us, tell the client nothing useful to an attacker.
+  console.error(JSON.stringify({ level: 'error', method: req.method, path: req.path, message: err.message, stack: err.stack }));
+  res.status(500).json({ error: { code: 'internal_error', message: 'Something went wrong on our side' } });
+}` },
+      { type: 'paragraph', text: 'Routes throw an `HttpError` when something is the client\'s to fix. The central handler recognises it and sends exactly what it carries. Anything else is **our** bug: a typo, a database outage, a null where we expected an object. For those, the handler logs everything (message and stack) for you, and tells the client only "Something went wrong on our side". Error messages and stack traces can expose table names, file paths and library versions, which is exactly what an attacker is hoping for.' },
+      { type: 'heading', text: 'Async errors, and the bug that is not an error' },
+      { type: 'paragraph', text: 'In Express 5, a handler that is an `async` function can simply throw, or `await` something that rejects, and Express passes the error to your error handler. You do not need `try/catch` in every route, or the `next` argument. That makes the opposite mistake more dangerous: forgetting `await`. Calling an async function without `await` gives you a **Promise** (a note that a result will arrive later), not the result. A Promise is an object, so it is truthy, `if (!court)` is never true, and `res.json({ court })` sends `{ "court": {} }` with status 200, for a court that exists and for one that does not. No error, just a wrong answer. If the un-awaited call rejects later, nothing is listening and Node.js treats it as an unhandled rejection, which stops the process by default.' },
+      {
+        type: 'version',
+        text: 'Express 5 forwards the error from a rejected promise or a thrown error in an async handler to the error handler on its own, and the docs warn that a promise that is not returned or awaited is not tracked, so its rejection can crash the process. In Zod 4, `z.email()`, `z.iso.datetime()`, `z.iso.date()` and `z.coerce.number()` are top-level helpers, and by default an object schema drops keys it does not know. NIST SP 800-63B-4 asks for single-factor passwords of at least 15 characters, allows a maximum of at least 64, and says verifiers should not impose composition rules.',
+        checked: CHECKED,
+        sources: [DOCS.expressErrors, DOCS.zod, DOCS.nist],
+      },
+      {
+        type: 'details',
+        summary: 'Should the React form validate too?',
+        body: [
+          'Yes, but only for kindness. Checking an email field while someone types saves a round trip and feels responsive. The server still validates everything, because the browser is not under your control. If you want both sides to share rules, put the schemas in a package or folder that both import, and let the server be the authority.',
+        ],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'Validate every part of a request (body, query, params) once, at the edge, with a schema; use the cleaned result afterwards.',
+          'Schemas both check and shape: they coerce, trim, normalise and drop unknown fields.',
+          'Use one error shape with a stable code, a human message and optional field details, and the right status: 400 invalid, 401 not signed in, 403 forbidden, 404 missing, 409 clash.',
+          'A central error handler sends HttpErrors as they are and turns everything else into a generic 500 while logging the detail privately.',
+          'Always await async calls. A forgotten await does not throw; it quietly sends the wrong answer.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'fullstack-web-05-code-challenge-1',
+          kind: 'code-challenge',
+          title: 'The booking rules as a function',
+          prompt: 'Write bookingProblems(startMs, endMs, nowMs). It returns an array of messages, in this order when they apply: "Book 1 to 3 whole hours", "Start on the hour", "Choose a time in the future". A valid booking returns an empty array. Times are milliseconds, and one hour is 3600000.',
+          concept: 'validation rules',
+          language: 'javascript',
+          starter: 'function bookingProblems(startMs, endMs, nowMs) {\n  const HOUR = 3600000;\n  const problems = [];\n  // add a message to problems for each broken rule\n  return problems;\n}\n',
+          solution: 'function bookingProblems(startMs, endMs, nowMs) {\n  const HOUR = 3600000;\n  const problems = [];\n  const hours = (endMs - startMs) / HOUR;\n  if (!(hours >= 1 && hours <= 3 && hours % 1 === 0)) {\n    problems.push(\'Book 1 to 3 whole hours\');\n  }\n  if (startMs % HOUR !== 0) {\n    problems.push(\'Start on the hour\');\n  }\n  if (startMs <= nowMs) {\n    problems.push(\'Choose a time in the future\');\n  }\n  return problems;\n}\n',
+          tests: {
+            kind: 'function',
+            fn: 'bookingProblems',
+            cases: [
+              { label: 'two hours, on the hour, in the future', args: [7200000000, 7207200000, 3600000000], expected: [] },
+              { label: 'four hours is too long', args: [7200000000, 7214400000, 3600000000], expected: ['Book 1 to 3 whole hours'] },
+              { label: 'starts at half past', args: [7201800000, 7205400000, 3600000000], expected: ['Start on the hour'] },
+              { label: 'starts in the past', args: [1800000000, 1803600000, 3600000000], expected: ['Choose a time in the future'] },
+              { label: 'half an hour, off the hour, in the past', args: [1801800000, 1803600000, 3600000000], expected: ['Book 1 to 3 whole hours', 'Start on the hour', 'Choose a time in the future'], hidden: true },
+              { label: 'exactly now is not in the future', args: [3600000000, 3603600000, 3600000000], expected: ['Choose a time in the future'], hidden: true },
+            ],
+          },
+          hints: [
+            'Work out the length first: (endMs - startMs) divided by HOUR.',
+            'A whole number of hours has no remainder: hours % 1 === 0. It must also be between 1 and 3.',
+            'Start on the hour means startMs % HOUR === 0, and "in the future" means startMs > nowMs.',
+          ],
+          explanation: 'Each rule is an independent if that pushes its own message, so several broken rules produce several messages in a fixed order. This is exactly how the superRefine in the booking schema works: it adds one issue per broken rule instead of stopping at the first.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'fullstack-web-05-fix-bug-1',
+          kind: 'fix-bug',
+          title: 'A court that is always found',
+          prompt: 'GET /api/courts/99 answers 200 with {"court":{}} instead of a 404, and so does a real court. Tap the faulty line, then choose the fix.',
+          concept: 'async and await',
+          language: 'js',
+          code: `courtsRouter.get('/:id', validate(idParams, 'params'), async (req, res) => {
+  const court = findCourt(req.valid.params.id);
+  if (!court) throw new HttpError(404, 'court_not_found', 'No such court');
+  res.json({ court });
+});`,
+          bugLine: 2,
+          fixes: [
+            { line: '  const court = await findCourt(req.valid.params.id);', correct: true, why: 'await waits for the Promise and gives the court object, or null when there is none, so the 404 check works.' },
+            { line: '  const court = findCourt(req.valid.params.id).then();', correct: false, why: 'then() with no callback returns another Promise. The variable is still a Promise, which is always truthy.' },
+            { line: '  const court = findCourt(req.valid.params.id) || null;', correct: false, why: 'A Promise is truthy, so the || never replaces it. court is still a Promise and the 404 never fires.' },
+          ],
+          lineNote: 'The 404 check and the response are fine. The problem is what court holds when the check runs.',
+          hints: [
+            'What does an async function such as findCourt return when you call it?',
+            'It returns a Promise, which is an object, so `!court` is false even when no court exists.',
+            'Put await in front of the call so court holds the result.',
+          ],
+          explanation: 'Without await, court is a Promise. Promises are truthy, so the not-found check never runs, and res.json serialises a Promise as an empty object. With await, court is the real row or null.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'fullstack-web-05-q1',
+        prompt: 'A request to create a booking has valid JSON, but the booking ends before it starts. Which response fits best?',
+        choices: [
+          '409 Conflict, because the request clashes with the existing bookings.',
+          '404 Not Found, because the booking does not exist yet.',
+          '400 Bad Request with a validation_error code and details naming the field.',
+          '500 Internal Server Error, because the data cannot be stored.',
+        ],
+        answer: 2,
+        explanation: 'The request is wrong in itself, whatever the current state of the system, so it is a 400 with details. A 409 is for a valid request that clashes with existing data, such as a taken hour.',
+      },
+      {
+        id: 'fullstack-web-05-q2',
+        prompt: 'For an exception nobody expected, the error handler sends "Something went wrong on our side" and logs the stack trace privately. Why not send the real message to the client?',
+        choices: [
+          'Real messages and stacks can expose table names, file paths or library versions that help an attacker, while the log keeps the detail for the developers.',
+          'The client\'s browser cannot display text from an error message.',
+          'Express refuses to send an error message in a JSON body.',
+          'Real messages are always empty in production, so there is nothing to send.',
+        ],
+        answer: 0,
+        explanation: 'Internal detail helps attackers and confuses users. The person needs to know it was not their fault, and the developer needs the stack in the log.',
+      },
+      {
+        id: 'fullstack-web-05-q3',
+        prompt: 'The validate middleware stores its result on `req.valid` instead of replacing `req.query`. What is the reason?',
+        choices: [
+          'Express middleware may only write to properties that start with "valid".',
+          'It keeps the original and cleaned data apart, and in Express 5 `req.query` is a read-only getter that cannot be assigned.',
+          'Zod cannot return a value that has the same shape as the input.',
+          'Replacing `req.query` would delete the cookies.',
+        ],
+        answer: 1,
+        explanation: 'Express 5 made req.query a getter, so assigning to it fails. A separate property also makes it obvious which data has been validated.',
+      },
+      {
+        id: 'fullstack-web-05-q4',
+        prompt: 'A client sends a create-booking body that includes `"status": "cancelled"` and `"totalCentavos": 1`. Neither is in the booking schema. What happens?',
+        choices: [
+          'The request is rejected with 400, because the schema forbids unknown keys.',
+          'The values are stored, because the database column exists.',
+          'The server crashes, because Zod throws on unknown keys.',
+          'The two extra keys are dropped from the validated result, so they never reach the SQL.',
+        ],
+        answer: 3,
+        explanation: 'By default an object schema in Zod 4 keeps only the keys it knows. The price is computed by the server, and the status takes the database default.',
+      },
+    ],
+    task: {
+      title: 'Add validation and one error shape',
+      minutes: 20,
+      steps: [
+        'Add `HttpError`, the `validate` middleware and the central error handler to your project, and write a Zod schema for creating a booking (or your own resource).',
+        'Send five bad requests with curl: broken JSON, a missing field, a wrong type, a rule that is broken (end before start), and an unknown field. Confirm each answer has the same JSON shape.',
+        'Throw a plain `new Error("boom")` from a route and confirm the client sees only the generic message while your terminal shows the stack.',
+        'Remove one `await` from a route that calls the database, call it, and describe what you get back.',
+      ],
+    },
+  },
+
+  {
+    id: 'fullstack-web-06',
+    day: 6,
+    title: 'Authentication and protected routes',
+    summary: 'Hash passwords with Argon2id, sign users in with a token in an httpOnly cookie, protect routes by who the caller is and what role they hold, and know what each defence stops.',
+    intro: {
+      objectives: [
+        'Store passwords as Argon2id hashes and verify them without revealing which part of a sign-in was wrong',
+        'Issue a signed token in an httpOnly, SameSite cookie and verify it safely on every request',
+        'Write requireAuth and requireRole middleware to protect routes',
+        'Explain what httpOnly, Secure, SameSite, CORS and rate limiting each defend against, and where they stop',
+      ],
+      why: 'Sign-in is the part of an app that attackers test first, and "I rolled my own" is the sentence that ends security reviews. Using vetted libraries correctly, and knowing exactly what each defence covers, is what employers hope to see.',
+    },
+    minutes: 35,
+    skills: ['auth-security'],
+    body: [
+      { type: 'paragraph', text: '**Authentication** answers "who are you?" and **authorization** answers "what may you do?". CourtBook needs both: a customer proves who they are once, and from then on every request must carry that proof, and each route decides what that person may touch. The golden rule of this lesson is to use well-tested libraries for the cryptography and to keep as little sensitive data as possible. Never invent your own password scheme or token format.' },
+      { type: 'heading', text: 'Passwords: store a slow hash, never the password' },
+      { type: 'paragraph', text: 'If your database leaks, whatever you stored for passwords leaks too. So you do not store the password. You store a **hash**: the output of a one-way function that cannot be turned back into the password. At sign-in you hash what was typed and compare. Not every hash function is suitable. SHA-256 is designed to be fast, which helps an attacker try billions of guesses per second. A password hash such as **Argon2id** is deliberately slow and memory-hungry, and it adds a random **salt** for you, so two users with the same password get different hashes.' },
+      { type: 'code', language: 'js', label: 'Hashing and verifying with the argon2 package', code: `import argon2 from 'argon2';
+
+const hash = await argon2.hash(password);
+// '$argon2id$v=19$m=65536,t=3,p=4$...salt...$...hash...'  (the settings and salt are inside the string)
+
+const ok = await argon2.verify(hash, typedPassword); // true or false`,
+      },
+      { type: 'paragraph', text: 'The hash string records its own settings, so you can raise them later and old hashes still verify. OWASP names Argon2id as its first choice and lists a minimum of 19 MiB of memory, 2 iterations and 1 lane; the package\'s defaults (64 MiB, 3 iterations, 4 lanes in the string above) are stronger than that minimum, so you rarely need to tune. Older systems use bcrypt, and most bcrypt implementations accept at most 72 bytes of password. That is one reason the guidance keeps bcrypt for legacy code.' },
+      { type: 'heading', text: 'Sign-in that does not leak' },
+      { type: 'paragraph', text: 'A sign-in form can accidentally tell an attacker which emails have accounts: "no such user" for one and "wrong password" for another, or one answer that comes back much faster than the other. CourtBook gives the same message for both, and when the email is unknown it still runs a verification against a throwaway hash so both paths take about the same time. It also limits attempts, so guessing passwords is slow.' },
+      { type: 'code', language: 'js', label: 'src/routes/auth.js (login and the rate limit)', code: `// A real hash of a throwaway password: verifying against it takes as long as a real check,
+// so "no such email" and "wrong password" cost the same time.
+const DUMMY_HASH = await argon2.hash('not-a-real-password');
+
+export function createAuthRouter({ attemptLimit = 10 } = {}) {
+  const router = Router();
+
+  const attempts = rateLimit({
+    windowMs: 15 * 60 * 1000,
+    limit: attemptLimit,
+    standardHeaders: 'draft-8',
+    legacyHeaders: false,
+    message: { error: { code: 'too_many_attempts', message: 'Too many attempts. Try again in a few minutes.' } },
+  });
+
+  router.post('/register', attempts, validate(registerSchema), async (req, res) => {
+    const { name, email, password } = req.valid.body;
+    const passwordHash = await argon2.hash(password);
+    try {
+      const user = await createUser({ email, name, passwordHash });
+      res.cookie(COOKIE_NAME, signToken(user.id), cookieOptions());
+      res.status(201).json({ user });
+    } catch (err) {
+      if (err.code === '23505') throw new HttpError(409, 'email_taken', 'That email already has an account');
+      throw err;
+    }
+  });
+
+  router.post('/login', attempts, validate(loginSchema), async (req, res) => {
+    const { email, password } = req.valid.body;
+    const found = await findLoginByEmail(email);
+    const ok = await argon2.verify(found?.password_hash ?? DUMMY_HASH, password);
+    if (!found || !ok) throw new HttpError(401, 'bad_credentials', 'Wrong email or password');
+    const { password_hash: _omit, ...user } = found;
+    res.cookie(COOKIE_NAME, signToken(user.id), cookieOptions());
+    res.json({ user });
+  });` },
+      { type: 'paragraph', text: 'The limiter counts attempts per client address and answers **429 Too Many Requests** after ten in fifteen minutes. If your server sits behind a hosting proxy, every request appears to come from the proxy unless you tell Express how many proxies to trust (`app.set(\'trust proxy\', 1)`, which CourtBook reads from `TRUST_PROXY`). Lesson 11 returns to this.' },
+      { type: 'heading', text: 'The session: a signed token in an httpOnly cookie' },
+      { type: 'paragraph', text: 'After a successful sign-in the server needs to recognise the same person on the next request. CourtBook issues a **JSON Web Token (JWT)**: a short string with the user\'s id (the `sub` claim) and an expiry, signed with a secret only the server knows. Anyone can read a JWT, but nobody can change it without the secret, so the server can trust what it says. The token travels in a **cookie**, which the browser sends back automatically.' },
+      {
+        type: 'diagram',
+        format: 'mermaid',
+        caption: 'Sign in once, then every request carries the cookie.',
+        source: 'sequenceDiagram\n  participant B as Browser\n  participant E as Express\n  participant P as PostgreSQL\n  B->>E: POST /api/auth/login with email and password\n  E->>P: find the user by email\n  P-->>E: the row with password_hash\n  E-->>B: 200 and Set-Cookie token, HttpOnly\n  B->>E: GET /api/bookings, cookie sent automatically\n  E->>P: load the user whose id is in the token\n  P-->>E: the user row\n  E-->>B: 200 with my bookings',
+      },
+      { type: 'code', language: 'js', label: 'src/middleware/auth.js', code: `import jwt from 'jsonwebtoken';
+import { config } from '../config.js';
+import { HttpError } from '../errors.js';
+import { findUserById } from '../data/users.js';
+
+export const COOKIE_NAME = 'token';
+const SEVEN_DAYS_MS = 7 * 24 * 60 * 60 * 1000;
+
+export function cookieOptions() {
+  return {
+    httpOnly: true, // JavaScript on the page can never read it
+    secure: config.NODE_ENV === 'production', // HTTPS only in production
+    sameSite: 'lax', // not sent on cross-site POSTs
+    maxAge: SEVEN_DAYS_MS,
+    path: '/',
+  };
+}
+
+export function signToken(userId) {
+  return jwt.sign({}, config.JWT_SECRET, { algorithm: 'HS256', subject: String(userId), expiresIn: '7d' });
+}
+
+// Reads the cookie, verifies it, loads the user. Sets req.user or answers 401.
+export async function requireAuth(req, _res, next) {
+  const token = req.cookies?.[COOKIE_NAME];
+  if (!token) throw new HttpError(401, 'not_signed_in', 'Sign in first');
+  let payload;
+  try {
+    // Pin the algorithm so a forged token cannot pick a weaker one.
+    payload = jwt.verify(token, config.JWT_SECRET, { algorithms: ['HS256'] });
+  } catch {
+    throw new HttpError(401, 'invalid_token', 'Your session is invalid or has expired');
+  }
+  const user = await findUserById(Number(payload.sub));
+  if (!user) throw new HttpError(401, 'invalid_token', 'Your session is invalid or has expired');
+  req.user = user;
+  next();
+}
+
+export const requireRole = (role) => (req, _res, next) => {
+  if (req.user?.role !== role) throw new HttpError(403, 'forbidden', 'You are not allowed to do that');
+  next();
+};` },
+      {
+        type: 'table',
+        headers: ['Setting', 'What it does', 'What it does not do'],
+        rows: [
+          ['httpOnly', 'JavaScript on the page cannot read the cookie, so an injected script cannot copy the token', 'It does not stop that script from making requests, which the browser will send with the cookie'],
+          ['secure', 'The cookie is sent only over HTTPS (localhost is exempt)', 'It does not encrypt anything by itself; HTTPS does'],
+          ['sameSite: lax', 'The browser leaves the cookie off cross-site requests such as a POST from another site', 'It does not help against a state-changing GET, or against requests from sibling subdomains'],
+          ['maxAge / expiresIn', 'The session ends on its own after seven days', 'It does not let you cancel one stolen token earlier'],
+        ],
+        caption: 'Every cookie flag has a job and a limit',
+      },
+      { type: 'paragraph', text: 'Three details in `requireAuth` deserve attention. First, `verify` is told which algorithm to accept (`HS256`), because a verifier that trusts the algorithm named inside the token can be tricked into accepting an unsigned one. Second, the middleware loads the **user from the database on every request** instead of trusting a role written into the token. If an admin deletes an account or changes a role, it takes effect on the next request. Third, a pure token cannot be cancelled before it expires. Server-side sessions stored in a table can be revoked instantly, and are the stricter alternative if your app needs "sign out everywhere".' },
+      { type: 'heading', text: 'Protecting routes: who, then what' },
+      { type: 'paragraph', text: '`requireAuth` answers who: it sets `req.user` or stops with a 401. `requireRole(\'admin\')` answers what kind of user, with a 403 for the wrong role. Ownership (lesson 4) answers whose record. Putting them together, `POST /api/courts` is `requireAuth, requireRole(\'admin\'), validate(schema)`: you read the line left to right and know exactly who can reach the handler.' },
+      { type: 'heading', text: 'Cookies and CSRF: what the browser does for you, and against you' },
+      { type: 'paragraph', text: 'The browser attaches cookies automatically, which is convenient and also the root of **cross-site request forgery (CSRF)**: another website makes your browser send a request to yours, and your cookie rides along. CourtBook\'s defences are layered. The cookie is `SameSite=Lax`, so it is not sent on cross-site POST, PATCH or DELETE. The API accepts JSON, which a plain cross-site HTML form cannot send. And CORS (lesson 7) lets only listed origins read responses. OWASP is clear that SameSite is a defence in depth rather than a complete replacement for a CSRF token, so a banking-grade app would add a token. For a booking app with no state-changing GET routes, this layering is a reasonable, explainable choice.' },
+      {
+        type: 'version',
+        text: 'OWASP\'s Password Storage Cheat Sheet names Argon2id first, with a minimum of 19 MiB of memory, 2 iterations and 1 degree of parallelism, and says bcrypt is for legacy use because most implementations cap input at 72 bytes. The `argon2` package (0.45) printed a hash recording m=65536, t=3, p=4. MDN documents HttpOnly as blocking `document.cookie` access (but not stopping the cookie being sent with script-made requests), says Secure cookies are allowed on localhost, and recommends setting SameSite explicitly. OWASP\'s CSRF cheat sheet calls SameSite useful as defence in depth that does not replace a proper CSRF defence in most deployments.',
+        checked: CHECKED,
+        sources: [DOCS.owaspPassword, DOCS.mdnCookie, DOCS.owaspCsrf, DOCS.nist],
+      },
+      { type: 'visual', id: 'web-auth-flow', caption: 'Step through an authentication flow and compare it with the sequence diagram above.' },
+      {
+        type: 'takeaways',
+        items: [
+          'Never store passwords: store an Argon2id hash from a vetted library, and allow long passwords (at least 15 characters for a password-only login).',
+          'Give one identical answer for "unknown email" and "wrong password", keep the timing similar, and rate-limit attempts.',
+          'Put the token in an httpOnly, SameSite=Lax cookie (Secure in production), pin the algorithm on verify, and reload the user on every request.',
+          'requireAuth answers who, requireRole answers what kind of user, and an ownership check answers whose record. Use all three where they apply.',
+          'Each defence has a limit: httpOnly does not stop requests made by an injected script, SameSite is defence in depth, and a plain token cannot be revoked early.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'fullstack-web-06-scenario-1',
+          kind: 'scenario',
+          title: 'Where does the token live?',
+          prompt: 'Choose where the browser should keep the sign-in token.',
+          concept: 'session storage and XSS',
+          situation: 'A teammate has added a rich-text notes feature that shows some user-written HTML. You are worried that one day a script injection (XSS) gets through. You are deciding where the React app keeps the sign-in token, knowing that any script on the page runs with the same powers as your own code.',
+          options: [
+            { text: 'In an httpOnly cookie set by the server, so the React code never sees the token at all.', consequence: 'An injected script cannot read or copy the token. It could still make requests while the page is open, so you keep fixing injection holes, but a stolen token that works from the attacker\'s own machine is not on the table.', quality: 'best' },
+            { text: 'Only in a React state variable in memory.', consequence: 'Nothing is written to disk, but every page refresh signs the user out, and the token is still readable by a script that runs in the page. Safer than localStorage, painful to use.', quality: 'acceptable' },
+            { text: 'In localStorage, sent in an Authorization header.', consequence: 'It survives refreshes, but any injected script can read localStorage and send the token to an attacker, who can then use it from anywhere until it expires.', quality: 'poor' },
+            { text: 'In the URL as a query parameter, so links keep the user signed in.', consequence: 'The token ends up in browser history, server logs and in the Referer header sent to other sites. Anyone who sees the link is signed in as that user.', quality: 'poor' },
+          ],
+          hints: [
+            'Think about which options a script running in your page can read.',
+            'A cookie flag can hide a value from JavaScript completely.',
+            'httpOnly means document.cookie cannot see the cookie, yet the browser still sends it with every request to your server.',
+          ],
+          explanation: 'An httpOnly cookie is invisible to page scripts, so an injection cannot simply copy the token. It does not make XSS harmless, because the script can still act as the user while the page is open, but it removes the easiest and most damaging outcome, which is a reusable stolen token.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'fullstack-web-06-fix-bug-1',
+          kind: 'fix-bug',
+          title: 'A cookie with no armour',
+          prompt: 'A security review says the token cookie can be read by scripts, is sent over plain HTTP in production, and goes along with cross-site requests. Tap the line to fix and choose the correct replacement.',
+          concept: 'cookie flags',
+          language: 'js',
+          code: `router.post('/login', async (req, res) => {
+  const user = await checkPassword(req.body);
+  const token = signToken(user.id);
+  res.cookie('token', token, { maxAge: SEVEN_DAYS_MS });
+  res.json({ user });
+});`,
+          bugLine: 4,
+          fixes: [
+            { line: '  res.cookie(\'token\', token, { httpOnly: true, secure: process.env.NODE_ENV === \'production\', sameSite: \'lax\', maxAge: SEVEN_DAYS_MS });', correct: true, why: 'httpOnly hides it from scripts, secure limits it to HTTPS in production (and still allows http on localhost for development), and sameSite lax keeps it off cross-site POSTs.' },
+            { line: '  res.cookie(\'token\', token, { httpOnly: true, sameSite: \'none\', maxAge: SEVEN_DAYS_MS });', correct: false, why: 'SameSite=None sends the cookie on every cross-site request, which is the opposite of what the review asked for (and browsers also demand Secure with it).' },
+            { line: '  res.cookie(\'token\', token, { secure: true, sameSite: \'lax\', maxAge: SEVEN_DAYS_MS });', correct: false, why: 'Without httpOnly, any script on the page can still read the cookie with document.cookie. A hard-coded secure: true would also stop the cookie working on plain http during development.' },
+          ],
+          lineNote: 'The login logic is fine. Look at the options passed to res.cookie.',
+          hints: [
+            'There are three complaints, so the options object needs three settings, not just maxAge.',
+            'One setting hides the cookie from scripts, one limits it to HTTPS, one limits cross-site sending.',
+            'httpOnly: true, secure: true in production, sameSite: \'lax\'.',
+          ],
+          explanation: 'Each complaint maps to one cookie attribute: httpOnly for script access, secure for plain HTTP, sameSite for cross-site sending. Setting secure from the environment keeps local development working while production gets HTTPS-only cookies.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'fullstack-web-06-q1',
+        prompt: 'Why does CourtBook store an Argon2id hash of each password instead of an encrypted password or a SHA-256 hash?',
+        choices: [
+          'Argon2id output is shorter, so the users table stays small.',
+          'A hash cannot be reversed, and Argon2id is deliberately slow and salted, so a stolen database cannot be cracked quickly. SHA-256 is fast, which helps attackers.',
+          'Encrypted passwords cannot be compared, so signing in would be impossible.',
+          'SHA-256 is no longer supported by Node.js.',
+        ],
+        answer: 1,
+        explanation: 'Encryption can be reversed with the key, and fast hashes allow billions of guesses per second. A slow, salted password hash makes each guess expensive.',
+      },
+      {
+        id: 'fullstack-web-06-q2',
+        prompt: 'The login route answers "Wrong email or password" for an unknown email and for a wrong password, and runs a verification against a dummy hash when the email is unknown. What does this prevent?',
+        choices: [
+          'SQL injection through the email field.',
+          'Cross-site request forgery against the login form.',
+          'Brute-force guessing, because the dummy hash is slower than the real one.',
+          'Finding out which emails have accounts, through the message or through how long the answer takes.',
+        ],
+        answer: 3,
+        explanation: 'A different message or a faster answer for unknown emails lets an attacker test a list of emails for accounts. Identical answers and similar timing remove that signal.',
+      },
+      {
+        id: 'fullstack-web-06-q3',
+        prompt: 'A script injected into a CourtBook page runs `document.cookie`. Which cookie attribute stops it from seeing the sign-in token?',
+        choices: [
+          'Secure',
+          'SameSite=Lax',
+          'HttpOnly',
+          'Max-Age',
+        ],
+        answer: 2,
+        explanation: 'HttpOnly hides a cookie from document.cookie. Secure is about HTTPS, SameSite is about cross-site sending, and Max-Age is about lifetime.',
+      },
+      {
+        id: 'fullstack-web-06-q4',
+        prompt: 'An admin deletes a customer\'s account while that customer\'s cookie is still valid for six days. What happens on the customer\'s next request?',
+        choices: [
+          'It fails with 401, because requireAuth loads the user from the database on each request and finds nobody.',
+          'It succeeds until the token expires, because a signed token is always trusted.',
+          'It succeeds, but only for routes that do not need a role.',
+          'It fails with 403, because the token contains the old role.',
+        ],
+        answer: 0,
+        explanation: 'The token only carries the user id. Because requireAuth loads the user each time, deleting the row takes effect immediately, at the cost of one indexed query per request.',
+      },
+    ],
+    task: {
+      title: 'Add sign-in to your API and attack it',
+      minutes: 20,
+      steps: [
+        'Add register, login, logout and me routes with Argon2id, an httpOnly cookie, `requireAuth` and `requireRole`, and sign in with curl using a cookie jar (`-c jar -b jar`).',
+        'Open the Network tab in your browser\'s developer tools after signing in from any page that calls your API, and find the Set-Cookie header. Confirm HttpOnly and SameSite are present and that `document.cookie` in the console does not show the token.',
+        'Send ten wrong passwords in a row and watch the answer change to 429.',
+        'Sign a token with a different secret, send it as the cookie, and confirm the answer is 401.',
+      ],
+    },
+  },
+
+  {
+    id: 'fullstack-web-07',
+    day: 7,
+    title: 'Connecting the React front end',
+    summary: 'Reach the API from React without CORS pain, wrap fetch in one client, read server data with TanStack Query, and handle who is signed in.',
+    intro: {
+      objectives: [
+        'Explain same-origin and cross-origin setups, and configure Vite\'s proxy and Express\'s CORS for each',
+        'Wrap fetch in one API client that sends cookies and turns error responses into errors',
+        'Show loading, error, empty and data states for a server query with TanStack Query',
+        'Gate screens by sign-in state, and say why that gate is only a convenience',
+      ],
+      why: 'The first thing that goes wrong when a React app meets a real API is a red CORS error in the console. Understanding what the browser is actually checking turns a day of guessing into a two-minute fix, and it is a favourite interview question.',
+    },
+    minutes: 30,
+    skills: ['react-integration'],
+    body: [
+      { type: 'paragraph', text: 'The React course covered components, state, effects, forms, routing and fetching server data. This lesson connects that front end to the API you built. The interesting questions are not about components: how does a browser on one address reach a server on another, how are errors from the server turned into screens, and how does the page know who is signed in? We start with the first, because it causes most of the pain.' },
+      { type: 'heading', text: 'Two setups: one origin or two' },
+      { type: 'paragraph', text: 'An **origin** is the scheme, domain and port together. `http://localhost:5173` (the Vite dev server) and `http://localhost:3000` (Express) are different origins, because the ports differ. Browsers apply the **same-origin policy**: a page may freely call its own origin, but another origin\'s response is hidden from it unless that server opts in. The opt-in is called **CORS**. You have two ways to live with this.' },
+      {
+        type: 'diagram',
+        format: 'mermaid',
+        caption: 'In development Vite forwards /api to Express; in production Express serves everything.',
+        source: 'flowchart LR\n  D1[Browser at localhost 5173] -- GET /api/courts --> D2[Vite dev server]\n  D2 -- proxy forwards the request --> D3[Express at localhost 3000]\n  P1[Browser at your domain] -- GET /api/courts --> P2[Express: the API and the built React files]',
+      },
+      { type: 'paragraph', text: '**Option 1, one origin (what CourtBook does).** In development, the browser talks only to Vite, and Vite\'s proxy forwards any path beginning with `/api` to Express. To the browser everything is one origin, so there is no CORS and the cookie just works. In production Express serves both the React files and the API, so it is one origin again.' },
+      { type: 'code', language: 'js', label: 'client/vite.config.js', code: `import { defineConfig } from 'vite';
+import react from '@vitejs/plugin-react';
+
+export default defineConfig({
+  plugins: [react()],
+  build: { outDir: '../public', emptyOutDir: true },
+  server: {
+    // In development the browser talks to Vite only; Vite forwards /api to Express.
+    // To the browser it is one origin, so no CORS and the cookie just works.
+    proxy: { '/api': process.env.API_TARGET ?? 'http://localhost:3000' },
+  },
+});` },
+      { type: 'paragraph', text: '`build.outDir` points the production build at `../public`, where Express looks for it. Because that folder is outside Vite\'s project root, Vite warns unless you set `emptyOutDir` explicitly, so we do. The proxy is a development feature only: Vite\'s docs say these server options apply to the dev server, which is why production needs Express to serve the files itself.' },
+      { type: 'paragraph', text: '**Option 2, two origins.** Sometimes the front end and the API must live on different domains. Then the server has to send CORS headers. Three rules matter. A JSON request is "preflighted": the browser first sends an `OPTIONS` request asking permission, and the server must answer it. A request that carries cookies needs `credentials: \'include\'` on the client. And for a credentialed request the server must name the exact origin and send `Access-Control-Allow-Credentials: true`. The wildcard `*` is not allowed. Express does it with one middleware:' },
+      { type: 'code', language: 'js', label: 'src/app.js (the CORS lines)', code: `  if (config.CORS_ORIGINS.length > 0) {
+    // An allow-list of exact origins; "credentials" lets the browser send and accept the cookie.
+    app.use(cors({ origin: config.CORS_ORIGINS, credentials: true }));
+  }` },
+      { type: 'warning', text: 'CORS is enforced by the browser to protect the user, not by the server to protect itself. curl and any other program ignore it entirely. It does not replace authentication, and an allow-list that reflects every origin (`origin: true`) while allowing credentials lets any website read a signed-in user\'s data.' },
+      { type: 'heading', text: 'One place that talks to the server' },
+      { type: 'paragraph', text: 'Scattered `fetch` calls each handle errors a little differently. CourtBook has one function. It sends the cookie, sends JSON or a file, returns the parsed body, and turns any non-2xx answer into an `ApiError` that carries the status, the stable `code` and the field `details` that lesson 5\'s error shape defines. Note that `fetch` itself does not throw on a 404 or 500, so the check on `response.ok` is essential.' },
+      { type: 'code', language: 'js', label: 'client/src/api.js', code: `// The one place that knows how to talk to the server.
+export class ApiError extends Error {
+  constructor(status, error) {
+    super(error?.message ?? \`Request failed (\${status})\`);
+    this.status = status;
+    this.code = error?.code;
+    this.details = error?.details ?? [];
+  }
+}
+
+// Empty means "same origin" (Vite's proxy in development, one server in production).
+// Set VITE_API_URL only when the API really lives on another origin; then the server needs CORS.
+const BASE = import.meta.env.VITE_API_URL ?? '';
+
+export async function api(path, { method = 'GET', body } = {}) {
+  const response = await fetch(\`\${BASE}/api\${path}\`, {
+    method,
+    credentials: 'include', // send and accept the httpOnly cookie
+    headers: body === undefined || body instanceof FormData ? undefined : { 'Content-Type': 'application/json' },
+    body: body === undefined || body instanceof FormData ? body : JSON.stringify(body),
+  });
+  if (response.status === 204) return null;
+  const data = await response.json().catch(() => null);
+  if (!response.ok) throw new ApiError(response.status, data?.error);
+  return data;
+}` },
+      { type: 'heading', text: 'Server data is not component state' },
+      { type: 'paragraph', text: 'The list of courts is not something the component owns; it lives on the server and the component holds a copy. A copy needs loading and error states, a way to refetch, caching, and invalidation. Libraries such as TanStack Query handle all of that, so CourtBook uses `useQuery` for reads. The **query key** identifies the data: `[\'courts\']` for the list, and `[\'availability\', id, date]` for one court on one day. Include every input the data depends on in the key, and the cache keeps each combination separate and refetches when an input changes.' },
+      { type: 'code', language: 'jsx', label: 'client/src/pages/CourtsPage.jsx', code: `import { Link } from 'react-router';
+import { useQuery } from '@tanstack/react-query';
+import { api } from '../api.js';
+import { formatPeso } from '../format.js';
+
+export function CourtsPage() {
+  const { data, isPending, error, refetch } = useQuery({
+    queryKey: ['courts'],
+    queryFn: async () => (await api('/courts')).courts,
+  });
+
+  if (isPending) return <p>Loading courts…</p>;
+  if (error) return <p role="alert">Could not load courts. <button onClick={() => refetch()}>Try again</button></p>;
+  if (data.length === 0) return <p>No courts yet.</p>;
+
+  return (
+    <ul>
+      {data.map((court) => (
+        <li key={court.id}>
+          <Link to={\`/courts/\${court.id}\`}>{court.name}</Link> · {court.surface} · {formatPeso(court.hourlyRateCentavos)} per hour
+        </li>
+      ))}
+    </ul>
+  );
+}` },
+      { type: 'paragraph', text: 'Every data screen deals with four states, and this page makes each visible: loading (`isPending`), failure (`error`, with a retry button), empty (zero courts, with a message and not a blank page), and data. Skipping one of these is the most common reason a demo looks fine and a real network does not.' },
+      { type: 'heading', text: 'Knowing who is signed in' },
+      { type: 'paragraph', text: 'The page cannot read the httpOnly cookie, so it asks the server: `GET /api/auth/me`. A 401 here is not an error to show; it simply means "nobody is signed in", so the query returns `null`. The answer is cached under `[\'me\']` and shared through a React context, and signing in or out updates that one cache entry.' },
+      { type: 'code', language: 'jsx', label: 'client/src/auth.jsx', code: `import { createContext, useContext } from 'react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { api, ApiError } from './api.js';
+
+const AuthContext = createContext(null);
+
+export function AuthProvider({ children }) {
+  const queryClient = useQueryClient();
+
+  // Who am I? 401 just means "nobody", not an error screen.
+  const me = useQuery({
+    queryKey: ['me'],
+    queryFn: async () => {
+      try {
+        return (await api('/auth/me')).user;
+      } catch (err) {
+        if (err instanceof ApiError && err.status === 401) return null;
+        throw err;
+      }
+    },
+    staleTime: 5 * 60 * 1000,
+    retry: false,
+  });
+
+  const signIn = useMutation({
+    mutationFn: ({ path, body }) => api(path, { method: 'POST', body }),
+    onSuccess: ({ user }) => queryClient.setQueryData(['me'], user),
+  });
+
+  const signOut = useMutation({
+    mutationFn: () => api('/auth/logout', { method: 'POST' }),
+    onSuccess: () => {
+      queryClient.setQueryData(['me'], null);
+      queryClient.removeQueries({ queryKey: ['bookings'] }); // never show the last person's data
+    },
+  });
+
+  const value = { user: me.data ?? null, loading: me.isPending, signIn, signOut };
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+}
+
+export const useAuth = () => useContext(AuthContext);` },
+      { type: 'paragraph', text: 'A small `RequireAuth` component wraps pages that need a user: while the answer is loading it shows a placeholder, with nobody signed in it redirects to `/login` and remembers where the person was going, otherwise it shows the page. This gate is a courtesy that saves a pointless request. It protects nothing, because anyone can open the developer tools or call the API directly. The real protection is `requireAuth` on the server, which you built in lesson 6.' },
+      { type: 'code', language: 'jsx', label: 'client/src/App.jsx (the gate)', code: `// Hides a page from people who are not signed in. This is for the user's comfort only:
+// the server's requireAuth is what actually protects the data.
+function RequireAuth({ children }) {
+  const { user, loading } = useAuth();
+  const location = useLocation();
+  if (loading) return <p>Loading…</p>;
+  if (!user) return <Navigate to="/login" replace state={{ from: location.pathname }} />;
+  return children;
+}` },
+      { type: 'paragraph', text: 'One last production detail. React Router changes the address (`/bookings`) without asking the server. If the user reloads that page, the browser does ask the server for `/bookings`, and a server that only knows `/api` would say 404. That is why `createApp()` ends with a fallback that sends `index.html` for any path that is not `/api`, and why the `/api` catch-all comes before it.' },
+      {
+        type: 'version',
+        text: 'Checked: Vite\'s server options, including server.proxy, apply to the dev server only; build.outDir is relative to the project root and Vite warns (unless emptyOutDir is set) when it points outside it. React Router 8 (docs for version 8.5.1) has declarative, data and framework modes; CourtBook uses declarative mode, with BrowserRouter, Routes and Route imported from "react-router". MDN confirms that a JSON request is preflighted, that a credentialed response must not use the * wildcard, and that it must send Access-Control-Allow-Credentials: true.',
+        checked: CHECKED,
+        sources: [DOCS.viteServer, DOCS.viteBuild, DOCS.rrModes, DOCS.mdnCors],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'Same origin (Vite\'s dev proxy, and Express serving the build in production) avoids CORS and keeps cookies simple.',
+          'For two origins the server needs an exact-origin CORS allow-list with credentials, and the client needs credentials: \'include\'. CORS protects users in the browser; it is not authentication.',
+          'Wrap fetch once: send the cookie, parse the body, and turn non-2xx answers into a typed error with the server\'s code and details.',
+          'Treat server data as cached copies: use a query library, put every input in the query key, and render loading, error, empty and data states.',
+          'A client-side sign-in gate is only for comfort; the server must enforce access. Production also needs an index.html fallback so reloads work.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'fullstack-web-07-fix-bug-1',
+          kind: 'fix-bug',
+          title: 'The red CORS error',
+          prompt: 'The React app on http://localhost:5173 calls the API with credentials: \'include\'. The browser blocks every response with a CORS error even though the server sends Access-Control-Allow-Origin. Tap the faulty line, then choose the safest fix.',
+          concept: 'CORS with credentials',
+          language: 'js',
+          code: `import cors from 'cors';
+
+app.use(cors({ origin: '*', credentials: true }));
+app.use(express.json());`,
+          bugLine: 3,
+          fixes: [
+            { line: 'app.use(cors({ origin: [\'http://localhost:5173\'], credentials: true }));', correct: true, why: 'The server names the exact origin it trusts and allows credentials, which is what the browser requires for a request that carries cookies. Other sites get no CORS headers.' },
+            { line: 'app.use(cors({ origin: \'*\' }));', correct: false, why: 'Dropping credentials makes the server say "no cookies", so the browser still refuses the credentialed request (and the cookie is never saved).' },
+            { line: 'app.use(cors({ origin: true, credentials: true }));', correct: false, why: 'This copies back whatever origin asked, so the error disappears, but now any website can make a signed-in user\'s browser read your API. It trades the error for a vulnerability.' },
+          ],
+          lineNote: 'The import and the body parser are fine. The question is what the CORS middleware is configured to send.',
+          hints: [
+            'A request with cookies is a "credentialed" request. MDN has special rules for those.',
+            'For credentialed requests the wildcard * is not allowed in Access-Control-Allow-Origin.',
+            'Name the exact origin (or a list of them) and keep credentials: true.',
+          ],
+          explanation: 'For a request that carries cookies the browser needs a specific origin and Allow-Credentials: true in the response. A wildcard is rejected, dropping credentials breaks cookies, and reflecting any origin opens the API to every website. An explicit allow-list is both the fix and the safe choice.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'fullstack-web-07-fill-blank-1',
+          kind: 'fill-blank',
+          title: 'A query for one day',
+          prompt: 'Complete the query that loads the booked hours of a court for the chosen date, and the loading check that follows it.',
+          concept: 'query keys and states',
+          language: 'jsx',
+          code: `const { data, ___, error } = useQuery({
+  queryKey: ['availability', id, ___],
+  queryFn: () => api(\`/courts/\${id}/bookings?date=\${date}\`),
+  enabled: Boolean(date),
+});
+
+if (___) return <p>Loading…</p>;`,
+          blanks: [
+            { answers: ['isPending'], feedback: 'isPending is true while there is no data yet. It is the state to destructure for the loading check.' },
+            { answers: ['date'], feedback: 'The key must include every value the data depends on. The URL uses date, so the key does too; otherwise two different days would share one cache entry.' },
+            { answers: ['isPending'], feedback: 'The same flag, now used to decide whether to show the loading message.' },
+          ],
+          bank: ['isPending', 'isPending', 'date', 'id', 'isError'],
+          hints: [
+            'What does useQuery return that says "there is no data yet"?',
+            'The cache key must change whenever the URL\'s inputs change. The URL uses id and date, and id is already in the key.',
+            'The first and third blanks are the same word. The middle one is a variable already used inside queryFn.',
+          ],
+          explanation: 'Destructure isPending to know when to show a loading state, and include every input of the request (court id and date) in the query key so each day is cached separately and refetched when the date changes. The enabled option keeps the query from running before a date is chosen.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'fullstack-web-07-q1',
+        prompt: 'A React app on localhost:5173 calls an API on localhost:3000 with `credentials: \'include\'`. The server replies with `Access-Control-Allow-Origin: *` and the browser reports a CORS error. Why?',
+        choices: [
+          'Browsers never allow a page on one port to call another port.',
+          'The request is missing a Content-Type header, so the preflight failed.',
+          'localhost is exempt from CORS, so the error must come from Express.',
+          'For credentialed requests the wildcard is not allowed: the server must name the origin and send Access-Control-Allow-Credentials: true.',
+        ],
+        answer: 3,
+        explanation: 'Credentialed requests have stricter CORS rules. The fix is an explicit origin plus Allow-Credentials, not a different port.',
+      },
+      {
+        id: 'fullstack-web-07-q2',
+        prompt: 'What does Vite\'s `server.proxy` setting give CourtBook while developing?',
+        choices: [
+          'The browser sees one origin (Vite) while Vite forwards /api requests to Express, so there is no CORS and cookies work; it does not exist in the production build.',
+          'A faster copy of Express that runs inside the browser.',
+          'Automatic HTTPS for the Express server in production.',
+          'A cache that stores every API response on the developer\'s machine.',
+        ],
+        answer: 0,
+        explanation: 'The proxy makes cross-origin calls look same-origin. It is a feature of the dev server only, which is why production has Express serve the files.',
+      },
+      {
+        id: 'fullstack-web-07-q3',
+        prompt: 'Why is the query key `[\'availability\', id, date]` rather than just `[\'availability\']`?',
+        choices: [
+          'Because TanStack Query rejects keys with fewer than three items.',
+          'So that each court and date is cached separately and the data is refetched when either one changes.',
+          'So that the key can be read by the server.',
+          'Because the key must contain the URL of the request character for character.',
+        ],
+        answer: 1,
+        explanation: 'The key is the identity of the data. If it ignored the date, Monday\'s bookings would be shown for Tuesday.',
+      },
+      {
+        id: 'fullstack-web-07-q4',
+        prompt: 'In production a signed-in customer reloads `/bookings` and the browser shows "Cannot GET /bookings". What is missing?',
+        choices: [
+          'A longer cookie lifetime, since the session probably expired.',
+          'A CORS header for the /bookings path.',
+          'A fallback route that sends index.html for every non-API path, so React Router can handle the address.',
+          'A second database table for page routes.',
+        ],
+        answer: 2,
+        explanation: '/bookings is a React Router path, not a file or an API route. On reload the server must send the app\'s index.html and let the front end read the address.',
+      },
+    ],
+    task: {
+      title: 'Wire the React app to your API',
+      minutes: 20,
+      steps: [
+        'Create a Vite React app (`npm create vite@latest`, choose React), add a `server.proxy` for `/api`, and write `api.js` with credentials and an ApiError.',
+        'Show the list of courts with `useQuery`, covering loading, error and empty states. To test them, stop your server and confirm the error state and retry button work.',
+        'Add `AuthProvider` and `RequireAuth`, sign in, and watch the cookie appear (and `document.cookie` stay empty of it) in the browser\'s developer tools.',
+        'Run `npm run build`, start Express in production mode and open a deep link such as `/bookings` directly to confirm the fallback works.',
+      ],
+    },
+  },
+
+  {
+    id: 'fullstack-web-08',
+    day: 8,
+    title: 'Forms, state and optimistic updates',
+    summary: 'Build forms that show server errors beside the right field, write data with mutations, and make cancelling feel instant with an optimistic update that rolls back on failure.',
+    intro: {
+      objectives: [
+        'Show the server\'s field errors next to the right inputs and prevent double submits',
+        'Write data with useMutation and refresh the affected queries afterwards',
+        'Implement an optimistic update with a snapshot and a rollback',
+        'Decide when an optimistic update is a good idea and when the server must have the last word',
+      ],
+      why: 'Forms and writes are where users feel an app\'s quality: do they see why something failed, does the button react at once, does the screen ever lie? Knowing how to make a write feel instant without ever showing a false state is a skill that separates polished apps from demos.',
+    },
+    minutes: 30,
+    skills: ['optimistic-ui'],
+    body: [
+      { type: 'paragraph', text: 'Reading data is the easy half of a front end. Writing is harder, because it takes time and can fail. While a write is in flight the interface has to say so; when the server refuses it, the interface has to say why in words that match the form; and when it works, every screen that showed the old data must update. This lesson covers the React course\'s forms and state ideas, applied to a real API.' },
+      { type: 'heading', text: 'Forms and the server\'s opinion' },
+      { type: 'paragraph', text: 'CourtBook\'s forms are controlled inputs: React state is the source of truth, and a `set(field)` helper updates one field. The server\'s answer comes back in the error shape from lesson 5, so the form does not need to guess. Each field looks up the server\'s message for its own name, and anything left over (for example "Wrong email or password") is shown above the button.' },
+      { type: 'code', language: 'jsx', label: 'client/src/pages/AuthPage.jsx (state, errors and submit)', code: `export function AuthPage({ mode }) {
+  const { signIn } = useAuth();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [form, setForm] = useState({ name: '', email: '', password: '' });
+  const isRegister = mode === 'register';
+
+  const set = (field) => (event) => setForm({ ...form, [field]: event.target.value });
+  const fieldError = (field) => signIn.error?.details?.find((d) => d.path === field)?.message;
+
+  function submit(event) {
+    event.preventDefault();
+    const body = isRegister ? form : { email: form.email, password: form.password };
+    signIn.mutate(
+      { path: isRegister ? '/auth/register' : '/auth/login', body },
+      { onSuccess: () => navigate(location.state?.from ?? '/', { replace: true }) },
+    );
+  }` },
+      { type: 'paragraph', text: '`signIn` is a **mutation**: TanStack Query\'s tool for a write. It exposes `isPending` while the request runs, `error` if it failed (the `ApiError` from lesson 7, with its `details`), and a `mutate` function. Disabling the submit button while `isPending` is true prevents the double submit that creates two accounts or two bookings. The form calls `mutate(variables, { onSuccess })`, and the redirect after success lives in that callback because it belongs to this screen.' },
+      { type: 'heading', text: 'After a write, refresh what it changed' },
+      { type: 'paragraph', text: 'A successful booking changes two things the screens show: the list of booked hours for that court and day, and the customer\'s own bookings. The simplest correct approach is to mark those queries as stale with `invalidateQueries`, so TanStack Query refetches them. Notice `onSettled` on the availability query: it refreshes whether the booking succeeded or failed, because a 409 means someone else changed that day, and the screen should now show the hour as taken.' },
+      { type: 'code', language: 'jsx', label: 'client/src/pages/CourtPage.jsx (the booking mutation)', code: `  const book = useMutation({
+    mutationFn: (body) => api('/bookings', { method: 'POST', body }),
+    // Success or failure, the picture of that day may have changed: ask the server again.
+    onSettled: () => queryClient.invalidateQueries({ queryKey: ['availability', id, date] }),
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['bookings'] }),
+  });` },
+      { type: 'paragraph', text: 'The user-facing part is the conflict. When the server answers with the code `slot_taken`, the page does not show a generic failure. It says "Someone just booked that time. Pick another." and, because of the refetch, the taken hour now appears in the list. The stable error codes from lesson 5 are what make this possible.' },
+      { type: 'heading', text: 'Optimistic updates: show the result before the server confirms' },
+      { type: 'paragraph', text: 'Waiting for a round trip to cancel a booking feels slow. An **optimistic update** changes the screen immediately, on the assumption that the request will succeed, and undoes the change if it does not. It makes an app feel fast on a weak mobile connection, which matters for most of your users. The pattern has four parts: stop anything that might overwrite your guess, save a snapshot of the current data, write the guess into the cache, and restore the snapshot on failure. Then refetch from the server either way, so the screen ends up matching the truth.' },
+      { type: 'code', language: 'jsx', label: 'client/src/pages/MyBookingsPage.jsx (cancel)', code: `  // Optimistic cancel: show "cancelled" at once, undo if the server says no.
+  const cancel = useMutation({
+    mutationFn: (id) => api(\`/bookings/\${id}\`, { method: 'DELETE' }),
+    onMutate: async (id) => {
+      await queryClient.cancelQueries({ queryKey }); // stop an in-flight refetch overwriting our guess
+      const previous = queryClient.getQueryData(queryKey);
+      queryClient.setQueryData(queryKey, (old) => old.map((b) => (b.id === id ? { ...b, status: 'cancelled' } : b)));
+      return { previous };
+    },
+    onError: (_err, _id, rollback) => queryClient.setQueryData(queryKey, rollback.previous),
+    onSettled: () => queryClient.invalidateQueries({ queryKey }),
+  });` },
+      {
+        type: 'list',
+        items: [
+          '`cancelQueries` stops any refetch already in flight. Without it, a slow response with the old data could arrive after your guess and overwrite it, so the booking would flicker back to confirmed.',
+          '`getQueryData` takes the snapshot and `onMutate` returns it, so `onError` receives it as its third argument and can put it back.',
+          '`setQueryData` writes the guess: the same list with that one booking marked cancelled.',
+          '`onSettled` runs after success or failure and refetches, so anything the server computed (or changed meanwhile) replaces the guess.',
+        ],
+      },
+      { type: 'paragraph', text: 'There is a test for this behaviour in lesson 10 that proves both halves: the screen shows "cancelled" before the server has answered, and goes back to "confirmed" with an error message when the server refuses.' },
+      { type: 'heading', text: 'When not to be optimistic' },
+      { type: 'paragraph', text: 'Optimism is right when the write almost always succeeds and the result is predictable. Cancelling your own confirmed booking fits. **Creating a booking does not**, because the whole point of the exclusion constraint is that sometimes the answer is "no, someone else got it". Showing a confirmed booking and then taking it away would be worse than a one-second wait. For creation CourtBook shows a pending button and lets the server decide.' },
+      {
+        type: 'table',
+        headers: ['Where does this state live?', 'Tool', 'Example in CourtBook'],
+        rows: [
+          ['On the server, shared and cached', 'TanStack Query (useQuery, useMutation)', 'Courts, bookings, who is signed in'],
+          ['In the address bar', 'The URL and React Router', 'Which court is open (`/courts/3`)'],
+          ['Only in one component, temporary', 'useState', 'The text in the notes field, the chosen date'],
+          ['Needed by many components, rarely changes', 'React context', 'The signed-in user, provided from the cached query'],
+        ],
+        caption: 'Put each piece of state where it belongs and do not copy server data into useState',
+      },
+      {
+        type: 'version',
+        text: 'TanStack Query v5\'s optimistic update guide shows the same sequence: cancel outgoing queries, snapshot with getQueryData, write with setQueryData, return the snapshot from onMutate, restore it in onError, and invalidate in onSettled. (Its newest examples receive the query client through a context argument; getting it from useQueryClient, as above, works too.) React 19 also has a built-in `useOptimistic` hook for state that shows a temporary value while an action is in progress and reverts when it ends, which suits simpler cases.',
+        checked: CHECKED,
+        sources: [DOCS.tqOptimistic, DOCS.reactOptimistic],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'Controlled forms plus the server\'s structured errors let each field show its own message, with leftovers shown above the button.',
+          'Use a mutation for writes, disable submit while it is pending, and invalidate the queries the write changed.',
+          'An optimistic update is four steps: cancel in-flight queries, snapshot, write the guess, roll back on error; then refetch in onSettled.',
+          'Use optimism when success is very likely and the result is predictable. Let the server decide when it may legitimately say no, as with a booking conflict.',
+          'Keep server data in the query cache, not copied into useState.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'fullstack-web-08-arrange-1',
+          kind: 'arrange',
+          title: 'The life of an optimistic cancel',
+          prompt: 'Put the steps of a cancel that fails on the server in the order they happen.',
+          concept: 'optimistic update sequence',
+          language: 'text',
+          solution: [
+            'The customer presses Cancel',
+            'onMutate: cancelQueries stops any refetch that is in flight',
+            'onMutate: getQueryData saves a copy of the current list',
+            'onMutate: setQueryData writes the booking as cancelled, so the screen updates at once',
+            'The DELETE request is sent and the server answers with an error',
+            'onError: the saved copy is written back and an error message shows',
+            'onSettled: invalidateQueries refetches the list from the server',
+          ],
+          reasons: [
+            'Everything starts with the user action.',
+            'Stopping in-flight refetches comes first, or one could overwrite the guess.',
+            'The snapshot has to be taken before the cache is changed.',
+            'Only then is the guess written, which is why the screen changes immediately.',
+            'The request goes out after the optimistic change; the screen did not wait for it.',
+            'A failure restores the snapshot taken earlier.',
+            'The final refetch makes the screen match the server whatever happened.',
+          ],
+          hints: [
+            'The screen changes before the request is sent, not after the answer.',
+            'The copy of the list must be saved before the guess is written.',
+            'The refetch comes last, after success or failure.',
+          ],
+          explanation: 'The cache is protected, snapshotted and changed before the request goes out, which is what makes the update optimistic. If the request fails, the snapshot is restored, and onSettled always finishes by asking the server for the truth.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'fullstack-web-08-scenario-1',
+          kind: 'scenario',
+          title: 'Should Book be optimistic too?',
+          prompt: 'Pick the best way to handle pressing "Book this court".',
+          concept: 'when optimism is wrong',
+          situation: 'Cancelling now feels instant, and a teammate suggests the Book button should work the same way: add the booking to the list straight away and send the request in the background. You know that on a busy Saturday several people often try for the same hour.',
+          options: [
+            { text: 'Keep it pessimistic: disable the button while pending, wait for the answer, show "Someone just booked that time" on a 409, and refetch the day.', consequence: 'The wait is a second at most, the customer never sees a booking that does not exist, and a lost race is explained clearly.', quality: 'best' },
+            { text: 'Make it optimistic, and roll back with an error message when a 409 arrives.', consequence: 'It works technically, but on a busy day customers see "Booked!" and a moment later it vanishes. Some will already have told their friends.', quality: 'acceptable' },
+            { text: 'Make it optimistic and skip the rollback, because conflicts are rare.', consequence: 'Whoever loses the race keeps staring at a booking that was never saved and turns up on Saturday to a locked court.', quality: 'poor' },
+          ],
+          hints: [
+            'What is the one thing the server might legitimately say to a booking request that it would not say to a cancel?',
+            'An optimistic update should be right most of the time.',
+            'When the server\'s answer decides the outcome, wait for it.',
+          ],
+          explanation: 'Optimism fits writes that nearly always succeed. A booking is a contest for a shared resource, and the exclusion constraint exists precisely because the server sometimes says no. Showing a false success costs more trust than a short wait.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'fullstack-web-08-q1',
+        prompt: 'The server answers a registration with status 400 and `details: [{ "path": "password", "message": "Use at least 15 characters" }]`. How does CourtBook\'s form show the message next to the right input?',
+        choices: [
+          'It shows every message at the top of the page, because forms cannot know which field is which.',
+          'It reloads the page so the server can draw the form again.',
+          'Each field calls fieldError(name), which finds the detail whose path matches and renders its message beside that input.',
+          'It stores the message in localStorage and reads it on the next visit.',
+        ],
+        answer: 2,
+        explanation: 'The server\'s details carry the field path, so the front end can match them to inputs. A consistent error shape (lesson 5) is what makes this simple.',
+      },
+      {
+        id: 'fullstack-web-08-q2',
+        prompt: 'Why is cancelling a booking a good fit for an optimistic update while creating one is not?',
+        choices: [
+          'Cancelling almost always succeeds and the result is predictable; creating can be refused with a 409, so showing success first would often be wrong.',
+          'Creating a booking involves a database, but cancelling does not.',
+          'TanStack Query only supports optimistic updates for DELETE requests.',
+          'Cancelling is faster to write, so it does not need a rollback.',
+        ],
+        answer: 0,
+        explanation: 'Optimism is a bet that the server will say yes. For a cancel the bet is very good. For a contested booking it is not.',
+      },
+      {
+        id: 'fullstack-web-08-q3',
+        prompt: 'In `onMutate`, why is `cancelQueries` called before the optimistic write?',
+        choices: [
+          'To clear the cache so there is no old data left.',
+          'To tell the server to stop processing the request.',
+          'To reset the button\'s pending state.',
+          'Because a refetch already in flight could finish after the guess is written and overwrite it with old data.',
+        ],
+        answer: 3,
+        explanation: 'Without it there is a race between the guess and a stale refetch, and the booking would flicker back to confirmed. cancelQueries removes the race.',
+      },
+      {
+        id: 'fullstack-web-08-q4',
+        prompt: 'The cancel mutation calls `invalidateQueries` in `onSettled`, even after a successful optimistic update. Why?',
+        choices: [
+          'Because the optimistic change is removed automatically after one second.',
+          'So the list is refetched and the screen ends up matching the server, including anything the server computed or changed meanwhile.',
+          'Because the DELETE request does not actually change anything on the server.',
+          'To make sure the user is still signed in.',
+        ],
+        answer: 1,
+        explanation: 'The optimistic value is only a guess. Refetching in onSettled replaces it with the server\'s truth whether the request worked or not.',
+      },
+    ],
+    task: {
+      title: 'Make cancelling instant, and break it on purpose',
+      minutes: 20,
+      steps: [
+        'Build the "My bookings" screen with a cancel button using the optimistic pattern from this lesson.',
+        'In your browser\'s developer tools, set network throttling to Slow 3G, press Cancel, and confirm the row changes immediately while the request is still running.',
+        'Stop your API server (or block the request in the Network tab), press Cancel again, and confirm the row returns to confirmed with an error message.',
+        'Add a form with a server-side rule that can fail (for example a password that is too short) and show each field\'s message from the response\'s `details`.',
+      ],
+    },
+  },
+
+  {
+    id: 'fullstack-web-09',
+    day: 9,
+    title: 'File uploads and third-party APIs',
+    summary: 'Accept a payment screenshot safely, decide where the bytes live, and call a forecast service so that its slowness, failures and surprises never become yours.',
+    intro: {
+      objectives: [
+        'Receive a multipart file upload with size limits and verify its real type',
+        'Compare disk, object storage and the database as homes for uploaded files, and choose for a given host',
+        'Call a third-party API with a timeout, response validation, caching and your own error mapping',
+        'Read a provider\'s terms and limits before building a feature on it',
+      ],
+      why: 'Nearly every real product accepts files and talks to someone else\'s API, and both are where outside input and outside failures enter your system. Handling them defensively is the difference between a feature that works in a demo and one that survives a bad day.',
+    },
+    minutes: 30,
+    skills: ['uploads-integrations'],
+    body: [
+      { type: 'paragraph', text: 'Two features in CourtBook depend on things you do not control. When a customer uploads their payment screenshot, the file is chosen by a stranger, and its name, size and claimed type are all unverified claims. When the court page shows a rain forecast, the data comes from another company\'s server that can be slow, down, or change its answers. The attitude is the same for both: **limit it, check it, and decide in advance what happens when it goes wrong.**' },
+      { type: 'heading', text: 'Uploading a file' },
+      { type: 'paragraph', text: 'A JSON body cannot carry a picture, so browsers send files as **multipart/form-data**: a body made of parts, one per field, each with its own headers. On the React side you build a `FormData` object, append the file under a field name, and pass it to `fetch` as the body. Do not set the `Content-Type` header yourself. The browser must add it, because the header includes a random boundary string that separates the parts. That is why the `api()` helper from lesson 7 skips its JSON header when the body is a `FormData`.' },
+      { type: 'paragraph', text: 'On the server, Express\'s JSON parser ignores multipart bodies, so a middleware called **Multer** reads them. You choose a field name, here `proof`, and where the bytes go. CourtBook\'s choices:' },
+      { type: 'code', language: 'js', label: 'src/upload.js', code: `import multer from 'multer';
+
+// Memory storage + a hard size limit: nothing touches the disk, nothing bigger than 3 MB gets in.
+export const MAX_PROOF_BYTES = 3 * 1024 * 1024;
+export const uploadProof = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: MAX_PROOF_BYTES, files: 1, fields: 0 },
+}).single('proof');
+
+// The browser's "Content-Type" for a file is only a claim. The first bytes tell the truth.
+export function sniffImageType(buffer) {
+  if (buffer.length >= 8 && buffer.subarray(0, 8).equals(Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a]))) return 'image/png';
+  if (buffer.length >= 3 && buffer[0] === 0xff && buffer[1] === 0xd8 && buffer[2] === 0xff) return 'image/jpeg';
+  if (buffer.length >= 12 && buffer.toString('ascii', 0, 4) === 'RIFF' && buffer.toString('ascii', 8, 12) === 'WEBP') return 'image/webp';
+  return null;
+}` },
+      {
+        type: 'list',
+        items: [
+          '`memoryStorage()` keeps the file in a Buffer. Multer\'s docs warn that large files, or many files quickly, can exhaust memory with this engine, which is exactly why the limits below are not optional.',
+          '`limits` caps the file size (3 MB), the number of files (1) and the number of text fields (0). The size limit is Multer\'s own: left unset, its default is no limit at all.',
+          '`sniffImageType` looks at the first bytes of the file, called its **magic number**. A PNG always starts with the bytes 89 50 4E 47, a JPEG with FF D8 FF, a WebP with the letters RIFF and later WEBP. The filename (`file.originalname`) and the Content-Type are client-supplied claims; the bytes are the evidence.',
+        ],
+      },
+      { type: 'code', language: 'js', label: 'src/routes/bookings.js (the upload and download routes)', code: `// Payment screenshot: multipart upload, checked three ways (size, real type, whose booking).
+bookingsRouter.post('/:id/proof', validate(idParams, 'params'), async (req, res, next) => {
+  await ownBooking(req);
+  uploadProof(req, res, async (err) => {
+    try {
+      if (err?.code === 'LIMIT_FILE_SIZE') throw new HttpError(413, 'file_too_large', \`Pictures can be up to \${MAX_PROOF_BYTES / 1024 / 1024} MB\`);
+      if (err) throw new HttpError(400, 'bad_upload', 'Send one picture in a field named "proof"');
+      if (!req.file) throw new HttpError(400, 'no_file', 'Attach a picture in a field named "proof"');
+      const type = sniffImageType(req.file.buffer);
+      if (!type) throw new HttpError(415, 'unsupported_type', 'Only PNG, JPEG or WebP pictures are accepted');
+      await saveProof(req.valid.params.id, type, req.file.buffer);
+      res.status(201).json({ ok: true });
+    } catch (error) {
+      next(error);
+    }
+  });
+});
+
+bookingsRouter.get('/:id/proof', validate(idParams, 'params'), async (req, res) => {
+  await ownBooking(req);
+  const proof = await findProof(req.valid.params.id);
+  if (!proof) throw new HttpError(404, 'no_proof', 'No picture uploaded for this booking');
+  res.type(proof.contentType).set('Cache-Control', 'private, max-age=0').send(proof.data);
+});` },
+      { type: 'paragraph', text: 'Read the upload route in order. The ownership check comes first, so a stranger cannot attach a picture to someone else\'s booking. Then Multer runs and its errors are translated: too big is **413**, anything else malformed is 400. A missing file is a 400. A file whose bytes are not a known image is **415 Unsupported Media Type**. Only then is anything saved, and the saved type is the one we detected, never the one the client claimed. The download route checks ownership again, because every route that takes an id must, and sends back the stored type with a private cache header.' },
+      { type: 'heading', text: 'Where should the bytes live?' },
+      {
+        type: 'table',
+        headers: ['Place', 'Good for', 'Watch out for'],
+        rows: [
+          ['The server\'s disk (an uploads folder)', 'One long-running server on a machine you control', 'Hosts that run your code as short-lived functions or several copies give each copy its own disk that you cannot count on keeping, so a file saved by one request may be missing for the next'],
+          ['Object storage (an S3-compatible bucket, Supabase Storage)', 'Many or large files, videos, public images', 'Another service, keys and permissions to manage, and signed links for private files'],
+          ['A bytea column in PostgreSQL', 'A few small private files that must stay consistent with the data', 'Large files bloat the database and its backups; every download passes through your server'],
+        ],
+        caption: 'There is no universal answer: pick by file size, count and host',
+      },
+      { type: 'paragraph', text: 'CourtBook stores pictures in their own table as `bytea`. They are small (3 MB at most), private and few, and the choice works on any host: no disk to lose, backed up together with the booking, deleted together with it by the foreign key. It also fits a platform limit that you will meet in lesson 11: Vercel documents a 4.5 MB maximum for a function\'s request body, so a 3 MB upload plus its multipart overhead fits underneath. If CourtBook grew to thousands of pictures a day, the next move would be object storage, and only `saveProof` and `findProof` would change.' },
+      { type: 'heading', text: 'Calling someone else\'s API' },
+      { type: 'paragraph', text: 'The forecast comes from Open-Meteo, a weather service that needs no key for its free, non-commercial use. CourtBook does not call it from the browser. The server calls it, so that the provider can be changed without touching React, a key (if one were needed) stays secret, and the answer can be cached. Everything about the integration lives in one module, and each line of it answers a failure that will happen sooner or later.' },
+      { type: 'code', language: 'js', label: 'src/weather.js', code: `import { z } from 'zod';
+import { HttpError } from './errors.js';
+
+// Everything we trust from the outside world is checked: the shape of Open-Meteo's answer is a schema too.
+const forecastSchema = z.object({
+  hourly: z.object({
+    time: z.array(z.string()),
+    precipitation_probability: z.array(z.number().nullable()),
+  }),
+});
+
+const TEN_MINUTES = 10 * 60 * 1000;
+const cache = new Map(); // key -> { at, value }
+
+export function clearForecastCache() {
+  cache.clear();
+}
+
+export async function getForecast(latitude, longitude, { fetchImpl = fetch, now = Date.now } = {}) {
+  const key = \`\${latitude.toFixed(2)},\${longitude.toFixed(2)}\`;
+  const hit = cache.get(key);
+  if (hit && now() - hit.at < TEN_MINUTES) return hit.value;
+
+  const url = new URL('https://api.open-meteo.com/v1/forecast');
+  url.search = new URLSearchParams({
+    latitude: String(latitude),
+    longitude: String(longitude),
+    hourly: 'precipitation_probability',
+    timezone: 'Asia/Manila',
+    forecast_days: '2',
+  }).toString();
+
+  let response;
+  try {
+    // Never wait forever for somebody else's server.
+    response = await fetchImpl(url, { signal: AbortSignal.timeout(3000) });
+  } catch {
+    throw new HttpError(502, 'forecast_unavailable', 'The forecast service is not answering right now');
+  }
+  if (!response.ok) throw new HttpError(502, 'forecast_unavailable', 'The forecast service is not answering right now');
+
+  const parsed = forecastSchema.safeParse(await response.json().catch(() => null));
+  if (!parsed.success) throw new HttpError(502, 'forecast_unavailable', 'The forecast service sent something unexpected');
+
+  const { time, precipitation_probability: chance } = parsed.data.hourly;
+  const value = { source: 'open-meteo', hours: time.map((t, i) => ({ time: t, rainChance: chance[i] ?? null })) };
+  cache.set(key, { at: now(), value });
+  return value;
+}` },
+      {
+        type: 'table',
+        headers: ['What goes wrong', 'What the module does'],
+        rows: [
+          ['The provider is slow', '`AbortSignal.timeout(3000)` cancels the request after three seconds; the catch turns it into our own 502'],
+          ['The provider answers with an error status', 'The `response.ok` check, because fetch does not throw on a 500'],
+          ['The provider changes its JSON', 'The Zod schema rejects anything of the wrong shape, so junk never reaches the browser'],
+          ['Thousands of page views ask for the same place', 'A ten-minute cache keyed by rounded coordinates, so one upstream call serves many'],
+          ['The provider is down for an hour', 'The route answers 502 and the React page simply hides the forecast; booking still works'],
+        ],
+        caption: 'The five failures of a third-party call',
+      },
+      { type: 'paragraph', text: 'One more question comes before any code: **may you use it?** Open-Meteo\'s documentation describes its free API as non-commercial, and lists an `apikey` parameter needed for commercial use. A court-rental business is a commercial use, so in real life the owner would take a commercial plan or choose another provider. Reading the licence, the rate limits and the attribution rules belongs in the plan from lesson 1, not in the week before launch. Because the provider sits behind `getForecast`, changing it is a one-file job.' },
+      {
+        type: 'version',
+        text: 'Multer 2.5\'s documentation (on the Express site) says memory storage can exhaust memory with large or many files, that `limits.fileSize` defaults to Infinity, that `file.originalname` is client-supplied and untrusted, and recommends limiting fileSize, files and fields. MDN says AbortSignal.timeout(ms) aborts with a TimeoutError DOMException (which I also confirmed on Node.js 22), and that fetch() does not reject for HTTP error statuses, so you check response.ok. Vercel\'s Functions limits page states a 4.5 MB maximum for a function\'s request or response body (413 FUNCTION_PAYLOAD_TOO_LARGE). Open-Meteo\'s docs list an apikey for commercial use; check its current licence page before relying on it.',
+        checked: CHECKED,
+        sources: [DOCS.multer, DOCS.mdnTimeout, DOCS.mdnFetch, DOCS.vercelLimits],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'Treat every upload as hostile: cap size, count and fields; ignore the client\'s filename and claimed type; check the first bytes; check who owns the record.',
+          'Send files as FormData and let the browser set the multipart Content-Type.',
+          'Choose file storage by host and size: disk for one long-lived server, object storage for many or large files, a bytea column for a few small private ones.',
+          'Wrap a third-party API in one module with a timeout, a status check, schema validation of the answer, a cache and your own error code.',
+          'Read the provider\'s terms (commercial use, limits, attribution) before building on it, and let the feature fail gracefully.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'fullstack-web-09-match-1',
+          kind: 'match',
+          title: 'Which defence answers this?',
+          prompt: 'Match each situation with the defence that handles it.',
+          concept: 'defensive uploads and integrations',
+          labels: { terms: 'Situation', meanings: 'Defence' },
+          pairs: [
+            { term: 'A customer uploads a 2 GB video as their payment proof', definition: 'A fileSize limit on the upload middleware', note: 'The limit stops the file while it is still being read.' },
+            { term: 'A file named gcash.png contains an HTML page with a script', definition: 'Check the first bytes of the file, not its name or claimed type', note: 'The name and Content-Type come from the client and can say anything.' },
+            { term: 'The forecast service takes 40 seconds to answer', definition: 'AbortSignal.timeout, then your own 502', note: 'A timeout stops the wait, and 502 tells the client that an upstream service failed.' },
+            { term: 'The forecast provider renames the fields of its JSON', definition: 'Validate the answer with a schema and refuse the wrong shape', note: 'A schema notices the change at the edge instead of passing broken data on.' },
+            { term: 'Every visitor of a court page asks for the same forecast', definition: 'A short cache keyed by location', note: 'One upstream call can serve many visitors.' },
+            { term: 'Another customer requests /api/bookings/12/proof', definition: 'An ownership check that answers 404', note: 'Every route that takes an id must check who owns the record.' },
+          ],
+          hints: [
+            'Decide first whether each situation is about the file, the third-party service, or who is asking.',
+            'Name or claimed type versus actual content: only one of them can be trusted.',
+            'Slow, wrong-shaped and popular are three different problems with three different tools.',
+          ],
+          explanation: 'Each defence is aimed at one failure: size limits for huge files, byte checks for fake types, timeouts for slow services, schemas for changed answers, caches for repeated questions and ownership checks for other people\'s records. Layering them is what makes the feature survive real use.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'fullstack-web-09-scenario-1',
+          kind: 'scenario',
+          title: 'Where do the pictures go?',
+          prompt: 'Choose how CourtBook should store payment pictures.',
+          concept: 'choosing file storage',
+          situation: 'You are about to deploy CourtBook to a free host that runs your server as short-lived functions, possibly several copies at once. Customers upload one small payment picture each (3 MB at most), a few hundred a month. The pictures are private and should disappear when a booking is deleted.',
+          options: [
+            { text: 'Store each picture as a bytea row in its own table, linked to the booking, with the 3 MB limit enforced.', consequence: 'It works on every copy of the server because the database is shared. Pictures are backed up with the bookings and removed by the foreign key. The volume is small enough that the database does not notice.', quality: 'best' },
+            { text: 'Send each picture to an object storage bucket and keep only its key in the bookings table.', consequence: 'This also works and scales better, but it adds a service, access keys and signed links for a feature with a few hundred small files a month. A sound choice with more setup than needed today.', quality: 'acceptable' },
+            { text: 'Write each picture to an uploads folder on the server.', consequence: 'On a host that starts and stops copies of your server, a picture saved by one copy may never be seen by the next request. Customers upload successfully and the owner sees broken images.', quality: 'poor' },
+            { text: 'Convert each picture to a base64 string and put it in a column of the bookings table.', consequence: 'It works anywhere, but base64 adds a third to the size, and every query that selects bookings drags the pictures along unless you remember to exclude them.', quality: 'poor' },
+          ],
+          hints: [
+            'What does a host that runs "several copies" of your server mean for a file saved on one copy\'s disk?',
+            'The volume is small, and a shared database is already part of the app.',
+            'A separate bytea table keeps the pictures out of the queries that list bookings.',
+          ],
+          explanation: 'For a few small private files on a function-style host, the shared database is the simplest correct home, and a separate table keeps hot queries light. Object storage is the right next step at higher volume. A local folder is the one choice that fails on this kind of host.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'fullstack-web-09-q1',
+        prompt: 'A customer uploads `gcash.png`. The browser labels it image/png, but its first bytes spell `<script>`. What does CourtBook do?',
+        choices: [
+          'It saves the file and serves it with the content type the browser claimed.',
+          'It saves the file and renames it to .txt.',
+          'It checks the file extension and accepts it because it ends in .png.',
+          'It refuses it with 415, because the real bytes are not a PNG, JPEG or WebP.',
+        ],
+        answer: 3,
+        explanation: 'Name and Content-Type are claims. The magic-number check looks at the actual bytes, and a mismatch is an unsupported media type.',
+      },
+      {
+        id: 'fullstack-web-09-q2',
+        prompt: 'The upload middleware uses memory storage and sets `limits: { fileSize, files: 1, fields: 0 }`. Why are the limits essential here?',
+        choices: [
+          'Multer refuses to start without them.',
+          'With memory storage a huge or numerous upload would be held in RAM, so unlimited uploads let anyone exhaust the server\'s memory.',
+          'The limits make uploads faster by compressing the file.',
+          'They decide which users may upload.',
+        ],
+        answer: 1,
+        explanation: 'Memory storage holds the whole file in a Buffer. The docs warn about running out of memory, so a cap on size and count is part of the design, not an extra.',
+      },
+      {
+        id: 'fullstack-web-09-q3',
+        prompt: 'The forecast provider is down and `getForecast` throws a 502. What should the court page do?',
+        choices: [
+          'Hide the forecast (or show a small "not available" note) and let the customer keep booking.',
+          'Show a full-page error and block booking until the forecast works.',
+          'Retry the request in a loop until the provider answers.',
+          'Sign the customer out so the page reloads cleanly.',
+        ],
+        answer: 0,
+        explanation: 'The forecast is a nicety, not the core feature. A failure in an optional dependency should degrade that one part of the page, not the whole product.',
+      },
+      {
+        id: 'fullstack-web-09-q4',
+        prompt: 'Why does CourtBook keep payment pictures in a PostgreSQL bytea table instead of an uploads folder on the server?',
+        choices: [
+          'PostgreSQL stores images in a format that browsers display faster.',
+          'Local folders are not allowed by Express.',
+          'The database is shared by every copy of the server and is backed up with the bookings, while a disk on a function-style host may not be there for the next request.',
+          'It lets the front end read the pictures directly without going through the server.',
+        ],
+        answer: 2,
+        explanation: 'The choice is about where state can safely live on the intended host. At higher volume object storage would be the next step; the folder is the option that breaks.',
+      },
+    ],
+    task: {
+      title: 'Upload a picture and call a service safely',
+      minutes: 20,
+      steps: [
+        'Add the upload route with Multer memory storage, the three limits and the magic-number check, and try it with curl using `-F proof=@picture.png`.',
+        'Rename a text file to `fake.png` and upload it, and send a file over the limit. Confirm you get 415 and 413 with your error shape.',
+        'Add `getForecast` (or another free API of your choice) behind one module, and test it by pointing the URL at a port where nothing is listening and confirming you answer 502 without crashing.',
+        'Find the provider\'s terms of use page and write one sentence about whether your project may use it commercially.',
+      ],
+    },
+  },
+
+];
+
+const projects: Project[] = [
+  {
+    id: 'fullstack-web-p1',
+    title: 'TODO',
+    summary: 'TODO',
+    outcome: 'TODO',
+    unlockAfterDay: 12,
+    steps: [
+      { id: 'fullstack-web-p1-s1', text: 'TODO' },
+      { id: 'fullstack-web-p1-s2', text: 'TODO' },
+      { id: 'fullstack-web-p1-s3', text: 'TODO' },
+    ],
+    submission: { kind: 'url', label: 'TODO', placeholder: 'https://', hint: 'TODO' },
+    rubric: ['a', 'b', 'c'],
+  },
+];
+
+export const fullstackWebCourse: Course = {
+  id: 'fullstack-web',
+  kind: 'standard',
+  title: 'Building Full-Stack Web Applications',
+  level: 'advanced',
+  tagline: 'Plan, build, test and ship a React, Express and PostgreSQL app, the way a real team does.',
+  description: 'The capstone of the web track. You design and build CourtBook, a court-booking app, from the schema to a live deployment, and every decision (where a rule lives, how sign-in is done safely, how the pieces are tested) is explained and defended.',
+  finishLine: [
+    'A deployed React, Express and PostgreSQL app with sign-in, validation, file upload and a third-party API',
+    'A test suite that checks the API, the screens and the whole flow in a real browser',
+    'A pipeline that tests every change and a checklist for launching and maintaining the app',
+  ],
+  objectives: [
+    'Plan an app with user stories, business rules, an API contract and a three-tier architecture',
+    'Design a PostgreSQL schema whose constraints enforce the rules even under concurrent requests',
+    'Build a validated, secured Express API with safe password storage and cookie-based sign-in',
+    'Connect a React front end with server state, forms and optimistic updates',
+    'Test the stack from SQL constraints to a real browser run, and run the tests in a pipeline',
+    'Deploy on free hosting, then launch and maintain the app with a checklist',
+  ],
+  audiences: ['experienced-dev', 'career-changer', 'builder', 'fresh-grad'],
+  skills: [
+    { id: 'app-planning', label: 'Planning and architecture' },
+    { id: 'schema-design', label: 'Schema design and migrations' },
+    { id: 'api-design', label: 'Express API structure and CRUD' },
+    { id: 'validation-errors', label: 'Validation and error handling' },
+    { id: 'auth-security', label: 'Authentication and web security' },
+    { id: 'react-integration', label: 'Connecting React to an API' },
+    { id: 'optimistic-ui', label: 'Forms and optimistic updates' },
+    { id: 'uploads-integrations', label: 'Uploads and third-party APIs' },
+    { id: 'fullstack-testing', label: 'Testing the whole stack' },
+    { id: 'deployment', label: 'Deployment and maintenance' },
+  ],
+  lessons,
+  projects,
+  icon: 'deployed_code',
+  updated: '2026-11-14',
+};

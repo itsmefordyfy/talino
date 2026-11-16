@@ -1,0 +1,630 @@
+import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globals';
+
+import type { Lesson } from '../content/types';
+import { hashSegments, lessonSegments } from '../lib/speech-segments';
+import type { ListenTiming, SavedPosition } from './listen-timing';
+import {
+  canJumpBySentence,
+  getListenSnapshot,
+  jumpToSegment,
+  seekListening,
+  setListenRate,
+  skipListening,
+  skipSegment,
+  startListening,
+  stopListening,
+  togglePlayPause,
+  type ListenSession,
+} from './listen-controller';
+import type { SentenceVoice } from './sentence-audio';
+
+/**
+ * The coach's Gemini voice read live, a clip per sentence (`mode: 'sentences'`): the order, the prefetch, the highlight moving only when a
+ * sentence's sound starts, pause, jump, speed, stopping, the retry and the fall back to the phone's voice. The audio player and the
+ * speech service are fakes the tests steer; the sentences are the real ones of a real lesson shape.
+ */
+const mockNative = jest.fn<() => unknown>();
+jest.mock('expo', () => ({ requireOptionalNativeModule: () => mockNative() }));
+
+type FakePlayer = {
+  uri: string;
+  currentTime: number;
+  duration: number;
+  playing: boolean;
+  rate: number;
+  removed: boolean;
+  listener: ((status: { currentTime: number; duration: number; didJustFinish: boolean }) => void) | null;
+  emit: (time: number, didJustFinish?: boolean) => void;
+};
+const mockPlayers: FakePlayer[] = [];
+jest.mock('expo-audio', () => ({
+  setAudioModeAsync: async () => {},
+  createAudioPlayer: (uri: string) => {
+    const player: FakePlayer & Record<string, unknown> = {
+      uri,
+      currentTime: 0,
+      duration: 6,
+      playing: false,
+      rate: 1,
+      removed: false,
+      listener: null,
+      seekTo: async () => {},
+      play: () => {
+        player.playing = true;
+      },
+      pause: () => {
+        player.playing = false;
+      },
+      setPlaybackRate: (rate: number) => {
+        player.rate = rate;
+      },
+      addListener: (_event: string, listener: FakePlayer['listener']) => {
+        player.listener = listener;
+      },
+      setActiveForLockScreen: () => {},
+      clearLockScreenControls: () => {},
+      remove: () => {
+        player.removed = true;
+      },
+      emit: (time: number, didJustFinish = false) => {
+        player.currentTime = time;
+        player.listener?.({ currentTime: time, duration: player.duration, didJustFinish });
+      },
+    };
+    mockPlayers.push(player);
+    return player;
+  },
+}));
+
+const mockSpoken: { text: string; rate?: number; onDone?: () => void; onStopped?: () => void }[] = [];
+jest.mock('expo-speech', () => ({
+  speak: (text: string, options: Record<string, unknown>) => mockSpoken.push({ text, ...options }),
+  stop: () => {},
+}));
+jest.mock('@/lib/monitoring', () => ({ reportError: jest.fn() }));
+jest.mock('./live-activity/listen-activity', () => ({ syncListenActivity: jest.fn() }));
+
+const mockOrigin: { value: string | undefined } = { value: undefined };
+const mockHosted: { value: boolean } = { value: false };
+const mockTiming: { value: ListenTiming | null } = { value: null };
+const mockDownloads = jest.fn();
+jest.mock('./audio-cache', () => ({
+  get AUDIO_ORIGIN() {
+    return mockOrigin.value;
+  },
+  savedLessonAudio: () => (mockHosted.value ? { uri: 'file:///lesson.m4a' } : null),
+  downloadLessonAudio: async () => {
+    mockDownloads();
+    if (mockHosted.value) return { uri: 'file:///lesson.m4a' };
+    throw new Error('no such recording');
+  },
+  loadLessonPeaks: async () => null,
+  loadLessonTiming: async () => mockTiming.value,
+  forgetLessonAudio: () => {},
+}));
+
+const mockSaved = new Map<string, SavedPosition>();
+jest.mock('./listen-position', () => ({
+  loadListenPosition: (lessonId: string, voice: string) => mockSaved.get(`${voice}:${lessonId}`) ?? null,
+  saveListenPosition: (lessonId: string, voice: string, position: SavedPosition) => mockSaved.set(`${voice}:${lessonId}`, position),
+  clearListenPosition: (lessonId: string, voice: string) => mockSaved.delete(`${voice}:${lessonId}`),
+  clearAllListenPositions: () => mockSaved.clear(),
+}));
+
+const lesson = {
+  id: 'live-01',
+  day: 1,
+  title: 'Writing better prompts',
+  summary: 'Learn how to ask an AI model for what you really want. It saves a lot of time.',
+  minutes: 15,
+  skills: [],
+  intro: { objectives: ['Write a clear prompt for a real task', 'Fix a vague prompt'], why: 'Good prompts save you hours every week. They also make the answers easier to trust.' },
+  body: [
+    { type: 'paragraph', text: 'A prompt is the message you send to an AI model. It can be a question or an instruction.' },
+    { type: 'heading', text: 'Be specific' },
+    { type: 'paragraph', text: 'Say who the answer is for and what you need from it, in a sentence or two.' },
+  ],
+  quiz: [],
+  task: { title: 't', steps: [], minutes: 5 },
+} as unknown as Lesson;
+
+const segments = lessonSegments(lesson);
+const session: ListenSession = { lessonId: 'live-01', lessonTitle: 'Lesson', courseTitle: 'Course', outline: [{ title: 'Lesson', at: 0 }], script: 'Hello.', segments };
+
+type Pending = { index: number; resolve: (uri: string | null) => void };
+/** A live voice whose clips are made when the test says so (or at once, when `instant`). */
+function makeVoice(options: { instant?: boolean; saved?: number[]; fail?: (index: number, attempt: number) => boolean } = {}) {
+  const asked: number[] = [];
+  const attempts = new Map<number, number>();
+  const pending: Pending[] = [];
+  const voice: SentenceVoice = {
+    load: (text) => {
+      const index = segments.findIndex((segment) => segment.text === text);
+      asked.push(index);
+      const attempt = (attempts.get(index) ?? 0) + 1;
+      attempts.set(index, attempt);
+      const outcome = options.fail?.(index, attempt) ? null : `file:///clip-${index}.wav`;
+      if (options.instant ?? true) return Promise.resolve(outcome);
+      return new Promise((resolve) => pending.push({ index, resolve: (uri) => resolve(uri ?? outcome) }));
+    },
+    isSaved: (text) => (options.saved ?? []).includes(segments.findIndex((segment) => segment.text === text)),
+  };
+  return { voice, asked, pending };
+}
+
+const flush = async () => {
+  for (let i = 0; i < 12; i += 1) await new Promise((resolve) => setTimeout(resolve, 0));
+};
+const sleep = (ms: number) => new Promise((resolve) => setTimeout(resolve, ms));
+const last = () => {
+  const player = mockPlayers[mockPlayers.length - 1];
+  if (!player) throw new Error('no clip was played');
+  return player;
+};
+const playing = () => mockPlayers.filter((player) => player.playing && !player.removed);
+/** How long the pause after sentence `index` lasts, plus a margin: a paragraph's end is longer than a sentence's. */
+const gapAfter = (index: number) => (segments[index].pause === 'paragraph' ? 620 : 220);
+const start = (voice: SentenceVoice, extra: Record<string, unknown> = {}) => startListening(session, { rate: 1, online: true, sentenceVoice: voice, ...extra });
+/** Plays the current clip to its end. */
+const finishClip = () => last().emit(last().duration, true);
+
+beforeEach(() => {
+  mockNative.mockReturnValue({});
+  mockPlayers.length = 0;
+  mockSpoken.length = 0;
+  mockSaved.clear();
+  mockOrigin.value = undefined;
+  mockHosted.value = false;
+  mockTiming.value = null;
+  mockDownloads.mockClear();
+});
+afterEach(() => {
+  stopListening();
+});
+
+describe('the lesson, read live in the coach’s voice a sentence at a time', () => {
+  test('with no recording the first sentence is made, played and lit; the next few are made while it plays, no more', async () => {
+    const { voice, asked } = makeVoice();
+    start(voice);
+    expect(getListenSnapshot()).toMatchObject({ mode: 'sentences', state: 'loading' });
+    await flush();
+    expect(getListenSnapshot()).toMatchObject({ mode: 'sentences', state: 'playing', activeSegment: 0, buffering: false });
+    expect(last().uri).toBe('file:///clip-0.wav');
+    expect(last().playing).toBe(true);
+    // The sentence playing and the next three, never the whole lesson at once (that would be a request storm and a bill).
+    expect([...new Set(asked)].sort((a, b) => a - b)).toEqual([0, 1, 2, 3]);
+    expect(mockSpoken).toHaveLength(0);
+  });
+
+  test('every sentence is read in order, each in its own clip, the highlight moving only when that sentence’s sound starts', async () => {
+    const { voice } = makeVoice();
+    start(voice);
+    await flush();
+    const order: number[] = [getListenSnapshot().activeSegment ?? -1];
+    for (let sentence = 1; sentence < segments.length; sentence += 1) {
+      finishClip();
+      await sleep(10);
+      // The pause between two sentences: the highlight stays on the one just read.
+      expect(getListenSnapshot().activeSegment).toBe(sentence - 1);
+      await sleep(segments[sentence - 1].pause === 'paragraph' ? 620 : 220);
+      order.push(getListenSnapshot().activeSegment ?? -1);
+      expect(last().uri).toBe(`file:///clip-${sentence}.wav`);
+    }
+    expect(order).toEqual(segments.map((_, index) => index));
+    finishClip();
+    await sleep(10);
+    // Heard to the end: nothing to carry on from, and nothing is reading.
+    expect(getListenSnapshot().state).toBe('idle');
+    expect(mockSaved.size).toBe(0);
+  }, 20_000);
+
+  test('a sentence that is slow to be made never lets the highlight run ahead of the sound', async () => {
+    const { voice, pending } = makeVoice({ instant: false });
+    start(voice);
+    await flush();
+    // Nothing is ready: the lesson is still loading and no sentence is lit as being read.
+    expect(getListenSnapshot().state).toBe('loading');
+    expect(mockPlayers).toHaveLength(0);
+    pending.find((item) => item.index === 0)?.resolve(null);
+    await flush();
+    expect(getListenSnapshot()).toMatchObject({ state: 'playing', activeSegment: 0 });
+    finishClip();
+    await sleep(gapAfter(0));
+    // Sentence 1's clip has not arrived: sentence 0 is still the lit one, and the learner is told it is being made.
+    expect(getListenSnapshot()).toMatchObject({ activeSegment: 0, buffering: true });
+    pending.find((item) => item.index === 1)?.resolve(null);
+    await flush();
+    expect(getListenSnapshot()).toMatchObject({ activeSegment: 1, buffering: false, state: 'playing' });
+  });
+
+  test('how far through the sentence the voice is comes from the clip that is playing', async () => {
+    const { voice } = makeVoice();
+    start(voice);
+    await flush();
+    last().emit(1.5);
+    expect(getListenSnapshot().spokenFraction).toBeCloseTo(0.25, 2);
+    last().emit(4.5);
+    expect(getListenSnapshot().spokenFraction).toBeCloseTo(0.75, 2);
+  });
+
+  test('pause holds the clip where it is and nothing else starts; resume carries on in the same clip, then moves on', async () => {
+    const { voice } = makeVoice();
+    start(voice);
+    await flush();
+    last().emit(2);
+    togglePlayPause();
+    expect(getListenSnapshot().state).toBe('paused');
+    expect(last().playing).toBe(false);
+    expect(last().currentTime).toBe(2);
+    // Even if the clip's end arrives while paused, the next sentence waits for the learner.
+    finishClip();
+    await sleep(gapAfter(0));
+    const count = mockPlayers.length;
+    await sleep(300);
+    expect(mockPlayers).toHaveLength(count);
+    expect(playing()).toHaveLength(0);
+    togglePlayPause();
+    await flush();
+    expect(getListenSnapshot().state).toBe('playing');
+    expect(getListenSnapshot().activeSegment).toBe(1);
+    expect(last().playing).toBe(true);
+  });
+
+  test('pause during the wait for a sentence is honoured when it arrives', async () => {
+    const { voice, pending } = makeVoice({ instant: false });
+    start(voice);
+    await flush();
+    pending.find((item) => item.index === 0)?.resolve(null);
+    await flush();
+    finishClip();
+    await sleep(gapAfter(0));
+    togglePlayPause();
+    expect(getListenSnapshot().state).toBe('paused');
+    pending.find((item) => item.index === 1)?.resolve(null);
+    await flush();
+    expect(mockPlayers).toHaveLength(1);
+    expect(getListenSnapshot()).toMatchObject({ state: 'paused', activeSegment: 0 });
+    togglePlayPause();
+    await flush();
+    expect(getListenSnapshot()).toMatchObject({ state: 'playing', activeSegment: 1 });
+    expect(last().uri).toBe('file:///clip-1.wav');
+  });
+
+  test('a tap on a sentence lights it at once, stops the clip that was playing, and plays that sentence', async () => {
+    const { voice, asked } = makeVoice();
+    start(voice);
+    await flush();
+    const before = last();
+    expect(canJumpBySentence()).toBe(true);
+    jumpToSegment(5);
+    // At once: lit, the old clip silenced, the learner told the sound is on its way.
+    expect(getListenSnapshot()).toMatchObject({ activeSegment: 5, buffering: true, state: 'playing' });
+    expect(before.playing).toBe(false);
+    expect(before.removed).toBe(true);
+    await flush();
+    expect(getListenSnapshot()).toMatchObject({ activeSegment: 5, buffering: false });
+    expect(last().uri).toBe('file:///clip-5.wav');
+    expect(playing()).toHaveLength(1);
+    // Sentences before the target were not made for it.
+    expect(asked.filter((index) => index === 4)).toHaveLength(0);
+    // And it carries on from there.
+    finishClip();
+    await sleep(gapAfter(5));
+    expect(getListenSnapshot().activeSegment).toBe(6);
+  });
+
+  test('a tap while paused carries on from the tapped sentence', async () => {
+    const { voice } = makeVoice();
+    start(voice);
+    await flush();
+    togglePlayPause();
+    jumpToSegment(3);
+    await flush();
+    expect(getListenSnapshot()).toMatchObject({ state: 'playing', activeSegment: 3 });
+    expect(last().uri).toBe('file:///clip-3.wav');
+    expect(last().playing).toBe(true);
+  });
+
+  test('a quick second tap wins: the first sentence never plays after it', async () => {
+    const { voice, pending } = makeVoice({ instant: false });
+    start(voice);
+    await flush();
+    pending.find((item) => item.index === 0)?.resolve(null);
+    await flush();
+    jumpToSegment(6);
+    jumpToSegment(2);
+    await flush();
+    for (const item of pending) item.resolve(null);
+    await flush();
+    expect(getListenSnapshot().activeSegment).toBe(2);
+    expect(mockPlayers.map((player) => player.uri).filter((uri) => uri.includes('clip-6'))).toHaveLength(0);
+    expect(playing()).toHaveLength(1);
+    expect(last().uri).toBe('file:///clip-2.wav');
+  });
+
+  test('previous restarts a sentence the learner is well into, and goes back once they are at its start; next skips forward', async () => {
+    const { voice } = makeVoice();
+    start(voice);
+    await flush();
+    jumpToSegment(4);
+    await flush();
+    last().emit(0.8);
+    skipSegment(-1);
+    await flush();
+    expect(getListenSnapshot().activeSegment).toBe(3);
+    last().emit(4);
+    skipSegment(-1);
+    await flush();
+    expect(getListenSnapshot().activeSegment).toBe(3);
+    skipSegment(1);
+    await flush();
+    expect(getListenSnapshot().activeSegment).toBe(4);
+  });
+
+  test('speed changes the clip that is playing in place and every clip after it, with nothing restarting', async () => {
+    const { voice } = makeVoice();
+    start(voice, { rate: 1 });
+    await flush();
+    const first = last();
+    first.emit(2);
+    setListenRate(1.2);
+    expect(first.rate).toBe(1.2);
+    expect(first.currentTime).toBe(2);
+    expect(first.playing).toBe(true);
+    expect(getListenSnapshot().activeSegment).toBe(0);
+    finishClip();
+    await sleep(gapAfter(0));
+    expect(last().uri).toBe('file:///clip-1.wav');
+    expect(last().rate).toBe(1.2);
+  });
+
+  test('the recording’s own controls do nothing here: skipping seconds and seeking a point', async () => {
+    const { voice } = makeVoice();
+    start(voice);
+    await flush();
+    last().emit(2);
+    skipListening(15);
+    seekListening(0.5);
+    expect(last().currentTime).toBe(2);
+    expect(getListenSnapshot().activeSegment).toBe(0);
+  });
+
+  test('stop silences the clip and nothing arriving later starts playing', async () => {
+    const { voice, pending } = makeVoice({ instant: false });
+    start(voice);
+    await flush();
+    pending.find((item) => item.index === 0)?.resolve(null);
+    await flush();
+    const clip = last();
+    stopListening();
+    expect(clip.playing).toBe(false);
+    expect(clip.removed).toBe(true);
+    expect(getListenSnapshot().state).toBe('idle');
+    for (const item of pending) item.resolve(null);
+    clip.emit(6, true);
+    await sleep(300);
+    expect(mockPlayers).toHaveLength(1);
+    expect(getListenSnapshot().state).toBe('idle');
+  });
+
+  test('where the learner stopped is kept, under the coach’s voice, and Listen carries on from that sentence', async () => {
+    const { voice } = makeVoice();
+    start(voice, { voice: 'sulafat' });
+    await flush();
+    jumpToSegment(4);
+    await flush();
+    stopListening();
+    expect(mockSaved.get('sulafat:live-01')).toMatchObject({ segment: 4, time: 0, hash: hashSegments(segments) });
+    expect(mockSaved.has('achird:live-01')).toBe(false);
+    mockPlayers.length = 0;
+    start(voice, { voice: 'sulafat' });
+    await flush();
+    expect(getListenSnapshot().activeSegment).toBe(4);
+    expect(last().uri).toBe('file:///clip-4.wav');
+  });
+
+  test('"from the start" ignores the saved place', async () => {
+    mockSaved.set('achird:live-01', { segment: 5, time: 0, hash: hashSegments(segments) });
+    const { voice } = makeVoice();
+    start(voice, { from: 'start' });
+    await flush();
+    expect(getListenSnapshot().activeSegment).toBe(0);
+  });
+});
+
+describe('when the voice can’t be had', () => {
+  test('a sentence that fails is asked for again, spaced out, and the lesson goes on in the coach’s voice if a later try works', async () => {
+    jest.useFakeTimers();
+    try {
+      const { voice, asked } = makeVoice({ fail: (index, attempt) => index === 0 && attempt < 3 });
+      start(voice);
+      await jest.advanceTimersByTimeAsync(100);
+      expect(mockPlayers).toHaveLength(0);
+      await jest.advanceTimersByTimeAsync(1600);
+      expect(mockPlayers).toHaveLength(0);
+      await jest.advanceTimersByTimeAsync(4100);
+      expect(getListenSnapshot()).toMatchObject({ mode: 'sentences', state: 'playing', activeSegment: 0 });
+      expect(asked.filter((index) => index === 0)).toHaveLength(3);
+      expect(mockSpoken).toHaveLength(0);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  test('a sentence that can’t be made after the retries is read by the phone’s voice, only that one, and the coach’s voice carries on after it', async () => {
+    jest.useFakeTimers();
+    try {
+      const { voice } = makeVoice({ fail: (index) => index === 2 });
+      start(voice);
+      await jest.advanceTimersByTimeAsync(50);
+      last().emit(last().duration, true);
+      await jest.advanceTimersByTimeAsync(700);
+      expect(getListenSnapshot().activeSegment).toBe(1);
+      last().emit(last().duration, true);
+      // Sentence 2: the retries run out (1.5 s, then 4 s), then the phone says it, exactly that sentence.
+      await jest.advanceTimersByTimeAsync(8000);
+      expect(getListenSnapshot()).toMatchObject({ mode: 'sentences', state: 'playing', activeSegment: 2 });
+      expect(mockSpoken.map((spoken) => spoken.text)).toEqual([segments[2].text]);
+      const clipsBefore = mockPlayers.length;
+      mockSpoken[0].onDone?.();
+      await jest.advanceTimersByTimeAsync(700);
+      // Back to the coach's own voice for sentence 3.
+      expect(getListenSnapshot()).toMatchObject({ mode: 'sentences', activeSegment: 3 });
+      expect(mockPlayers.length).toBe(clipsBefore + 1);
+      expect(last().uri).toBe('file:///clip-3.wav');
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  test('a phone-read sentence can be paused, and is read again from its start on resume', async () => {
+    jest.useFakeTimers();
+    try {
+      const { voice } = makeVoice({ fail: (index) => index === 0 });
+      start(voice);
+      await jest.advanceTimersByTimeAsync(8000);
+      expect(mockSpoken).toHaveLength(1);
+      togglePlayPause();
+      expect(getListenSnapshot().state).toBe('paused');
+      mockSpoken[0].onStopped?.();
+      await jest.advanceTimersByTimeAsync(1000);
+      expect(mockSpoken).toHaveLength(1);
+      togglePlayPause();
+      await jest.advanceTimersByTimeAsync(50);
+      expect(mockSpoken.map((spoken) => spoken.text)).toEqual([segments[0].text, segments[0].text]);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  test('three sentences in a row that can’t be made mean the service is down: the phone’s voice reads the rest, and says so', async () => {
+    jest.useFakeTimers();
+    try {
+      const { voice } = makeVoice({ fail: (index) => index >= 1 && index <= 3 });
+      start(voice);
+      await jest.advanceTimersByTimeAsync(50);
+      last().emit(last().duration, true);
+      // Sentences 1, 2 and 3 each use up their retries and are read by the phone one at a time.
+      for (const sentence of [1, 2]) {
+        await jest.advanceTimersByTimeAsync(9000);
+        expect(mockSpoken[mockSpoken.length - 1].text).toBe(segments[sentence].text);
+        mockSpoken[mockSpoken.length - 1].onDone?.();
+      }
+      await jest.advanceTimersByTimeAsync(9000);
+      expect(getListenSnapshot()).toMatchObject({ mode: 'phone', fallback: 'missing', activeSegment: 3 });
+      expect(mockSpoken[mockSpoken.length - 1].text).toBe(segments[3].text);
+      // From here the phone's voice carries on sentence by sentence, as it always did.
+      mockSpoken[mockSpoken.length - 1].onDone?.();
+      expect(getListenSnapshot().activeSegment).toBe(4);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  test('no connection and the first sentence not on the phone: the phone’s voice reads at once, and says the connection is why', async () => {
+    const { voice, asked } = makeVoice({ saved: [] });
+    start(voice, { online: false });
+    expect(getListenSnapshot()).toMatchObject({ mode: 'phone', fallback: 'offline' });
+    expect(asked).toHaveLength(0);
+    expect(mockSpoken[0].text).toBe(segments[0].text);
+  });
+
+  test('no connection but the first sentence is saved: the coach’s voice reads from the phone', async () => {
+    const { voice } = makeVoice({ saved: [0] });
+    start(voice, { online: false });
+    await flush();
+    expect(getListenSnapshot().mode).toBe('sentences');
+    expect(last().uri).toBe('file:///clip-0.wav');
+  });
+
+  test('a clip that never starts moving is given up on, and the phone reads that sentence', async () => {
+    jest.useFakeTimers();
+    try {
+      const { voice } = makeVoice();
+      start(voice);
+      await jest.advanceTimersByTimeAsync(50);
+      expect(getListenSnapshot().activeSegment).toBe(0);
+      await jest.advanceTimersByTimeAsync(16_000);
+      expect(getListenSnapshot()).toMatchObject({ mode: 'sentences', activeSegment: 0 });
+      expect(mockSpoken[0].text).toBe(segments[0].text);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  test('a paused clip is never mistaken for a stalled one', async () => {
+    jest.useFakeTimers();
+    try {
+      const { voice } = makeVoice();
+      start(voice);
+      await jest.advanceTimersByTimeAsync(50);
+      togglePlayPause();
+      await jest.advanceTimersByTimeAsync(40_000);
+      expect(getListenSnapshot()).toMatchObject({ mode: 'sentences', state: 'paused' });
+      expect(mockSpoken).toHaveLength(0);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  test('a build without the audio module reads with the phone’s voice', async () => {
+    mockNative.mockReturnValue(null);
+    const { voice, asked } = makeVoice();
+    start(voice);
+    expect(getListenSnapshot().mode).toBe('phone');
+    expect(asked).toHaveLength(0);
+  });
+
+  test('with no live voice given, behaviour is what it was: the phone reads', () => {
+    startListening(session, { rate: 1, online: true });
+    expect(getListenSnapshot().mode).toBe('phone');
+  });
+});
+
+describe('a hosted recording and the live voice', () => {
+  test('a recording whose timing describes these very words is played and followed; the live voice stays out of it', async () => {
+    mockOrigin.value = 'https://audio.example.com';
+    mockHosted.value = true;
+    mockTiming.value = { hash: hashSegments(segments), duration: segments.length * 5, segments: segments.map((_, i) => [i * 5, i * 5 + 4] as [number, number]) };
+    const { voice, asked } = makeVoice();
+    start(voice);
+    await flush();
+    expect(getListenSnapshot().mode).toBe('recording');
+    expect(asked).toHaveLength(0);
+  });
+
+  test('a recording made from other words (the lesson was edited, or is shown in Tagalog) is not downloaded or played unfollowed: the live voice reads what is on screen', async () => {
+    mockOrigin.value = 'https://audio.example.com';
+    mockHosted.value = true;
+    mockTiming.value = { hash: 'deadbeef', duration: 100, segments: [[0, 4], [5, 9]] };
+    const { voice } = makeVoice();
+    start(voice);
+    await flush();
+    expect(getListenSnapshot()).toMatchObject({ mode: 'sentences', state: 'playing', activeSegment: 0, timing: null });
+    expect(mockDownloads).not.toHaveBeenCalled();
+    expect(last().uri).toBe('file:///clip-0.wav');
+  });
+
+  test('a recording with no timing file at all is not played unfollowed when the live voice can follow', async () => {
+    mockOrigin.value = 'https://audio.example.com';
+    mockHosted.value = true;
+    mockTiming.value = null;
+    const { voice } = makeVoice();
+    start(voice);
+    await flush();
+    expect(getListenSnapshot().mode).toBe('sentences');
+    expect(mockDownloads).not.toHaveBeenCalled();
+  });
+
+  test('a lesson whose recording isn’t there is read by the live voice instead of the phone’s', async () => {
+    mockOrigin.value = 'https://audio.example.com';
+    mockHosted.value = false;
+    const { voice } = makeVoice();
+    start(voice);
+    await flush();
+    expect(getListenSnapshot()).toMatchObject({ mode: 'sentences', state: 'playing', activeSegment: 0, timing: null, peaks: null, fallback: null });
+    expect(mockSpoken).toHaveLength(0);
+    // The recording's leftovers are not shown: no clock for the whole lesson.
+    expect(getListenSnapshot().duration).toBeLessThanOrEqual(6);
+  });
+});

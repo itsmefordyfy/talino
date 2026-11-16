@@ -1,0 +1,1605 @@
+import type { Course, Lesson, Project } from '../../types';
+
+const CHECKED = '2026-11-14';
+
+// Every official page a version note cites. All were opened while writing the course (see the checked date).
+const DOCS = {
+  releases: { label: 'Node.js: Previous releases', url: 'https://nodejs.org/en/about/previous-releases' },
+  schedule: { label: 'Node.js Release Working Group: release schedule', url: 'https://github.com/nodejs/Release' },
+  cli: { label: 'Node.js docs: Command-line options', url: 'https://nodejs.org/api/cli.html' },
+  test: { label: 'Node.js docs: Test runner', url: 'https://nodejs.org/api/test.html' },
+  esm: { label: 'Node.js docs: ECMAScript modules', url: 'https://nodejs.org/api/esm.html' },
+  modules: { label: 'Node.js docs: Modules (CommonJS)', url: 'https://nodejs.org/api/modules.html' },
+  packages: { label: 'Node.js docs: Modules: Packages', url: 'https://nodejs.org/api/packages.html' },
+  globals: { label: 'Node.js docs: Global objects', url: 'https://nodejs.org/api/globals.html' },
+  process: { label: 'Node.js docs: Process', url: 'https://nodejs.org/api/process.html' },
+  http: { label: 'Node.js docs: HTTP', url: 'https://nodejs.org/api/http.html' },
+  fs: { label: 'Node.js docs: File system', url: 'https://nodejs.org/api/fs.html' },
+  sqlite: { label: 'Node.js docs: SQLite', url: 'https://nodejs.org/api/sqlite.html' },
+  blocking: { label: "Node.js: Don't block the event loop", url: 'https://nodejs.org/en/learn/asynchronous-work/dont-block-the-event-loop' },
+  expressSupport: { label: 'Express: Support and release schedule', url: 'https://expressjs.com/en/support/' },
+  expressMigrate: { label: 'Express: Migrating to Express 5', url: 'https://expressjs.com/en/guide/migrating-5.html' },
+  expressHello: { label: 'Express: Hello world', url: 'https://expressjs.com/en/starter/hello-world.html' },
+  expressMiddleware: { label: 'Express: Using middleware', url: 'https://expressjs.com/en/guide/using-middleware.html' },
+  expressErrors: { label: 'Express: Error handling', url: 'https://expressjs.com/en/guide/error-handling.html' },
+  expressSecurity: { label: 'Express: Production best practices: security', url: 'https://expressjs.com/en/advanced/best-practice-security.html' },
+  expressPerf: { label: 'Express: Production best practices: performance and reliability', url: 'https://expressjs.com/en/advanced/best-practice-performance.html' },
+  expressCors: { label: 'Express: cors middleware', url: 'https://expressjs.com/en/resources/middleware/cors.html' },
+  expressProxies: { label: 'Express: Express behind proxies', url: 'https://expressjs.com/en/guide/behind-proxies.html' },
+  expressDb: { label: 'Express: Database integration', url: 'https://expressjs.com/en/guide/database-integration.html' },
+  zod: { label: 'Zod: API reference', url: 'https://zod.dev/api' },
+  helmet: { label: 'Helmet: README', url: 'https://github.com/helmetjs/helmet' },
+  rateLimit: { label: 'express-rate-limit: README', url: 'https://github.com/express-rate-limit/express-rate-limit' },
+  cors: { label: 'MDN: Cross-Origin Resource Sharing (CORS)', url: 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/CORS' },
+  status: { label: 'MDN: HTTP response status codes', url: 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status' },
+  sqli: { label: 'OWASP: SQL Injection Prevention Cheat Sheet', url: 'https://cheatsheetseries.owasp.org/cheatsheets/SQL_Injection_Prevention_Cheat_Sheet.html' },
+};
+
+const lessons: Lesson[] = [
+  {
+    id: 'nodejs-express-01',
+    day: 1,
+    title: 'The Node.js runtime, npm and modules',
+    summary: 'Run JavaScript outside the browser with Node.js, pick the right version, and manage a project with npm and ES modules.',
+    intro: {
+      objectives: [
+        'Explain what Node.js is and how running JavaScript on a server differs from running it in a browser',
+        'Choose a Node.js version for a real project and say what LTS means',
+        'Create a project with package.json, install packages and run scripts with npm',
+        'Fix the "require is not defined" error by using ES modules correctly',
+      ],
+      why: 'Every Node.js backend job starts here: you cannot build or deploy a server until you can set up a project, install its dependencies and run it the same way on your laptop, a teammate\'s laptop and a hosting server.',
+    },
+    minutes: 25,
+    skills: ['node-basics'],
+    body: [
+      { type: 'paragraph', text: 'So far your JavaScript ran inside a browser tab, where it can change a web page but cannot read a file on your computer or listen for visitors. **Node.js** is a program that runs JavaScript outside the browser. It lets you write the other half of an app, the **server**: the code that waits for requests from phones and websites, talks to a database and sends answers back.' },
+      { type: 'heading', text: 'What Node.js actually is' },
+      { type: 'paragraph', text: 'Node.js takes V8, the JavaScript engine that powers Google Chrome, and adds the things a server needs: reading files, opening network connections, reading environment settings and starting other programs. The browser provides `document`, `window` and the page. Node provides `process`, `fs` and `http`. Think of it as the same kitchen equipment (the language) installed in a different building: a restaurant kitchen (the browser) and a factory kitchen (the server).' },
+      { type: 'paragraph', text: 'Create a folder, save the file below as `hello.js` and run it with `node hello.js Maria`. It uses `import`, which we will explain in a moment.' },
+      {
+        type: 'code',
+        language: 'javascript',
+        label: 'hello.js',
+        code: `import { platform } from 'node:os';
+import { argv } from 'node:process';
+
+const name = argv[2] ?? 'Juan';
+console.log(\`Kumusta, \${name}! Running on \${platform() === 'darwin' ? 'macOS' : platform()}\`);
+console.log(typeof fetch, typeof window, typeof process);`,
+      },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'Output of node hello.js Maria (on a Mac)',
+        code: `Kumusta, Maria! Running on macOS
+function undefined object`,
+      },
+      { type: 'paragraph', text: '`argv` holds what you typed after `node`, so `argv[2]` is `Maria`. The last line shows the difference from a browser: `fetch` exists (you can call other servers), `window` does not (there is no page), and `process` does (information about the running program).' },
+      { type: 'heading', text: 'Which Node.js version?' },
+      { type: 'paragraph', text: 'Node.js ships a new major version every year, and each one has a status. **LTS** means long-term support: Node.js\'s own docs say it typically guarantees that critical bugs are fixed for a total of 30 months, and that production applications should use only Active LTS or Maintenance LTS releases. Active LTS is the line that is still getting new improvements; Maintenance LTS only gets important fixes. For a new project, install the newest Active LTS from nodejs.org and check with `node -v`.' },
+      {
+        type: 'table',
+        headers: ['Line', 'Codename', 'Status on 14 Nov 2026'],
+        rows: [
+          ['Node.js 26', 'Lithium', 'Active LTS since 28 Oct 2026: the one to start new projects on'],
+          ['Node.js 24', 'Krypton', 'Maintenance LTS: fine to keep running, security and bug fixes only'],
+          ['Node.js 22', 'Jod', 'Maintenance LTS until 30 Apr 2027: upgrade before then'],
+        ],
+        caption: 'Line, codename and status, read from the Node.js release schedule',
+      },
+      {
+        type: 'version',
+        text: 'As of 14 November 2026 the Node.js release page lists Node.js 26, 24 and 22 as LTS lines, and the Release Working Group schedule gives 26 (Lithium) as the newest, in Active LTS since 28 October 2026, with 24 and 22 in Maintenance LTS. The finished API of this course, and its tests, were run on Node.js 22, 24 and 26; the shorter examples were run on Node.js 22. Always check the release page for the current status, because it changes every few months.',
+        checked: CHECKED,
+        sources: [DOCS.releases, DOCS.schedule],
+      },
+      { type: 'heading', text: 'Modules: splitting code into files' },
+      { type: 'paragraph', text: 'A real server is dozens of files that import each other. JavaScript has two module systems. **ES modules** use `import` and `export` and are the standard everywhere (browsers too). **CommonJS** is the older Node.js style with `require()` and `module.exports`, and you will meet it in older tutorials and packages. Node.js decides which one a `.js` file is from the nearest `package.json`: with `"type": "module"` it is an ES module, with `"type": "commonjs"` or no type it is CommonJS. This course uses ES modules.' },
+      { type: 'paragraph', text: 'Two habits keep imports clear. Write the `node:` prefix for built-in modules (`node:fs`, `node:http`), so they can never be confused with an npm package of the same name. And in your own files include the extension: `import { createApp } from \'./app.js\'`.' },
+      { type: 'warning', text: 'If a file says `const os = require(\'node:os\')` in a project with `"type": "module"`, Node.js stops with `ReferenceError: require is not defined in ES module scope, you can use import instead`. The fix is to write `import os from \'node:os\'`, not to change the project type.' },
+      { type: 'heading', text: 'npm and package.json' },
+      { type: 'paragraph', text: '**npm** is the package manager that comes with Node.js: it downloads other people\'s code (**packages**) from the npm registry into your project. A file called `package.json` records your project: its name, scripts and the packages it needs. Set one up with these commands:' },
+      {
+        type: 'code',
+        language: 'bash',
+        label: 'A new project',
+        code: `mkdir tindahan-api
+cd tindahan-api
+npm init -y
+npm pkg set type=module
+npm install express`,
+      },
+      {
+        type: 'code',
+        language: 'json',
+        label: 'package.json after the commands (shortened)',
+        code: `{
+  "name": "tindahan-api",
+  "version": "1.0.0",
+  "type": "module",
+  "dependencies": {
+    "express": "^5.3.0"
+  }
+}`,
+      },
+      { type: 'paragraph', text: '`npm install express` did four things: it downloaded Express and everything Express needs into a `node_modules` folder, added Express to `dependencies`, wrote exact versions into `package-lock.json`, and printed any known security problems. The `^5.3.0` means "5.3.0 or any newer 5.x version", so a bug-fix will not break you but a new major version will not sneak in.' },
+      {
+        type: 'list',
+        items: [
+          '**dependencies** are packages the app needs to run, such as `express`. Add them with `npm install <name>`.',
+          '**devDependencies** are only for building and testing, such as a test helper. Add them with `npm install --save-dev <name>` (short form `-D`). A production server skips them.',
+          '**package-lock.json** records the exact version of every package. Commit it. `npm ci` installs exactly what the lock file says, which is what a server or a teammate should run.',
+          '**node_modules** is large and can be rebuilt at any time. Never commit it: put `node_modules` in `.gitignore`.',
+          '**scripts** are short names for commands. With `"dev": "node --watch src/server.js"` anyone can start the project with `npm run dev`.',
+        ],
+      },
+      { type: 'heading', text: 'Node.js already includes a lot' },
+      { type: 'paragraph', text: 'Tutorials written a few years ago install a package for every small need. Modern Node.js has built-in answers for many of them, which means fewer packages to update and fewer places for security problems to enter. You will use each of these later in the course.' },
+      {
+        type: 'table',
+        headers: ['You need to', 'Built into Node.js', 'You may have seen a package for it'],
+        rows: [
+          ['Call another API', '`fetch()` is a global, no import needed', '`node-fetch`, `axios`'],
+          ['Restart the server when a file changes', '`node --watch file.js`', '`nodemon`'],
+          ['Load settings from a `.env` file', '`node --env-file=.env file.js`', '`dotenv`'],
+          ['Write and run tests', '`node:test` and `node --test`', 'Mocha, Jest (still fine for bigger needs)'],
+          ['Run a package.json script quickly', '`node --run dev`', '`npm run dev` also works'],
+        ],
+        caption: 'Built-in features that often replace a dependency',
+      },
+      {
+        type: 'version',
+        text: 'Checked against the Node.js docs: `fetch` is a stable global and is no longer experimental (since v21.0.0); watch mode (`--watch`) is stable since v22.0.0 and v20.13.0; `--env-file` was added in v20.6.0 and is no longer experimental in v24.10.0 and v22.21.0; the test runner is stable since v20.0.0 (its watch mode, coverage and a few newer features are still marked experimental); `--run` was added in v22.0.0. Node.js docs also note that `import.meta.dirname` is no longer experimental in v24.0.0 and v22.16.0.',
+        checked: CHECKED,
+        sources: [DOCS.globals, DOCS.cli, DOCS.test, DOCS.esm],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'Node.js runs JavaScript outside the browser, with `fs`, `http` and `process` instead of `document` and `window`. It is how you write a server in JavaScript.',
+          'Start new projects on the newest Active LTS; production should only use Active or Maintenance LTS, never a short-lived odd-numbered release.',
+          'Set `"type": "module"` in package.json, use `import`, write the `node:` prefix for built-ins and include the `.js` extension on your own files.',
+          'dependencies run the app, devDependencies only help build and test it. Commit package.json and package-lock.json, never node_modules, and install on servers with `npm ci`.',
+          '`fetch`, `--watch`, `--env-file` and `node:test` are built in, so you need fewer packages than older tutorials show.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'nodejs-express-01-fix-bug-1',
+          kind: 'fix-bug',
+          title: 'require is not defined',
+          story: 'You copied a snippet from an old tutorial into a new project that has "type": "module" in package.json.',
+          prompt: 'Running `node server.js` stops with `ReferenceError: require is not defined in ES module scope`. Tap the line with the bug, then choose the correct fix.',
+          concept: 'ES modules',
+          language: 'javascript',
+          code: `import os from 'node:os';
+const express = require('express');
+
+const app = express();
+console.log(os.platform());
+app.listen(3000);`,
+          bugLine: 2,
+          lineNote: 'That line is fine. Look for the line that uses the older way of loading a package.',
+          fixes: [
+            { line: "import express from 'express';", correct: true, why: 'In an ES module you load packages with `import`, exactly as line 1 already does for `node:os`.' },
+            { line: "const express = await require('express');", correct: false, why: '`require` does not exist in an ES module at all, so adding `await` in front of it changes nothing.' },
+            { line: "const express = import('express');", correct: false, why: 'A bare `import(...)` call is a different feature that returns a promise, so `express` would be a promise, not the function you call on line 3.' },
+            { line: '"type": "commonjs"', correct: false, why: 'That is a package.json setting, not a line of this file. Changing the project type just to keep an old snippet would move you away from the module system the rest of the course uses.' },
+          ],
+          hints: [
+            'The error message itself suggests the replacement: "you can use import instead".',
+            'ES modules write `import name from \'package\'` where CommonJS wrote `const name = require(\'package\')`.',
+            "The answer starts with the word `import`, then `express`, then `from 'express'`.",
+          ],
+          explanation: 'A package.json with "type": "module" makes every .js file an ES module, where `require` is not defined. Use `import express from \'express\'`, the same style as the first line.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'nodejs-express-01-arrange-1',
+          kind: 'arrange',
+          title: 'Start a new Node.js project',
+          prompt: 'Put these commands in the order you would type them to start a new project that uses ES modules and Express.',
+          concept: 'project setup',
+          language: 'bash',
+          solution: ['mkdir tindahan-api', 'cd tindahan-api', 'npm init -y', 'npm pkg set type=module', 'npm install express'],
+          reasons: [
+            'The project needs a folder first.',
+            'Move into the folder so the next commands act on it.',
+            'This creates package.json, which every later npm command edits.',
+            'Setting the module type needs package.json to exist, and must happen before you write code.',
+            'Installing adds Express to the dependencies in package.json.',
+          ],
+          hints: [
+            'A folder has to exist before you can step into it.',
+            'npm commands change package.json, so something must create it before the install.',
+            'Order: make the folder, go into it, create package.json, set the type, install Express.',
+          ],
+          explanation: 'Each command builds on the previous one: folder, then package.json, then settings, then dependencies. Running `npm install` before `npm init` would still work, but it would create a package.json without your name or type.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'nodejs-express-01-match-1',
+          kind: 'match',
+          title: 'Which npm tool solves it?',
+          prompt: 'Match each situation to the npm feature that handles it.',
+          concept: 'npm features',
+          labels: { terms: 'Situation', meanings: 'What to use' },
+          pairs: [
+            { term: 'You need a test helper that your production server never runs', definition: '`npm install --save-dev`, so it lands in devDependencies', note: 'Packages the running app needs go in dependencies; a test-only helper does not.' },
+            { term: 'A new teammate clones the repo and must get exactly the versions you tested with', definition: '`package-lock.json` with `npm ci`', note: '`^5.3.0` allows newer versions; the lock file pins the exact ones.' },
+            { term: 'Everyone should start the server with one short command, `npm run dev`', definition: 'A `scripts` entry in package.json', note: 'Scripts are named commands stored in package.json.' },
+            { term: 'Your repo is 300 MB because a folder of downloaded packages was committed', definition: 'Add `node_modules` to `.gitignore`', note: 'The folder can be rebuilt from package.json and the lock file, so it never belongs in git.' },
+          ],
+          hints: [
+            'Read each situation for the word that gives it away: "never runs", "exactly the versions", "one short command", "repo is 300 MB".',
+            'Two of the four involve what gets committed to git; think about which file is small and which is rebuilt.',
+            'Test-only helper: devDependencies. Exact versions: lock file. Short command: scripts. Huge repo: .gitignore.',
+          ],
+          explanation: 'Dependency type, lock file, scripts and .gitignore each solve a different problem. Knowing which one a situation calls for is what keeps a project the same on every machine.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'nodejs-express-01-q1',
+        prompt: 'A teammate says "my code that calls `document.getElementById` fails when I run it with `node`". What is the reason?',
+        choices: [
+          'Node.js only runs TypeScript, so the file needs to be compiled to JavaScript before node can run it',
+          'Node.js does not provide a web page, so `document` and `window` do not exist there',
+          'The file needs an `import document` line at the top before it can be used',
+          'Node.js blocks any call that reads from the web page for security reasons',
+        ],
+        answer: 1,
+        explanation: 'Node.js runs JavaScript without a browser, so there is no page for `document` to point at. It provides `process`, `fs`, `http` and other server tools instead.',
+      },
+      {
+        id: 'nodejs-express-01-q2',
+        prompt: 'You are starting a client project that will be deployed to production. Which Node.js choice follows the official guidance?',
+        choices: [
+          'The newest Active LTS line, such as the one marked LTS on the release page',
+          'Whatever the very latest odd-numbered release is, to get the newest features',
+          'The oldest line listed, because older versions have had more time to be tested',
+          'Any version, since every release line gets the same support period',
+        ],
+        answer: 0,
+        explanation: 'Node.js\'s docs say production applications should use only Active LTS or Maintenance LTS releases. Odd-numbered (Current) lines historically lasted only about six months, and old end-of-life lines get no fixes.',
+      },
+      {
+        id: 'nodejs-express-01-q3',
+        prompt: 'You add `supertest`, a package you will only use while testing. Which command puts it in the right place in package.json?',
+        choices: [
+          '`npm install supertest`, which adds it to the dependencies that a production server also installs',
+          '`npm ci supertest`, so the lock file is rebuilt with it',
+          '`npm pkg set type=supertest`, so the project knows about it',
+          '`npm install --save-dev supertest`, so it is added to devDependencies',
+        ],
+        answer: 3,
+        explanation: '`--save-dev` (or `-D`) records a package under devDependencies, which a production install skips. A plain install would ship test tools to the server, and `npm ci` installs what is already listed rather than adding something.',
+      },
+      {
+        id: 'nodejs-express-01-q4',
+        prompt: 'The lock file says Express is at 5.3.0 but package.json says `"^5.3.0"`. What does the caret in `^5.3.0` allow?',
+        choices: [
+          'Only exactly 5.3.0, so npm would refuse to install any other version of Express at any time',
+          'Any version of Express at all, including a future 6.0',
+          'Version 5.3.0 or a newer 5.x version, but not the next major version',
+          'Any 5.x version, including older ones such as 5.0.0',
+        ],
+        answer: 2,
+        explanation: 'The caret allows compatible upgrades within the same major version (5.3.0 up to, but not including, 6.0.0). The lock file is what pins the exact version that npm ci installs.',
+      },
+    ],
+    task: {
+      title: 'Set up your first Node.js project',
+      minutes: 15,
+      steps: [
+        'Install the newest LTS version of Node.js from nodejs.org and check it with `node -v` and `npm -v`.',
+        'Create a folder, run `npm init -y`, then `npm pkg set type=module`, and save the `hello.js` file from the lesson. Run it with and without a name after the file.',
+        'Run `npm install express`, open package.json and find `express` under `dependencies`. Then add a `dev` script that runs `node --watch hello.js` and start it with `npm run dev`.',
+        'Edit hello.js while `npm run dev` is running and watch Node.js restart by itself.',
+      ],
+    },
+  },
+  {
+    id: 'nodejs-express-02',
+    day: 2,
+    title: 'Core modules and asynchronous code on the server',
+    summary: 'Use the built-in fs, path and http modules, and learn why a server must never block while it waits.',
+    intro: {
+      objectives: [
+        'Read a file and build a path with the built-in node:fs/promises and node:path modules',
+        'Explain how Node.js serves many clients with one thread, and what "blocking" means',
+        'Write an async function that handles errors and never leaves a promise un-awaited',
+        'Describe what Express adds on top of Node.js\'s own http module',
+      ],
+      why: 'A server that waits badly makes every customer wait. Most beginner backend bugs, a frozen server, a crash at 3 AM or a request that never finishes, trace back to the ideas in this lesson.',
+    },
+    minutes: 25,
+    skills: ['node-basics'],
+    body: [
+      { type: 'paragraph', text: 'A server spends most of its life waiting: for a file to be read, for the database to answer, for another API to reply, for the next visitor. How a server waits decides whether it serves ten customers or ten thousand. Node.js was designed around that idea, and once you see it, a lot of backend advice (use `await`, never use the `Sync` functions, always handle errors) stops being a list of rules and becomes common sense.' },
+      { type: 'heading', text: 'One waiter, many tables' },
+      { type: 'paragraph', text: 'Picture a restaurant with one very fast waiter. He takes a table\'s order, hands it to the kitchen, and immediately walks to the next table instead of standing at the kitchen door staring at the pot. When the kitchen rings the bell, he collects the dish and delivers it. One waiter can look after many tables because he never waits idly.' },
+      { type: 'paragraph', text: 'Node.js runs your JavaScript on one thread, like that waiter. When your code starts a slow job (reading a file, asking the database), Node.js hands it to the operating system and moves on. When the job finishes, the **event loop** (the part of Node.js that keeps checking "is any finished work waiting for me?") runs your callback or continues your `await`. While one request waits for the disk, the same thread answers other requests.' },
+      {
+        type: 'diagram',
+        format: 'mermaid',
+        caption: 'While Client A waits for the disk, Node.js answers Client B right away',
+        source: 'sequenceDiagram\n  participant A as Client A\n  participant N as Node.js\n  participant D as Disk\n  participant B as Client B\n  A->>N: GET /products\n  N->>D: start reading products.json\n  B->>N: GET /health\n  N-->>B: ok, answered immediately\n  D-->>N: file contents ready\n  N-->>A: JSON response',
+      },
+      { type: 'heading', text: 'Core modules: tools that ship with Node.js' },
+      { type: 'paragraph', text: 'Node.js comes with **core modules**, built-in libraries you import without installing anything. A few cover most server needs: `node:fs/promises` (files, with promises), `node:path` (building file paths that work on Windows, macOS and Linux), `node:http` (the web server itself), `node:os` (information about the machine), `node:crypto` (for example `randomUUID()`) and `node:timers/promises` (a `setTimeout` you can `await`). Here is the first one in use, reading a small JSON file of products:' },
+      {
+        type: 'code',
+        language: 'javascript',
+        label: 'read.js',
+        code: `import { readFile } from 'node:fs/promises';
+import path from 'node:path';
+
+const file = path.join(import.meta.dirname, 'products.json');
+console.log(path.basename(file), path.extname(file));
+
+const text = await readFile(file, 'utf8');
+const products = JSON.parse(text);
+console.log(products.length, 'products; first:', products[0].name);
+
+try {
+  await readFile(path.join(import.meta.dirname, 'missing.json'), 'utf8');
+} catch (err) {
+  console.log(err.code, '-', err.message.split(',')[0]);
+}`,
+      },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'Output, with a products.json holding two products',
+        code: `products.json .json
+2 products; first: Pandesal (10 pcs)
+ENOENT - ENOENT: no such file or directory`,
+      },
+      { type: 'paragraph', text: '`import.meta.dirname` is the folder of the current file, and `path.join` glues it to a file name, so the script works wherever you run it from. `await` pauses only this function until the file is read; the thread stays free. A missing file does not crash anything here because `try/catch` receives an error whose `code` is `ENOENT` ("no such entry"). Always read `err.code`, not the message text, when you need to decide what to do.' },
+      { type: 'heading', text: 'The one rule: do not block the event loop' },
+      { type: 'paragraph', text: 'If your code does a long job without waiting, nothing else can run, because there is only one thread. This is called **blocking** the event loop. The fs module has `readFileSync`, `writeFileSync` and other `Sync` functions: they are convenient for a quick script, and the Node.js docs say the synchronous APIs block the event loop until the operation is complete. A heavy loop, a huge `JSON.parse` or a synchronous crypto call blocks too. Here are two routes, one that waits properly and one that busy-loops for two seconds:' },
+      {
+        type: 'code',
+        language: 'javascript',
+        label: 'blocking.js (the two routes)',
+        code: `app.get('/slow-async', async (req, res) => {
+  await sleep(2000); // waiting: the event loop is free to serve others
+  res.json({ done: 'async' });
+});
+
+app.get('/slow-sync', (req, res) => {
+  const end = Date.now() + 2000;
+  while (Date.now() < end) {} // busy loop: nothing else can run
+  res.json({ done: 'sync' });
+});`,
+      },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'How long /health took while each slow route was running (one run on a laptop)',
+        code: `/health while /slow-async runs: 35 ms
+/health while /slow-sync runs: 1828 ms`,
+      },
+      { type: 'paragraph', text: 'Your numbers will differ, but the pattern will not. While `/slow-async` waited, a different visitor got an answer almost instantly. While `/slow-sync` ran, that visitor waited nearly two seconds, and so would every other customer. The rule for server code: use the promise versions (`readFile` from `node:fs/promises`), and move heavy calculations out of the request.' },
+      { type: 'heading', text: 'Node.js has a web server built in' },
+      { type: 'paragraph', text: 'Before using Express, look at what Node.js gives you alone. This server answers `/health` and says "not found" to everything else:' },
+      {
+        type: 'code',
+        language: 'javascript',
+        label: 'raw-server.js',
+        code: `import { createServer } from 'node:http';
+
+const server = createServer((req, res) => {
+  if (req.method === 'GET' && req.url === '/health') {
+    res.writeHead(200, { 'Content-Type': 'application/json' });
+    res.end(JSON.stringify({ status: 'ok' }));
+    return;
+  }
+  res.writeHead(404, { 'Content-Type': 'application/json' });
+  res.end(JSON.stringify({ error: 'Not found' }));
+});
+
+server.listen(3000, () => console.log('Listening on http://localhost:3000'));`,
+      },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'curl -i localhost:3000/health (some headers left out)',
+        code: `HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"status":"ok"}`,
+      },
+      { type: 'paragraph', text: 'It works, but you decide everything by hand: you compare `req.url` to find the route, you set the headers, you turn objects into JSON text, and you would have to read and parse a request body yourself. Express (next lesson) is a thin layer over this same `http` server that does those chores for you. Nothing is hidden: `app.listen()` creates exactly this kind of server.' },
+      { type: 'heading', text: 'Promises: await every one, or the server can crash' },
+      { type: 'paragraph', text: 'An `async` function returns a promise. If you call it and neither `await` it nor `return` it nor attach a `.catch`, a failure has nowhere to go: Node.js reports it as an **unhandled rejection**, and by default that makes the whole process exit with an error. One forgotten `await` on a failing database call can therefore take down the server for every customer. The fix is easy: `await` the call inside a `try/catch`, or let an `async` Express route throw (lesson 5 shows how Express turns that into a clean error response).' },
+      {
+        type: 'code',
+        language: 'javascript',
+        label: 'Two routes: one safe, one that can kill the server',
+        code: `async function saveAudit() {
+  throw new Error('audit table is down');
+}
+
+app.get('/ok-awaited', async (req, res) => {
+  await saveAudit(); // the rejection becomes a 500 response; the server keeps running
+  res.json({ saved: true });
+});
+
+app.get('/forgot-await', (req, res) => {
+  saveAudit(); // no await, no catch: an unhandled rejection
+  res.json({ saved: true });
+});`,
+      },
+      { type: 'paragraph', text: 'We ran this. `/ok-awaited` answered `500 Internal Server Error` and the server stayed up. `/forgot-await` answered `{"saved":true}` (a lie), then the process printed the error and exited, and every later request was refused. Needing several slow things at once? `await Promise.all([a(), b(), c()])` runs them together: three 300 ms jobs took about 300 ms that way and about 900 ms one after another.' },
+      {
+        type: 'version',
+        text: 'Checked against the Node.js docs: `node:fs/promises` and its `readFile` are stable; the docs say the synchronous fs APIs block the event loop; `import.meta.dirname` was added in v20.11.0 and v21.2.0 and is no longer experimental in v22.16.0 and v24.0.0; unhandled rejections are raised as an uncaught exception by default (`--unhandled-rejections` default `throw`); `server.close()` stops accepting connections and, since v19.0.0, also closes idle ones.',
+        checked: CHECKED,
+        sources: [DOCS.fs, DOCS.esm, DOCS.process, DOCS.http, DOCS.blocking],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'Node.js runs your JavaScript on one thread and hands slow work (files, database, network) to the system, so one thread can serve many clients that are mostly waiting.',
+          'Blocking the event loop (`readFileSync`, a long loop, a huge `JSON.parse`) freezes every request. In server code use the promise versions, such as `node:fs/promises`.',
+          'Core modules such as `node:fs/promises`, `node:path`, `node:http` and `node:crypto` need no installation. Build file paths with `path.join` and `import.meta.dirname`.',
+          'Always `await` (or return, or catch) a promise. A forgotten `await` on a failing call can end the whole process.',
+          'Express is a thin layer over Node.js\'s `http` server that does routing, headers and JSON for you.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'nodejs-express-02-predict-output-1',
+          kind: 'predict-output',
+          title: 'Which line prints first?',
+          prompt: 'This script reads a file that exists. What does it print, in order?',
+          concept: 'the event loop',
+          language: 'nodejs',
+          code: `import { readFile } from 'node:fs/promises';
+
+console.log('1: start');
+readFile('products.json', 'utf8').then(() => console.log('3: file read'));
+console.log('2: this line runs before the file is read');`,
+          expected: '1: start\n2: this line runs before the file is read\n3: file read',
+          choices: [
+            '1: start\n2: this line runs before the file is read\n3: file read',
+            '1: start\n3: file read\n2: this line runs before the file is read',
+            '3: file read\n1: start\n2: this line runs before the file is read',
+          ],
+          wrongNotes: {
+            '1: start\n3: file read\n2: this line runs before the file is read': 'That would mean Node.js waited for the file before continuing. It does not: `readFile` returns a promise immediately and the script carries on.',
+            '3: file read\n1: start\n2: this line runs before the file is read': 'The file can only be read after the script has started, and the `.then` callback runs later, once the read finishes.',
+          },
+          hints: [
+            'Does `readFile(...)` pause the script until the file is read?',
+            'The function inside `.then(...)` is a callback that runs later, when the read finishes.',
+            'The two plain `console.log` lines run straight away, in order, and the callback prints last.',
+          ],
+          explanation: 'Reading the file is started, not finished, by `readFile`. Node.js continues with the next line, prints line 2, and only when the file is ready does the event loop run the `.then` callback. This is exactly why one thread can serve many requests.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'nodejs-express-02-fix-bug-1',
+          kind: 'fix-bug',
+          title: 'The forgotten await',
+          story: 'A route saves an audit record after every sale. Sometimes the audit table is down, and then the whole server dies.',
+          prompt: 'Tap the line that lets a failure escape, then choose the fix that keeps the server alive and reports the failure.',
+          concept: 'unhandled rejections',
+          language: 'nodejs',
+          code: `async function saveAudit(sale) {
+  await db.query('INSERT INTO audit (sale) VALUES ($1)', [sale]);
+}
+
+app.post('/sales', async (req, res) => {
+  saveAudit(req.body);
+  res.status(201).json({ saved: true });
+});`,
+          bugLine: 6,
+          lineNote: 'That line is fine. Look for the call that returns a promise nobody waits for.',
+          fixes: [
+            { line: '  await saveAudit(req.body);', correct: true, why: 'Now a failure rejects the route\'s own promise, Express (version 5) turns it into an error response, and `saved: true` is only sent when the audit really saved.' },
+            { line: '  saveAudit(req.body).catch(() => {});', correct: false, why: 'This stops the crash but hides the failure completely, and the client is still told `saved: true` when nothing was saved.' },
+            { line: '  try { saveAudit(req.body); } catch (err) {}', correct: false, why: 'A `try/catch` only catches errors thrown while it runs. The rejection happens later, so it is still unhandled.' },
+            { line: '  return saveAudit(req.body);', correct: false, why: 'This returns before `res.json` runs, so the client never receives a response even when the audit saves.' },
+          ],
+          hints: [
+            'Which line calls an async function and ignores the promise it returns?',
+            'An unawaited promise that fails becomes an unhandled rejection. How do you make the route wait for it?',
+            'Put the keyword `await` in front of `saveAudit(req.body)`.',
+          ],
+          explanation: 'Awaiting the call lets the failure travel up to Express, which answers with an error and keeps running, and it makes the response truthful. Swallowing the error with an empty catch is the tempting wrong answer: the server survives but lies to the client.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'nodejs-express-02-scenario-1',
+          kind: 'scenario',
+          title: 'A slow report endpoint',
+          prompt: 'Choose the best way to fix the problem.',
+          concept: 'blocking the event loop',
+          situation: 'Your API has a `/report` route that reads a 200 MB sales file with `readFileSync` and totals it in a loop. While it runs, `/health` and every other route stop answering for several seconds, and your hosting dashboard shows the app as unhealthy.',
+          options: [
+            { text: 'Stop doing the work inside the request: read the file with the promise API in small pieces, or build the report ahead of time (a scheduled job or a separate worker) and serve the saved result.', consequence: 'The event loop stays free, so other customers are served while the report is prepared, and the route returns quickly.', quality: 'best' },
+            { text: 'Wrap the `readFileSync` call in a `try/catch` so errors are handled.', consequence: 'Errors are handled, but the call still blocks everything for as long as it takes, so the real problem remains.', quality: 'poor' },
+            { text: 'Switch to `readFile` from `node:fs/promises` but keep the heavy loop that totals everything in one go.', consequence: 'Reading no longer blocks, which helps, but the long loop still hogs the single thread for seconds, so other requests still stall.', quality: 'acceptable' },
+            { text: 'Add `await` before `readFileSync` so the route waits for it properly.', consequence: '`await` on a function that returns a plain value changes nothing: `readFileSync` has already blocked the thread before the await happens.', quality: 'poor' },
+          ],
+          hints: [
+            'What stops other requests from running: the reading, the totalling, or both?',
+            'There is only one thread. Which options still keep it busy for seconds?',
+            'The best answer takes the heavy work out of the request path, not just out of one function.',
+          ],
+          explanation: 'Any long synchronous work blocks every client. The fix is to avoid doing heavy work on the request thread at all: use promise APIs, split the work, or prepare the result elsewhere and serve it.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'nodejs-express-02-q1',
+        prompt: 'Two customers call your API at nearly the same moment. The first request awaits a slow database query. What happens to the second request?',
+        choices: [
+          'It waits in line until the first request has completely finished, and is handled only afterwards',
+          'It is refused, because Node.js can only handle one request at a time',
+          'It is handled while the first request waits, because the thread is free',
+          'It starts a second copy of the server so both run at the same time',
+        ],
+        answer: 2,
+        explanation: 'While a request awaits slow work, the thread is free and the event loop runs other requests. Waiting costs nothing; blocking is what makes others queue.',
+      },
+      {
+        id: 'nodejs-express-02-q2',
+        prompt: 'Which of these inside a route handler is most likely to freeze the whole server for every customer?',
+        choices: [
+          'Calling `await readFile(file, "utf8")` on a small configuration file at the start of each request',
+          'Calling `await fetch(url)` to reach another API',
+          'Using `await Promise.all([a(), b()])` to run two queries',
+          'Calling `readFileSync` on a very large file, then looping over it',
+        ],
+        answer: 3,
+        explanation: 'The `Sync` call and the long loop both keep the single thread busy, so nothing else can run. The `await` versions hand the waiting to the system and leave the thread free.',
+      },
+      {
+        id: 'nodejs-express-02-q3',
+        prompt: 'A route calls `await sendReceiptEmail()` inside `try/catch`, but a teammate\'s route calls `logSale()` (an async function) without `await` and without `.catch`. If `logSale` rejects, what is the likely result in Node.js?',
+        choices: [
+          'The rejection is ignored silently and the next request works normally',
+          'An unhandled rejection that, by default, ends the Node.js process',
+          'The error is retried automatically three times before being dropped',
+          'The error is sent to the client as a 400 response with its message',
+        ],
+        answer: 1,
+        explanation: 'Node.js raises an unhandled rejection as an uncaught exception by default, which ends the process. Nothing retries it, and nothing sends it to the client, because no one was waiting for that promise.',
+      },
+      {
+        id: 'nodejs-express-02-q4',
+        prompt: 'You need three independent database lookups, each about 300 ms, before you can reply. Roughly how long does `await Promise.all([one(), two(), three()])` take?',
+        choices: [
+          'About 900 ms, because the three waiting times are added together one after the other',
+          'About 300 ms, because the lookups wait at the same time',
+          'About 100 ms, because the work is split three ways',
+          'It depends on how many CPU cores the machine has',
+        ],
+        answer: 1,
+        explanation: 'Promise.all starts all three and waits for the slowest, so waiting overlaps. Awaiting them one after another would take about 900 ms. Waiting on I/O does not need extra CPU cores.',
+      },
+    ],
+    task: {
+      title: 'Watch the event loop work',
+      minutes: 15,
+      steps: [
+        'Create `products.json` with two products, then write and run `read.js` from the lesson. Change the file name to one that does not exist and read the `err.code` it prints.',
+        'Write `raw-server.js`, start it with `node --watch raw-server.js`, and call `/health` and `/anything` with curl or your browser.',
+        'Install Express (`npm install express`), write the `/health`, `/slow-async` and `/slow-sync` routes from the lesson, and open `/slow-sync` in one tab while loading `/health` in another. Note the difference, then try `/slow-async`.',
+        'Add the `/forgot-await` route, call it once, and see what happens to the server. Then add `await` and call it again.',
+      ],
+    },
+  },
+  {
+    id: 'nodejs-express-03',
+    day: 3,
+    title: 'Express basics: routes, requests and responses',
+    summary: 'Build your first Express 5 server with routes, URL parameters, query strings and JSON responses.',
+    intro: {
+      objectives: [
+        'Create an Express 5 app with routes for GET and POST requests',
+        'Read URL parameters, query strings and a JSON body from req',
+        'Send responses with the right status code using res.status() and res.json()',
+        'Write route paths in Express 5 syntax, including wildcards and optional parts',
+      ],
+      why: 'Routes are the front door of every API. Once you can map a method and a path to a function that answers, you can build the endpoints a mobile app or website calls, which is the core of most backend work.',
+    },
+    minutes: 25,
+    skills: ['express-routing'],
+    body: [
+      { type: 'paragraph', text: 'In the last lesson you built a server with `node:http` and decided everything by hand. Express removes the repetitive part. You describe your **routes**, each one a pairing of an HTTP method (GET, POST...) and a path (`/products`) with a function that produces the answer, and Express does the matching, the headers and the JSON for you. Express is one of the most widely used Node.js web frameworks, and it is the base that many other Node.js tools are built on or modelled after.' },
+      { type: 'heading', text: 'Your first Express server' },
+      { type: 'paragraph', text: 'We will build the API for a small neighbourhood store, the "Tindahan" API, and grow it through the whole course. Install Express with `npm install express` and create `server.js`. For now the data is a plain array in memory, so it disappears when the server restarts; lesson 7 moves it into a database.' },
+      {
+        type: 'code',
+        language: 'javascript',
+        label: 'server.js',
+        code: `import express from 'express';
+
+const app = express();
+app.use(express.json());
+
+const products = [
+  { id: 1, name: 'Pandesal (10 pcs)', priceCents: 5000, stock: 40 },
+  { id: 2, name: 'Kape 3-in-1 sachet', priceCents: 800, stock: 120 },
+];
+let nextId = 3;
+
+app.get('/health', (req, res) => {
+  res.json({ status: 'ok' });
+});
+
+app.get('/products', (req, res) => {
+  const { q } = req.query;
+  const found = q
+    ? products.filter((p) => p.name.toLowerCase().includes(String(q).toLowerCase()))
+    : products;
+  res.json(found);
+});
+
+app.get('/products/:id', (req, res) => {
+  const product = products.find((p) => p.id === Number(req.params.id));
+  if (!product) {
+    return res.status(404).json({ error: 'Product not found' });
+  }
+  res.json(product);
+});
+
+app.post('/products', (req, res) => {
+  const product = { id: nextId++, ...req.body };
+  products.push(product);
+  res.status(201).json(product);
+});
+
+const port = 3000;
+app.listen(port, () => console.log(\`Tindahan API on http://localhost:\${port}\`));`,
+      },
+      { type: 'paragraph', text: 'Read it from the top. `express()` creates the app. `app.use(express.json())` adds a helper that reads a JSON request body (lesson 4 explains why it is a "middleware"). Prices are stored in **centavos** as whole numbers, so `5000` means PHP 50.00; computers add whole numbers exactly, while decimals like 0.1 + 0.2 do not, so money is best kept as integers. Each `app.get(path, handler)` registers a route: when a GET request for that path arrives, Express calls `handler(req, res)`. `req` describes the request, and `res` is how you answer it.' },
+      { type: 'heading', text: 'What lives on req and res' },
+      {
+        type: 'table',
+        headers: ['You want', 'You write', 'Example for GET /products/2?q=kape'],
+        rows: [
+          ['A value from the path', '`req.params.name`', '`req.params.id` is the text `"2"`'],
+          ['A value after the `?`', '`req.query.name`', '`req.query.q` is `"kape"`'],
+          ['The JSON the client sent', '`req.body`', 'Only filled in after `express.json()` ran'],
+          ['The HTTP method and path', '`req.method`, `req.path`', '`GET` and `/products/2`'],
+          ['Send JSON', '`res.json(data)`', 'Sets the content type and converts the object to text'],
+          ['Choose the status code', '`res.status(404)`', 'Chain it: `res.status(404).json({ ... })`'],
+        ],
+        caption: 'The parts of req and res you will use every day',
+      },
+      { type: 'warning', text: 'Everything in `req.params` and `req.query` is **text**, even if it looks like a number: `/products/2` gives `"2"`, not `2`. That is why the route above wraps it in `Number(...)`. Anything a client sends can be missing, the wrong type or hostile, so treat it as untrusted. Lesson 5 shows how to check it properly.' },
+      { type: 'heading', text: 'Trying it with curl' },
+      { type: 'paragraph', text: '`curl` is a command-line tool that sends HTTP requests, so you can try the API without building a website. Start the server with `node --watch server.js`, then in a second terminal window:' },
+      {
+        type: 'code',
+        language: 'bash',
+        label: 'Requests and the answers we got (some headers left out)',
+        code: `$ curl -i "localhost:3000/products?q=kape"
+HTTP/1.1 200 OK
+Content-Type: application/json; charset=utf-8
+
+[{"id":2,"name":"Kape 3-in-1 sachet","priceCents":800,"stock":120}]
+
+$ curl -i localhost:3000/products/99
+HTTP/1.1 404 Not Found
+{"error":"Product not found"}
+
+$ curl -i -X POST localhost:3000/products -H "Content-Type: application/json" -d '{"name":"Sardinas","priceCents":2500,"stock":30}'
+HTTP/1.1 201 Created
+{"id":3,"name":"Sardinas","priceCents":2500,"stock":30}
+
+$ curl -i localhost:3000/nope
+HTTP/1.1 404 Not Found
+<pre>Cannot GET /nope</pre>`,
+      },
+      { type: 'paragraph', text: 'Notice the status codes. **200 OK** means it worked, **201 Created** means a new thing now exists, **404 Not Found** means there is nothing at that address. A route that finds nothing should say so with a 404 instead of a 200 with an empty body, because client apps check the status code first. And a path with no route at all gets Express\'s built-in 404 page, which you will replace with a JSON one in lesson 5.' },
+      { type: 'paragraph', text: 'One more thing we saw while testing, and it is a bug, not a feature. When we sent a POST **without** the `Content-Type: application/json` header, `express.json()` did not parse the body, `req.body` was `undefined`, `{ id: nextId++, ...undefined }` is just `{ id }`, and the server answered `201 Created` with `{"id":4}`: a product with no name or price, saved and acknowledged. That is the "never trust the client" lesson in one request, and lessons 4 and 5 fix it.' },
+      { type: 'heading', text: 'Route paths in Express 5' },
+      { type: 'paragraph', text: 'Express 5 is the current major version, and its route-path syntax is stricter than Express 4, which matters because many older tutorials still show the old forms. We ran each of these in Express 5:' },
+      {
+        type: 'table',
+        headers: ['What you want', 'Express 4 style', 'Express 5 style'],
+        rows: [
+          ['Match anything below a folder', '`/files/*`', '`/files/*path` (the wildcard needs a name)'],
+          ['An optional part', '`/docs/:page.:ext?`', '`/docs/:page{.:ext}` (braces)'],
+          ['A choice between paths', '`/[discussion|page]/:slug`', 'Two routes in an array: `[\'/discussion/:slug\', \'/page/:slug\']`'],
+        ],
+        caption: 'Path syntax changes in Express 5',
+      },
+      {
+        type: 'code',
+        language: 'javascript',
+        label: 'Wildcards and optional parts (output of our test)',
+        code: `app.get('/files/*', handler);       // Express 5 stops with: Missing parameter name at index 8: /files/*
+app.get('/files/*path', (req, res) => res.json(req.params));
+// GET /files/a/b/c.txt  ->  {"path":["a","b","c.txt"]}
+
+app.get('/docs/:page{.:ext}', (req, res) => res.json(req.params));
+// GET /docs/intro       ->  {"page":"intro"}
+// GET /docs/intro.md    ->  {"page":"intro","ext":"md"}`,
+      },
+      { type: 'paragraph', text: 'Two more habits. By default Express matches paths without caring about capital letters or a trailing slash: in our test `/Products/2` and `/products/2/` both reached the `/products/:id` route. And `app.listen` now passes a start-up failure, such as the port being already taken (`EADDRINUSE`), to its callback instead of throwing, so check for it: `app.listen(port, (error) => { if (error) throw error; ... })`.' },
+      {
+        type: 'version',
+        text: 'Verified against the Express documentation and by running the code: Express 5 is the current major version (the support page lists v5.x as the current major and v4.x as still supported; the version npm installs by default was 5.3.0 on 14 November 2026) and requires Node.js 18 or higher. The migration guide lists the changes used here: wildcards must be named (`/*splat`), `?` is replaced by braces, regular-expression characters are no longer supported in string paths, `req.params` has a null prototype and a wildcard is captured as an array, `req.body` is `undefined` unless a body parser ran, and `res.json(obj, status)` style calls were removed in favour of `res.status(status).json(obj)`.',
+        checked: CHECKED,
+        sources: [DOCS.expressSupport, DOCS.expressMigrate, DOCS.expressHello],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'A route pairs an HTTP method and a path with a handler function: `app.get(\'/products/:id\', (req, res) => { ... })`.',
+          'Read inputs from `req.params` (the path), `req.query` (after the `?`) and `req.body` (JSON, after `express.json()` ran). The first two are always text.',
+          'Answer with `res.status(code).json(data)`. Use 200 for success, 201 for created and 404 when nothing exists at that address.',
+          'Express 5 path syntax: name your wildcards (`/*path`), use braces for optional parts (`{.:ext}`), and no regular-expression characters.',
+          'A route that trusts `req.body` can save broken data and still say 201 Created. Validation (lesson 5) is not optional.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'nodejs-express-03-predict-output-1',
+          kind: 'predict-output',
+          title: 'What does the route answer?',
+          prompt: 'The server below is running. What status and body does `GET /products/2` return?',
+          concept: 'route parameters',
+          language: 'nodejs',
+          code: `const stock = { 1: 'Pandesal', 2: 'Kape' };
+
+app.get('/products/:id', (req, res) => {
+  const name = stock[req.params.id];
+  if (!name) return res.status(404).json({ error: 'not found' });
+  res.json({ id: req.params.id, name });
+});`,
+          expected: '200 {"id":"2","name":"Kape"}',
+          choices: [
+            '200 {"id":2,"name":"Kape"}',
+            '200 {"id":"2","name":"Kape"}',
+            '404 {"error":"not found"}',
+            '200 {"name":"Kape"}',
+          ],
+          wrongNotes: {
+            '200 {"id":2,"name":"Kape"}': 'The route echoes `req.params.id` as it arrived, and path parameters are always text, so the id is the string `"2"`, with quotes.',
+            '404 {"error":"not found"}': 'The object `stock` has a property named `2`, and JavaScript converts the text `"2"` to look it up, so `name` is `Kape` and the 404 branch is skipped.',
+            '200 {"name":"Kape"}': 'The response object lists `id` first, and `req.params.id` exists, so `id` is part of the answer.',
+          },
+          hints: [
+            'Is the product found? Look at how `stock` is indexed.',
+            'What type does `req.params.id` have: number or text?',
+            'The body includes the id exactly as it came in the URL, as text, so it is printed with quotes.',
+          ],
+          explanation: 'The lookup works, so the route answers 200. `req.params.id` is the text `"2"`, so `res.json` prints `"id":"2"` with quotes. We ran this route: `/products/2` returned `200 {"id":"2","name":"Kape"}` and `/products/7` returned `404 {"error":"not found"}`.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'nodejs-express-03-fill-blank-1',
+          kind: 'fill-blank',
+          title: 'Complete the route',
+          prompt: 'Fill in the blanks so the route reads the id from the path, rejects a non-number with a 400 status, and otherwise answers with the id.',
+          concept: 'req and res',
+          language: 'nodejs',
+          code: `app.___('/products/:id', (req, res) => {
+  const id = Number(req.___.id);
+  if (Number.isNaN(id)) {
+    return res.___(400).json({ error: 'Id must be a number' });
+  }
+  res.json({ id });
+});`,
+          blanks: [
+            { answers: ['get'], feedback: 'The route answers a request that only reads data, which is a GET.' },
+            { answers: ['params'], feedback: 'Values written as `:id` inside the path are on `req.params`; `req.query` holds what comes after the `?`.' },
+            { answers: ['status'], feedback: '`res.status(400)` sets the status code, and `.json(...)` then sends the body.' },
+          ],
+          bank: ['get', 'params', 'status', 'post', 'query', 'send'],
+          hints: [
+            'Looking up a product is a read, so which method is it?',
+            'The id is part of the path (`:id`), not after a question mark.',
+            'Answers in order: get, params, status.',
+          ],
+          explanation: 'GET for reading, `req.params` for `:id` in the path, and `res.status(400)` to tell the client its request was wrong. Because params are text, converting with `Number` and checking `isNaN` is the first small step of validation.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'nodejs-express-03-code-challenge-1',
+          kind: 'code-challenge',
+          title: 'Write a tiny route matcher',
+          story: 'Express turns "/products/:id" and "/products/7" into { id: "7" }. You can do the same with plain JavaScript.',
+          prompt: 'Complete `matchRoute(pattern, path)`. If the path matches the pattern, return an object of its parameters (a part that starts with `:` is a parameter, and its value is the text in the same position of the path). If it does not match, return `null`.',
+          concept: 'route matching',
+          language: 'javascript',
+          starter: `function matchRoute(pattern, path) {
+  const patternParts = pattern.split('/');
+  const pathParts = path.split('/');
+  // 1. A different number of parts is never a match: return null.
+  // 2. Go through the parts one by one.
+  //    A pattern part starting with ':' is a parameter: save pathParts[i] under its name without the colon.
+  //    Any other pattern part must equal the path part, otherwise return null.
+  const params = {};
+  return params;
+}`,
+          solution: `function matchRoute(pattern, path) {
+  const patternParts = pattern.split('/');
+  const pathParts = path.split('/');
+  if (patternParts.length !== pathParts.length) {
+    return null;
+  }
+  const params = {};
+  for (let i = 0; i < patternParts.length; i++) {
+    if (patternParts[i].startsWith(':')) {
+      params[patternParts[i].slice(1)] = pathParts[i];
+    } else if (patternParts[i] !== pathParts[i]) {
+      return null;
+    }
+  }
+  return params;
+}`,
+          tests: {
+            kind: 'function',
+            fn: 'matchRoute',
+            cases: [
+              { label: 'one parameter', args: ['/products/:id', '/products/7'], expected: { id: '7' } },
+              { label: 'no parameters, same path', args: ['/products', '/products'], expected: {} },
+              { label: 'path has too few parts', args: ['/products/:id', '/products'], expected: null },
+              { label: 'a fixed part differs', args: ['/products/:id', '/orders/7'], expected: null },
+              { label: 'two parameters', args: ['/shops/:shop/items/:item', '/shops/nena/items/42'], expected: { shop: 'nena', item: '42' }, hidden: true },
+              { label: 'a fixed part differs after a parameter', args: ['/shops/:shop/items', '/shops/nena/prices'], expected: null, hidden: true },
+            ],
+          },
+          hints: [
+            'Splitting on "/" gives lists of parts. Compare their lengths first.',
+            'Loop over the parts: if the pattern part starts with ":", store the path part; otherwise the two must be equal.',
+            'Use `params[patternParts[i].slice(1)] = pathParts[i]` for a parameter, and `return null` when a fixed part does not match.',
+          ],
+          explanation: 'This is the idea behind every router: split the pattern and the path into parts, require the same number, treat parts that start with ":" as named holes and everything else as fixed text. Express does the same, plus the features you saw in this lesson.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'nodejs-express-03-q1',
+        prompt: 'A client calls `GET /products/12?sort=price`. Where do you read `12` and `price` in the route handler?',
+        choices: [
+          '`req.body.id` and `req.body.sort`, because both are sent by the client',
+          '`req.query.id` for both, since they all arrive in the URL text',
+          '`req.params.id` for the 12 and `req.query.sort` for the price',
+          '`req.query.id` for the 12 and `req.params.sort` for the price',
+        ],
+        answer: 2,
+        explanation: 'Values named in the route path (`/products/:id`) are on `req.params`. Values after the question mark are on `req.query`. `req.body` holds the data sent in the request body, which a GET does not normally have.',
+      },
+      {
+        id: 'nodejs-express-03-q2',
+        prompt: 'You search a product list with `products.find((p) => p.id === req.params.id)` and it never finds anything, though the id exists. What is the most likely cause?',
+        choices: [
+          'The route handler has to be marked `async` before Express will let it read anything from params',
+          '`req.params.id` is text such as `"2"`, so it is never strictly equal to the number 2',
+          'Express 5 removed `req.params`, so the value must be read from `req.query`',
+          'The `find` method does not work on arrays of objects with an id field',
+        ],
+        answer: 1,
+        explanation: 'Path parameters are always strings. Comparing with `===` against a number fails, so convert first with `Number(req.params.id)` (and check that the result is a valid number).',
+      },
+      {
+        id: 'nodejs-express-03-q3',
+        prompt: 'You are porting an Express 4 tutorial to Express 5. The line `app.get(\'/files/*\', handler)` stops the server at start-up. What is the right change?',
+        choices: [
+          'Wrap the path in a regular expression so the star is treated as a pattern',
+          'Name the wildcard: `app.get(\'/files/*path\', handler)`',
+          'Replace `get` with `all` so the star can match any HTTP method',
+          'Remove the star and add `express.static` so files are served automatically',
+        ],
+        answer: 1,
+        explanation: 'Express 5 requires wildcards to be named, such as `/*path` (the matched parts arrive in `req.params.path` as an array). The unnamed star gives "Missing parameter name".',
+      },
+      {
+        id: 'nodejs-express-03-q4',
+        prompt: 'A customer asks for `GET /products/9999`, which does not exist. Which response best follows what this lesson taught?',
+        choices: [
+          '`200 OK` with an empty body, so the client app does not show an error',
+          '`201 Created` with `{}`, because the request was understood',
+          '`500 Internal Server Error`, since the server could not find what was asked',
+          '`404 Not Found` with a small JSON body saying the product does not exist',
+        ],
+        answer: 3,
+        explanation: 'A missing thing is a 404. Client code checks the status code first, so a 200 with nothing in it hides the problem, and 5xx codes mean the server itself failed, which is not the case here.',
+      },
+    ],
+    task: {
+      title: 'Build the Tindahan API v0',
+      minutes: 20,
+      steps: [
+        'Create the project from lesson 1 (type module, Express installed) and paste in `server.js`. Start it with `node --watch server.js`.',
+        'Try every curl command from the lesson. Then send a POST without the `Content-Type` header and see the broken `{"id":4}` yourself.',
+        'Add a `PATCH /products/:id` route that changes the price of an existing product (404 if it does not exist). Then add `DELETE /products/:id` that answers `204 No Content` with `res.status(204).end()`.',
+        'Add a route with a wildcard written in Express 5 style, for example `/files/*path`, and print `req.params` as JSON.',
+      ],
+    },
+  },
+  {
+    id: 'nodejs-express-04',
+    day: 4,
+    title: 'Middleware',
+    summary: 'Understand how a request passes through a chain of middleware functions, and write your own.',
+    intro: {
+      objectives: [
+        'Explain how a request moves through middleware with next() and why order matters',
+        'Write a logging middleware and a middleware that rejects a request early',
+        'Use the built-in express.json() correctly and place it before the routes that need it',
+        'Diagnose a request that hangs because a middleware never called next()',
+      ],
+      why: 'Almost everything useful in Express is middleware: body parsing, logging, security headers, authentication, error handling. If you understand the chain, you can read any Express app and add behaviour in exactly the right place.',
+    },
+    minutes: 25,
+    skills: ['middleware'],
+    body: [
+      { type: 'paragraph', text: 'Think of an airport. Before you reach the plane you pass check-in, security, passport control and the gate. Each desk looks at you, does one job, and either waves you through to the next desk or stops you there. **Middleware** is that idea for requests: a chain of small functions between the arrival of a request and the final answer. Each one does one job, and each one decides whether the request carries on.' },
+      { type: 'heading', text: 'The shape of a middleware function' },
+      { type: 'paragraph', text: 'A middleware function receives three things: the request (`req`), the response (`res`) and a function called `next`. It has exactly two choices. Either it **ends the request** by sending a response (`res.json(...)`, `res.status(415).json(...)`), or it calls **`next()`** to hand the request to the next function in the chain. If it does neither, the request just hangs until the client gives up.' },
+      {
+        type: 'diagram',
+        format: 'mermaid',
+        caption: 'The request lifecycle of the Tindahan API: each step may answer or pass the request on',
+        source: 'flowchart TD\n  A(Request arrives) --> B[requestLogger]\n  B --> C["express.json()"]\n  C --> D{Does a route match?}\n  D -->|yes| E[Route handler]\n  D -->|no| F[Not found handler]\n  E --> G(Response sent)\n  F --> G\n  E -.->|error thrown| H[Error handler]\n  H --> G',
+      },
+      { type: 'paragraph', text: 'The request flows down this chain in the order you wrote it in your code. Route handlers are middleware too: a route that answers with `res.json()` simply never calls `next()`.' },
+      { type: 'heading', text: 'Writing two middleware functions' },
+      { type: 'paragraph', text: 'The first logs one line per request. It cannot print the status code when it first runs, because the answer does not exist yet, so it asks Node.js to run a function when the response has finished. The second refuses a request whose body is not JSON. Both are used by `app.use(...)`, which adds a middleware for every request, and the second is added to just one route.' },
+      {
+        type: 'code',
+        language: 'javascript',
+        label: 'app.js',
+        code: `import express from 'express';
+
+const app = express();
+
+function requestLogger(req, res, next) {
+  const start = performance.now();
+  res.on('finish', () => {
+    const ms = Math.round(performance.now() - start);
+    console.log(\`\${req.method} \${req.originalUrl} -> \${res.statusCode} (\${ms} ms)\`);
+  });
+  next();
+}
+
+function requireJson(req, res, next) {
+  if (!req.is('application/json')) {
+    return res.status(415).json({ error: 'Send the body as application/json' });
+  }
+  next();
+}
+
+app.use(requestLogger);
+app.use(express.json());
+
+app.get('/health', (req, res) => res.json({ status: 'ok' }));
+app.post('/echo', requireJson, (req, res) => res.json({ youSent: req.body }));
+
+app.listen(3000, () => console.log('up'));`,
+      },
+      { type: 'paragraph', text: '`requireJson` stops the request with a **415 Unsupported Media Type** if the content type is wrong, and otherwise calls `next()`. The `return` before `res.status(...)` matters: without it the function would continue and call `next()` after already answering. We sent four requests (two good, one with form data instead of JSON, one to a missing path) and the server printed:' },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'Server console',
+        code: `GET /health -> 200 (3 ms)
+POST /echo -> 200 (6 ms)
+POST /echo -> 415 (1 ms)
+GET /missing -> 404 (1 ms)`,
+      },
+      { type: 'paragraph', text: 'The logger saw all four, including the 404 for a path that has no route, because it sits before any route. That is the real power of middleware: one function, written once, applies to the whole app. You can also mount a middleware on a path (`app.use(\'/admin\', checkSomething)`), or put one inside a router, which lesson 6 uses.' },
+      { type: 'heading', text: 'Built-in and third-party middleware' },
+      { type: 'paragraph', text: 'Express includes `express.json()` (reads JSON bodies into `req.body`), `express.urlencoded()` (reads HTML form posts) and `express.static()` (serves files). Everything else is a package you install: `helmet`, `cors` and `express-rate-limit` in lesson 9 are all middleware. Before it reads a body, `express.json()` checks the `Content-Type` header, and by default it refuses a body larger than 100 kilobytes: we sent 90 kB and got 200, then 110 kB and got **413 Payload Too Large**. That default is a small security feature, because it stops one request from filling your memory; keep it small and raise it only for the routes that need more.' },
+      { type: 'heading', text: 'Order is behaviour' },
+      { type: 'paragraph', text: 'Because the chain runs top to bottom, moving a line changes what the app does. Two bugs you will see sooner or later, both reproduced here:' },
+      {
+        type: 'list',
+        items: [
+          '**A body parser placed after the route.** Our `/echo` route ran before `app.use(express.json())`, so `req.body` was `undefined` and the response was `{}`. In Express 5 the body is `undefined` until a parser has run (Express 4 used an empty object), so a missing parser shows up as missing data, not an error.',
+          '**A middleware that forgets `next()`.** The logger printed `GET /health`, but curl waited until it gave up (status 000, exit code 28). Nothing sent a response and nothing called `next()`, so the request was stuck for ever. A very common typo is writing `next;` instead of `next();`.',
+        ],
+      },
+      { type: 'tip', text: 'If a request hangs and no error appears, suspect middleware: add a `console.log` at the top of each one and see where the log stops. The last one printed is the one that forgot to answer or to call `next()`.' },
+      { type: 'paragraph', text: 'There is one more kind, **error-handling middleware**, with four parameters `(err, req, res, next)`. Calling `next(err)` (with anything except `\'route\'` or `\'router\'`) skips the normal chain and jumps to the error handlers, which must be registered last. Lesson 5 builds that.' },
+      {
+        type: 'version',
+        text: 'Checked against the Express docs and by running the code on Express 5.3.0: middleware is a function of `(req, res, next)` that must end the response or call `next()`; error-handling middleware takes four arguments; `next(\'route\')` skips the rest of the current route\'s handlers; `express.json()` limits the body to 100 kB by default (we measured 200 at 90 kB and 413 at 110 kB); and in Express 5 `req.body` is `undefined` until a body parser has run.',
+        checked: CHECKED,
+        sources: [DOCS.expressMiddleware, DOCS.expressMigrate, DOCS.expressErrors],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'Middleware is a function `(req, res, next)` in a chain. Each one either sends a response or calls `next()`; doing neither leaves the request hanging.',
+          'The chain runs in the order you wrote it. Put body parsing, logging and security before the routes that need them, and error handlers last.',
+          '`express.json()` fills `req.body` only for JSON requests, refuses bodies over 100 kB by default, and must come before your routes. In Express 5 a missing parser means `req.body` is `undefined`.',
+          'Use `return res.status(...).json(...)` when ending a request early, so the function does not also call `next()`.',
+          'A hanging request with no error is usually a middleware that forgot `next()` (or wrote `next;` without the parentheses).',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'nodejs-express-04-fix-bug-1',
+          kind: 'fix-bug',
+          title: 'The request that never answers',
+          story: 'After adding a logger, every request to your API now hangs until the client gives up. The console shows the log line, but no response is ever sent.',
+          prompt: 'Tap the line that stops requests from continuing, then choose the fix.',
+          concept: 'calling next()',
+          language: 'javascript',
+          code: `function requestLogger(req, res, next) {
+  console.log(\`\${req.method} \${req.url}\`);
+  next;
+}
+
+app.use(requestLogger);
+app.get('/health', (req, res) => res.json({ status: 'ok' }));`,
+          bugLine: 3,
+          lineNote: 'That line is fine. Look for the line where the request should be passed on.',
+          fixes: [
+            { line: '  next();', correct: true, why: 'Calling `next()` hands the request to the next function in the chain, so the `/health` route can answer.' },
+            { line: '  next(req);', correct: false, why: 'Passing an argument other than `\'route\'` tells Express an error happened, so the request would be answered with a 500 error instead of reaching `/health`.' },
+            { line: '  return next;', correct: false, why: 'This still only refers to the function without calling it, so nothing moves on.' },
+            { line: '  res.next();', correct: false, why: '`res` has no `next` method, so this would throw a TypeError.' },
+          ],
+          hints: [
+            'The log line prints, so the function runs. What should it do afterwards?',
+            'A function is only run when you add parentheses after its name.',
+            'Write `next();` with the parentheses and no arguments.',
+          ],
+          explanation: '`next;` mentions the function without calling it, a typo that JavaScript allows. Without a call to `next()` or a response, Express waits for ever. We reproduced it: the log printed and curl gave up after two seconds.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'nodejs-express-04-predict-output-1',
+          kind: 'predict-output',
+          title: 'The parser in the wrong place',
+          prompt: 'A client posts `{"name":"Pandesal"}` with the header `Content-Type: application/json` to this app. What body does the response have?',
+          concept: 'middleware order',
+          language: 'nodejs',
+          code: `app.post('/echo', (req, res) => {
+  res.json({ youSent: req.body });
+});
+
+app.use(express.json());`,
+          expected: '{}',
+          choices: ['{"youSent":{"name":"Pandesal"}}', '{}', '{"youSent":null}', '{"youSent":{}}'],
+          wrongNotes: {
+            '{"youSent":{"name":"Pandesal"}}': 'This is what you would get if `express.json()` ran before the route. Here the route is registered first, so it runs before the body is ever parsed.',
+            '{"youSent":null}': 'Express 5 does not set `req.body` to `null`. It leaves it `undefined`, and `res.json` leaves out properties whose value is `undefined`.',
+            '{"youSent":{}}': 'That was Express 4 behaviour, where `req.body` started as an empty object. In Express 5 it is `undefined` until a parser runs.',
+          },
+          hints: [
+            'Which comes first in the file: the route or `express.json()`?',
+            'What is `req.body` in Express 5 when no parser has run yet?',
+            'JSON drops properties whose value is `undefined`, so `youSent` disappears from the answer.',
+          ],
+          explanation: 'The route runs before the parser, so `req.body` is `undefined` in Express 5. `JSON.stringify` omits `undefined` properties, so the body is `{}`. We ran exactly this code and got `{}`. Registering `express.json()` first fixes it.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'nodejs-express-04-arrange-1',
+          kind: 'arrange',
+          title: 'Order the app setup',
+          prompt: 'Arrange these lines in the order they should appear in the file so every request passes through the chain correctly.',
+          concept: 'middleware order',
+          language: 'nodejs',
+          solution: [
+            'app.use(requestLogger);',
+            'app.use(express.json());',
+            "app.post('/products', createProduct);",
+            'app.use(notFoundHandler);',
+            'app.use(errorHandler);',
+          ],
+          alternatives: [
+            [
+              'app.use(express.json());',
+              'app.use(requestLogger);',
+              "app.post('/products', createProduct);",
+              'app.use(notFoundHandler);',
+              'app.use(errorHandler);',
+            ],
+          ],
+          reasons: [
+            'The logger goes first so it sees every request, even ones that fail later.',
+            'The body parser must run before any route that reads `req.body`.',
+            'The route comes after the middleware it depends on.',
+            'The not-found handler comes after all routes: it only runs when nothing else answered.',
+            'Error handlers go last, so errors from everything above reach them.',
+          ],
+          hints: [
+            'Middleware that every request needs goes at the top; things that run only when nothing else matched go at the bottom.',
+            'The route needs `req.body`, so the parser must come before it. The error handler needs to catch errors from everything.',
+            'Logger and parser (either order), then the route, then not-found, then the error handler.',
+          ],
+          explanation: 'Express runs middleware in registration order. Shared helpers first, routes in the middle, then the fallback "not found" handler and finally the error handler, which only works if it is registered after everything that can fail.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'nodejs-express-04-code-challenge-1',
+          kind: 'code-challenge',
+          title: 'Build a tiny middleware chain',
+          story: 'You will write the idea at the heart of Express: running functions one after another, where each decides whether to continue.',
+          prompt: 'Complete `next()` inside `run`. It must take the next function from `chain`, move the position forward, and call it with `(req, next)`. If there are no functions left, it does nothing. A function that never calls `next` stops the chain.',
+          concept: 'the middleware chain',
+          language: 'javascript',
+          starter: `function run(chain, req) {
+  let index = 0;
+  function next() {
+    // 1. Get chain[index].
+    // 2. Move index forward by one.
+    // 3. If there is such a function, call it with (req, next).
+  }
+  next();
+}
+
+const logger = (req, next) => { console.log('logger'); next(); };
+const json = (req, next) => { console.log('json'); next(); };
+const handler = (req, next) => { console.log('handler for ' + req.url); };
+const blocker = (req, next) => { console.log('blocked'); };
+
+run([logger, json, handler], { url: '/products' });
+run([logger, blocker, handler], { url: '/products' });`,
+          solution: `function run(chain, req) {
+  let index = 0;
+  function next() {
+    const middleware = chain[index];
+    index = index + 1;
+    if (middleware) {
+      middleware(req, next);
+    }
+  }
+  next();
+}
+
+const logger = (req, next) => { console.log('logger'); next(); };
+const json = (req, next) => { console.log('json'); next(); };
+const handler = (req, next) => { console.log('handler for ' + req.url); };
+const blocker = (req, next) => { console.log('blocked'); };
+
+run([logger, json, handler], { url: '/products' });
+run([logger, blocker, handler], { url: '/products' });`,
+          tests: { kind: 'output', expected: ['logger', 'json', 'handler for /products', 'logger', 'blocked'] },
+          hints: [
+            'Read the function at `chain[index]` before you change `index`.',
+            'After reading it, add 1 to `index`, so calling `next()` again reaches the following function.',
+            'If `middleware` exists, call `middleware(req, next)`; the function you pass as `next` is the same one, which is how each step continues the chain.',
+          ],
+          explanation: 'Each middleware receives `next`, a function that runs the following middleware. Calling it continues the chain; not calling it stops the chain, as `blocker` does in the second run, so `handler` never runs. Express adds paths, methods and error handling to this same idea.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'nodejs-express-04-q1',
+        prompt: 'A middleware checks a header and finds it missing. What should it do to stop the request properly?',
+        choices: [
+          'Call `next()` anyway, because the route handler will deal with it later',
+          'Throw away the response object so no answer can be sent to the client',
+          'Send a response such as `return res.status(400).json(...)` and do not call `next()`',
+          'Call `next()` twice so Express skips the rest of the chain faster',
+        ],
+        answer: 2,
+        explanation: 'A middleware ends a request by sending a response. Using `return` avoids falling through to a later `next()` call. Calling `next()` would let the request carry on as if nothing was wrong.',
+      },
+      {
+        id: 'nodejs-express-04-q2',
+        prompt: 'Your POST route logs `undefined` for `req.body`, although the client sends valid JSON with the right header. Which change is most likely to fix it?',
+        choices: [
+          'Register `app.use(express.json())` before the route',
+          'Switch the route from `app.post` to `app.get`',
+          'Wrap the handler in `async` so the body is awaited',
+          'Increase the JSON size limit to a very large number',
+        ],
+        answer: 0,
+        explanation: 'The route needs `express.json()` to have run first, and middleware runs in registration order. The method, `async` and the limit have nothing to do with a missing parser.',
+      },
+      {
+        id: 'nodejs-express-04-q3',
+        prompt: 'The log shows a request reached your logging middleware, but the client never receives an answer and there is no error. What is the most likely cause?',
+        choices: [
+          'The server ran out of disk space while writing the log line',
+          'Express removes middleware that logs, so the request is dropped',
+          'A later middleware sent two responses, which Express ignores silently',
+          'A middleware neither sent a response nor called `next()` correctly',
+        ],
+        answer: 3,
+        explanation: 'If nothing answers and nothing continues the chain, the request waits until the client times out. That is the signature of a missing or mistyped `next()` call.',
+      },
+      {
+        id: 'nodejs-express-04-q4',
+        prompt: 'Why does `requestLogger` in the lesson print the status code inside `res.on(\'finish\', ...)` instead of right where the middleware starts?',
+        choices: [
+          'The status code is only known after the route has run and the response is finished',
+          'Express forbids reading `res.statusCode` anywhere except inside event listeners',
+          'The `finish` event is the only way to call `next()` without an argument',
+          'It makes the log line print faster than a normal `console.log` call',
+        ],
+        answer: 0,
+        explanation: 'At the top of the chain the route has not run yet, so `res.statusCode` would still hold the default. The `finish` event fires when the response has been sent, so by then the real status is known.',
+      },
+    ],
+    task: {
+      title: 'Add middleware to your API',
+      minutes: 15,
+      steps: [
+        'Add the `requestLogger` and `requireJson` functions to your Tindahan server and use `requireJson` only on the POST route that creates products.',
+        'Break your app on purpose, one change at a time: move `express.json()` below the routes, then change `next();` to `next;` in the logger. Note what you see in curl each time, then restore it.',
+        'Send a body larger than 100 kB with curl (for example `--data @big.json`) and read the status code you get back.',
+        'Write a third middleware, `addRequestId`, that puts `crypto.randomUUID()` into `res.locals.requestId` and sets the `X-Request-Id` response header. Check the header with `curl -i`.',
+      ],
+    },
+  },
+  {
+    id: 'nodejs-express-05',
+    day: 5,
+    title: 'Validating requests and handling errors',
+    summary: 'Check every request with Zod before using it, and turn every failure into a clear, safe JSON error.',
+    intro: {
+      objectives: [
+        'Explain why a server must validate input even when the app or website already does',
+        'Write a Zod schema and a small helper that turns bad input into a 400 response listing each problem',
+        'Add an error-handling middleware and a not-found handler that always answer in JSON',
+        'Choose the right status code for a failure and keep internal details out of the response',
+      ],
+      why: 'Your API is open to anyone who can send an HTTP request, not only your own app. Validation and careful errors are what separate a demo that works from a service that survives real users and attackers.',
+    },
+    minutes: 30,
+    skills: ['validation-errors'],
+    body: [
+      { type: 'paragraph', text: 'A bank teller does not hand over cash because a slip says "1,000,000 pesos". She checks the slip: is it filled in, is the amount a number, is it within the limit? Your server must do the same with every request. The mobile app you build may only ever send good data, but nothing forces other callers to use your app. Anyone can open a terminal and run `curl`, and that person can send missing fields, text where you expect a number, a 5 MB string or a field you never invented. The rule is simple: **nothing in `req.body`, `req.params` or `req.query` is trusted until it has been validated.**' },
+      { type: 'heading', text: 'What validation checks' },
+      {
+        type: 'list',
+        items: [
+          '**Shape:** is the body an object at all, and do the fields you need exist?',
+          '**Type:** is `priceCents` a number, not the text `"free"`?',
+          '**Range and length:** a price cannot be negative, a name cannot be 50,000 characters, an id has to fit in the database\'s integer column.',
+          '**Allow-list:** keep only the fields you expect and drop the rest. If a client adds `"id": 1` or `"isAdmin": true` to a create request, ignoring unknown fields stops them from reaching your database. This attack is called **mass assignment**.',
+        ],
+      },
+      { type: 'paragraph', text: 'You could write these checks with `if` statements (you will in the exercise below), but a library keeps them short and consistent. This course uses **Zod**, a validation library where you describe the data you accept as a **schema**, then ask the schema to check some input. Install it with `npm install zod`.' },
+      {
+        type: 'code',
+        language: 'javascript',
+        label: 'src/products/products.schema.js',
+        code: `import { z } from 'zod';
+
+const fields = {
+  name: z.string('Name must be text').trim().min(1, 'Name is required').max(80, 'Name is too long (80 characters at most)'),
+  priceCents: z.int('Price must be a whole number of centavos').min(0, 'Price cannot be negative').max(100_000_000, 'Price is too high'),
+  stock: z.int('Stock must be a whole number').min(0, 'Stock cannot be negative').max(1_000_000, 'Stock is too high'),
+};
+
+export const NewProduct = z.object({ ...fields, stock: fields.stock.default(0) });
+
+// Not NewProduct.partial(): the default on \`stock\` would reset it to 0 on every PATCH.
+export const ProductPatch = z
+  .object(fields)
+  .partial()
+  .refine((patch) => Object.keys(patch).length > 0, 'Send at least one field to change');
+
+export const IdParam = z.object({
+  id: z.coerce.number('Id must be a number').int('Id must be a whole number').positive('Id must be positive').max(2_147_483_647, 'Id is too large'),
+});`,
+      },
+      { type: 'paragraph', text: 'Read the first schema as a sentence: a new product is an object with a `name` (text, spaces trimmed off, 1 to 80 characters), a `priceCents` (a whole number from 0 up) and an optional `stock` that defaults to 0. `z.coerce.number()` turns the text `"7"` from a URL into the number 7 before checking it, which is exactly what path parameters need. The `max(2_147_483_647, ...)` on the id is not decoration: it is the largest value a PostgreSQL `integer` column can hold, and a bigger number would make the database throw an error (lesson 7).' },
+      { type: 'warning', text: 'A subtle trap: `NewProduct.partial()` makes every field optional, but it **keeps the default** on `stock`. A PATCH that only changes the price would then silently reset the stock to 0. We checked: `New.partial().parse({ name: \'Kape\' })` returns `{ name: \'Kape\', stock: 0 }`. That is why `ProductPatch` is built from the plain `fields` without defaults.' },
+      { type: 'heading', text: 'Turning a failed check into a 400' },
+      { type: 'paragraph', text: 'A small helper runs a schema and either returns the clean data or throws an error that carries a status code. The `HttpError` class below is our own: it is an ordinary `Error` with a `status` and an optional list of `details`.' },
+      {
+        type: 'code',
+        language: 'javascript',
+        label: 'src/errors.js',
+        code: `export class HttpError extends Error {
+  constructor(status, message, details) {
+    super(message);
+    this.status = status;
+    this.details = details;
+  }
+}
+
+export const notFound = (what) => new HttpError(404, \`\${what} not found\`);
+
+/** Check data against a Zod schema; throw a 400 that lists what is wrong, or return the clean data. */
+export function parse(schema, data) {
+  const result = schema.safeParse(data);
+  if (!result.success) {
+    const details = result.error.issues.map((issue) => ({
+      field: issue.path.join('.') || 'body',
+      message: issue.message,
+    }));
+    throw new HttpError(400, 'Invalid request', details);
+  }
+  return result.data;
+}`,
+      },
+      { type: 'paragraph', text: '`schema.safeParse(data)` never throws: it returns `{ success: true, data }` with the cleaned data (trimmed, defaulted, unknown fields removed) or `{ success: false, error }`, where `error.issues` lists each problem with its `path` (which field) and `message`. In a route you write one line: `const input = parse(NewProduct, req.body);` and from then on you use `input`, never `req.body`.' },
+      { type: 'heading', text: 'The error handler: one place for every failure' },
+      { type: 'paragraph', text: 'Now where does that thrown `HttpError` go? Express 5 catches an error thrown in a route, **including an `async` route whose promise rejects**, and passes it to **error-handling middleware**: a function with four parameters `(err, req, res, next)` registered after all your routes. (In Express 4 an async route needed a manual `try/catch` and `next(err)`; in 5 you just throw.) Even if you do not use `next`, you must list it: the four-parameter signature is how Express recognises an error handler.' },
+      {
+        type: 'code',
+        language: 'javascript',
+        label: 'src/middleware/error-handler.js (the version from this lesson)',
+        code: `import { HttpError } from '../errors.js';
+
+export function errorHandler(err, req, res, next) {
+  if (res.headersSent) return next(err);
+
+  if (err instanceof HttpError) {
+    return res.status(err.status).json({ error: { message: err.message, details: err.details } });
+  }
+  if (err.type === 'entity.parse.failed') {
+    return res.status(400).json({ error: { message: 'Body is not valid JSON' } });
+  }
+
+  console.error(err); // the full error stays on the server
+  res.status(500).json({ error: { message: 'Something went wrong on our side' } });
+}
+
+// ... and the not-found handler, registered before it, after every route:
+// app.use((req, res) => res.status(404).json({ error: { message: \`No route for \${req.method} \${req.path}\` } }));`,
+      },
+      { type: 'paragraph', text: 'Three kinds of failure end up here. An error you **expected** and made yourself (`HttpError`) is shown to the client with its status. An error from Express\'s own JSON parser (`entity.parse.failed`, a broken JSON body) is the client\'s mistake, so it becomes a 400 with our own wording. Anything else is a **bug or a broken dependency**, something like a database outage. The client gets only a generic 500, and the details are logged on the server. `res.headersSent` covers a response that has already started: all you can do then is pass the error on.' },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'What curl got back from the finished API (status, then body)',
+        code: `POST /products  {"name":"  Sardinas ","priceCents":2500,"isAdmin":true}
+201  {"id":1,"name":"Sardinas","priceCents":2500,"stock":0}
+
+POST /products  {"name":"","priceCents":"free"}
+400  {"error":{"message":"Invalid request","details":[{"field":"name","message":"Name is required"},{"field":"priceCents","message":"Price must be a whole number of centavos"}]}}
+
+POST /products  {"name":"x"          (a broken body)
+400  {"error":{"message":"Body is not valid JSON"}}
+
+GET /products/42
+404  {"error":{"message":"Product not found"}}
+
+GET /boom    (a route that throws: password=hunter2 leaked into a message)
+500  {"error":{"message":"Something went wrong on our side"}}`,
+      },
+      { type: 'paragraph', text: 'Look at the first answer: the name was trimmed, `stock` defaulted to 0, and `isAdmin` vanished. Look at the last: the route threw an error whose message contained a password, and the client never saw it. **The most important rule of error handling is that error messages are for you, not for the client.** Stack traces, SQL text and file paths help attackers. The default Express error page shows the stack trace unless `NODE_ENV` is `production`, which is another reason to write your own handler.' },
+      {
+        type: 'table',
+        headers: ['Status', 'Use it when'],
+        rows: [
+          ['400 Bad Request', 'The request is malformed or fails validation'],
+          ['404 Not Found', 'The URL or the thing it names does not exist'],
+          ['409 Conflict', 'The request is fine but clashes with the current state, for example selling more than is in stock'],
+          ['413 Content Too Large', 'The body is bigger than the limit'],
+          ['415 Unsupported Media Type', 'The body is in a format you do not accept'],
+          ['429 Too Many Requests', 'The client is being rate limited (lesson 9)'],
+          ['500 Internal Server Error', 'Your own bug or a failed dependency; always a generic message'],
+        ],
+        caption: 'Status codes you will use in this API',
+      },
+      {
+        type: 'version',
+        text: 'Checked against the Express error-handling guide and by running the code on Express 5.3.0: errors thrown in sync handlers and rejected promises from async handlers are passed to error-handling middleware automatically; error handlers have four arguments and go after other `app.use()` and routes; the built-in handler hides the stack trace when `NODE_ENV` is `production`. Zod was version 4.6.7 on npm on 14 November 2026: `z.int()`, `z.coerce.number()`, `.default()`, `.refine()` and `safeParse` all behaved as shown, `z.object()` removes unknown keys by default, and a string passed as the first argument of `z.string()` or `z.int()` is used as the error message. Status code meanings follow MDN.',
+        checked: CHECKED,
+        sources: [DOCS.expressErrors, DOCS.zod, DOCS.status],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'Never trust `req.body`, `req.params` or `req.query`. Validate shape, type, range and length, and keep only the fields you expect.',
+          'A Zod schema describes valid input; `safeParse` returns clean data or a list of issues, and a small `parse` helper turns issues into a 400 with one entry per field.',
+          '`.partial()` keeps defaults: for PATCH, build a schema from fields that have no defaults, or you will overwrite data.',
+          'Express 5 forwards thrown errors and rejected promises from async routes to one error-handling middleware with four parameters, registered last.',
+          'Answer expected failures with the right status and a helpful message, and unexpected ones with a generic 500. Log the details on the server, never send them to the client.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'nodejs-express-05-code-challenge-1',
+          kind: 'code-challenge',
+          title: 'Write a validator by hand',
+          story: 'Before reaching for a library, see what one does. You will write the checks yourself.',
+          prompt: 'Complete `validateProduct(body)`. Return a list of problem messages (an empty list if the body is valid). If the body is not a plain object (null, a number, an array...), return only `[\'Body must be an object\']`. Otherwise check, in this order: the name must be text that is not empty after `trim()` (message `Name is required`), and `priceCents` must be a whole number (`Price must be a whole number of centavos`); if it is a whole number but below zero, the message is `Price cannot be negative`.',
+          concept: 'input validation',
+          language: 'javascript',
+          starter: `function validateProduct(body) {
+  const errors = [];
+  // 1. Not a plain object? Return ['Body must be an object'].
+  // 2. Check the name.
+  // 3. Check priceCents.
+  return errors;
+}`,
+          solution: `function validateProduct(body) {
+  const errors = [];
+  if (typeof body !== 'object' || body === null || Array.isArray(body)) {
+    return ['Body must be an object'];
+  }
+  if (typeof body.name !== 'string' || body.name.trim() === '') {
+    errors.push('Name is required');
+  }
+  if (!Number.isInteger(body.priceCents)) {
+    errors.push('Price must be a whole number of centavos');
+  } else if (body.priceCents < 0) {
+    errors.push('Price cannot be negative');
+  }
+  return errors;
+}`,
+          tests: {
+            kind: 'function',
+            fn: 'validateProduct',
+            cases: [
+              { label: 'a valid product', args: [{ name: 'Kape', priceCents: 800 }], expected: [] },
+              { label: 'nothing sent', args: [null], expected: ['Body must be an object'] },
+              { label: 'an empty object', args: [{}], expected: ['Name is required', 'Price must be a whole number of centavos'] },
+              { label: 'a blank name', args: [{ name: '   ', priceCents: 5 }], expected: ['Name is required'] },
+              { label: 'a negative price', args: [{ name: 'Kape', priceCents: -1 }], expected: ['Price cannot be negative'] },
+              { label: 'a price with centavos', args: [{ name: 'Kape', priceCents: 12.5 }], expected: ['Price must be a whole number of centavos'] },
+              { label: 'wrong types everywhere', args: [{ name: 5, priceCents: '5' }], expected: ['Name is required', 'Price must be a whole number of centavos'], hidden: true },
+              { label: 'an array is not an object body', args: [[1, 2]], expected: ['Body must be an object'], hidden: true },
+            ],
+          },
+          hints: [
+            'Start with the shape: `typeof body !== \'object\'`, `body === null` and `Array.isArray(body)` are the three ways it can fail.',
+            'The name is bad if `typeof body.name !== \'string\'` or the trimmed text is empty. Push a message onto `errors` for each problem.',
+            '`Number.isInteger(body.priceCents)` is false for text, `undefined` and 12.5. When it is true, you can then check `< 0`.',
+          ],
+          explanation: 'Each rule adds a message to the list instead of stopping at the first problem, so the client learns about every mistake in one round trip. A library like Zod does the same job with less code and with many more checks.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'nodejs-express-05-match-1',
+          kind: 'match',
+          title: 'Pick the status code',
+          prompt: 'Each situation happened in the Tindahan API. Match it to the status code and reason that fits best.',
+          concept: 'status codes for failures',
+          labels: { terms: 'What happened', meanings: 'Best response' },
+          pairs: [
+            { term: 'A client posts `{"name":"","priceCents":-1}` to create a product', definition: '400: the request fails validation, so list the problems', note: 'The request itself is wrong, which is a 400, not a server problem.' },
+            { term: '`GET /products/42` when no product 42 exists', definition: '404: nothing exists at that address', note: 'A missing product is not the server failing, so it is a 404.' },
+            { term: 'A sale asks for 500 packs when only 100 are in stock', definition: '409: the request is valid but clashes with the current state', note: 'The request is well-formed; it conflicts with what is stored.' },
+            { term: 'A client posts a 300 kB JSON body to a route that limits bodies to 10 kB', definition: '413: the body is larger than the server allows', note: 'The size, not the content, is the problem.' },
+            { term: 'The database is unreachable while handling `GET /products`', definition: '500: our own failure, with a generic message and the details in the log', note: 'The client did nothing wrong, and the real reason must not be shown.' },
+          ],
+          hints: [
+            'Decide first: is the client\'s request the problem, or the server?',
+            'A well-formed request that clashes with stored data is a conflict; an oversized body has its own code.',
+            '400 validation, 404 missing, 409 conflict, 413 too large, 500 server failure.',
+          ],
+          explanation: 'Status codes tell client code what to do next without reading the message: fix the input (400), stop looking (404), reload the state (409), send less (413) or try again later (500).',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'nodejs-express-05-scenario-1',
+          kind: 'scenario',
+          title: 'A helpful error message',
+          prompt: 'Choose the best change to the error handler.',
+          concept: 'safe error messages',
+          situation: 'Your catch-all handler is `res.status(500).json({ error: err.message })`. A tester shows you a response from `/products` reading `password authentication failed for user "tindahan_app"`. The team lead wants testers to be able to report problems clearly.',
+          options: [
+            { text: 'Log the full error on the server, send a generic 500 message, and include a request id the tester can quote so you can find the log line.', consequence: 'Testers can still report a problem precisely, and nothing about your database or users reaches a client.', quality: 'best' },
+            { text: 'Keep sending `err.message` in development and production, but remove the word "password" from it.', consequence: 'Messages can still reveal table names, SQL, file paths or usernames. Filtering words is guesswork and will miss something.', quality: 'poor' },
+            { text: 'Send `err.stack` instead, so testers have more detail to report.', consequence: 'Stack traces reveal file paths, library names and versions, which help attackers and mean nothing to testers.', quality: 'poor' },
+            { text: 'Send the real message only when the request has a header `X-Debug: true`.', consequence: 'Anyone can add a header. A debug switch that the client controls is no protection at all.', quality: 'poor' },
+          ],
+          hints: [
+            'Who should be able to read the real reason for an unexpected error: the client, or only you?',
+            'A client-controlled switch, such as a header, is not a safeguard.',
+            'Log everything, tell the client little, and give them a way to point to the log entry.',
+          ],
+          explanation: 'Unexpected errors are described on the server and summarised for the client. A request id gives the best of both: the tester can report a short code, and you find the full story in the logs (lesson 8 adds the logger).',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'nodejs-express-05-q1',
+        prompt: 'Your mobile app already checks that the price field is a number before sending. Why must the server check it again?',
+        choices: [
+          'Because JSON cannot carry numbers, so every value arrives as text',
+          'Because other clients, such as curl or a script, can send anything without using your app',
+          'Because Express removes the app\'s checks when it reads the request body',
+          'Because validating twice makes the database run faster on every query',
+        ],
+        answer: 1,
+        explanation: 'The server cannot control who calls it. Any HTTP client can bypass the app\'s own checks, so the server must treat every request as untrusted.',
+      },
+      {
+        id: 'nodejs-express-05-q2',
+        prompt: 'A client sends `{"name":"Kape","priceCents":800,"isAdmin":true}` to the create route that uses `NewProduct.safeParse`. What does `result.data` contain?',
+        choices: [
+          '`{ name: "Kape", priceCents: 800, isAdmin: true, stock: 0 }`, because every field is kept',
+          'Nothing: the whole request is rejected because `isAdmin` is not in the schema',
+          '`{ name: "Kape", priceCents: 800 }`, with no stock value because none was sent',
+          '`{ name: "Kape", priceCents: 800, stock: 0 }`, with the unknown field removed',
+        ],
+        answer: 3,
+        explanation: '`z.object()` drops unknown keys by default and `.default(0)` fills the missing stock. This allow-list behaviour is what protects you from mass assignment.',
+      },
+      {
+        id: 'nodejs-express-05-q3',
+        prompt: 'You build the PATCH schema with `NewProduct.partial()`. A client patches only the price of a product that has 120 in stock. What goes wrong?',
+        choices: [
+          'The request is refused, because a partial schema cannot be used on a PATCH',
+          'The price is ignored, because partial schemas only accept the `name` field',
+          'The stock is reset to 0, because the default of `stock` still applies',
+          'Nothing goes wrong, because `.partial()` removes all defaults and checks',
+        ],
+        answer: 2,
+        explanation: '`.partial()` makes fields optional but keeps the default on `stock`, so a missing stock becomes 0 and then overwrites the stored value. Build PATCH schemas from fields without defaults.',
+      },
+      {
+        id: 'nodejs-express-05-q4',
+        prompt: 'In Express 5 an `async` route handler awaits a database call that rejects. Where does the error go, if you wrote no try/catch?',
+        choices: [
+          'Express passes it to your error-handling middleware, the same as `next(err)`',
+          'It becomes an unhandled rejection that ends the process right away',
+          'Express retries the route once and then sends an empty 200 response',
+          'It is dropped, and the client waits until its request times out',
+        ],
+        answer: 0,
+        explanation: 'Express 5 forwards a rejected promise from a handler to the error handlers, so a throw inside an async route is enough. This is one of the biggest improvements over Express 4.',
+      },
+    ],
+    task: {
+      title: 'Make the Tindahan API safe to call',
+      minutes: 20,
+      steps: [
+        'Install Zod. Create `products.schema.js`, `errors.js` and the error handler from this lesson, then use `parse(NewProduct, req.body)` in your POST route and `parse(IdParam, req.params)` in your GET-by-id route.',
+        'Add the JSON not-found handler after your routes and the error handler after that. Test with curl: a broken JSON body, a missing price, `/products/abc`, `/products/-3` and a path that does not exist.',
+        'Add a `/boom` route that throws an error with a secret-looking message, call it, and check that the client sees only the generic message while your console shows the real one. Then remove the route.',
+        'Add a PATCH route using `ProductPatch`. Prove the stock is kept when you change only the price, then change the schema to `NewProduct.partial()` and watch it break.',
+      ],
+    },
+  },
+  // @@MORE_LESSONS@@
+];
+
+const projects: Project[] = [];
+
+export const nodejsExpressCourse: Course = {
+  id: 'nodejs-express',
+  kind: 'standard',
+  title: 'Node.js and Express.js',
+  level: 'intermediate',
+  tagline: 'Build, secure, test and deploy a REST API with Node.js, Express 5 and PostgreSQL.',
+  description: 'Placeholder',
+  finishLine: ['placeholder', 'placeholder'],
+  objectives: ['placeholder one two three', 'placeholder one two three', 'placeholder one two three'],
+  audiences: ['experienced-dev'],
+  skills: [{ id: 'node-runtime', label: 'Node.js runtime' }, { id: 'npm-modules', label: 'npm and modules' }, { id: 'x', label: 'x' }],
+  lessons,
+  projects,
+  icon: 'dns',
+  updated: '2026-11-14',
+};

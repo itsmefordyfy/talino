@@ -1,0 +1,250 @@
+import type { Lesson } from '../../types';
+import { FIL_CHECKED, FIL_DOCS } from './meta';
+
+export const aiCodingBeginnersLesson11Fil: Lesson = {
+  id: 'ai-coding-beginners-11',
+  day: 11,
+  title: 'Pagpapanatiling ligtas: mga secret, password at kung ano ang hindi dapat i-paste',
+  summary: 'Alamin kung ano ang hindi dapat ilagay sa chat o sa public na file, kung paano tinatrato ng mga AI tool ang mga chat mo, at kung ano ang gagawin kapag may na-leak.',
+  intro: {
+    objectives: [
+      'Pangalanan kung ano ang hindi mo dapat i-paste sa AI chat o ilagay sa public na file',
+      'Hanapin ang privacy settings ng AI tool mo at sabihin kung ano ang ginagawa at hindi ginagawa ng mga ito',
+      'Tumugon nang tama kapag napunta sa public na lugar ang isang secret o private na detalye',
+    ],
+    why: 'Ang na-leak na password o listahan ng customer ay puwedeng magkahalaga nang mas malaki kaysa sa anumang kikitain ng isang website. Ilang segundo lang ang bawat habit sa lesson na ito, at pinoprotektahan ka nito, ang mga customer mo at ang mga account mo.',
+  },
+  minutes: 25,
+  skills: ['stay-safe'],
+  body: [
+    { type: 'paragraph', text: 'Napakadali ng pag-paste ng mga bagay sa chat kapag bumubuo gamit ang AI: error message, file, spreadsheet, screenshot. Sa karamihan ng pagkakataon, okay lang iyon. Ilang uri ng impormasyon ang hindi dapat mapunta roon, at ilan ang hindi rin dapat mapunta sa mga file ng public na site. Maikli sa technique ang lesson na ito at malaki sa habit. Matutunan nang minsan ang listahan at ang natitira ay pag-alala na lang na tumingin bago mag-paste.' },
+    { type: 'heading', text: 'Huwag i-paste ang mga ito' },
+    {
+      type: 'list',
+      items: [
+        '**Mga password at login code,** kasama ang mga one-time code na ipinapadala sa phone mo. Walang katulong, tao man o AI, ang nangangailangan ng password mo.',
+        '**Mga secret key at token.** Ang **API key** ay mahabang string ng mga letra at numero na nagpapahintulot sa isang program na gamitin ang online service bilang ikaw, madalas ay sa account mo sinisingil. Ang sinumang may hawak nito ay puwedeng kumilos bilang ikaw.',
+        '**Mga private na detalye ng ibang tao:** listahan ng customer na may mga pangalan at phone number, mga mensahe, ID number, impormasyong pangkalusugan. Ikaw ang pinagkatiwalaan nila, hindi ang kumpanya ng AI.',
+        '**Ang sarili mong sensitibong detalye:** card number, bank details, government ID number, at ang home address mo kapag hindi ito kailangan.',
+        '**Confidential na materyal na pag-aari ng employer o client.**',
+      ],
+    },
+    { type: 'paragraph', text: 'Halos laging makukuha mo ang tulong na gusto mo nang wala ang totoong bagay. Palitan ang mga totoong pangalan ng “Customer A” at ang mga phone number ng halatang peke tulad ng 0917 000 0000. Ilarawan ang mga column ng spreadsheet sa halip na i-paste ang mga row nito. Kung may key o password ang isang error message, tanggalin ito bago ka mag-paste.' },
+    { type: 'prompt', label: 'Paghingi ng tulong nang walang totoong data', text: 'May maliit akong bakery. Gusto ko ng simpleng order list sa page ko. Heto ang gawa-gawang halimbawa ng impormasyon: Customer A, 0917 000 0000, 2 tray ng biko, pickup sa Biyernes. Pakidisenyo ang layout ng list. Peke ang mga detalyeng ito; huwag mo akong hingan ng totoo.' },
+    { type: 'heading', text: 'Ano ang ginagawa ng mga AI tool sa mga chat mo' },
+    { type: 'paragraph', text: 'Puwedeng itago ng mga kumpanya ng AI ang mga conversation mo, at, depende sa settings mo, puwedeng gamitin ang mga ito para pagandahin ang mga model nila, at kakaunting bahagi ay puwedeng mabasa ng mga human reviewer. May settings ang bawat tool na nagbabago nito. Sulit silipin ang mga ito nang minsan, ngayon na:' },
+    {
+      type: 'table',
+      headers: ['Tool', 'Saan titingin', 'Ano ang ginagawa nito'],
+      rows: [
+        ['ChatGPT', 'Settings, Data controls', 'Ang pag-off sa “Improve the model for everyone” ay pumipigil na magamit sa training ang mga bagong conversation. Ang Temporary Chat ay hindi napupunta sa history mo at hindi ginagamit para pagandahin ang mga model'],
+        ['Claude', 'Privacy settings; incognito chat', 'Puwede mong baguhin ang model improvement setting anumang oras. Ang mga incognito chat ay hindi ginagamit para pagandahin ang Claude. Pinapayuhan ng Anthropic ang pag-iingat sa mga password, card at health details at confidential na dokumento'],
+        ['Gemini', 'Settings at help, tapos Activity (Keep Activity)', 'Naka-on bilang default para sa mga adult. Ang pag-off nito ay pumipigil na magamit sa training ng mga model ang mga susunod na chat, maliban kung magpadala ka ng feedback, pero naka-store pa rin ang mga chat nang hanggang 72 oras. May bahagi ng mga chat na nire-review ng mga tao'],
+      ],
+      caption: 'Binabawasan ng settings kung paano puwedeng gamitin ng kumpanya ang mga chat mo. Hindi nila ginagawang ligtas ang pag-paste ng secret.',
+    },
+    {
+      type: 'version',
+      text: 'Ayon sa petsang 2026-11-14: Sinasabi ng mga page ng Gemini ng Google na kapag naka-off ang Keep Activity, naka-store pa rin ang mga chat sa account mo nang hanggang 72 oras, na may bahagi ng mga chat na nire-review ng mga human reviewer (ang mga na-review na chat ay itinatago nang hanggang tatlong taon), at na hindi ka dapat maglagay ng confidential na impormasyong ayaw mong makita ng reviewer; ang mga temporary chat ay hindi ginagamit para i-train ang mga model ng Google. Sinasabi ng help center ng Anthropic na ang mga incognito chat ay hindi ginagamit para pagandahin ang Claude at inirerekomenda nito ang pag-iingat sa mga password, financial at health details at confidential na dokumento. Ang artikulo ng OpenAI tungkol sa data controls, na hindi namin nabuksan nang buo noong isinusulat ito, ay nakalista na may parehong dalawang control (ang improve-the-model setting at Temporary Chat): basahin mo mismo para sa kasalukuyang wording. Nagbabago ang mga pangalan ng setting at ang mga default, at puwedeng iba ang mga company account sa personal.',
+      checked: FIL_CHECKED,
+      sources: [FIL_DOCS.geminiPrivacy, FIL_DOCS.geminiActivity, FIL_DOCS.claudePrivacy, FIL_DOCS.chatgptData],
+    },
+    { type: 'heading', text: 'Ang public ay public' },
+    { type: 'paragraph', text: 'Lahat ng ilalagay sa public na site ay mababasa ng kahit sino. Makikita ng mga bisita ang HTML, CSS at anumang code sa page mo sa isang click lang, kaya ang key o password sa page mo ay key o password na ibinigay sa lahat. May dalawa pang lugar na public. Ipinapakita ng public na repository ang bawat file, kasama ang mga lumang version sa history nito, at ang pagbura ng isang bagay mamaya ay hindi nag-aalis nito sa history. At ang GitHub Pages site ay naaabot ng publiko kahit private ang repository nito. Para sa one-page na site, hindi mo kailangan ng kahit anong key. Kung sumulat man ang AI ng linyang tulad ng `const apiKey = "..."` sa page mo, ituring itong red flag at itanong kung bakit ito nandoon.' },
+    { type: 'heading', text: 'Mga safety net, at ang gagawin kapag may na-leak' },
+    { type: 'paragraph', text: 'May feature ang GitHub na tinatawag na push protection na humaharang sa pag-upload mo ng mga file na may ilang kilalang uri ng secret, at sinasabing naka-on ito bilang default para sa mga user kapag nagpu-push sa mga public na repository. Chine-check din ang mga upload sa pamamagitan ng browser. Ituring itong net sa ilalim mo, hindi lisensya: kinikilala lang nito ang mga uri ng secret na may pattern ito, at ang password na na-type mo sa isang notes file ay hindi isa roon.' },
+    { type: 'paragraph', text: 'Kung may lumabas na secret, hindi sapat ang pagbura nito. Ipagpalagay na may nakakopya nito. Para sa password, palitan ito ngayon, at palitan din saanman mo ito ginamit ulit. Para sa API key, pumunta sa service na nag-issue nito, kanselahin (i-revoke) ang key na iyon at gumawa ng bago. Para sa mga detalye ng ibang tao, tanggalin ang file at, kung may posibleng masaktang totoong tao, sabihan sila.' },
+    { type: 'prompt', label: 'Review bago ka mag-publish', text: 'Heto ang index.html ko. Pakibasa ito na parang estrangherong gustong gamitin ito sa masama. Ilista ang bawat linyang may laman na private o secret: mga key, password, phone number, email address, home address, pangalan ng mga pribadong tao, o mga link sa mga private na file. Kung wala, sabihin. Huwag galawin ang file.' },
+    {
+      type: 'version',
+      text: 'Inilalarawan ng docs ng GitHub ang push protection bilang humaharang sa mga push na may secret bago makarating sa repository, at sinasabing naka-enable ito bilang default para sa mga user sa GitHub.com para sa mga push sa mga public na repository, habang limitado ang detection sa mga sinusuportahang uri ng secret. Binabanggit din nila na hinaharang ang mga browser upload kapag may sinusuportahang secret ang file, at na ang GitHub Pages site ay publicly available sa internet kahit private ang repository nito.',
+      checked: FIL_CHECKED,
+      sources: [FIL_DOCS.ghPush, FIL_DOCS.ghUpload, FIL_DOCS.ghCreatePages],
+    },
+    { type: 'tip', text: 'Tatlo pang maliit na habit: gamitin lang ang official na site o app ng isang tool, huwag kailanman magpatakbo ng command na ibinigay ng AI kung hindi mo naiintindihan kung ano ang ginagawa nito, at maglagay lang sa page mo ng mga photo at pangalan na may karapatan at pahintulot kang gamitin.' },
+    {
+      type: 'paragraph',
+      audience: { max: 'beginner' },
+      text: 'Sa simpleng salita: ang password ay susi ng bahay mo. Puwedeng magiliw at mabilis ang isang katulong, at hindi mo pa rin ibibigay sa kanya ang susi. Ang API key ay susi ng account sa tindahan na naniningil sa card mo. Ang public na website ay bulletin board sa plaza: lahat ng idikit mo ay binabasa ng lahat, at hindi na mababawi ang mga photocopy. Ang listahan ng customer ay diary ng ibang tao: ipinahiram nila ito sa iyo, hindi sa buong mundo. Kapag gusto mo ng tulong sa bagay na may private na detalye, palitan muna ang totoong detalye ng gawa-gawa, tulad ng pagsulat ng “Customer A” sa note.',
+    },
+    {
+      type: 'paragraph',
+      audience: { min: 'advanced' },
+      text: 'Ituring ang AI provider bilang third-party data processor at magpasya kada data class: public, internal, confidential, regulated. Mas piliin ang business o API terms na walang training sa data mo para sa anumang hindi public, i-scope nang makitid ang mga credential at i-rotate ang mga ito, itago ang mga secret sa environment variable o secrets manager sa halip na sa source o sa mga prompt, at magdagdag ng pre-commit at CI secret scanning dahil ang push protection ay sumasaklaw lang sa mga kilalang pattern. I-review din ang mga dependency na iminumungkahi ng assistant (mga package na hindi umiiral o malisyoso) at panatilihin ang data minimisation sa design mo: huwag mangolekta ng hindi mo kayang protektahan.',
+    },
+    {
+      type: 'takeaways',
+      items: [
+        'Huwag kailanman mag-paste ng mga password, login code, API key, private na detalye ng ibang tao o ng sarili mong sensitibong detalye sa chat.',
+        'Gumamit ng gawa-gawang halimbawa kapag kailangan mo ng tulong sa bagay na may kinalaman sa private na data.',
+        'Nililimitahan ng privacy settings kung paano puwedeng gamitin ng kumpanya ang mga chat mo; hindi nito ginagawang ligtas i-paste ang mga secret.',
+        'Public ang anumang nasa public na site o public na repository, kasama ang history nito. Kung may na-leak na secret, i-revoke o palitan ito; hindi sapat ang pagbura.',
+      ],
+    },
+    {
+      type: 'activity',
+      activity: {
+        id: 'ai-coding-beginners-11-match-1',
+        kind: 'match',
+        title: 'Puwede ko bang i-paste?',
+        prompt: 'Itambal ang bawat item sa kung ano ang dapat mong gawin bago ito mapunta sa AI chat o public na page.',
+        concept: 'what never to paste',
+        conceptLabel: 'ang hindi dapat i-paste',
+        labels: { terms: 'Ang item', meanings: 'Ang gagawin' },
+        pairs: [
+          { term: 'Ang opening hours at price list ng shop mo', definition: 'Okay i-paste: magiging public din naman ito sa page mo', note: 'Ligtas i-share ang public na impormasyong ilalagay naman sa page.' },
+          { term: 'Ang password ng email account mo', definition: 'Huwag i-paste kailanman sa kahit anong chat o file', note: 'Walang tool o katulong ang nangangailangan ng password mo.' },
+          { term: 'Isang sheet ng mga totoong pangalan at phone number ng mga customer', definition: 'Palitan muna ng gawa-gawang mga pangalan at numero', note: 'Ang detalye nila ay ipinagkatiwala sa iyo, hindi sa kumpanya ng AI.' },
+          { term: 'Isang API key mula sa serbisyong binabayaran mo', definition: 'Ilayo sa mga chat at sa bawat naka-publish na file', note: 'Ang sinumang makakita ng key ay puwedeng gamitin ang serbisyo bilang ikaw.' },
+        ],
+        hints: [
+          'Itanong: magiging public na ba ito?',
+          'Hindi kailanman ibinabahagi ang mga password at key; ang detalye ng ibang tao ay kailangan ng gawa-gawang kapalit.',
+          'Ang price list lang ang nakalaan para sa publiko.',
+        ],
+        explanation: 'Ligtas ang impormasyong ipa-publish mo rin naman. Hindi kailanman ibinabahagi ang mga password at key, at pinapalitan ng gawa-gawa ang detalye ng ibang tao kapag hihingi ng tulong.',
+      },
+    },
+    {
+      type: 'activity',
+      activity: {
+        id: 'ai-coding-beginners-11-fix-bug-1',
+        kind: 'fix-bug',
+        title: 'Ang notes file na may secret',
+        story: 'Ia-upload mo na ang notes file na ito sa public mong repository.',
+        prompt: 'Isang linya ang hindi dapat i-upload nang ganito. I-tap ito, tapos piliin ang pinakaligtas na kapalit.',
+        concept: 'secrets in files',
+        conceptLabel: 'mga secret sa mga file',
+        language: 'text',
+        code: `Shop notes
+Opening hours: Mon-Sat 6 AM to 12 noon
+Email password: kakanin2024!
+Delivery area: Naga City`,
+        bugLine: 3,
+        fixes: [
+          { line: 'Email password: (kept in a password manager, never in a file)', correct: true, why: 'Wala nang password sa file, at sinasabi nito sa sarili mo sa hinaharap kung nasaan ang totoo. Palitan din ang totoong password, dahil minsan na itong na-type nang hayagan.' },
+          { line: '# Email password: kakanin2024!', correct: false, why: 'Walang naitatago ang pag-comment out sa linya. Nasa file pa rin ang password at nasa history nito.' },
+          { line: 'Email password: kakanin2025!', correct: false, why: 'Ang pagpalit ng isang digit ay nagpapanatili ng habit, at baka sumusunod sa parehong pattern ang totoong password. Mahuhulaan ng sinumang makakita nito ang natitira.' },
+          { line: 'Email password: kakanin2024! (private)', correct: false, why: 'Ang pagdagdag ng salitang private ay hindi ginagawang private ang public na file.' },
+        ],
+        hints: [
+          'Aling linya ang makakasakit kung mabasa ng estranghero?',
+          'Isipin kung ano ang makikita pa rin pagkatapos ng bawat kapalit.',
+          'Ang ligtas na version ay walang kahit anong parte ng password.',
+        ],
+        explanation: 'Hindi dapat lumitaw ang secret sa public na file sa kahit anong anyo. Alisin ito, palitan ang totoong password, at itago ang mga password sa password manager.',
+      },
+    },
+    {
+      type: 'activity',
+      activity: {
+        id: 'ai-coding-beginners-11-scenario-1',
+        kind: 'scenario',
+        title: 'Ang na-paste na listahan ng customer',
+        prompt: 'Piliin ang pinakamagandang tugon.',
+        concept: 'responding to a leak',
+        conceptLabel: 'pagtugon sa leak',
+        situation: 'Na-paste ni Ben ang totoong listahan ng mga customer niya, na may mga pangalan at phone number, sa AI chat para humingi ng layout. Pagkatapos ay napagtanto niyang pagkakamali iyon.',
+        options: [
+          { text: 'Huminto, burahin ang chat na iyon, i-review ang data settings ng tool, at mula ngayon ay gumamit ng gawa-gawang mga pangalan at numero kapag humihingi ng tulong.', consequence: 'Nililimitahan niya ang karagdagang pinsala at binubuo ang tamang habit. Hindi nito binabawi ang lahat, pero tamang unang hakbang ito.', quality: 'best' },
+          { text: 'Huwag pansinin, dahil computer lang naman ang AI.', consequence: 'Baka manatiling naka-store sa kumpanya ang mga detalye, at wala siyang matututunan para sa susunod.', quality: 'poor' },
+          { text: 'I-paste ulit ang listahan para ipaburang sa AI.', consequence: 'Dalawang beses na ngayong nasa chat ang mga detalye, at walang kapangyarihan ang AI na alisin ang mga ito sa records ng kumpanya.', quality: 'poor' },
+          { text: 'Burahin lang ang chat.', consequence: 'Magandang unang hakbang, pero kung hindi babaguhin ang habit at hindi i-check ang settings, baka maulit niya ito.', quality: 'acceptable' },
+        ],
+        hints: [
+          'Mababawi ba ng AI ang isang bagay na na-paste na?',
+          'Ayusin ang kaya mo ngayon, at pigilan sa susunod.',
+          'Burahin, i-check ang settings, gumamit ng peke sa susunod.',
+        ],
+        explanation: 'Hindi mo mababawi sa AI ang na-paste, pero mabubura mo ang chat, mahihigpitan ang settings at makakagamit ka ng gawa-gawang data mula ngayon.',
+      },
+    },
+  ],
+  quiz: [
+    {
+      id: 'ai-coding-beginners-11-q1',
+      prompt: 'Iminungkahi ng AI na magdagdag ng linyang may API key mismo sa code ng page mo para gumana ang isang feature. Ano ang pinakamagandang tugon?',
+      choices: [
+        'Gawin ito, dahil kailangan ng page ang key para gumana',
+        'Huwag ilagay sa page; ang key sa page ay nakikita ng bawat bisita, kaya humingi ng paraang walang kailangang key',
+        'Ilagay sa comment sa loob ng page, dahil tinatago ng mga browser ang mga comment at walang bisitang makakabasa nito',
+        'Itago sa pamamagitan ng paggawang puti sa text',
+      ],
+      answer: 1,
+      explanation: 'Kahit sino ay puwedeng tumingin sa source ng web page, kasama ang mga comment at puting text. Hindi kailangan ng one-page na site ng secret key.',
+    },
+    {
+      id: 'ai-coding-beginners-11-q2',
+      prompt: 'In-off mo ang setting na nagpapagamit sa tool ng mga chat mo para sa training. Ano ang ibig sabihin nito sa pag-paste ng mga password?',
+      choices: [
+        'Ligtas na itong i-paste',
+        'Hindi pa rin magandang idea: nililimitahan ng settings kung paano ginagamit ng kumpanya ang mga chat, hindi nito inaalis ang risk',
+        'Walang pinagkaiba sa kahit ano, kaya puwede mong balewalain ang buong setting at lahat ng babala nito',
+      ],
+      answer: 1,
+      explanation: 'Binabawasan ng setting ang isang paggamit ng mga chat mo. Puwede pa ring i-store at i-review ang mga chat, kaya ilayo ang mga password.',
+    },
+    {
+      id: 'ai-coding-beginners-11-q3',
+      prompt: 'May password na na-upload sa public na repository at binura makalipas ang isang araw. Ano ang gagawin mo?',
+      choices: [
+        'Wala, binura na naman',
+        'Maghintay na padalhan ka ng GitHub ng warning email bago ka magpasya kung gagawa ka ng anuman tungkol dito',
+        'Palitan ang password saanman mo ito ginamit, dahil nananatili ang mga lumang version sa history',
+        'Gawing private ang repository at itago ang password',
+      ],
+      answer: 2,
+      explanation: 'Itinatago ng history ang mga lumang version at puwedeng may nakakopya nito. Dapat ituring na nailantad ang password at palitan ito.',
+    },
+    {
+      id: 'ai-coding-beginners-11-q4',
+      prompt: 'Kailangan mo ng tulong sa layout para sa listahan ng customer. Ano ang ligtas na paraan ng pag-ask?',
+      choices: [
+        'I-paste ang totoong listahan para makita ng AI ang totoong hugis',
+        'I-paste lang ang unang limang totoong row, dahil mas maliit na bahagi iyon ng listahan',
+        'Ilarawan ang mga column o mag-paste ng gawa-gawang mga row na may pekeng pangalan at numero',
+      ],
+      answer: 2,
+      explanation: 'Ang kailangan ng AI ay ang hugis ng data, hindi ang mga taong nasa loob nito. Ang mga gawa-gawang row ay nagbibigay ng parehong tulong nang hindi nanganganib ang mga totoong detalye.',
+    },
+    {
+      id: 'ai-coding-beginners-11-q5',
+      audience: { max: 'beginner' },
+      prompt: 'Sa paghahambing sa susi ng bahay, ano ang API key?',
+      choices: [
+        'Ang susi ng account sa tindahan na naniningil sa card mo',
+        'Dekorasyong nagpapaganda sa propesyonal na itsura ng page mo para sa mga bisita',
+        'Libreng regalo mula sa AI',
+      ],
+      answer: 0,
+      explanation: 'Pinapayagan ng API key ang isang program na gamitin ang serbisyo bilang ikaw, madalas ay sa iyo sinisingil. Ituring itong susi ng account mo.',
+    },
+    {
+      id: 'ai-coding-beginners-11-q6',
+      audience: { min: 'advanced' },
+      prompt: 'Bakit magdadagdag ng secret scanning sa pre-commit at CI kung may push protection na ang host?',
+      choices: [
+        'Hindi kailanman gumagana ang push protection',
+        'Mga kilalang format ng secret lang ang tinutugma ng push protection, kaya puwedeng makalusot ang mga password, internal token at custom key',
+        'Kailangan ng bawat host ang CI',
+        'Pinabibilis ng scanning ang mga commit',
+      ],
+      answer: 1,
+      explanation: 'Batay sa pattern ang detection at limitado sa mga sinusuportahang uri. Ang local at CI scanning na may sarili mong rule ay nagpapalawak ng saklaw at nakakahuli ng mga leak bago pa umalis sa machine mo.',
+    },
+  ],
+  task: {
+    title: 'I-check ang page at ang settings mo',
+    minutes: 15,
+    steps: [
+      'Buksan ang privacy o data settings ng AI tool na ginagamit mo, hanapin ang setting na kumokontrol kung gagamitin ba ang mga chat mo para pagandahin ang tool, at magpasya kung gusto mo itong naka-on o naka-off.',
+      'Patakbuhin ang prompt na “Review bago ka mag-publish” sa page mo at basahin ang listahang ibibigay nito.',
+      'Isulat ang sarili mong “huwag i-paste” na listahan sa isang page, na may limang item at kung ano ang gagawin sa halip para sa bawat isa.',
+      'I-check ang bawat file sa repository mo: may anumang ayaw mong mabasa ng estranghero?',
+    ],
+  },
+  taskExtra: [
+    { audience: { max: 'beginner' }, steps: ['Gumawa ng pekeng sample ng impormasyong kailangan ng page mo (halimbawa tatlong gawa-gawang customer) at itabi ito para gamitin tuwing hihingi ka ng tulong sa AI.'] },
+    { audience: { min: 'advanced' }, steps: ['Magdagdag ng pre-commit secret scan sa isang practice na repository at isulat kung aling mga uri ng secret ang nahuhuli at hindi nahuhuli nito.'] },
+  ],
+};

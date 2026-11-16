@@ -1,0 +1,112 @@
+import { Directory, File, Paths } from 'expo-file-system';
+
+import { companionOf, type CompanionId } from '@/features/companion/lib/companions';
+import { ApiError, postJson, SERVER_CONFIGURED } from '@/lib/api';
+import { deviceId } from '@/lib/device-id';
+import { newId } from '@/lib/id';
+import { clipFileName } from '@/lib/clip-name';
+import { reportError, type Feature } from '@/lib/monitoring';
+
+/**
+ * One short piece of speech in a coach's Gemini voice, kept on the phone. The server (`/api/speech`) makes the audio; the file is named by
+ * the voice and the exact words, so the same words are made once and heard from the phone afterwards (offline too). Used by a chat answer's
+ * pieces (`features/coach`) and by the lessons' sentences (`features/courses/audio/sentence-audio.ts`), each in its own cache folder with its
+ * own size limit. The files are in the cache folder (the system may clear it; they are simply made again) and never in a backup.
+ */
+
+export type ClipStore = {
+  /** The folder name inside the cache directory. */
+  folder: string;
+  /** The oldest clips are deleted when the folder passes this size. */
+  maxBytes: number;
+  /** What the server counts it as: a chat answer's piece (default) or a lesson's sentence, each with its own daily allowance. */
+  kind?: 'reply' | 'lesson';
+  /** The part of the app and the step an unexpected failure is reported under. */
+  feature: Feature;
+  step: string;
+};
+
+/** Who is asking: this phone's id, the store customer id, and what the app believes was bought (the server asks RevenueCat). */
+export type ClipIdentity = { appUserId: string | null; entitlements: string[] };
+
+function directoryOf(store: ClipStore): Directory {
+  const directory = new Directory(Paths.cache, store.folder);
+  if (!directory.exists) directory.create({ intermediates: true, idempotent: true });
+  return directory;
+}
+
+/** The saved file of a clip, or null. */
+export function savedClip(store: ClipStore, companion: CompanionId, text: string): File | null {
+  try {
+    const file = new File(directoryOf(store), clipFileName(companionOf(companion).geminiVoice, text));
+    return file.exists && file.size > 0 ? file : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Deletes the oldest clips until what is kept is under the store's limit. */
+function prune(store: ClipStore): void {
+  try {
+    const files = directoryOf(store)
+      .list()
+      .filter((entry): entry is File => entry instanceof File)
+      .map((file) => ({ file, size: file.size, at: file.modificationTime ?? 0 }))
+      .sort((a, b) => a.at - b.at);
+    let total = files.reduce((sum, entry) => sum + entry.size, 0);
+    for (const entry of files) {
+      if (total <= store.maxBytes) break;
+      entry.file.delete();
+      total -= entry.size;
+    }
+  } catch {
+    // The cache is a convenience: a failure to tidy it never reaches the learner.
+  }
+}
+
+/** How much space a store's clips take, in bytes. */
+export function clipBytes(store: ClipStore): number {
+  try {
+    return directoryOf(store)
+      .list()
+      .reduce((total, entry) => total + (entry instanceof File ? entry.size : 0), 0);
+  } catch {
+    return 0;
+  }
+}
+
+/** Deletes every clip of a store (they are made again when needed). */
+export function clearClips(store: ClipStore): void {
+  try {
+    const directory = new Directory(Paths.cache, store.folder);
+    if (directory.exists) directory.delete();
+  } catch {
+    // Nothing to clean up.
+  }
+}
+
+/** Offline, busy and "over today's allowance" are ordinary and quietly fall back to another voice; anything else is worth knowing about. */
+const ORDINARY = ['network', 'busy', 'unavailable', 'speech_limit', 'quota_unavailable', 'chat_in_progress'];
+
+/**
+ * The audio file of one clip in the coach's voice: from the phone if it is there, otherwise made by the server and saved. Null when it
+ * can't be had (no server in this build, no connection, the server said no): the caller reads with the phone's own voice instead.
+ */
+export async function voiceClip(store: ClipStore, identity: ClipIdentity, companion: CompanionId, text: string): Promise<string | null> {
+  const saved = savedClip(store, companion, text);
+  if (saved) return saved.uri;
+  if (!SERVER_CONFIGURED) return null;
+  try {
+    const body = await postJson('/api/speech', { deviceId: deviceId(), appUserId: identity.appUserId, entitlements: identity.entitlements, requestId: newId(), text, companion, kind: store.kind ?? 'reply' }, { timeoutMs: 45_000 });
+    if (typeof body.audio !== 'string' || body.audio === '') return null;
+    const file = new File(directoryOf(store), clipFileName(companionOf(companion).geminiVoice, text));
+    file.create({ overwrite: true, intermediates: true });
+    file.write(body.audio, { encoding: 'base64' });
+    prune(store);
+    return file.uri;
+  } catch (error) {
+    const code = error instanceof ApiError ? error.code : 'unknown';
+    if (!ORDINARY.includes(code)) reportError(error, store.feature, { step: store.step });
+    return null;
+  }
+}

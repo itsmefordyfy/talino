@@ -1,0 +1,3208 @@
+import type { Course, Lesson, Project } from '../../types';
+
+const CHECKED = '2026-11-14';
+
+const DOCS = {
+  whatsNew: { label: 'Flutter docs: What is new in the docs (Flutter 3.50)', url: 'https://docs.flutter.dev/release/whats-new' },
+  releaseNotes: { label: 'Flutter docs: Flutter release notes', url: 'https://docs.flutter.dev/release/release-notes' },
+  blog350: { label: 'Flutter blog: What is new in Flutter 3.50', url: 'https://flutter.dev/blog/whats-new-in-flutter-3-50' },
+  install: { label: 'Flutter docs: Install Flutter', url: 'https://docs.flutter.dev/install' },
+  hotReload: { label: 'Flutter docs: Hot reload', url: 'https://docs.flutter.dev/tools/hot-reload' },
+  architecture: { label: 'Flutter docs: Architectural overview', url: 'https://docs.flutter.dev/resources/architectural-overview' },
+  forReactNative: { label: 'Flutter docs: Flutter for React Native developers', url: 'https://docs.flutter.dev/get-started/flutter-for/react-native-devs' },
+  materialMigration: { label: 'Flutter docs: Migrate to material_ui and cupertino_ui', url: 'https://docs.flutter.dev/release/breaking-changes/material-ui-and-cupertino-ui' },
+  variables: { label: 'Dart docs: Variables', url: 'https://dart.dev/language/variables' },
+  functions: { label: 'Dart docs: Functions', url: 'https://dart.dev/language/functions' },
+  dartNews: { label: 'Dart docs: What is new in Dart', url: 'https://dart.dev/resources/whats-new' },
+  nullSafety: { label: 'Dart docs: Sound null safety', url: 'https://dart.dev/null-safety' },
+  records: { label: 'Dart docs: Records', url: 'https://dart.dev/language/records' },
+  patterns: { label: 'Dart docs: Patterns', url: 'https://dart.dev/language/patterns' },
+  classes: { label: 'Dart docs: Classes', url: 'https://dart.dev/language/classes' },
+  primaryConstructors: { label: 'Dart docs: Primary constructors', url: 'https://dart.dev/language/primary-constructors' },
+  dotShorthands: { label: 'Dart docs: Dot shorthands', url: 'https://dart.dev/language/dot-shorthands' },
+  asyncAwait: { label: 'Dart docs: Asynchronous programming: futures, async, await', url: 'https://dart.dev/libraries/async/async-await' },
+  streams: { label: 'Dart docs: Using streams', url: 'https://dart.dev/libraries/async/using-streams' },
+  constraints: { label: 'Flutter docs: Understanding constraints', url: 'https://docs.flutter.dev/ui/layout/constraints' },
+  navigation: { label: 'Flutter docs: Navigation and routing', url: 'https://docs.flutter.dev/ui/navigation' },
+  goRouter: { label: 'pub.dev: go_router package', url: 'https://pub.dev/packages/go_router' },
+  stateOptions: { label: 'Flutter docs: State management approaches', url: 'https://docs.flutter.dev/data-and-backend/state-mgmt/options' },
+  stateSimple: { label: 'Flutter docs: Simple app state management', url: 'https://docs.flutter.dev/data-and-backend/state-mgmt/simple' },
+  listenableBuilder: { label: 'Flutter API: ListenableBuilder class', url: 'https://api.flutter.dev/flutter/widgets/ListenableBuilder-class.html' },
+  archGuide: { label: 'Flutter docs: Architecture guide', url: 'https://docs.flutter.dev/app-architecture/guide' },
+  riverpod: { label: 'pub.dev: flutter_riverpod package', url: 'https://pub.dev/packages/flutter_riverpod' },
+  provider: { label: 'pub.dev: provider package', url: 'https://pub.dev/packages/provider' },
+  formValidation: { label: 'Flutter docs: Build a form with validation', url: 'https://docs.flutter.dev/cookbook/forms/validation' },
+  fetchData: { label: 'Flutter docs: Fetch data from the internet', url: 'https://docs.flutter.dev/cookbook/networking/fetch-data' },
+  chooseDatabase: { label: 'Flutter docs: Choose a database', url: 'https://docs.flutter.dev/data-and-backend/persistence/choose-a-database' },
+  sharedPreferences: { label: 'pub.dev: shared_preferences package', url: 'https://pub.dev/packages/shared_preferences' },
+  sqlite: { label: 'Flutter docs: Persist data with SQLite', url: 'https://docs.flutter.dev/cookbook/persistence/sqlite' },
+  themes: { label: 'Flutter docs: Use themes to share colors and font styles', url: 'https://docs.flutter.dev/cookbook/design/themes' },
+  animations: { label: 'Flutter docs: Introduction to animations', url: 'https://docs.flutter.dev/ui/animations' },
+  testing: { label: 'Flutter docs: Testing Flutter apps', url: 'https://docs.flutter.dev/testing/overview' },
+  widgetTest: { label: 'Flutter docs: An introduction to widget testing', url: 'https://docs.flutter.dev/cookbook/testing/widget/introduction' },
+  androidRelease: { label: 'Flutter docs: Build and release an Android app', url: 'https://docs.flutter.dev/deployment/android' },
+  iosRelease: { label: 'Flutter docs: Build and release an iOS app', url: 'https://docs.flutter.dev/deployment/ios' },
+  obfuscate: { label: 'Flutter docs: Obfuscate Dart code', url: 'https://docs.flutter.dev/deployment/obfuscate' },
+};
+
+const lessons: Lesson[] = [
+  {
+    id: 'flutter-dart-01',
+    day: 1,
+    title: 'Flutter and Dart: what they are and setting up',
+    summary: 'Learn what Flutter and Dart each do, how Flutter draws an app, how it compares honestly with React Native, and run your first app.',
+    intro: {
+      objectives: [
+        'Explain the difference between Flutter (the toolkit) and Dart (the language)',
+        'Describe how a Flutter app draws its own screen instead of using native controls',
+        'Weigh Flutter against React Native for a given project',
+        'Create, run and live-edit a new app with hot reload',
+      ],
+      why: 'Choosing a mobile toolkit shapes your next few years of work, so it is worth knowing what you are signing up for before you write code. By the end of this lesson you have a real app running on your own machine.',
+    },
+    minutes: 25,
+    skills: ['flutter-setup'],
+    body: [
+      { type: 'paragraph', text: "You already know how to program, so let us start with the map. **Flutter** is a toolkit, made by Google, for building the screens of an app: buttons, lists, text, animation and everything else you see. **Dart** is the programming language you write it in. People often say \"Flutter\" when they mean both, in the same way people say \"React\" and mean JavaScript too. In this course you learn both, in that order: the language first, then the toolkit." },
+      { type: 'heading', text: 'How Flutter puts pixels on the screen' },
+      { type: 'paragraph', text: "Most cross-platform tools ask the phone to draw its own native buttons and lists. Flutter takes another road. It brings its own drawing engine and paints every pixel itself, the way a game does. The official architecture overview says it plainly: Flutter draws its own controls rather than using the operating system's. The result is that a button looks and behaves the same on an old Android phone and on the newest iPhone, and the team that owns the engine can improve rendering without waiting for an operating system update." },
+      { type: 'paragraph', text: "Think of a restaurant. A native app orders its dishes from the kitchen next door (the operating system). A Flutter app brings its own chef and its own stove. You control the food completely, but you also carry the stove everywhere you go." },
+      {
+        type: 'diagram',
+        format: 'mermaid',
+        caption: 'The layers of a Flutter app; each layer depends only on the one below it',
+        source: 'flowchart TD\n  A["Your app: widgets and logic written in Dart"] --> B["Framework (Dart): widgets, layout, gestures, animation"]\n  B --> C["Engine (C++): draws with Impeller, text layout, Dart runtime"]\n  C --> D["Embedder: Android, iOS, web, desktop shell"]\n  D --> E["The phone: screen, touch, sensors"]',
+      },
+      { type: 'paragraph', text: "Dart helps in two ways. While you develop, your code runs in a virtual machine that can swap changed code into the running app in about a second (hot reload). When you release, Dart compiles ahead of time into real machine code for the phone, so the shipped app does not carry an interpreter." },
+      {
+        type: 'version',
+        text: 'Current stable at the time of writing: Flutter 3.50.0 (released 11 November 2026), which ships with Dart 3.14. Impeller is the rendering engine on native platforms. Both the Flutter docs and the release feed were read on this date, and Flutter ships a new stable several times a year, so run `flutter --version` and check the release notes before you follow a tutorial.',
+        checked: CHECKED,
+        sources: [DOCS.whatsNew, DOCS.releaseNotes, DOCS.blog350, DOCS.architecture],
+      },
+      { type: 'heading', text: 'Flutter or React Native: pick one' },
+      { type: 'paragraph', text: "This course is an **alternative** to the React Native course in the catalog, not the next step after it. You build the same kind of app either way, so choose one toolkit and go deep. Here is an honest comparison." },
+      {
+        type: 'table',
+        headers: ['', 'Flutter', 'React Native'],
+        rows: [
+          ['Language', 'Dart, which you learn here; used mostly inside Flutter', 'JavaScript or TypeScript, which you may already know from the web'],
+          ['How the UI is drawn', 'Flutter paints every pixel with its own engine, so it looks the same everywhere', 'It maps your components onto native views, so controls look native to each platform'],
+          ['Reusing web skills', 'Little: new language and a widget model, not HTML or React', 'A lot: React concepts, npm packages and TypeScript carry over'],
+          ['Custom, brand-heavy design', 'Strong: you control every pixel and animation', 'Possible, but you work with each platform\'s native views'],
+          ['Following platform conventions', 'You choose widgets to feel native; the platform does not do it for you', 'Native views follow the platform automatically'],
+          ['Packages', 'pub.dev, smaller than npm but with strong official packages', 'npm: very large, with many options of uneven quality'],
+        ],
+        caption: 'Neither is better in general; the right choice depends on your team and your design',
+      },
+      {
+        type: 'version',
+        text: 'The official "Flutter for React Native developers" page puts the main difference this way: React Native maps to native widgets, while Flutter compiles to native code and controls each pixel, without a JavaScript bridge. It also says Dart handles `null` and truthiness differently from JavaScript, which lesson 3 covers.',
+        checked: CHECKED,
+        sources: [DOCS.forReactNative],
+      },
+      { type: 'heading', text: 'Setting up' },
+      { type: 'paragraph', text: "The recommended route in the docs is the **Flutter extension for VS Code**, which downloads the SDK, puts it on your `PATH` and checks your setup. A manual download of the SDK works too. After installing, open a terminal and run the doctor, which lists what is working and what is missing:" },
+      {
+        type: 'code',
+        language: 'bash',
+        label: 'Check, create and run',
+        code: `flutter doctor -v
+flutter create my_app
+cd my_app
+flutter run`,
+      },
+      { type: 'paragraph', text: "To build for iPhone you need a Mac with Xcode. For Android you need Android Studio and its SDK. You can follow this whole course on a Chrome window or an Android emulator if you have no Mac. `flutter doctor` tells you which pieces are missing and how to add them." },
+      { type: 'heading', text: 'A tour of the new project' },
+      {
+        type: 'list',
+        items: [
+          '`lib/main.dart`: the code you write. Everything starts at `main()`.',
+          '`pubspec.yaml`: the app\'s name, version, packages it depends on and assets. It is the Flutter version of `package.json`.',
+          '`test/`: tests that `flutter test` runs.',
+          '`android/` and `ios/`: the native shells Flutter generates. You touch them only for platform settings such as permissions and signing.',
+        ],
+      },
+      { type: 'paragraph', text: "Here is the whole of `lib/main.dart` in a project made with `flutter create --empty`. Read it from the top: it is the smallest complete Flutter app." },
+      {
+        type: 'code',
+        language: 'dart',
+        label: 'lib/main.dart',
+        code: `import 'package:material_ui/material_ui.dart';
+
+void main() {
+  runApp(const MainApp());
+}
+
+class MainApp extends StatelessWidget {
+  const MainApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return const MaterialApp(
+      home: Scaffold(body: Center(child: Text('Hello World!'))),
+    );
+  }
+}`,
+      },
+      {
+        type: 'list',
+        items: [
+          '`main()` is where every Dart program starts. `runApp` hands Flutter the top widget and starts drawing.',
+          '`MainApp` is a **widget**: a small description of part of the screen. Lesson 4 explains the two kinds.',
+          '`build` returns what this widget looks like. Here it is a `MaterialApp` (the app shell) holding a `Scaffold` (a standard screen) holding a `Center` holding the `Text`.',
+          '`const` marks things that never change, so Flutter can reuse them instead of rebuilding them.',
+        ],
+      },
+      {
+        type: 'version',
+        text: 'In Flutter 3.50, `flutter create` writes `import \'package:material_ui/material_ui.dart\';` and adds `material_ui` to `pubspec.yaml`. Material and Cupertino are now their own packages (`material_ui`, `cupertino_ui`), and the old imports `package:flutter/material.dart` and `package:flutter/cupertino.dart` are formally deprecated. The migration guide gives `dart fix --apply --code=migrate_design_widgets` to update old code. The guide says the old libraries are deprecated, not removed, and gives no removal date.',
+        checked: CHECKED,
+        sources: [DOCS.materialMigration, DOCS.blog350],
+      },
+      { type: 'warning', text: 'Most tutorials, videos and answers online still use `import \'package:flutter/material.dart\';`. The widgets have the same names in both, so you can follow along: only the import line differs. In a new project, use what `flutter create` gives you.' },
+      { type: 'heading', text: 'Hot reload and hot restart' },
+      { type: 'paragraph', text: "Keep `flutter run` open, edit the text `Hello World!`, save, then press `r` in the terminal (your editor can reload on save). The text changes in about a second and the app keeps its current state. That is **hot reload**. Press a capital `R` for **hot restart**, which restarts the app and forgets state. Changes to `main()` or to `initState`, and to native code, need a restart: hot reload does not re-run them. Both work only in debug mode." },
+      {
+        type: 'version',
+        text: 'The Flutter docs: hot reload keeps app state and does not re-run `main()` or `initState()`; hot restart loses state; both work only in debug mode. Terminal keys are `r` for reload and, in `flutter run`, `R` for restart.',
+        checked: CHECKED,
+        sources: [DOCS.hotReload, DOCS.install],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'Flutter is the UI toolkit and Dart is the language; you learn both.',
+          'Flutter paints every pixel with its own engine, so UI is consistent across platforms, and you choose widgets that feel right on each one.',
+          'Flutter and React Native are alternatives: Flutter gives you a new language and total control of the look, React Native reuses JavaScript and renders native views.',
+          '`flutter doctor`, `flutter create` and `flutter run` are the three commands that get you started; `r` hot reloads and `R` hot restarts.',
+          'In Flutter 3.50 new projects import `package:material_ui`, while most tutorials still show `package:flutter/material.dart`.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'flutter-dart-01-scenario-1',
+          kind: 'scenario',
+          title: 'Which toolkit for this team?',
+          prompt: 'Choose the option you would recommend and read what happens.',
+          concept: 'choosing a cross-platform toolkit',
+          situation: 'A small studio in Cebu is building a food-ordering app for iPhone, Android and the web. The designer wants a highly custom look with animated brand elements that must be identical on every platform. Nobody on the team has used JavaScript or React; two developers know Java and Kotlin.',
+          options: [
+            { text: 'Flutter, because custom visuals are drawn by Flutter itself and the team has no JavaScript habits to reuse.', consequence: 'The team learns Dart (close to Java and Kotlin in feel) and gets one UI that looks the same everywhere. The cost is a new toolkit, but no existing skill is thrown away.', quality: 'best' },
+            { text: 'React Native, because it is the more famous choice.', consequence: 'It can work, but the team must learn JavaScript, React and the native views at the same time, and the custom animated design has to be made on top of each platform\'s views. Popularity alone did not fit their situation.', quality: 'acceptable' },
+            { text: 'Skip cross-platform tools and ask each platform team to write two native apps from scratch.', consequence: 'You get the best native feel but pay twice for every screen, and a small studio cannot keep two codebases in step.', quality: 'poor' },
+          ],
+          hints: [
+            'Look at what the team already knows and what the designer demands.',
+            'The key words are "identical on every platform" and "custom": which toolkit paints its own pixels?',
+            'Flutter fits a custom, consistent design for a team with no JavaScript background.',
+          ],
+          explanation: 'The deciding facts are a custom, identical design and no JavaScript experience. Flutter paints everything itself and the team would not be discarding any web skills. With a team of React developers or a design that follows each platform\'s native look, the answer could reasonably flip.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'flutter-dart-01-match-1',
+          kind: 'match',
+          title: 'Which tool for the job?',
+          prompt: 'Match each situation to the command or file that solves it.',
+          concept: 'the Flutter toolchain',
+          labels: { terms: 'Situation', meanings: 'What you use' },
+          pairs: [
+            { term: 'You want to use the `http` package in your app', definition: '`flutter pub add http`, which records it in pubspec.yaml', note: 'Packages are added with `flutter pub add`, and the dependency is recorded in pubspec.yaml.' },
+            { term: 'You are unsure whether Xcode or the Android SDK is set up correctly', definition: '`flutter doctor`', note: 'The doctor reports which parts of your toolchain are missing.' },
+            { term: 'You changed a label and want to see it at once, keeping the screen you were on', definition: 'Hot reload (`r`)', note: 'Hot reload keeps the app state, so you stay on the same screen.' },
+            { term: 'You edited `main()` and nothing changed after a hot reload', definition: 'Hot restart (`R`), because `main()` is not run again on reload', note: 'main() is not re-run on hot reload, so you need a restart.' },
+          ],
+          hints: [
+            'Think about what each command reads or changes.',
+            'One of them looks at your computer, one changes the project, two change a running app.',
+            'Hot reload keeps state; hot restart does not and re-runs `main()`.',
+          ],
+          explanation: 'Each tool has one job: `pub add` manages packages, `doctor` checks your machine, hot reload shows UI edits while keeping state, and hot restart re-runs the app from `main()`.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'flutter-dart-01-fill-blank-1',
+          kind: 'fill-blank',
+          title: 'Complete the smallest app',
+          prompt: 'Fill the three blanks to finish a valid Flutter app.',
+          concept: 'the shape of main.dart',
+          language: 'dart',
+          code: `import 'package:material_ui/material_ui.dart';
+
+void main() {
+  ___(const MainApp());
+}
+
+class MainApp extends ___ {
+  const MainApp({super.key});
+
+  @override
+  Widget ___(BuildContext context) {
+    return const MaterialApp(
+      home: Scaffold(body: Center(child: Text('Hello'))),
+    );
+  }
+}`,
+          blanks: [
+            { answers: ['runApp'], feedback: '`runApp` starts Flutter with the top widget; `main` itself is already the function name.' },
+            { answers: ['StatelessWidget'], feedback: 'This widget holds no changing data, so it is a StatelessWidget. A StatefulWidget needs a separate State class.' },
+            { answers: ['build'], feedback: 'Flutter calls `build` to ask what the widget looks like.' },
+          ],
+          bank: ['runApp', 'StatelessWidget', 'build', 'setState', 'StatefulWidget', 'main'],
+          hints: [
+            'The first blank starts the whole app.',
+            'The class has no state at all, and the second blank names its parent class.',
+            'The method every widget has is the one that returns the UI.',
+          ],
+          explanation: '`runApp` launches the widget tree, `StatelessWidget` is the base class for a widget with no changing state, and `build` is the method Flutter calls to get the widget\'s description.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'flutter-dart-01-q1',
+        prompt: 'Why does a Flutter button look the same on an old Android phone and a new iPhone?',
+        choices: [
+          'Flutter asks each operating system for its native button and then tints it to match',
+          'Flutter draws its own controls with its own engine instead of using the native ones',
+          'Dart translates the button into the correct native control while the app is starting',
+        ],
+        answer: 1,
+        explanation: 'The architecture overview says Flutter draws its own controls instead of using native widgets, which is why the look is consistent across platforms.',
+      },
+      {
+        id: 'flutter-dart-01-q2',
+        prompt: 'You change the code inside `main()` and press hot reload, but the app looks the same. What is the right fix?',
+        choices: [
+          'Do a hot restart, because hot reload does not run `main()` again',
+          'Run `flutter doctor`, since an old SDK is the usual cause of this',
+          'Add `const` to the widget so that Flutter notices the change on reload',
+          'Delete the `build` method and write it again from the start',
+        ],
+        answer: 0,
+        explanation: 'Hot reload keeps state and re-runs `build` for changed widgets, but it does not re-run `main()` or `initState()`. A hot restart starts the app over.',
+      },
+      {
+        id: 'flutter-dart-01-q3',
+        prompt: 'A team of five React and TypeScript developers must ship an app that follows each platform\'s native look. Which statement is most accurate?',
+        choices: [
+          'Flutter is required, because Dart is the only language that works on both phones',
+          'Neither works, since one codebase cannot serve both phones at all',
+          'React Native is a strong fit because they reuse React and TypeScript and it renders native views',
+        ],
+        answer: 2,
+        explanation: 'This is the reverse of the studio in the scenario: existing React skills and a wish for the native look favour React Native. Flutter could still be chosen, but it would throw away those skills.',
+      },
+      {
+        id: 'flutter-dart-01-q4',
+        prompt: 'In a project created with Flutter 3.50, which import appears at the top of `lib/main.dart`?',
+        choices: [
+          'import \'package:flutter/material.dart\';',
+          'import \'package:material_ui/material_ui.dart\';',
+          'import \'dart:ui\';',
+        ],
+        answer: 1,
+        explanation: 'From 3.50, `flutter create` uses the standalone material_ui package. `package:flutter/material.dart` still appears in older tutorials and is formally deprecated.',
+      },
+    ],
+    task: {
+      title: 'Install Flutter and run your first app',
+      minutes: 20,
+      steps: [
+        'Install Flutter with the VS Code extension (or the manual download) and run `flutter doctor -v`. Fix anything marked with an X for the platform you want to target.',
+        'Run `flutter create hello_flutter`, open the folder, and start it with `flutter run` on an emulator, a phone or Chrome.',
+        'Change the text on screen, save, and press `r`. Then change something in `main()` and note that you need `R`.',
+        'Open `pubspec.yaml` and find your app name, version and the `material_ui` dependency.',
+      ],
+    },
+  },
+  {
+    id: 'flutter-dart-02',
+    day: 2,
+    title: 'Dart language basics',
+    summary: 'Write Dart with variables, collections, functions with named parameters, and enums, and avoid the floating-point trap with money.',
+    intro: {
+      objectives: [
+        'Choose between `var`, `final` and `const` and explain why',
+        'Build and loop over lists, sets and maps',
+        'Write functions with positional, optional and named parameters',
+        'Use `where`, `map` and `fold` instead of hand-written loops',
+      ],
+      why: 'Every Flutter widget is a Dart constructor call full of named parameters, and every list on screen starts as a Dart collection. A little fluency with these basics makes the widget lessons feel easy instead of strange.',
+    },
+    minutes: 25,
+    skills: ['dart-language'],
+    body: [
+      { type: 'paragraph', text: "If you have written Java, Kotlin, Swift or TypeScript, Dart will feel like a friendly cousin. It is statically typed, so the compiler knows the type of every value, but it infers most types for you, so you rarely write them out. It uses curly braces and semicolons, and every statement ends with `;`. You can run any file with `dart run file.dart` (or paste code into DartPad in a browser), and `dart format` and `dart analyze` tidy and check it." },
+      { type: 'heading', text: 'Variables: var, final and const' },
+      { type: 'paragraph', text: "Dart gives you three ways to declare a name. `var` lets Dart work out the type from the first value, and the value can change later. `final` means the name can be set only once, at run time. `const` means a compile-time constant: the value is known before the app even runs, and Flutter can then reuse one shared copy. Prefer `final` for most local names, and reach for `var` only when the value really changes." },
+      { type: 'paragraph', text: "The basic types are `int` for whole numbers, `double` for decimals, `String`, and `bool`. Put a value into text with `$name`, or `${expression}` for anything longer than a name." },
+      {
+        type: 'code',
+        language: 'dart',
+        label: 'Variables and numbers',
+        code: `void main() {
+  final shop = 'Aling Nena';
+  var items = 3;
+  const taxRate = 0.12;
+  double price = 49.5;
+
+  items = items + 2;
+  print('$shop sold $items items at ₱$price');
+  print('Tax: \${(price * taxRate).toStringAsFixed(2)}');
+  print(items / 2);
+  print(items ~/ 2);
+  print(items % 2);
+  print(100 * 1.12);
+}`,
+      },
+      { type: 'paragraph', text: "Run it and you get: `Aling Nena sold 5 items at ₱49.5`, then `Tax: 5.94`, then `2.5`, `2` and `1`, and finally `112.00000000000001`. Three things to notice. First, `/` always gives a `double`, while `~/` divides and keeps only the whole part. Second, you cannot reassign `shop` or `taxRate`, because they are `final` and `const`. Third, the last line is the classic trap: `double` stores numbers in binary, so `100 * 1.12` is not exactly 112." },
+      { type: 'tip', text: 'Never keep money in a `double`. Store it as a whole number of centavos in an `int` (₱49.50 is 4950), do all arithmetic on the integers, and turn it into text only when you show it. This is what the final project does.' },
+      { type: 'heading', text: 'Collections: list, set and map' },
+      { type: 'paragraph', text: "A `List` is an ordered group (like an array), a `Set` holds each value once, and a `Map` pairs keys with values. Dart infers their types from what you put in. Notice that `final prices = [...]` stops you from pointing `prices` at a different list, but you can still add to the list: `final` protects the name, not the contents." },
+      {
+        type: 'code',
+        language: 'dart',
+        label: 'Lists, sets and maps',
+        code: `void main() {
+  final prices = [12, 8, 25, 40];
+  final unique = {'Lucky Me', 'Kopiko'};
+  final stock = {'rice': 10, 'sugar': 4};
+
+  prices.add(15);
+  stock['salt'] = 7;
+  print(prices.length);
+  print(stock['sugar']);
+  print(stock['egg']);
+
+  for (final p in prices) {
+    if (p > 20) print('big $p');
+  }
+  for (final entry in stock.entries) {
+    print('\${entry.key}: \${entry.value}');
+  }
+  print(unique.contains('Kopiko'));
+}`,
+      },
+      { type: 'paragraph', text: "The output is `5`, `4`, `null` (there is no `egg` in the map, so the lookup gives `null`, which lesson 3 handles), then `big 25`, `big 40`, then the three stock lines `rice: 10`, `sugar: 4`, `salt: 7`, and finally `true`. The `for (final p in prices)` form is the one you will use most. You will also see `for` and `if` placed *inside* a list literal, which is how Flutter builds a list of widgets that depends on conditions." },
+      { type: 'heading', text: 'Functions and named parameters' },
+      { type: 'paragraph', text: "A function names its return type first. A function whose body is one expression can use an arrow `=>`. Parameters come in three flavours. Plain ones are required and positional. Ones in square brackets `[ ]` are optional and positional. Ones in curly braces `{ }` are **named**: the caller writes the name, the order does not matter, and they are optional unless you mark them `required` or give a default." },
+      { type: 'paragraph', text: "Named parameters matter more here than in most languages, because Flutter uses them everywhere: `Text('Hi', style: ..., maxLines: 2)`. When you read a widget later, you are reading a function call with named arguments." },
+      {
+        type: 'code',
+        language: 'dart',
+        label: 'Parameters, closures and list helpers',
+        code: `double total(List<double> prices, {double discount = 0, bool vat = false}) {
+  var sum = 0.0;
+  for (final p in prices) {
+    sum += p;
+  }
+  sum -= discount;
+  return vat ? sum * 1.12 : sum;
+}
+
+String label(String name, [String? note]) => note == null ? name : '$name ($note)';
+
+void main() {
+  print(total([10, 20, 30]));
+  print(total([10, 20, 30], discount: 5));
+  print(label('Rice'));
+  print(label('Rice', '5kg'));
+
+  final prices = [12, 8, 25, 40];
+  final cheap = prices.where((p) => p < 20).toList();
+  final doubled = prices.map((p) => p * 2).toList();
+  final sum = prices.fold(0, (a, b) => a + b);
+  print(cheap);
+  print(doubled);
+  print(sum);
+  print(['promo', if (sum > 50) 'big order', for (final p in cheap) 'p$p']);
+}`,
+      },
+      { type: 'paragraph', text: "Functions are values, so you can pass them around. `(p) => p < 20` is an **anonymous function** (a closure). Three list methods replace most loops: `where` keeps the items that pass a test, `map` turns each item into something else, and `fold` squeezes the list into one value, starting from a first value you give it (here `0`). `where` and `map` return lazy sequences, so add `.toList()` when you want a real list. The program prints `60.0`, `55.0`, `Rice`, `Rice (5kg)`, `[12, 8]`, `[24, 16, 50, 80]`, `85` and `[promo, big order, p12, p8]`." },
+      { type: 'heading', text: 'Enums and switch expressions' },
+      { type: 'paragraph', text: "An **enum** is a fixed set of named choices, such as a payment method. A `switch` used as an expression returns a value, and for an enum the compiler checks that you handled every case, so adding a new choice later makes the compiler point at every place you forgot." },
+      {
+        type: 'code',
+        language: 'dart',
+        label: 'An enum with a switch expression',
+        code: `enum Payment { cash, ewallet, card }
+
+String describe(Payment p) => switch (p) {
+  Payment.cash => 'Cash on hand',
+  Payment.ewallet => 'E-wallet transfer',
+  Payment.card => 'Card',
+};
+
+void main() {
+  Payment method = .ewallet;
+  print(describe(method));
+  print(Payment.values.length);
+}`,
+      },
+      { type: 'paragraph', text: "The line `Payment method = .ewallet;` uses a **dot shorthand**: because the variable's type is `Payment`, you may leave the type name out. It prints `E-wallet transfer` and `3`." },
+      {
+        type: 'version',
+        text: 'These examples were run with Dart 3.14.0, the stable release on this date. Dot shorthands (`.ewallet`) need language version 3.10 or later; a project created by Flutter 3.50 sets `sdk: ^3.14.0` in `pubspec.yaml`, so they work. Older tutorials write `Payment.ewallet` in full, which is still valid. Named parameters are optional unless marked `required` or given a default, as the Dart functions page says.',
+        checked: CHECKED,
+        sources: [DOCS.variables, DOCS.functions, DOCS.dotShorthands, DOCS.dartNews],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'Use `final` by default, `var` when the value changes, and `const` for values known before the app runs; `final` protects the name, not the contents of a list.',
+          '`/` returns a double and `~/` returns the whole part; never store money in a double, keep integer centavos.',
+          'A `List` is ordered, a `Set` has no repeats, and a `Map` pairs keys with values; a missing map key gives `null`.',
+          'Named parameters in `{ }` are how Flutter widgets take their settings; mark them `required` or give a default.',
+          '`where`, `map` and `fold` replace most loops, and an enum with a `switch` expression is checked for every case.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'flutter-dart-02-predict-output-1',
+          kind: 'predict-output',
+          title: 'What does the stock check print?',
+          prompt: 'Read the program carefully and type exactly what it prints, one line each.',
+          concept: 'collections and null',
+          language: 'dart',
+          code: `void main() {
+  final stock = {'rice': 10, 'sugar': 4};
+  stock['salt'] = 7;
+  final names = ['Lucky Me', 'Kopiko', 'Lucky Me'];
+  print(stock.length);
+  print(names.toSet().length);
+  print(stock['egg']);
+  var total = 0;
+  for (final qty in stock.values) {
+    total += qty;
+  }
+  print(total);
+}`,
+          expected: '3\n2\nnull\n21',
+          choices: ['3\n2\nnull\n21', '3\n3\nnull\n21', '3\n2\n0\n21', '2\n2\nnull\n14'],
+          wrongNotes: {
+            '3\n3\nnull\n21': 'A Set keeps each value once, so `toSet()` removes the repeated "Lucky Me" and the length is 2, not 3.',
+            '3\n2\n0\n21': 'A map lookup for a key that is not there gives `null`, not 0.',
+            '2\n2\nnull\n14': 'The salt line adds a third entry to the map before it is counted, so the length is 3 and the total is 10 + 4 + 7.',
+          },
+          hints: [
+            'Go line by line and keep track of what is in the map after `stock[\'salt\'] = 7;`.',
+            'A set drops duplicates, and a missing key is `null`.',
+            'The map holds three values, 10, 4 and 7, which add up to 21.',
+          ],
+          explanation: 'After the salt line the map has three entries. Turning the list into a set removes the repeat, so there are two names. `stock[\'egg\']` is null because that key was never added, and the values 10 + 4 + 7 add to 21.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'flutter-dart-02-predict-output-2',
+          kind: 'predict-output',
+          title: 'Named parameters and doubles',
+          prompt: 'Predict all three lines. Watch the number formats.',
+          concept: 'named parameters',
+          language: 'dart',
+          code: `String receipt(String item, int qty, {double price = 10, bool paid = false}) {
+  final total = qty * price;
+  return '$item x$qty = $total \${paid ? 'PAID' : 'UTANG'}';
+}
+
+void main() {
+  print(receipt('Egg', 3));
+  print(receipt('Soap', 2, price: 25.5, paid: true));
+  print(receipt('Candy', 5, paid: true));
+}`,
+          expected: 'Egg x3 = 30.0 UTANG\nSoap x2 = 51.0 PAID\nCandy x5 = 50.0 PAID',
+          choices: [
+            'Egg x3 = 30.0 UTANG\nSoap x2 = 51.0 PAID\nCandy x5 = 50.0 PAID',
+            'Egg x3 = 30 UTANG\nSoap x2 = 51 PAID\nCandy x5 = 50 PAID',
+            'Egg x3 = 30.0 PAID\nSoap x2 = 51.0 PAID\nCandy x5 = 50.0 UTANG',
+          ],
+          wrongNotes: {
+            'Egg x3 = 30 UTANG\nSoap x2 = 51 PAID\nCandy x5 = 50 PAID': 'An `int` times a `double` is a `double`, so the total prints with a decimal point: 30.0.',
+            'Egg x3 = 30.0 PAID\nSoap x2 = 51.0 PAID\nCandy x5 = 50.0 UTANG': '`paid` defaults to false, so the first call prints UTANG, and the third call sets `paid: true`.',
+          },
+          hints: [
+            'Which defaults apply when a named argument is left out?',
+            'The first call uses price 10 and paid false.',
+            'Multiplying an int by a double gives a double, so 3 * 10.0 prints as 30.0.',
+          ],
+          explanation: 'Named arguments you leave out take their defaults (price 10, paid false). `qty * price` is an int times a double, which is a double, so every total prints with `.0`.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'flutter-dart-02-fix-bug-1',
+          kind: 'fix-bug',
+          title: 'The counter that will not count',
+          prompt: 'This program should count the prices above 10, but it does not compile. Tap the line that holds the real mistake, then pick the fix.',
+          concept: 'final and var',
+          language: 'dart',
+          code: `void main() {
+  final prices = [12, 8, 25];
+  final count = 0;
+  for (final p in prices) {
+    if (p > 10) {
+      count++;
+    }
+  }
+  print('$count prices above 10');
+}`,
+          bugLine: 3,
+          lineNote: 'The error message points at `count++`, but the cause is how `count` was declared.',
+          fixes: [
+            { line: 'var count = 0;', correct: true, why: '`var` lets the value change, so `count++` is allowed.' },
+            { line: 'const count = 0;', correct: false, why: '`const` is even stricter than `final`: it can never change.' },
+            { line: 'int count;', correct: false, why: 'A non-nullable `int` must have a value before you use it, so `count++` would still fail.' },
+            { line: 'final count = 1;', correct: false, why: 'This is still `final`, so `count++` cannot change it, and the starting value is wrong too.' },
+          ],
+          hints: [
+            'Which keyword stops a name from being reassigned?',
+            'The name `count` changes every time the loop finds a price above 10.',
+            'Replace `final` with the keyword that lets a value change.',
+          ],
+          explanation: 'A `final` name can be set only once, but `count++` sets it again. `var` allows the change. `final prices` is fine, because the list is never reassigned.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'flutter-dart-02-fill-blank-1',
+          kind: 'fill-blank',
+          title: 'Three list helpers',
+          prompt: 'Choose the helper that does each job: keep, total and transform.',
+          concept: 'where, map and fold',
+          language: 'dart',
+          code: `void main() {
+  final prices = [120, 45, 300, 80];
+  final cheap = prices.___((p) => p < 100).toList();
+  final total = prices.___(0, (sum, p) => sum + p);
+  final labels = prices.___((p) => '₱$p').toList();
+  print(cheap);
+  print(total);
+  print(labels);
+}`,
+          blanks: [
+            { answers: ['where'], feedback: '`where` keeps only the items that pass the test; `map` would produce true or false for each item instead.' },
+            { answers: ['fold'], feedback: '`fold` takes a starting value and a combining function and returns a single result.' },
+            { answers: ['map'], feedback: '`map` turns every item into something new, here a piece of text.' },
+          ],
+          bank: ['where', 'fold', 'map', 'reduce', 'forEach', 'filter'],
+          hints: [
+            'The first one keeps some items and drops others.',
+            'The second takes a starting value of 0 and adds each price to it.',
+            'The last one changes each number into text.',
+          ],
+          explanation: '`where` filters, `fold` combines the list into one value from a starting point, and `map` transforms every item. `filter` does not exist in Dart, and `reduce` takes no starting value.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'flutter-dart-02-q1',
+        prompt: 'You write `final prices = [12, 8]; prices.add(5);`. What happens?',
+        choices: [
+          'It compiles and the list now has three items, because `final` stops reassigning the name, not changing the list',
+          'It does not compile, because a `final` list can never change',
+          'It compiles only if you change `final` to `const`',
+          'It compiles, but the new item is ignored at run time',
+        ],
+        answer: 0,
+        explanation: '`final` protects the name from being pointed at another list. The list object itself can still change; a `const` list is the one that cannot.',
+      },
+      {
+        id: 'flutter-dart-02-q2',
+        prompt: 'A shop adds ₱0.10 and ₱0.20 in `double` variables and the total is not exactly ₱0.30. What is the safest design?',
+        choices: [
+          'Round to two decimals after every addition so the error never builds up',
+          'Keep amounts as whole centavos in an `int` and format them for display',
+          'Use `String` for amounts so no arithmetic is done on them',
+        ],
+        answer: 1,
+        explanation: 'Doubles store binary approximations of decimals. Integers add exactly, so keeping whole centavos avoids the problem entirely.',
+      },
+      {
+        id: 'flutter-dart-02-q3',
+        prompt: 'Which call is valid for `String label(String name, {required String size, int qty = 1})`?',
+        choices: [
+          'label(\'Soap\', \'small\')',
+          'label(size: \'small\', \'Soap\')',
+          'label(\'Soap\', size: \'small\')',
+          'label(\'Soap\', qty: 2)',
+        ],
+        answer: 2,
+        explanation: 'Positional arguments come first, and `size` is required by name. Leaving out `size` or passing it positionally does not compile; `qty` is optional because it has a default.',
+      },
+      {
+        id: 'flutter-dart-02-q4',
+        prompt: 'You have a list of prices and want only the ones above 100. Which expression does that?',
+        choices: [
+          'prices.fold(100, (a, b) => a > b)',
+          'prices.map((p) => p > 100).toList()',
+          'prices.where((p) => p > 100).toList()',
+        ],
+        answer: 2,
+        explanation: '`where` keeps matching items. `map` would give a list of true and false values instead, and `fold` produces a single value.',
+      },
+    ],
+    task: {
+      title: 'A tiny sari-sari store in Dart',
+      minutes: 15,
+      steps: [
+        'Create a file `store.dart` with a `Map<String, int>` of products and their prices in centavos.',
+        'Write a function with a required named parameter `item` and an optional `qty` that defaults to 1, returning the cost in centavos.',
+        'Use `fold` to total all prices, and `where` to list the products under 2000 centavos. Print them with `₱` and two decimals using `(centavos / 100).toStringAsFixed(2)`.',
+        'Run it with `dart run store.dart`, then add an enum for payment type and a `switch` expression that describes it.',
+      ],
+    },
+  },
+  {
+    id: 'flutter-dart-03',
+    day: 3,
+    title: 'Dart: null safety, classes and asynchronous code',
+    summary: 'Use null safety to remove a whole class of crashes, write classes with named constructors, and run code that waits with Future, async and Stream.',
+    intro: {
+      objectives: [
+        'Declare nullable and non-nullable values and use `?.`, `??`, `!` and type promotion correctly',
+        'Write an immutable class with named parameters, a getter and a `fromJson` factory',
+        'Use a sealed class with a `switch` expression to cover every case',
+        'Read and write `async` and `await` code, and loop over a `Stream`',
+      ],
+      why: 'Almost every real app crashes because something was null or because the code did not wait for a network reply. Dart has strong tools for both, and the Flutter widgets in later lessons assume you use them.',
+    },
+    minutes: 30,
+    skills: ['dart-language', 'dart-async'],
+    body: [
+      { type: 'paragraph', text: "This lesson covers the three parts of Dart that you must be comfortable with before building screens: null safety, classes and asynchronous code. You already know classes from the OOP course, so we move quickly through the Dart spelling and spend the time on the parts that are new." },
+      { type: 'heading', text: 'Null safety: the compiler checks for null' },
+      { type: 'paragraph', text: "In many languages any variable may secretly hold `null`, and the program crashes when you use it. In Dart, types are **non-nullable by default**: a `String` can never be null. If a value may be missing, you say so by adding a question mark, `String?`. The compiler then refuses to let you use it as if it were definitely there. Think of it as a label on a parcel: \"fragile: may be empty\" forces everybody who handles the parcel to check." },
+      {
+        type: 'code',
+        language: 'dart',
+        label: 'The null-aware tools',
+        code: `String? findNote(Map<String, String> notes, String key) => notes[key];
+
+void show(String? nickname) {
+  print(nickname?.length);
+  print(nickname ?? 'no nickname');
+  if (nickname != null) {
+    print(nickname.length);
+  }
+}
+
+void main() {
+  String name = 'Mia';
+  show(null);
+  show('Miami');
+
+  final notes = {'rice': 'new stock'};
+  print(findNote(notes, 'rice')!.toUpperCase());
+
+  late final String greeting;
+  greeting = 'Hello $name';
+  print(greeting);
+}`,
+      },
+      {
+        type: 'list',
+        items: [
+          '`nickname?.length` is the null-aware call: if `nickname` is null the whole expression is null instead of crashing. `show(null)` prints `null` here and `show(\'Miami\')` prints `5`.',
+          '`nickname ?? \'no nickname\'` gives a fallback when the left side is null. It prints `no nickname` for null and `Miami` otherwise.',
+          'After `if (nickname != null)`, Dart **promotes** the variable to a plain `String` inside the block, so `nickname.length` is allowed. It runs only for `Miami` and prints `5` again.',
+          '`findNote(...)!` is the **bang**: you promise the value is not null. If you are wrong the app crashes with a null check error. Use it only when you have just proved the value exists.',
+          '`late` says "I will assign this before I read it". It is checked while the app runs, so reading it too early crashes.',
+        ],
+      },
+      { type: 'warning', text: 'Reaching for `!` to silence the compiler is the commonest way to bring null crashes back. Prefer `?.`, `??` or an `if` check, and keep `!` for cases where you can explain why null is impossible.' },
+      {
+        type: 'version',
+        text: 'Sound null safety has been enforced in all Dart code since Dart 3 (2023). If the type system says an expression is non-nullable, the docs promise it can never be null at run time. Records and patterns need language version 3.0 or later; primary constructors (a shorter way to declare a class) need 3.13 or later and need no flag in Dart 3.14. This course writes the long, universal form, which all existing packages and tutorials use.',
+        checked: CHECKED,
+        sources: [DOCS.nullSafety, DOCS.primaryConstructors, DOCS.records, DOCS.dartNews],
+      },
+      { type: 'heading', text: 'Classes: immutable by habit' },
+      { type: 'paragraph', text: "Dart classes look like the ones you know, with some tidy shortcuts. `this.name` in the constructor's parameter list assigns the field directly. Wrapping parameters in `{ }` makes them named, and `required` forces the caller to supply them. A `const` constructor on a class whose fields are all `final` lets Dart build compile-time constants. Flutter widgets are built exactly this way, so the pattern below is one you will write constantly." },
+      {
+        type: 'code',
+        language: 'dart',
+        label: 'An immutable class',
+        code: `class Item {
+  const Item({required this.name, required this.centavos, this.qty = 1});
+
+  final String name;
+  final int centavos;
+  final int qty;
+
+  int get lineTotal => centavos * qty;
+
+  Item copyWith({String? name, int? centavos, int? qty}) => Item(
+        name: name ?? this.name,
+        centavos: centavos ?? this.centavos,
+        qty: qty ?? this.qty,
+      );
+
+  factory Item.fromJson(Map<String, Object?> json) => Item(
+        name: json['name'] as String,
+        centavos: json['centavos'] as int,
+        qty: (json['qty'] as int?) ?? 1,
+      );
+
+  @override
+  String toString() => '$name x$qty';
+}
+
+(int, int) minMax(List<int> values) {
+  var lo = values.first;
+  var hi = values.first;
+  for (final v in values) {
+    if (v < lo) lo = v;
+    if (v > hi) hi = v;
+  }
+  return (lo, hi);
+}
+
+void main() {
+  const rice = Item(name: 'Rice', centavos: 5400, qty: 2);
+  final more = rice.copyWith(qty: 3);
+  final fromServer = Item.fromJson({'name': 'Egg', 'centavos': 1000});
+  print('\${rice.lineTotal} \${more.lineTotal} $fromServer');
+
+  final (lo, hi) = minMax([40, 12, 99, 7]);
+  print('$lo to $hi');
+}`,
+      },
+      { type: 'paragraph', text: "Read `copyWith` first: because the fields are `final`, you never edit an item. You make a changed copy, using `??` to keep the old value when you pass nothing. This habit makes widgets and state simple later, because a new object is easy to notice and compare. A `get` defines a computed property (`lineTotal`), and a `factory` constructor such as `fromJson` may do work before returning an object. The program prints `10800 16200 Egg x1`, then `7 to 99`." },
+      { type: 'paragraph', text: "`(int, int) minMax(...)` returns a **record**: a small, fixed bundle of values with no class needed. `final (lo, hi) = ...` unpacks it, which is called destructuring and is one of Dart's **patterns**. For other class relationships, Dart uses `extends` for inheritance, `implements` to follow another class's interface, `with` to add a mixin, and `abstract` for classes you do not create directly." },
+      { type: 'heading', text: 'Sealed classes: every case, checked' },
+      { type: 'paragraph', text: "A **sealed** class has a fixed, known list of subtypes. When you `switch` on one, the compiler checks that you covered all of them, and a missing case is a compile error. This is perfect for the states of a screen: loading, loaded or failed." },
+      {
+        type: 'code',
+        language: 'dart',
+        label: 'Sealed state and a switch expression',
+        code: `sealed class LoadState {}
+
+class Loading extends LoadState {}
+
+class Loaded extends LoadState {
+  Loaded(this.names);
+  final List<String> names;
+}
+
+class Failed extends LoadState {
+  Failed(this.message);
+  final String message;
+}
+
+String show(LoadState state) => switch (state) {
+  Loading() => 'Loading...',
+  Loaded(:final names) => '\${names.length} names',
+  Failed(:final message) => 'Error: $message',
+};
+
+void main() {
+  print(show(Loading()));
+  print(show(Loaded(['Ana', 'Ben'])));
+  print(show(Failed('no signal')));
+}`,
+      },
+      { type: 'paragraph', text: "The pattern `Loaded(:final names)` both checks the type and pulls out the field in one step. Add a fourth subclass and every `switch` that forgets it stops compiling, which is exactly the safety net you want." },
+      { type: 'heading', text: 'Asynchronous code: waiting without freezing' },
+      { type: 'paragraph', text: "A phone app must never freeze while it waits for the network or a file. Dart handles this with a **Future**: a value that is not ready yet and will arrive later, either as a result or as an error. Mark a function `async` and it returns a `Future`. Inside it, `await` pauses *that function* until the future completes, while the rest of the app keeps running. Think of ordering at a counter and getting a queue number: you are free until your number is called." },
+      {
+        type: 'diagram',
+        format: 'mermaid',
+        caption: 'main keeps going while fetchOrder waits',
+        source: 'sequenceDiagram\n  participant M as main\n  participant F as fetchOrder\n  M->>F: call fetchOrder()\n  F-->>M: at the first await, hand back an unfinished Future\n  M->>M: runs the next line right away\n  F-->>M: Future completes with the value\n  M->>M: continues after its own await',
+      },
+      { type: 'paragraph', text: "A **Stream** is like a Future that delivers many values over time, such as a live location or a countdown. A function marked `async*` produces one with `yield`, and `await for` reads it. Errors from a failed Future or Stream appear where you `await`, so an ordinary `try` and `catch` handles them." },
+      {
+        type: 'code',
+        language: 'dart',
+        label: 'Future, await, Stream and errors',
+        code: `Future<String> fetchOrder() async {
+  print('fetching');
+  await Future.delayed(const Duration(milliseconds: 50));
+  return 'Large Latte';
+}
+
+Stream<int> countdown(int from) async* {
+  for (var i = from; i > 0; i--) {
+    await Future.delayed(const Duration(milliseconds: 10));
+    yield i;
+  }
+}
+
+Future<void> fail() async {
+  throw Exception('no signal');
+}
+
+Future<void> main() async {
+  print('start');
+  final pending = fetchOrder();
+  print('waiting');
+  print(await pending);
+  await for (final n in countdown(3)) {
+    print(n);
+  }
+  try {
+    await fail();
+  } catch (e) {
+    print('Caught: $e');
+  } finally {
+    print('done');
+  }
+}`,
+      },
+      { type: 'paragraph', text: "It prints `start`, `fetching`, `waiting`, `Large Latte`, `3`, `2`, `1`, `Caught: Exception: no signal` and `done`. Notice that `fetching` appears *before* `waiting`: an `async` function runs normally until its first `await`, and only then hands control back. Without `await`, `print(pending)` would show \"Instance of 'Future<String>'\", not the text." },
+      {
+        type: 'version',
+        text: 'Per the Dart docs, an async function runs synchronously until the first `await`, a `Future` may complete with a value or an error, and `await for` consumes a `Stream`. A Stream does nothing until something listens to it; a single-subscription stream can be listened to once. The docs recommend turning on the `unawaited_futures` and `discarded_futures` lints to catch futures you forgot to await.',
+        checked: CHECKED,
+        sources: [DOCS.asyncAwait, DOCS.streams],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'Types are non-nullable by default; `String?` allows null and forces you to check before use.',
+          'Use `?.`, `??` and `if (x != null)` (type promotion) before reaching for the `!` bang.',
+          'Make classes immutable with `final` fields, a `const` constructor and `copyWith`; use records for quick multi-value returns.',
+          'A `sealed` class plus a `switch` expression makes the compiler check that every case is handled.',
+          'A Future is a value that arrives later; `await` pauses only the current function, and a Stream delivers many values.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'flutter-dart-03-predict-output-1',
+          kind: 'predict-output',
+          title: 'Who runs first?',
+          prompt: 'Predict the order in which the lines print. Remember when an `async` function first gives up control.',
+          concept: 'async and await',
+          language: 'dart',
+          code: `Future<String> order() async {
+  print('2');
+  await Future.delayed(const Duration(milliseconds: 10));
+  return 'latte';
+}
+
+Future<void> main() async {
+  print('1');
+  final pending = order();
+  print('3');
+  print(await pending);
+  print('4');
+}`,
+          expected: '1\n2\n3\nlatte\n4',
+          choices: ['1\n2\n3\nlatte\n4', '1\n3\n2\nlatte\n4', '1\n2\nlatte\n3\n4', '1\n3\nlatte\n2\n4'],
+          wrongNotes: {
+            '1\n3\n2\nlatte\n4': 'An `async` function does not pause at its start: it runs until its first `await`, so `print(\'2\')` runs inside the call to `order()`, before `print(\'3\')`.',
+            '1\n2\nlatte\n3\n4': '`main` does not wait at `order()`. It keeps running to `print(\'3\')` and only waits at `await pending`.',
+            '1\n3\nlatte\n2\n4': 'The body of `order()` starts running as soon as it is called, so `2` appears before `3`.',
+          },
+          hints: [
+            'Where does `main` stop and wait?',
+            'Calling `order()` runs its code until the first `await`.',
+            'So `2` prints during the call, then `main` continues to `3`, then waits.',
+          ],
+          explanation: 'Calling `order()` starts running its body at once and prints 2; at the `await` it returns an unfinished Future to `main`, which prints 3. Only `await pending` makes `main` wait for the result, so latte comes next and then 4.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'flutter-dart-03-fix-bug-1',
+          kind: 'fix-bug',
+          title: 'The crash on a missing name',
+          prompt: 'This function must return the first letter of a name, or `?` when the name is missing or empty, and must never crash. Find the line and pick the safe fix.',
+          concept: 'null safety',
+          language: 'dart',
+          code: `String initials(String? name) {
+  return name[0].toUpperCase();
+}
+
+void main() {
+  print(initials('mia'));
+  print(initials(null));
+}`,
+          bugLine: 2,
+          fixes: [
+            { line: 'return (name == null || name.isEmpty) ? \'?\' : name[0].toUpperCase();', correct: true, why: 'It checks for null and for an empty string before indexing, and Dart promotes `name` to a non-null `String` in the other branch.' },
+            { line: 'return name![0].toUpperCase();', correct: false, why: 'It compiles, but the bang promises the value is not null. `initials(null)` would crash at run time.' },
+            { line: 'return name?[0].toUpperCase();', correct: false, why: 'The null-aware index makes the result a `String?`, but the function promises a `String`, so it does not compile.' },
+          ],
+          hints: [
+            'The parameter type is `String?`, so the compiler will not let you index it directly.',
+            'You need a check for null (and an empty string) before using the name.',
+            'A conditional expression can return `?` in the missing case.',
+          ],
+          explanation: 'The type `String?` says the value may be null, so you must handle that case. A conditional expression returns a fallback for null or empty, and in the other branch Dart knows the value is a real, non-empty String.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'flutter-dart-03-match-1',
+          kind: 'match',
+          title: 'Choose the null tool',
+          prompt: 'Match each situation to the tool that fits it best.',
+          concept: 'null-aware operators',
+          labels: { terms: 'Situation', meanings: 'Tool' },
+          pairs: [
+            { term: 'Read the length of a nickname that may be missing, and get null if it is', definition: '`nickname?.length`', note: 'The question mark makes the call null-aware, so a missing nickname gives null instead of a crash.' },
+            { term: 'Show "Guest" on screen whenever the user name is null', definition: '`userName ?? \'Guest\'`', note: 'The double question mark supplies a fallback value when the left side is null.' },
+            { term: 'You just inserted a key into a map and now read that same key back', definition: '`map[key]!`, because you can prove it exists', note: 'The bang is acceptable only when you can show the value cannot be null.' },
+            { term: 'A field cannot be set in the constructor but is always set before first use', definition: '`late` on a non-nullable field', note: '`late` defers initialisation, and reading it before it is set crashes.' },
+          ],
+          hints: [
+            'Which tool gives a fallback, and which one gives null?',
+            'Only one of these four is a promise to the compiler that you can back up.',
+            'Look for the tool that is safe only when you can prove the value exists.',
+          ],
+          explanation: 'Each tool has a different safety story: `?.` passes null along, `??` replaces it, `!` asserts it away and so needs proof, and `late` postpones assignment with a run-time check.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'flutter-dart-03-fill-blank-1',
+          kind: 'fill-blank',
+          title: 'A constant peso class',
+          prompt: 'Fill the blanks so the class works and the program prints the formatted price.',
+          concept: 'classes and constructors',
+          language: 'dart',
+          code: `class Peso {
+  const ___({required this.centavos});
+
+  final int centavos;
+
+  String get label => '₱\${(centavos / 100).toStringAsFixed(2)}';
+}
+
+void main() {
+  const price = ___(centavos: 4950);
+  print(price.___);
+}`,
+          blanks: [
+            { answers: ['Peso'], feedback: 'A constructor has the same name as its class.' },
+            { answers: ['Peso'], feedback: 'To create an object, call the class name like a function.' },
+            { answers: ['label'], feedback: '`label` is the getter; you read it without parentheses.' },
+          ],
+          bank: ['Peso', 'Peso', 'label', 'centavos', 'Item', 'toString'],
+          hints: [
+            'The first blank names the constructor.',
+            'The second creates an object using that same name.',
+            'The last one reads the getter that formats the price.',
+          ],
+          explanation: 'The constructor takes the class name, you create the object by calling that name with a named argument, and a getter is read like a field, so `price.label` prints ₱49.50.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'flutter-dart-03-q1',
+        prompt: 'What does `String? nickname; print(nickname?.length);` print?',
+        choices: [
+          'It prints 0, since a missing nickname has no characters',
+          'It crashes with a null check error on `length`',
+          'It prints null, because the call is skipped when nickname is null',
+          'It does not compile, since `String?` has no `length`',
+        ],
+        answer: 2,
+        explanation: 'The `?.` operator stops and gives null when the receiver is null. It never crashes, and it is not the same as an empty string.',
+      },
+      {
+        id: 'flutter-dart-03-q2',
+        prompt: 'You add a new subclass to a `sealed class LoadState`. What happens to a `switch` that handles only the old subclasses?',
+        choices: [
+          'Dart silently returns null for the new subclass at run time',
+          'The compiler reports an error because the switch no longer covers every case',
+          'The new subclass is treated as the first case in the switch',
+        ],
+        answer: 1,
+        explanation: 'A sealed class has a fixed set of subtypes, so a `switch` over it must be exhaustive. That compile-time check is the main reason to use sealed classes for screen states.',
+      },
+      {
+        id: 'flutter-dart-03-q3',
+        prompt: 'In `async` code, when does the body of `Future<String> order() async { print(\'a\'); await ...; }` first print `a`?',
+        choices: [
+          'When the caller later reaches an `await` on the result',
+          'After the awaited operation has finished and the Future has completed',
+          'Right when `order()` is called, before the caller\'s next line',
+          'Never, unless the caller uses `await` or `.then`',
+        ],
+        answer: 2,
+        explanation: 'An async function runs synchronously until its first `await`. Calling `order()` is enough to start it, even if nobody awaits the result.',
+      },
+      {
+        id: 'flutter-dart-03-q4',
+        prompt: 'Why is `copyWith` common on immutable classes?',
+        choices: [
+          'Because `final` fields cannot be read from outside the class',
+          'It lets you make a changed copy instead of editing the object, so changes are easy to notice and compare',
+          'It makes Dart copy the object more quickly than a constructor can',
+        ],
+        answer: 1,
+        explanation: 'With `final` fields you cannot edit an object, so you build a new one that differs in the fields you choose. Later, Flutter state code compares old and new objects.',
+      },
+    ],
+    task: {
+      title: 'Model, null-check and fetch',
+      minutes: 20,
+      steps: [
+        'In a `.dart` file, write an immutable `Expense` class with a `const` constructor, named required fields, `copyWith` and `fromJson`.',
+        'Make one field nullable (for example `String? note`). Print `note?.length` and `note ?? \'no note\'` for an expense with and without a note.',
+        'Write `Future<List<Expense>> loadExpenses()` that waits 200 ms and returns a list, plus a sealed `LoadState` with a switch that prints each state.',
+        'Run it with `dart run`, then break it on purpose by removing `await` and read what prints.',
+      ],
+    },
+  },
+  {
+    id: 'flutter-dart-04',
+    day: 4,
+    title: 'Widgets: stateless and stateful',
+    summary: 'Understand the widget tree, write a StatelessWidget and a StatefulWidget, and know what setState and the widget lifecycle really do.',
+    intro: {
+      objectives: [
+        'Explain what a widget is and why Flutter rebuilds widgets so freely',
+        'Write a StatelessWidget that depends only on its constructor values',
+        'Write a StatefulWidget that changes with `setState` and cleans up in `dispose`',
+        'Decide whether a piece of UI needs a StatelessWidget or a StatefulWidget',
+      ],
+      why: 'Everything you see in a Flutter app is a widget, and the choice between stateless and stateful is the first design decision you make for every piece of screen. Get this right and the rest of Flutter becomes predictable.',
+    },
+    minutes: 30,
+    skills: ['widgets-layout'],
+    body: [
+      { type: 'paragraph', text: "In Flutter, **everything is a widget**: a button, a padding, a colour, a whole screen, even the app itself. A widget is not the thing on screen. It is a short, cheap **description** of part of the screen: \"a text saying Hello, in bold\". When something changes, Flutter does not edit the old description. It asks your code for a new one and works out what differs. This is the same idea you may know from React: the UI is a function of its inputs." },
+      { type: 'paragraph', text: "Widgets nest inside each other like boxes in boxes, and the whole structure is the **widget tree**. A `Scaffold` contains an `AppBar` and a `body`, the body contains a `Column`, the column contains `Text` widgets. Flutter keeps two more trees behind the scenes (elements and render objects), but you write and think in widgets only." },
+      { type: 'heading', text: 'StatelessWidget: the same inputs give the same screen' },
+      { type: 'paragraph', text: "A **StatelessWidget** has no data that changes during its life. Everything it shows comes from its constructor, so the same inputs always make the same output. Its `build` method returns the widget tree for that part of the screen. Use it whenever the parent can simply hand over the data." },
+      {
+        type: 'code',
+        language: 'dart',
+        label: 'A StatelessWidget',
+        code: `import 'package:material_ui/material_ui.dart';
+
+class PriceTag extends StatelessWidget {
+  const PriceTag({super.key, required this.name, required this.centavos});
+
+  final String name;
+  final int centavos;
+
+  @override
+  Widget build(BuildContext context) {
+    return Text('$name: ₱\${(centavos / 100).toStringAsFixed(2)}');
+  }
+}`,
+      },
+      { type: 'paragraph', text: "Line by line: `super.key` passes an optional `Key` up to the parent class; you will rarely use it except for reordering lists. The two `final` fields hold what the parent gave us. `build` receives a `BuildContext`, which is the widget's address in the tree; you use it to look things up above you, such as the theme. The `const` constructor lets a parent write `const PriceTag(name: 'Rice', centavos: 5400)`, and Flutter can then skip rebuilding that widget altogether." },
+      { type: 'heading', text: 'StatefulWidget: remembering something' },
+      { type: 'paragraph', text: "Some UI must remember things between rebuilds: the number of taps, whether a switch is on, the text a person has typed. Widgets are thrown away and recreated all the time, so they cannot hold that memory. A **StatefulWidget** is split into two classes: the widget itself, which is still a cheap immutable description, and a separate **State** object that lives longer and holds the changing data." },
+      {
+        type: 'code',
+        language: 'dart',
+        label: 'A StatefulWidget',
+        code: `import 'package:material_ui/material_ui.dart';
+
+class TapCounter extends StatefulWidget {
+  const TapCounter({super.key});
+
+  @override
+  State<TapCounter> createState() => _TapCounterState();
+}
+
+class _TapCounterState extends State<TapCounter> {
+  int _taps = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return FilledButton(
+      onPressed: () => setState(() => _taps++),
+      child: Text('Tapped $_taps times'),
+    );
+  }
+}`,
+      },
+      { type: 'paragraph', text: "`createState` creates the State object once. The field `_taps` lives in that object, so it survives rebuilds. When the button is pressed, `setState` runs your small function, then marks the widget as \"dirty\" so Flutter calls `build` again and the new number appears. The leading underscore makes the class and field private to the file." },
+      { type: 'warning', text: 'Changing `_taps` without `setState` changes the variable but does not redraw anything: the screen keeps showing the old number until something else triggers a rebuild. Put every change that affects the screen inside `setState`.' },
+      { type: 'heading', text: 'The lifecycle of a State object' },
+      {
+        type: 'diagram',
+        format: 'mermaid',
+        caption: 'A State object is created once, rebuilt many times and disposed once',
+        source: 'flowchart TD\n  A(createState) --> B["initState: set up once"]\n  B --> C["build: describe the UI"]\n  C --> D["User acts: setState runs"]\n  D --> C\n  C --> E["Screen removed: dispose frees resources"]',
+      },
+      { type: 'paragraph', text: "`initState` runs once, before the first build, and is the place to create things such as a `TextEditingController` or to start a request. `build` runs many times and should be fast and free of side effects: it only describes the UI. `dispose` runs once when the widget leaves the screen, and it must release anything you created, such as controllers, timers and stream subscriptions, or they keep working in the background." },
+      {
+        type: 'code',
+        language: 'dart',
+        label: 'Creating and cleaning up in a State',
+        code: `import 'package:material_ui/material_ui.dart';
+
+class NameBox extends StatefulWidget {
+  const NameBox({super.key, required this.initial});
+
+  final String initial;
+
+  @override
+  State<NameBox> createState() => _NameBoxState();
+}
+
+class _NameBoxState extends State<NameBox> {
+  late final TextEditingController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = TextEditingController(text: widget.initial);
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return TextField(controller: _controller);
+  }
+}`,
+      },
+      { type: 'paragraph', text: "Inside the State class, `widget` refers to the configuration the parent passed in (`widget.initial`). A `late final` field fits `_controller`, because it is set in `initState` and never again. Always call `super.initState()` first and `super.dispose()` last." },
+      { type: 'heading', text: 'Choosing between them' },
+      {
+        type: 'table',
+        headers: ['Ask yourself', 'Stateless', 'Stateful'],
+        rows: [
+          ['Does this piece of UI change on its own?', 'No: the parent supplies everything', 'Yes: it changes from taps, typing, timers or animation'],
+          ['Does it own a controller, timer or subscription?', 'No', 'Yes, and it disposes of it'],
+          ['What is the safe default?', 'Start here', 'Move here only when you must remember something'],
+        ],
+        caption: 'Start stateless; reach for stateful when the widget has to remember',
+      },
+      { type: 'tip', text: 'When a `build` method grows long, split it into smaller widget classes rather than helper methods that return widgets. A small `const` widget is cheap and Flutter can skip it when nothing it depends on has changed.' },
+      {
+        type: 'version',
+        text: 'The architecture overview describes widgets as immutable declarations of part of the UI, and says stateful widgets keep their mutable data in a separate State object, where `setState()` tells the framework to rebuild. The widgets named here (`FilledButton`, `TextField`) come from Material, which in Flutter 3.50 is imported from `package:material_ui`. Hot reload keeps State objects alive, which is why a counter keeps its number when you edit the code.',
+        checked: CHECKED,
+        sources: [DOCS.architecture, DOCS.materialMigration, DOCS.hotReload],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'A widget is a cheap, immutable description of part of the screen; Flutter rebuilds descriptions often and compares them.',
+          'A StatelessWidget gets everything from its constructor; the same inputs give the same output.',
+          'A StatefulWidget keeps changing data in a separate State object; call `setState` to change it and redraw.',
+          '`initState` runs once, `build` runs often and must stay fast, and `dispose` must free controllers, timers and subscriptions.',
+          'Default to stateless and move to stateful only when the widget has to remember something.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'flutter-dart-04-predict-output-1',
+          kind: 'predict-output',
+          title: 'What does the State object print?',
+          prompt: 'The screen opens, the user taps the button twice, then leaves the screen. Predict every line that prints, in order.',
+          concept: 'the widget lifecycle',
+          language: 'dart',
+          code: `class _DemoState extends State<Demo> {
+  int taps = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    print('initState');
+  }
+
+  @override
+  void dispose() {
+    print('dispose');
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    print('build $taps');
+    return TextButton(
+      onPressed: () => setState(() => taps++),
+      child: const Text('tap'),
+    );
+  }
+}`,
+          expected: 'initState\nbuild 0\nbuild 1\nbuild 2\ndispose',
+          choices: [
+            'initState\nbuild 0\nbuild 1\nbuild 2\ndispose',
+            'initState\nbuild 0\nbuild 0\nbuild 0\ndispose',
+            'build 0\nbuild 1\nbuild 2\ninitState\ndispose',
+            'initState\nbuild 0\ndispose',
+          ],
+          wrongNotes: {
+            'initState\nbuild 0\nbuild 0\nbuild 0\ndispose': '`taps` lives in the State object, which survives rebuilds, so each rebuild prints the new value.',
+            'build 0\nbuild 1\nbuild 2\ninitState\ndispose': '`initState` runs once, before the very first `build`.',
+            'initState\nbuild 0\ndispose': 'Each `setState` schedules another `build`, so two taps give two more builds.',
+          },
+          hints: [
+            'Which method always runs before the first build?',
+            'Each tap calls `setState`, which makes Flutter call `build` again.',
+            'The State object keeps `taps`, so the numbers go 0, 1, 2; `dispose` is last.',
+          ],
+          explanation: '`initState` runs once first. The first build shows 0. Each tap changes `taps` inside `setState`, which triggers a new build with 1 and then 2. When the screen is removed, `dispose` runs once.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'flutter-dart-04-fix-bug-1',
+          kind: 'fix-bug',
+          title: 'The button that does nothing',
+          prompt: 'The label never changes when the button is pressed, although `_taps` goes up. Tap the buggy line and pick the fix.',
+          concept: 'setState',
+          language: 'dart',
+          code: `class _TapCounterState extends State<TapCounter> {
+  int _taps = 0;
+
+  @override
+  Widget build(BuildContext context) {
+    return FilledButton(
+      onPressed: () => _taps++,
+      child: Text('Tapped $_taps times'),
+    );
+  }
+}`,
+          bugLine: 7,
+          fixes: [
+            { line: 'onPressed: () => setState(() => _taps++),', correct: true, why: '`setState` runs the change and then tells Flutter to call `build` again, so the new label appears.' },
+            { line: 'onPressed: () { _taps++; build(context); },', correct: false, why: 'Calling `build` yourself only creates a widget that nobody puts on screen. Only `setState` schedules a real rebuild.' },
+            { line: 'onPressed: _taps++,', correct: false, why: '`onPressed` needs a function, but `_taps++` is a number, so this does not compile.' },
+          ],
+          hints: [
+            'The variable changes but the screen does not.',
+            'Flutter only redraws when told that state changed.',
+            'Wrap the increment in the method that marks the widget dirty.',
+          ],
+          explanation: 'Flutter rebuilds a StatefulWidget only when `setState` is called. Wrapping the increment in `setState` changes the value and schedules a new `build`.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'flutter-dart-04-scenario-1',
+          kind: 'scenario',
+          title: 'Stateless or Stateful?',
+          prompt: 'Pick the design that fits best.',
+          concept: 'choosing stateless or stateful',
+          situation: 'You are building an order screen. Each row shows a product name and price (passed in by the screen), and a small quantity stepper with minus and plus buttons. The stepper has to remember its count while the person taps it.',
+          options: [
+            { text: 'Make the row a StatelessWidget for the name and price, and put the count in a small StatefulWidget for the stepper only.', consequence: 'Only the stepper is rebuilt on each tap, the row stays simple, and the stateful part is easy to move or test.', quality: 'best' },
+            { text: 'Make the whole order screen one big StatefulWidget that holds every count.', consequence: 'It works, and sharing counts across rows is easy, but every tap rebuilds the whole screen. It is fine for a small list and gets heavy as the screen grows.', quality: 'acceptable' },
+            { text: 'Keep the count in a plain variable inside a StatelessWidget and update it on each tap.', consequence: 'The variable changes, but there is no State object to keep it and no `setState`, so the screen never redraws and the count is lost when the widget is rebuilt.', quality: 'poor' },
+          ],
+          hints: [
+            'Which parts of the row change? Which parts only display data?',
+            'Keep the memory in the smallest widget that needs it.',
+            'A StatelessWidget cannot remember or redraw itself.',
+          ],
+          explanation: 'State belongs in the smallest widget that needs to remember it. The name and price are inputs, so they are stateless, and only the stepper holds changing data. A stateless widget cannot hold or redraw a changing value.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'flutter-dart-04-q1',
+        prompt: 'What is a Flutter widget, most accurately?',
+        choices: [
+          'A native iOS or Android control that Flutter wraps',
+          'A short-lived, immutable description of part of the screen',
+          'A long-lived object that stores the pixels of a button',
+        ],
+        answer: 1,
+        explanation: 'Widgets are cheap descriptions that Flutter creates and discards constantly. Longer-lived objects behind the scenes (elements and render objects) do the persistent work.',
+      },
+      {
+        id: 'flutter-dart-04-q2',
+        prompt: 'Where should the `int _taps` counter live in a StatefulWidget?',
+        choices: [
+          'In a final field of the StatefulWidget class',
+          'In a top-level variable so that every widget can read it',
+          'In the State class, because it survives rebuilds',
+          'Inside the `build` method as a local variable',
+        ],
+        answer: 2,
+        explanation: 'The widget object is recreated often, so its fields are lost. The State object persists, so mutable data lives there. A local variable in `build` is reset every time it runs.',
+      },
+      {
+        id: 'flutter-dart-04-q3',
+        prompt: 'A screen creates a `TextEditingController` in `initState`. What must it do in `dispose`?',
+        choices: [
+          'Call `setState` so that the text on screen is cleared',
+          'Nothing, because Flutter releases controllers automatically',
+          'Call `_controller.dispose()` and then `super.dispose()`',
+        ],
+        answer: 2,
+        explanation: 'Flutter does not free controllers, timers or subscriptions you created. Disposing them releases resources and stops background work.',
+      },
+      {
+        id: 'flutter-dart-04-q4',
+        prompt: 'Which `build` method follows good practice?',
+        choices: [
+          'One that starts a network request each time, so the data is always fresh',
+          'One that only returns a description of the UI from the data it has',
+          'One that increments a counter field so the number is always right',
+        ],
+        answer: 1,
+        explanation: '`build` can run many times a second, so it must be fast and free of side effects. Start requests in `initState` or in response to a user action.',
+      },
+    ],
+    task: {
+      title: 'Your first two widgets',
+      minutes: 15,
+      steps: [
+        'In a new Flutter project, write the `PriceTag` StatelessWidget and show three of them with different values inside the `Scaffold` body (use a `Column`; the next lesson explains it).',
+        'Add the `TapCounter` StatefulWidget below them and tap it. Run it with `flutter run`.',
+        'Remove `setState` from the counter, hot reload and tap again to see that nothing redraws. Put it back.',
+        'Add a `print` to `initState`, `build` and `dispose` and watch the console as you tap and leave the screen.',
+      ],
+    },
+  },
+  {
+    id: 'flutter-dart-05',
+    day: 5,
+    title: 'Layout: rows, columns and containers',
+    summary: 'Lay out screens with Row, Column, Expanded, Padding, Stack and ListView, and learn the one constraint rule that explains every layout error.',
+    intro: {
+      objectives: [
+        'State the rule "constraints go down, sizes go up, the parent sets the position"',
+        'Build a screen with Row, Column, Expanded, Padding and SizedBox',
+        'Show a long list efficiently with `ListView.builder`',
+        'Diagnose a RenderFlex overflow and an unbounded height error',
+      ],
+      why: 'Layout is where most beginners lose hours to red-and-yellow overflow stripes. One mental model, constraints, turns those errors from mysterious into obvious, and makes any screen design buildable.',
+    },
+    minutes: 30,
+    skills: ['widgets-layout'],
+    body: [
+      { type: 'paragraph', text: "In Flutter you do not position things with coordinates or style rules. You arrange **layout widgets** inside each other: a `Row` puts children side by side, a `Column` stacks them, `Padding` adds space around one child, and `Center` centres one. The skill is knowing how a widget decides its size, and that comes down to one rule from the official docs: **constraints go down, sizes go up, and the parent sets the position.**" },
+      { type: 'heading', text: 'The one rule: constraints' },
+      {
+        type: 'diagram',
+        format: 'mermaid',
+        caption: 'How every widget gets its size and place',
+        source: 'flowchart TD\n  A["Parent gives the child constraints: min and max width and height"] --> B["Child picks a size inside those limits"]\n  B --> C["Child reports its size back up to the parent"]\n  C --> D["Parent decides where to place the child"]',
+      },
+      { type: 'paragraph', text: "Picture a parent telling a child: \"you may be between 0 and 300 wide and 0 and 85 tall.\" The child chooses a size inside that box and tells the parent. The parent then decides where to put it. Two things follow. A widget cannot simply demand any size it likes, because it must stay within what its parent allows. And a widget never decides its own position: its parent does. That is why \"why will my box not be 100 wide?\" usually has the answer \"because its parent told it to be something else\"." },
+      { type: 'paragraph', text: "Different widgets react differently. `Center` and `ListView` try to be as big as possible. `Text` and `Image` take the size of their content. `Container` with no child and no size fills the space; give it a `width` or a child and it shrinks to that. `Expanded` ignores its child's preferred size and forces it to fill a share of the free space in a Row or Column." },
+      { type: 'heading', text: 'Row, Column and friends' },
+      { type: 'paragraph', text: "`Row` and `Column` are the same widget turned 90 degrees. Each has a **main axis** (the direction it lays children out: horizontal for Row, vertical for Column) and a **cross axis** (the other direction). `mainAxisAlignment` spreads children along the main axis (`start`, `center`, `spaceBetween`) and `crossAxisAlignment` aligns them across it. A card that shows a product has an icon, text that should take the leftover room, and a price on the right:" },
+      {
+        type: 'code',
+        language: 'dart',
+        label: 'A product row',
+        code: `import 'package:material_ui/material_ui.dart';
+
+class OrderCard extends StatelessWidget {
+  const OrderCard({
+    super.key,
+    required this.name,
+    required this.note,
+    required this.centavos,
+  });
+
+  final String name;
+  final String note;
+  final int centavos;
+
+  @override
+  Widget build(BuildContext context) {
+    return Card(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Row(
+          children: [
+            const Icon(Icons.shopping_basket),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(name, style: Theme.of(context).textTheme.titleMedium),
+                  Text(note),
+                ],
+              ),
+            ),
+            Text('₱\${(centavos / 100).toStringAsFixed(2)}'),
+          ],
+        ),
+      ),
+    );
+  }
+}`,
+      },
+      { type: 'paragraph', text: "Read it from the outside in. `Card` draws a rounded surface; `Padding` adds 16 logical pixels inside it; the `Row` lays out an icon, a `SizedBox` that is just a 12-pixel gap, an `Expanded` column and the price. The `Expanded` is the key: the icon and the price take only the width they need, and the text column gets *all the rest*, so a long name wraps instead of pushing the price off the screen." },
+      { type: 'warning', text: 'If you see a yellow and black striped bar and "A RenderFlex overflowed by 54 pixels on the right", a child of a Row or Column is bigger than the space it was given. Wrap the offending child (usually a long `Text`) in `Expanded` or `Flexible`, or make the content smaller.' },
+      { type: 'heading', text: 'Scrolling lists' },
+      { type: 'paragraph', text: "A `Column` with fifty children builds all fifty at once and cannot scroll. For lists use `ListView.builder`: it asks your `itemBuilder` for a row only when that row is about to appear on screen, so a list of ten thousand items is as cheap as a list of ten. Put the list in a `Scaffold`, which gives the screen its standard frame with an `AppBar`, and wrap the body in `SafeArea` so content avoids notches and system bars." },
+      {
+        type: 'code',
+        language: 'dart',
+        label: 'A scrolling screen',
+        code: `import 'package:material_ui/material_ui.dart';
+
+class OrdersScreen extends StatelessWidget {
+  const OrdersScreen({super.key, required this.orders});
+
+  final List<({String name, String note, int centavos})> orders;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Orders')),
+      body: SafeArea(
+        child: ListView.builder(
+          itemCount: orders.length,
+          itemBuilder: (context, index) {
+            final order = orders[index];
+            return OrderCard(
+              name: order.name,
+              note: order.note,
+              centavos: order.centavos,
+            );
+          },
+        ),
+      ),
+    );
+  }
+}`,
+      },
+      { type: 'warning', text: 'A `ListView` inside a `Column` throws "Vertical viewport was given unbounded height". The Column gives its children unlimited height, and a ListView wants as much as it can get. Wrap the list in `Expanded` so it receives the Column\'s leftover space.' },
+      { type: 'heading', text: 'Layering and adapting' },
+      { type: 'paragraph', text: "To put widgets on top of each other, such as a badge over the corner of a photo, use a `Stack`. Its children are drawn in order, with later ones on top, and `Positioned` pins a child to an edge. To change the layout on a wide tablet, ask how much room there is with `LayoutBuilder` (or `MediaQuery`) and return different widgets." },
+      {
+        type: 'code',
+        language: 'dart',
+        label: 'Stack and LayoutBuilder',
+        code: `import 'package:material_ui/material_ui.dart';
+
+class PromoBadge extends StatelessWidget {
+  const PromoBadge({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      children: [
+        Container(width: 200, height: 120, color: Colors.teal),
+        const Positioned(right: 8, top: 8, child: Icon(Icons.star)),
+        const Align(
+          alignment: Alignment.bottomLeft,
+          child: Padding(padding: EdgeInsets.all(8), child: Text('Promo')),
+        ),
+      ],
+    );
+  }
+}
+
+class ResponsiveRow extends StatelessWidget {
+  const ResponsiveRow({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final wide = constraints.maxWidth >= 600;
+        const children = [Text('Menu'), Text('Details')];
+        return wide ? const Row(children: children) : const Column(children: children);
+      },
+    );
+  }
+}`,
+      },
+      {
+        type: 'version',
+        text: 'The layout rule and the widget behaviours above come from the Flutter docs page "Understanding constraints" (Flutter 3.50 docs). The docs map React Native\'s `FlatList` to `ListView.builder`, which builds only the visible children. Material widgets such as `Card`, `Scaffold` and `AppBar` are imported from `package:material_ui` in Flutter 3.50 and use Material 3 styling by default.',
+        checked: CHECKED,
+        sources: [DOCS.constraints, DOCS.forReactNative, DOCS.materialMigration],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'Constraints go down, sizes go up, and the parent sets the position: a widget can only be as big as its parent allows.',
+          'Row and Column differ only by their main axis; `mainAxisAlignment` spreads along it and `crossAxisAlignment` aligns across it.',
+          '`Expanded` gives a child the leftover space in a Row or Column, which is the usual fix for a RenderFlex overflow.',
+          'Use `ListView.builder` for long lists (it builds only visible rows), and wrap it in `Expanded` when it sits inside a Column.',
+          '`Stack` layers widgets, `Padding` and `SizedBox` give space, and `LayoutBuilder` adapts to the available width.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'flutter-dart-05-fix-bug-1',
+          kind: 'fix-bug',
+          title: 'The stripes on the right',
+          prompt: 'On a narrow phone this row shows "RenderFlex overflowed" because of a long product name. Tap the line to fix, then choose the correct change.',
+          concept: 'Expanded and overflow',
+          language: 'dart',
+          code: `Row(
+  children: [
+    const Icon(Icons.shopping_basket),
+    const SizedBox(width: 12),
+    Text(name),
+    Text('₱\${(centavos / 100).toStringAsFixed(2)}'),
+  ],
+)`,
+          bugLine: 5,
+          fixes: [
+            { line: 'Expanded(child: Text(name)),', correct: true, why: '`Expanded` gives the text all the width left over after the icon and the price, so a long name wraps.' },
+            { line: 'SizedBox(width: 400, child: Text(name)),', correct: false, why: 'A fixed 400-pixel width is wider than a small phone, so the row still overflows.' },
+            { line: 'Text(name, style: const TextStyle(fontSize: 10)),', correct: false, why: 'Smaller text only hides the problem for this name; a longer name overflows again.' },
+          ],
+          hints: [
+            'The text asks for its full width, but the row has limited space.',
+            'Which widget gives a child "all the free space" in a Row?',
+            'Wrap the `Text` in the widget that shares the leftover width.',
+          ],
+          explanation: 'A Row passes its children unlimited width on the main axis, so a long Text overflows. `Expanded` makes the Text fill only the free space, and the text wraps inside it.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'flutter-dart-05-match-1',
+          kind: 'match',
+          title: 'Read the error, pick the fix',
+          prompt: 'Match each layout problem to the change that solves it.',
+          concept: 'diagnosing layout',
+          labels: { terms: 'What you see or want', meanings: 'What to do' },
+          pairs: [
+            { term: '"RenderFlex overflowed by 54 pixels on the right" in a Row', definition: 'Wrap the wide child in `Expanded` or `Flexible`', note: 'The child is wider than the space the Row has left.' },
+            { term: '"Vertical viewport was given unbounded height" for a ListView in a Column', definition: 'Wrap the ListView in `Expanded`', note: 'The Column gives unlimited height, so the ListView needs a bounded space.' },
+            { term: 'Put a name at the far left and a price at the far right of a Row', definition: 'Set `mainAxisAlignment: MainAxisAlignment.spaceBetween`', note: 'The main axis of a Row is horizontal, so this spreads the children to the two edges.' },
+            { term: 'Show a small "NEW" label over the corner of a product photo', definition: 'Use a `Stack` with a `Positioned` child', note: 'Only Stack layers children on top of each other.' },
+          ],
+          hints: [
+            'Decide which of these are errors and which are design wishes.',
+            'The two errors both come from a child not knowing how much room it has.',
+            'Overlapping needs a widget that draws children on top of each other.',
+          ],
+          explanation: 'Overflow means a child is too big for its slot, and unbounded height means a scrollable has no limit; `Expanded` supplies a limit in both. Alignment and overlap are chosen with `mainAxisAlignment` and `Stack`.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'flutter-dart-05-fill-blank-1',
+          kind: 'fill-blank',
+          title: 'A list under a heading',
+          prompt: 'Complete the screen so that a heading sits above a scrolling list that fills the rest of the space.',
+          concept: 'ListView inside a Column',
+          language: 'dart',
+          code: `Scaffold(
+  appBar: AppBar(title: const Text('Orders')),
+  body: Column(
+    children: [
+      const Text('Today'),
+      ___(
+        child: ListView.builder(
+          ___: 3,
+          ___: (context, index) => Text('Order $index'),
+        ),
+      ),
+    ],
+  ),
+)`,
+          blanks: [
+            { answers: ['Expanded'], feedback: 'The list needs a bounded height from the Column; `Expanded` supplies it.' },
+            { answers: ['itemCount'], feedback: '`itemCount` tells the list how many rows exist.' },
+            { answers: ['itemBuilder'], feedback: '`itemBuilder` builds one row for a given index.' },
+          ],
+          bank: ['Expanded', 'Container', 'itemCount', 'itemBuilder', 'children', 'builder'],
+          hints: [
+            'A ListView inside a Column needs a widget that gives it bounded height.',
+            'The builder constructor needs a count and a function that builds one row.',
+            'The two parameter names start with `item`.',
+          ],
+          explanation: '`Expanded` hands the leftover height to the list, `itemCount` says how many rows there are, and `itemBuilder` creates each row when it scrolls into view.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'flutter-dart-05-q1',
+        prompt: 'You set `Container(width: 100, ...)` but it is stretched across the whole screen. What is the most likely reason?',
+        choices: [
+          'Its parent forced it to a particular size, so the width it asked for was ignored',
+          'Containers ignore a width unless a height is also set on them',
+          'Flutter converts widths to percentages on wide screens',
+        ],
+        answer: 0,
+        explanation: 'A widget can only choose a size within the constraints from its parent. If the parent demands a tight size, the child\'s own preference does not matter.',
+      },
+      {
+        id: 'flutter-dart-05-q2',
+        prompt: 'In a `Column`, which setting places its children from left to right across the screen?',
+        choices: [
+          '`mainAxisAlignment`, because it controls the horizontal axis in every widget',
+          '`crossAxisAlignment`, since the cross axis of a Column is horizontal',
+          '`MainAxisSize.max`, which spreads the children to the full width',
+          'Nothing; a Column cannot position things horizontally',
+        ],
+        answer: 1,
+        explanation: 'A Column\'s main axis is vertical, so the cross axis is horizontal. `crossAxisAlignment` controls how the children line up across it.',
+      },
+      {
+        id: 'flutter-dart-05-q3',
+        prompt: 'A list has 5,000 products. Which choice keeps scrolling smooth?',
+        choices: [
+          'Put 5,000 widgets into the children of a Column',
+          'Use `ListView.builder`, which builds only the rows near the screen',
+          'Wrap every row in a `Container` so it renders faster',
+        ],
+        answer: 1,
+        explanation: '`ListView.builder` creates rows on demand as they scroll into view. A Column builds every child immediately and cannot scroll by itself.',
+      },
+      {
+        id: 'flutter-dart-05-q4',
+        prompt: 'What does `Expanded` do to a child of a Row?',
+        choices: [
+          'It makes the child as large as the whole Row, overlapping its siblings',
+          'It shrinks the child to the smallest size it can take',
+          'It gives the child a share of the leftover space and makes it fill that share',
+        ],
+        answer: 2,
+        explanation: 'Siblings without Expanded take the space they need; the Expanded child gets the remaining main-axis space.',
+      },
+    ],
+    task: {
+      title: 'Build a product list screen',
+      minutes: 20,
+      steps: [
+        'Create `OrderCard` and `OrdersScreen` from the lesson in a Flutter project and pass in at least eight made-up orders, such as rice, eggs and coffee, with prices in centavos.',
+        'Run it on a small emulator, make one product name very long, and watch the overflow stripes appear when you remove the `Expanded`. Then put it back.',
+        'Add a `Text` heading above the list in a `Column` and fix the unbounded height error that appears, using `Expanded`.',
+        'Wrap the list in a `LayoutBuilder` so that from 600 pixels wide it shows two cards per row with `GridView.count`.',
+      ],
+    },
+  },
+  {
+    id: 'flutter-dart-06',
+    day: 6,
+    title: 'Navigation and routing',
+    summary: 'Move between screens with Navigator push and pop, then use go_router for URL-style routes, path parameters, redirects and deep links.',
+    intro: {
+      objectives: [
+        'Open a screen with `Navigator.push`, send data in and get a result back',
+        'Explain why Flutter\'s docs do not recommend named routes for most apps',
+        'Define routes, path parameters and a login redirect with go_router',
+        'Choose between `context.go`, `context.push` and `context.pop`',
+      ],
+      why: 'A real app has many screens, and people expect the back button and shared links to work. Picking the right routing approach early saves a painful rewrite later.',
+    },
+    minutes: 30,
+    skills: ['navigation'],
+    body: [
+      { type: 'paragraph', text: "A phone app is a set of screens, and Flutter calls each one a **route**. The simplest way to move between them is the **Navigator**, which keeps a stack of routes like a pile of papers: `push` puts a new screen on top, and `pop` removes the top one to reveal the one below. The Android back button and the iPhone back swipe both just call `pop`." },
+      { type: 'heading', text: 'The Navigator: push and pop' },
+      { type: 'paragraph', text: "You get the Navigator from the `BuildContext`: `Navigator.of(context).push(...)`. You give it a `MaterialPageRoute`, whose `builder` returns the new screen, and the route adds the platform's normal slide animation. Data goes in through the new screen's constructor. Data comes back through `pop`: whatever you pass to `pop` becomes the value of the `await` on `push`." },
+      {
+        type: 'code',
+        language: 'dart',
+        label: 'Open a screen and wait for its answer',
+        code: `import 'package:material_ui/material_ui.dart';
+
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
+  @override
+  State<HomeScreen> createState() => _HomeScreenState();
+}
+
+class _HomeScreenState extends State<HomeScreen> {
+  String _name = 'nobody';
+
+  Future<void> _pick() async {
+    final result = await Navigator.of(context).push<String>(
+      MaterialPageRoute(builder: (context) => const PickScreen()),
+    );
+    if (!mounted) return;
+    setState(() => _name = result ?? _name);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Home')),
+      body: Column(
+        children: [
+          Text('Chosen: $_name'),
+          FilledButton(onPressed: _pick, child: const Text('Pick')),
+        ],
+      ),
+    );
+  }
+}
+
+class PickScreen extends StatelessWidget {
+  const PickScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Pick')),
+      body: Center(
+        child: FilledButton(
+          onPressed: () => Navigator.of(context).pop('Ana'),
+          child: const Text('Choose Ana'),
+        ),
+      ),
+    );
+  }
+}`,
+      },
+      { type: 'paragraph', text: "Three details deserve attention. `push<String>` says the screen will return a `String`; if the person taps the back arrow instead, `result` is `null`, which the `??` handles. The `if (!mounted) return;` line matters because the person may have left `HomeScreen` while the other screen was open, and calling `setState` on a removed State is an error. This pattern, checking after every `await`, is one you will use often. Finally `pop('Ana')` hands the value back." },
+      { type: 'heading', text: 'When the Navigator is not enough' },
+      { type: 'paragraph', text: "Push and pop are fine for a small app. They struggle when you want a link such as `/item/42` to open the right screen directly, when the web address bar should match the page, or when you need rules like \"send logged-out people to the login screen\". Flutter's docs describe **named routes** (`Navigator.pushNamed(context, '/second')`) as a middle step, but state plainly that they do not recommend named routes for most applications: a deep link always behaves the same way, and the browser's forward button is not supported. For anything beyond a simple app, the docs point you to a routing package such as **go_router**." },
+      {
+        type: 'version',
+        text: 'The Flutter docs on navigation say small apps without complex deep linking can use `Navigator`; they "don\'t recommend using named routes for most applications"; and apps with advanced routing, deep links or web URLs should use a Router-based package such as go_router. go_router is published by flutter.dev, is described as a declarative router based on Navigation 2 that supports deep linking and data-driven routes, and the version checked here was 18.1.4.',
+        checked: CHECKED,
+        sources: [DOCS.navigation, DOCS.goRouter],
+      },
+      { type: 'heading', text: 'go_router: routes as paths' },
+      { type: 'paragraph', text: "With go_router you describe your whole app as a list of routes, each with a URL-style **path**. Add it with `flutter pub add go_router`, build a `GoRouter`, and hand it to `MaterialApp.router`. A path can contain a **parameter**, written `:id`, that you read in the builder from `state.pathParameters`. A `redirect` function runs before each navigation and can send the person somewhere else by returning a path, or return `null` to let them through." },
+      {
+        type: 'code',
+        language: 'dart',
+        label: 'A router with a parameter and a login guard',
+        code: `import 'package:go_router/go_router.dart';
+import 'package:material_ui/material_ui.dart';
+
+bool loggedIn = true; // in a real app this comes from your state
+
+final router = GoRouter(
+  initialLocation: '/',
+  redirect: (context, state) {
+    if (!loggedIn && state.matchedLocation != '/login') return '/login';
+    return null;
+  },
+  routes: [
+    GoRoute(
+      path: '/',
+      builder: (context, state) => const ListScreen(),
+    ),
+    GoRoute(
+      path: '/item/:id',
+      builder: (context, state) {
+        final id = state.pathParameters['id']!;
+        return ItemScreen(id: id);
+      },
+    ),
+    GoRoute(
+      path: '/login',
+      builder: (context, state) => const Scaffold(body: Text('Login')),
+    ),
+  ],
+);
+
+class App extends StatelessWidget {
+  const App({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp.router(routerConfig: router);
+  }
+}
+
+class ListScreen extends StatelessWidget {
+  const ListScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: const Text('Items')),
+      body: ListTile(
+        title: const Text('Item 3'),
+        onTap: () => context.push('/item/3'),
+      ),
+    );
+  }
+}
+
+class ItemScreen extends StatelessWidget {
+  const ItemScreen({super.key, required this.id});
+
+  final String id;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text('Item $id')),
+      body: FilledButton(onPressed: () => context.pop(), child: const Text('Back')),
+    );
+  }
+}`,
+      },
+      { type: 'paragraph', text: "Notice that nothing here holds a screen object: the router builds a screen from the path, so `/item/3` can be opened from a notification, a web link or a tap, and always builds the same screen. The `!` after `pathParameters['id']` is justified because the path `/item/:id` can only match when an id exists. The query part of a link such as `/search?q=rice` is available from `state.uri.queryParameters`." },
+      { type: 'heading', text: 'go, push and pop' },
+      {
+        type: 'table',
+        headers: ['Call', 'What happens to the stack', 'Use it for'],
+        rows: [
+          ['`context.push(\'/item/3\')`', 'Adds the screen on top; the list stays underneath and a back arrow appears', 'Opening a detail screen the person will return from'],
+          ['`context.go(\'/item/3\')`', 'Moves to that location and builds the stack the route table describes; with sibling routes the old screen is gone and there is no back arrow', 'Switching sections or jumping to a place, such as after login'],
+          ['`context.replace(\'/item/3\')`', 'Swaps the top screen for the new one', 'A step that should not be returned to'],
+          ['`context.pop()`', 'Removes the top screen', 'Closing a screen or a dialog'],
+        ],
+        caption: 'The difference between go and push is the most common go_router surprise',
+      },
+      { type: 'paragraph', text: "We checked this in a test: from the list, `push('/item/3')` left a back button, while `go('/item/5')` and `replace('/item/8')` did not, because the item route is a sibling of the list route. For tab-style apps, go_router also offers `ShellRoute`, which keeps a bottom bar visible while its children change." },
+      { type: 'warning', text: 'After an `await`, a `BuildContext` may belong to a screen that is gone. Check `mounted` in a State, or `context.mounted` anywhere, before using it. The analyzer warns about this with the `use_build_context_synchronously` lint.' },
+      {
+        type: 'takeaways',
+        items: [
+          'The Navigator is a stack of routes: `push` adds a screen, `pop` removes one and can return a value to the `await` on `push`.',
+          'Flutter\'s docs do not recommend named routes for most apps; they recommend go_router for deep links, web URLs and rules like login redirects.',
+          'In go_router, each route has a path such as `/item/:id`; read the parameter from `state.pathParameters`.',
+          'Use `context.push` to stack a screen you will return from, `context.go` to move to a location, and `context.pop` to close.',
+          'Check `mounted` after any `await` before touching the context.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'flutter-dart-06-fix-bug-1',
+          kind: 'fix-bug',
+          title: 'No way back from the details',
+          prompt: 'People tap an item and the details screen opens, but there is no back arrow. The routes are `/` and `/item/:id`, as siblings. Tap the buggy line and choose the fix.',
+          concept: 'go versus push',
+          language: 'dart',
+          code: `ListTile(
+  title: Text('Item $id'),
+  onTap: () => context.go('/item/$id'),
+)`,
+          bugLine: 3,
+          fixes: [
+            { line: 'onTap: () => context.push(\'/item/$id\'),', correct: true, why: '`push` puts the details on top of the list, so the list stays underneath and a back arrow appears.' },
+            { line: 'onTap: () => context.replace(\'/item/$id\'),', correct: false, why: '`replace` swaps the list for the details, so there is still nothing to go back to.' },
+            { line: 'onTap: () => Navigator.of(context).pop(),', correct: false, why: '`pop` closes the current screen; it never opens the details at all.' },
+          ],
+          hints: [
+            'Which call keeps the current screen underneath?',
+            '`go` moves to a location and does not keep the previous sibling screen.',
+            'Use the call that stacks a new screen on top of the old one.',
+          ],
+          explanation: 'With sibling routes, `go` replaces what is on screen with the new location, so there is nothing to go back to. `push` adds the details on top of the list, which is what a back arrow needs.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'flutter-dart-06-scenario-1',
+          kind: 'scenario',
+          title: 'Which routing approach?',
+          prompt: 'Choose the approach you would use and read what follows.',
+          concept: 'choosing a navigation approach',
+          situation: 'Your delivery app will have around twenty screens. The marketing team wants links in text messages such as `myshop://order/812` to open the right order directly. You also plan to ship a web version where the address bar must match the page, and logged-out people must be sent to a login screen first.',
+          options: [
+            { text: 'Use go_router with one path per screen, path parameters for ids and a `redirect` for the login rule.', consequence: 'Links, the web address bar and the login rule all come from one route table, so the whole team can see every screen and how to reach it.', quality: 'best' },
+            { text: 'Use `Navigator.pushNamed` with named routes and parse the link yourself in each screen.', consequence: 'It works for a start, but a deep link always behaves the same way, the web forward button is not supported, and the login rule is scattered across screens.', quality: 'acceptable' },
+            { text: 'Use `Navigator.push` everywhere and keep a global variable that remembers which order to open.', consequence: 'There is nothing to connect a link or a web address to a screen, so deep linking and the web version would each need a custom workaround.', quality: 'poor' },
+          ],
+          hints: [
+            'List the requirements: links, a web address bar, and a login rule.',
+            'Which approach gives each screen a path that something outside the app can open?',
+            'Flutter\'s docs point apps with these needs to a Router-based package.',
+          ],
+          explanation: 'Deep links, web URLs and login rules are exactly what a Router-based package is for. Named routes and plain `push` can be bent to do some of it, but each requirement then needs extra custom code.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'flutter-dart-06-match-1',
+          kind: 'match',
+          title: 'Match the goal to the call',
+          prompt: 'Match each goal to the go_router feature or call that achieves it.',
+          concept: 'go_router API',
+          labels: { terms: 'Goal', meanings: 'What to use' },
+          pairs: [
+            { term: 'Read `42` from the location `/order/42` inside the builder', definition: '`state.pathParameters[\'id\']` for a path `/order/:id`', note: 'Parameters declared with a colon in the path are read from pathParameters.' },
+            { term: 'Close the screen on top and show the one below it', definition: '`context.pop()`', note: 'Pop removes the top screen and is what the back arrow does.' },
+            { term: 'Send everyone who is not logged in to the login screen, whichever link they opened', definition: 'A top-level `redirect` that returns `\'/login\'`', note: 'The redirect runs before each navigation, so it protects every route in one place.' },
+            { term: 'After a successful login, move to the home screen and drop the login screen', definition: '`context.go(\'/\')`', note: 'Go moves to a location without keeping the previous screen to return to.' },
+          ],
+          hints: [
+            'Two of these are about reading or closing, two about moving.',
+            'The rule that applies to every route belongs in one central place.',
+            'Moving "and dropping" the old screen is the behaviour of go.',
+          ],
+          explanation: 'Each goal has one natural tool: path parameters carry ids, `pop` closes, a top-level redirect guards every route, and `go` jumps to a place without leaving a screen to come back to.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'flutter-dart-06-q1',
+        prompt: 'What does `await Navigator.of(context).push<String>(...)` give you when the person taps the back arrow instead of choosing something?',
+        choices: [
+          'An empty string, because the screen had no answer',
+          'It throws, because a value was expected from the screen',
+          'null, because nothing was passed to `pop`',
+        ],
+        answer: 2,
+        explanation: 'The value comes from `pop(value)`. Going back without a value completes the Future with null, so the type is effectively `String?`.',
+      },
+      {
+        id: 'flutter-dart-06-q2',
+        prompt: 'Why do you check `if (!mounted) return;` after `await Navigator.push(...)` before calling `setState`?',
+        choices: [
+          'The screen may have been removed while you waited, and using it afterwards is an error',
+          'Because `push` always unmounts the screen that called it',
+          'It makes `setState` run faster by skipping the rebuild of children',
+          'The Navigator needs a mounted flag to return its result',
+        ],
+        answer: 0,
+        explanation: 'Anything can happen while an `await` is pending, including the screen being closed. Calling `setState` or using the context after that is a bug.',
+      },
+      {
+        id: 'flutter-dart-06-q3',
+        prompt: 'In go_router, what is `:id` in the path `/item/:id`?',
+        choices: [
+          'A named constant that must be defined in `pubspec.yaml`',
+          'A path parameter, read from `state.pathParameters[\'id\']`',
+          'A query parameter, read from `state.uri` after a question mark',
+        ],
+        answer: 1,
+        explanation: 'A colon marks a path parameter that matches that part of the URL. Query parameters come after a question mark and are read from `state.uri.queryParameters`.',
+      },
+      {
+        id: 'flutter-dart-06-q4',
+        prompt: 'The login screen finishes. Which call moves to home and leaves nothing to go back to?',
+        choices: [
+          '`context.push(\'/\')`, which stacks home over the login screen',
+          '`context.pop()`, which closes the login but shows an empty stack',
+          '`context.go(\'/\')`, which moves to the home location',
+        ],
+        answer: 2,
+        explanation: '`go` moves to the location and builds the stack the route table describes; with sibling routes, the login screen is gone. `push` would leave login underneath.',
+      },
+    ],
+    task: {
+      title: 'Three screens and a guard',
+      minutes: 20,
+      steps: [
+        'Run `flutter pub add go_router` in a project and build a router with `/`, `/item/:id` and `/login`, using the code from the lesson.',
+        'Open an item with `context.push`, then change it to `context.go` and see that the back arrow disappears. Put it back.',
+        'Set `loggedIn = false` and verify that every path sends you to the login screen. Add a button there that sets it to true and calls `context.go(\'/\')`.',
+        'On Chrome (`flutter run -d chrome`) open `/item/7` in the address bar and see that the right screen appears.',
+      ],
+    },
+  },
+  {
+    id: 'flutter-dart-07',
+    day: 7,
+    title: 'State management',
+    summary: 'Tell local state from shared app state, lift state up, and compare ChangeNotifier, Provider and Riverpod the way Flutter\'s own docs frame them.',
+    intro: {
+      objectives: [
+        'Tell ephemeral (local) state from app (shared) state',
+        'Build a ChangeNotifier model and listen to it with a ListenableBuilder',
+        'Read the same model with Provider and with Riverpod, and compare them',
+        'Decide where a piece of state should live',
+      ],
+      why: 'Sooner or later two screens need the same data, such as a cart badge and a cart page. How you share that data decides whether your app stays simple or turns into tangled callbacks.',
+    },
+    minutes: 35,
+    skills: ['state-management'],
+    body: [
+      { type: 'paragraph', text: "Flutter's slogan for UI is \"the screen is a function of state\": change the data, and the widgets are rebuilt from it. Lesson 4 used `setState` for data one widget owns, like a tap counter. Real apps also have data that many widgets need: the signed-in user, the cart, the chosen theme. This lesson is about where that data lives and how the widgets that show it find out when it changes." },
+      { type: 'heading', text: 'Two kinds of state' },
+      { type: 'paragraph', text: "**Ephemeral state** belongs to one widget and nobody else cares about it: which tab is selected, whether a password is visible, a half-typed field. Keep it in a StatefulWidget with `setState`. **App state** is shared between widgets or must survive leaving a screen: the cart, the login, the saved orders. When two widgets need the same state, you **lift it up**: move it to their nearest common ancestor (or above), and let the widgets read it and ask for changes. The docs put the rule vividly: do not reach into a widget to update it from outside; change the model and let the framework rebuild." },
+      {
+        type: 'table',
+        headers: ['Question', 'Ephemeral (setState)', 'App state (shared model)'],
+        rows: [
+          ['Who needs it?', 'One widget', 'Several screens or widgets'],
+          ['Should it survive leaving the screen?', 'No', 'Often yes'],
+          ['Example', 'A switch, a selected tab, an animation value', 'Cart, signed-in user, settings, loaded orders'],
+        ],
+        caption: 'Most state in a real app is ephemeral; resist moving it up until a second widget needs it',
+      },
+      { type: 'heading', text: 'No package needed: ChangeNotifier' },
+      { type: 'paragraph', text: "Flutter ships a small tool for shared state. A class that extends **ChangeNotifier** keeps its data and calls `notifyListeners()` after every change that should reach the screen. A **ListenableBuilder** widget listens to it and rebuilds just its own subtree. The model is plain Dart, so you can test it without any widgets." },
+      {
+        type: 'code',
+        language: 'dart',
+        label: 'A shared model',
+        code: `import 'package:flutter/foundation.dart';
+
+class CartModel extends ChangeNotifier {
+  final List<String> _items = [];
+
+  List<String> get items => List.unmodifiable(_items);
+  int get count => _items.length;
+
+  void add(String item) {
+    _items.add(item);
+    notifyListeners();
+  }
+
+  void clear() {
+    _items.clear();
+    notifyListeners();
+  }
+}`,
+      },
+      { type: 'paragraph', text: "Two details. `items` returns an unmodifiable view, so widgets cannot change the list behind the model's back; every change goes through `add` or `clear`, which both notify. And the only ChangeNotifier-specific code is the `notifyListeners()` call. Forget it and the data changes but nothing redraws, the same trap as forgetting `setState`." },
+      {
+        type: 'code',
+        language: 'dart',
+        label: 'Listening with ListenableBuilder',
+        code: `import 'package:material_ui/material_ui.dart';
+
+class Shop extends StatefulWidget {
+  const Shop({super.key});
+
+  @override
+  State<Shop> createState() => _ShopState();
+}
+
+class _ShopState extends State<Shop> {
+  final _cart = CartModel();
+
+  @override
+  void dispose() {
+    _cart.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        ListenableBuilder(
+          listenable: _cart,
+          builder: (context, child) => Text('Cart: \${_cart.count}'),
+        ),
+        FilledButton(
+          onPressed: () => _cart.add('Rice'),
+          child: const Text('Add rice'),
+        ),
+      ],
+    );
+  }
+}`,
+      },
+      { type: 'paragraph', text: "The State creates the model once and disposes it. Only the `Text` inside `ListenableBuilder` is rebuilt when the cart changes; the button and the column are not. ListenableBuilder also has a `child` parameter for a part of the subtree that does not depend on the model, which you build once and pass through. The limit of this approach is delivery: here the model is a field of one State, so a distant screen would need it passed down through every constructor in between. That is the problem the next tools solve." },
+      {
+        type: 'version',
+        text: 'Flutter\'s own state-management page lists three built-in approaches (`setState`; `ValueNotifier` with `InheritedNotifier`; `InheritedWidget` and `InheritedModel`) and points to community packages, saying the best choice depends on your app\'s complexity and your team, without recommending one. The API docs describe `ListenableBuilder` as rebuilding a subtree when any Listenable, such as a ChangeNotifier, changes.',
+        checked: CHECKED,
+        sources: [DOCS.stateOptions, DOCS.listenableBuilder, DOCS.stateSimple],
+      },
+      { type: 'heading', text: 'Provider: hand the model down the tree' },
+      { type: 'paragraph', text: "The **provider** package wraps `InheritedWidget`, the tool Flutter itself uses to let a widget find data above it (this is how `Theme.of(context)` works). You place a `ChangeNotifierProvider` high in the tree, and any widget below can find the model with `context.watch<T>()` (read it and rebuild when it changes) or `context.read<T>()` (get it once, for example inside a button handler). It disposes the model for you." },
+      {
+        type: 'code',
+        language: 'dart',
+        label: 'The same cart with provider',
+        code: `import 'package:material_ui/material_ui.dart';
+import 'package:provider/provider.dart';
+
+void main() {
+  runApp(
+    ChangeNotifierProvider(
+      create: (context) => CartModel(),
+      child: const MaterialApp(home: ShopScreen()),
+    ),
+  );
+}
+
+class ShopScreen extends StatelessWidget {
+  const ShopScreen({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final count = context.watch<CartModel>().count;
+    return Scaffold(
+      appBar: AppBar(title: Text('Cart: $count')),
+      body: Center(
+        child: FilledButton(
+          onPressed: () => context.read<CartModel>().add('Rice'),
+          child: const Text('Add rice'),
+        ),
+      ),
+    );
+  }
+}`,
+      },
+      { type: 'tip', text: 'Use `context.watch` in `build` and `context.read` in event handlers. Calling `watch` inside `onPressed` is a mistake: it is meant to subscribe during a build, and the package asserts when it is used elsewhere.' },
+      { type: 'heading', text: 'Riverpod: providers that live outside widgets' },
+      { type: 'paragraph', text: "**Riverpod** is a separate, popular approach by the same author as provider. State lives in *providers* that are declared as ordinary global values but are looked up through a `ref`, not through the widget tree. A `Notifier` holds state that you replace, never mutate, which is the same immutable habit as `copyWith`. Widgets that read state extend `ConsumerWidget`." },
+      {
+        type: 'code',
+        language: 'dart',
+        label: 'The same cart with Riverpod',
+        code: `import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:material_ui/material_ui.dart';
+
+class CartNotifier extends Notifier<List<String>> {
+  @override
+  List<String> build() => [];
+
+  void add(String item) => state = [...state, item];
+}
+
+final cartProvider = NotifierProvider<CartNotifier, List<String>>(CartNotifier.new);
+
+void main() {
+  runApp(const ProviderScope(child: MaterialApp(home: ShopScreen())));
+}
+
+class ShopScreen extends ConsumerWidget {
+  const ShopScreen({super.key});
+
+  @override
+  Widget build(BuildContext context, WidgetRef ref) {
+    final items = ref.watch(cartProvider);
+    return Scaffold(
+      appBar: AppBar(title: Text('Cart: \${items.length}')),
+      body: Center(
+        child: FilledButton(
+          onPressed: () => ref.read(cartProvider.notifier).add('Rice'),
+          child: const Text('Add rice'),
+        ),
+      ),
+    );
+  }
+}`,
+      },
+      { type: 'heading', text: 'Choosing, honestly' },
+      {
+        type: 'table',
+        headers: ['Approach', 'Strength', 'Cost'],
+        rows: [
+          ['`setState`', 'Zero setup; right for one widget\'s own state', 'Sharing means passing values and callbacks through every level'],
+          ['ChangeNotifier + ListenableBuilder', 'Built in, easy to test, no dependency', 'You deliver the model to distant widgets yourself'],
+          ['provider', 'Small, close to how Flutter itself works, easy to learn', 'Lookup by type happens at run time; async and combined state take more care'],
+          ['Riverpod', 'Providers are testable and can depend on each other; strong for async data', 'More concepts and its own vocabulary; a third-party package that changes more often'],
+          ['BLoC and others', 'A strict events-in, states-out structure that suits large teams', 'More boilerplate; worth it when the structure pays for itself'],
+        ],
+        caption: 'None is "the" answer; pick the least machinery that your app needs',
+      },
+      { type: 'paragraph', text: "Flutter's architecture guide is also worth knowing. It describes a UI layer of **views** (widgets that only show things and forward taps) and **view models** (objects that hold the screen's state and expose commands), over a data layer of **repositories** (one source of truth for a kind of data) and **services** (wrappers around an API or a file). A ChangeNotifier makes a natural view model in that picture. The final project uses it." },
+      {
+        type: 'version',
+        text: 'Versions checked on pub.dev: provider 6.1.5+1 (a wrapper around InheritedWidget, verified publisher dash-overflow.net) and flutter_riverpod 3.5.0 (published by the same publisher, not by flutter.dev). The code above was compiled and run in widget tests with those versions on Flutter 3.50. Riverpod\'s newest releases also offer code generation with `@riverpod`, which this lesson does not use; check the package docs before following an older Riverpod tutorial, because its API has changed between major versions.',
+        checked: CHECKED,
+        sources: [DOCS.provider, DOCS.riverpod, DOCS.archGuide],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'Keep state local with `setState` until a second widget needs it, then lift it up to a shared model.',
+          'A ChangeNotifier plus `notifyListeners()` and a ListenableBuilder is state management with no packages.',
+          'provider hands a model down the tree (`watch` in build, `read` in handlers); Riverpod moves state into providers reached through `ref`.',
+          'Flutter\'s docs list the options without crowning one; choose the least machinery that fits your app and team.',
+          'A ChangeNotifier works well as a view model in the view, view model, repository layering the architecture guide describes.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'flutter-dart-07-scenario-1',
+          kind: 'scenario',
+          title: 'Where should this state live?',
+          prompt: 'Choose where the cart should live.',
+          concept: 'lifting state up',
+          situation: 'A shop app has a product list, a product details screen with an Add to cart button, and a cart icon with a count in the home screen\'s app bar. The cart page lists the items. Right now the details screen keeps its own `List<String> cart` in its State.',
+          options: [
+            { text: 'Move the cart into a ChangeNotifier created above the screens, and let the badge and the cart page listen to it.', consequence: 'Every screen sees the same cart. The badge, the list and the details screen update together and the model can be tested without any UI.', quality: 'best' },
+            { text: 'Keep a StatefulWidget at the very top that holds the list and pass the list and an `onAdd` callback down through every screen.', consequence: 'It works and needs no tools, but each screen between the top and the details must carry the values, and the code gets noisy as the app grows.', quality: 'acceptable' },
+            { text: 'Make `cart` a global variable and add to it from the details screen.', consequence: 'The list changes but nothing tells the badge to rebuild, so the count is stale until something else redraws it.', quality: 'poor' },
+          ],
+          hints: [
+            'Who needs to know when an item is added?',
+            'State that several screens use should live above all of them.',
+            'You need a way for the badge to be told about a change.',
+          ],
+          explanation: 'Lift state to the nearest place above everyone who needs it, and make it observable. A global variable has no way to notify the UI, and passing everything through constructors scales poorly.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'flutter-dart-07-fix-bug-1',
+          kind: 'fix-bug',
+          title: 'The cart that never updates',
+          prompt: 'Items are added to the list, but the cart badge stays at 0. Tap the buggy line and choose the fix.',
+          concept: 'notifyListeners',
+          language: 'dart',
+          code: `class CartModel extends ChangeNotifier {
+  final List<String> _items = [];
+
+  int get count => _items.length;
+
+  void add(String item) {
+    _items.add(item);
+  }
+}`,
+          bugLine: 7,
+          fixes: [
+            { line: '_items.add(item); notifyListeners();', correct: true, why: 'After the change, `notifyListeners` tells every listener (the ListenableBuilder or `context.watch`) to rebuild.' },
+            { line: '_items.add(item); setState(() {});', correct: false, why: '`setState` belongs to State objects. A ChangeNotifier has no `setState`, so this does not compile.' },
+            { line: '_items = [..._items, item];', correct: false, why: '`_items` is `final`, so it cannot be reassigned, and nothing would notify the listeners anyway.' },
+          ],
+          hints: [
+            'The data changes, but nobody is told.',
+            'A ChangeNotifier has a method to announce a change to listeners.',
+            'Call `notifyListeners()` right after the list is changed.',
+          ],
+          explanation: 'ChangeNotifier does not watch its fields. It only tells listeners about a change when you call `notifyListeners()`, so every method that changes visible data must call it.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'flutter-dart-07-predict-output-1',
+          kind: 'predict-output',
+          title: 'How many listeners were told?',
+          prompt: 'Run the program in your head and type what it prints (it runs under `flutter test`, because ChangeNotifier belongs to Flutter).',
+          concept: 'ChangeNotifier',
+          language: 'dart',
+          code: `import 'package:flutter/foundation.dart';
+
+class Counter extends ChangeNotifier {
+  int value = 0;
+
+  void increment() {
+    value++;
+    notifyListeners();
+  }
+}
+
+void main() {
+  final counter = Counter();
+  var heard = 0;
+  counter.addListener(() => heard++);
+  counter.increment();
+  counter.increment();
+  counter.value = 10;
+  print('$heard \${counter.value}');
+}`,
+          expected: '2 10',
+          choices: ['2 10', '3 10', '2 2', '0 10'],
+          wrongNotes: {
+            '3 10': 'Setting `counter.value = 10` directly does not call `notifyListeners`, so the listener is not told a third time.',
+            '2 2': 'The value was set to 10 directly after the two increments, so it is 10.',
+            '0 10': 'The listener was added before the increments, and each `increment` notifies it.',
+          },
+          hints: [
+            'Count only the calls that reach `notifyListeners()`.',
+            'The direct assignment skips `increment`.',
+            'Two notifications, and the final value is whatever was assigned last.',
+          ],
+          explanation: 'Each `increment` calls `notifyListeners`, so the listener runs twice. The direct assignment changes the value to 10 without notifying anybody.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'flutter-dart-07-match-1',
+          kind: 'match',
+          title: 'Which kind of state is it?',
+          prompt: 'Match each piece of data to where it should live.',
+          concept: 'ephemeral versus app state',
+          labels: { terms: 'The data', meanings: 'Where it belongs' },
+          pairs: [
+            { term: 'Whether the password field is showing its text or dots', definition: 'Ephemeral state in the widget, changed with `setState`', note: 'Only that one field cares about it.' },
+            { term: 'The signed-in customer, needed by six different screens', definition: 'A shared model above the screens, read with `watch` or a builder', note: 'Many screens need it, so it must live above them.' },
+            { term: 'A product name that the list passes to its row widget', definition: 'Not state of the row at all: a constructor parameter', note: 'The parent owns it, and the row just displays it.' },
+            { term: 'The number on a cart badge that should change whenever an item is added elsewhere', definition: 'A ListenableBuilder or `watch` around the badge, listening to the cart model', note: 'The badge does not own the number; it listens for changes.' },
+          ],
+          hints: [
+            'Ask who else needs the data.',
+            'One of these is not state at all: the parent already has it.',
+            'The badge only displays a value and has to be told when it changes.',
+          ],
+          explanation: 'Data used by one widget stays local; data used by many lives above them; data a parent already holds is passed in; and widgets that only display shared data listen for its changes.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'flutter-dart-07-q1',
+        prompt: 'Two screens need the same list of favourite shops. What does "lifting state up" mean here?',
+        choices: [
+          'Storing the list in a global variable at the top of the file',
+          'Placing it in a `late` field so it loads only when it is needed',
+          'Moving the list to a place above both screens, so both read it and ask it to change',
+        ],
+        answer: 2,
+        explanation: 'Lifting state up means moving it to the nearest common ancestor (or higher) so every widget that needs it can read the same data.',
+      },
+      {
+        id: 'flutter-dart-07-q2',
+        prompt: 'Which statement about `context.watch<CartModel>()` and `context.read<CartModel>()` is correct?',
+        choices: [
+          '`watch` is for event handlers and `read` for build methods',
+          '`watch` subscribes during build and rebuilds on change; `read` gets the model once, for handlers',
+          'They are identical, and the names only describe your intent',
+          'Both rebuild the widget, but `read` does it twice as fast',
+        ],
+        answer: 1,
+        explanation: '`watch` makes the widget depend on the model so it rebuilds on changes. `read` just fetches the model, which is right for a button\'s `onPressed`.',
+      },
+      {
+        id: 'flutter-dart-07-q3',
+        prompt: 'A teammate says "the Flutter docs tell us to use Riverpod". What do the docs\' state-management page actually say?',
+        choices: [
+          'It recommends provider for every app, and calls other packages obsolete',
+          'It lists built-in options and says the best choice for your app depends on complexity and team',
+          'It says setState is the only supported way to manage state',
+        ],
+        answer: 1,
+        explanation: 'The official page describes setState, ValueNotifier with InheritedNotifier and InheritedWidget, and points to community packages without recommending one.',
+      },
+      {
+        id: 'flutter-dart-07-q4',
+        prompt: 'In the architecture guide\'s layering, where does a ChangeNotifier that holds a screen\'s state and exposes methods like `add` sit?',
+        choices: [
+          'In the view layer, as a widget',
+          'In the view model of the UI layer',
+          'In the service layer, wrapping an API',
+        ],
+        answer: 1,
+        explanation: 'View models hold the state for a view and expose commands the view calls. Services are stateless wrappers around data sources, and views are widgets.',
+      },
+    ],
+    task: {
+      title: 'Share a cart between two screens',
+      minutes: 20,
+      steps: [
+        'Create `CartModel` and a two-screen app: a product list with Add buttons, and a cart page that lists the items.',
+        'Show a count badge in the product list\'s app bar using a `ListenableBuilder`. Remove `notifyListeners()` and watch the badge stop updating, then restore it.',
+        'Run `flutter pub add provider`, wrap the app in a `ChangeNotifierProvider` and replace the manual passing with `context.watch` and `context.read`.',
+        'Write a unit test that calls `add` twice, listens, and expects two notifications.',
+      ],
+    },
+  },
+  {
+    id: 'flutter-dart-08',
+    day: 8,
+    title: 'Forms, input and validation',
+    summary: 'Build a validated form with TextFormField, controllers and a Form key, parse money safely, and show errors at the right moment.',
+    intro: {
+      objectives: [
+        'Build a form with `Form`, `TextFormField` and a `GlobalKey<FormState>`',
+        'Write validators that return an error message or `null`',
+        'Create and dispose `TextEditingController`s correctly',
+        'Choose when errors should appear and parse a peso amount into centavos safely',
+      ],
+      why: 'Almost every real app collects input: a login, a new expense, a delivery address. A form that checks its input and explains mistakes kindly is the difference between an app people trust and one they abandon.',
+    },
+    minutes: 30,
+    skills: ['forms-validation'],
+    body: [
+      { type: 'paragraph', text: "You already use text input every day, so the new part here is how Flutter organises it. There are three pieces. A **TextField** shows a box and reads what is typed. A **TextEditingController** is an object you hold on to, to read or change that text from code. A **Form** groups several fields so you can check them all at once. The field that plugs into a Form is **TextFormField**, which is a TextField with a `validator`." },
+      { type: 'heading', text: 'Validators: return a message, or null' },
+      { type: 'paragraph', text: "A validator is a function that receives the current text and returns either an error message (a `String`) or `null` when the input is fine. That convention trips up many beginners: **any non-null string is treated as an error**, even \"OK\". Keep the checks themselves in plain Dart functions, with no widgets, so you can test them quickly." },
+      { type: 'paragraph', text: "Money needs special care. As lesson 2 showed, a `double` cannot hold ₱0.10 exactly, so we parse what the person typed straight into whole centavos with a pattern: pesos, then an optional dot and one or two digits. Commas are allowed as thousand separators. Anything else is rejected." },
+      {
+        type: 'code',
+        language: 'dart',
+        label: 'Plain-Dart parsing and validators',
+        code: `int? parsePesos(String input) {
+  final text = input.trim().replaceAll(',', '');
+  final match = RegExp(r'^(\\d+)(?:\\.(\\d{1,2}))?$').firstMatch(text);
+  if (match == null) return null;
+  final pesos = int.parse(match.group(1)!);
+  final cents = int.parse((match.group(2) ?? '0').padRight(2, '0'));
+  return pesos * 100 + cents;
+}
+
+String? validateName(String? value) {
+  if (value == null || value.trim().isEmpty) return 'Enter the item name';
+  return null;
+}
+
+String? validatePrice(String? value) {
+  final centavos = parsePesos(value ?? '');
+  if (centavos == null) return 'Enter an amount like 49.50';
+  if (centavos == 0) return 'The price must be above zero';
+  return null;
+}
+
+void main() {
+  print(parsePesos('49.5'));
+  print(parsePesos('1,250.75'));
+  print(parsePesos('4.999'));
+  print(validatePrice('abc'));
+  print(validatePrice('0'));
+  print(validatePrice('54.50'));
+}`,
+      },
+      { type: 'paragraph', text: "Run it and you get `4950`, `125075`, `null` (three decimals do not match the pattern), then `Enter an amount like 49.50`, `The price must be above zero` and finally `null`, which means \"valid\". The `padRight(2, '0')` turns `.5` of a peso into 50 centavos, not 5. Notice the double meaning of `null`: `parsePesos` returns null for \"cannot read this\", while a validator returns null for \"no problem\". Do not mix them up." },
+      { type: 'heading', text: 'Putting a form together' },
+      { type: 'paragraph', text: "Create a `GlobalKey<FormState>` in your State class and give it to the `Form`. The key is a handle to the form's own state, which is how you reach `validate()`. Calling `validate()` runs every field's validator, shows the messages under the fields that fail, and returns `true` only when all pass. Create each `TextEditingController` in the State, and **dispose it**, as you learned in lesson 4." },
+      {
+        type: 'code',
+        language: 'dart',
+        label: 'An item form',
+        code: `import 'package:flutter/services.dart';
+import 'package:material_ui/material_ui.dart';
+
+class ItemForm extends StatefulWidget {
+  const ItemForm({super.key, required this.onSave});
+
+  final void Function(String name, int centavos, String category) onSave;
+
+  @override
+  State<ItemForm> createState() => _ItemFormState();
+}
+
+class _ItemFormState extends State<ItemForm> {
+  final _formKey = GlobalKey<FormState>();
+  final _name = TextEditingController();
+  final _price = TextEditingController();
+  String _category = 'Food';
+
+  @override
+  void dispose() {
+    _name.dispose();
+    _price.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    if (!_formKey.currentState!.validate()) return;
+    widget.onSave(_name.text.trim(), parsePesos(_price.text)!, _category);
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Form(
+      key: _formKey,
+      autovalidateMode: AutovalidateMode.onUserInteraction,
+      child: Column(
+        children: [
+          TextFormField(
+            controller: _name,
+            decoration: const InputDecoration(labelText: 'Item'),
+            textInputAction: TextInputAction.next,
+            validator: validateName,
+          ),
+          TextFormField(
+            controller: _price,
+            decoration: const InputDecoration(labelText: 'Price', prefixText: '₱'),
+            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+            inputFormatters: [FilteringTextInputFormatter.allow(RegExp(r'[0-9.,]'))],
+            validator: validatePrice,
+          ),
+          DropdownButtonFormField<String>(
+            initialValue: _category,
+            items: const [
+              DropdownMenuItem(value: 'Food', child: Text('Food')),
+              DropdownMenuItem(value: 'Drinks', child: Text('Drinks')),
+            ],
+            onChanged: (value) => setState(() => _category = value ?? _category),
+          ),
+          FilledButton(onPressed: _submit, child: const Text('Save')),
+        ],
+      ),
+    );
+  }
+}`,
+      },
+      {
+        type: 'list',
+        items: [
+          '`validator: validateName` passes a function by name; Flutter calls it with the field\'s text.',
+          '`keyboardType` with `decimal: true` shows a number pad with a decimal point, and `inputFormatters` stops other characters from being typed at all. These help the person, but they do not replace the validator, because text can also be pasted in.',
+          '`textInputAction: TextInputAction.next` makes the keyboard\'s action key move to the next field.',
+          '`_submit` returns early if `validate()` fails. Only a valid form reaches `widget.onSave`, so `parsePesos(...)!` is safe: the validator already proved it is not null.',
+          '`DropdownButtonFormField` is the Form-aware dropdown; it takes the starting choice as `initialValue`.',
+        ],
+      },
+      { type: 'heading', text: 'When should errors appear?' },
+      { type: 'paragraph', text: "Showing \"Enter the item name\" the instant the form opens feels like being scolded before you did anything. The Form's `autovalidateMode` controls this. `AutovalidateMode.onUserInteraction` (used above) starts checking a field only after the person has touched it, and every field is checked when they press Save. The docs also list `onUnfocus`, which checks a field when it loses focus. Use `disabled` (the default) if you only want checks on Save." },
+      {
+        type: 'version',
+        text: 'The Flutter form-validation recipe uses `Form`, `GlobalKey<FormState>`, a `TextFormField` validator that returns a message or null, `validate()`, and `autovalidateMode` values such as `AutovalidateMode.onUserInteraction` and `AutovalidateMode.onUnfocus`. Its imports use `package:material_ui/material_ui.dart`. The code in this lesson was analysed and exercised in widget tests on Flutter 3.50, including `DropdownButtonFormField` with `initialValue`, which replaces the older `value` argument.',
+        checked: CHECKED,
+        sources: [DOCS.formValidation, DOCS.blog350, DOCS.materialMigration],
+      },
+      { type: 'warning', text: 'After an `await` in a submit handler (saving to a database, for example), check `if (!mounted) return;` before using the context to show a message or close the screen. The person may have left while you waited.' },
+      {
+        type: 'takeaways',
+        items: [
+          'A TextFormField inside a Form lets you check every field at once with `_formKey.currentState!.validate()`.',
+          'A validator returns an error message or `null` for valid; any non-null string counts as an error.',
+          'Keep parsing and validation in plain Dart functions that are easy to test, and keep money as integer centavos.',
+          'Create a TextEditingController in `initState` or as a field, and always dispose it.',
+          '`AutovalidateMode.onUserInteraction` avoids showing errors before the person has typed anything.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'flutter-dart-08-predict-output-1',
+          kind: 'predict-output',
+          title: 'Which amounts pass?',
+          prompt: 'Predict what each validator call returns. `null` is printed as null.',
+          concept: 'validators',
+          language: 'dart',
+          code: `int? parsePesos(String input) {
+  final text = input.trim().replaceAll(',', '');
+  final match = RegExp(r'^(\\d+)(?:\\.(\\d{1,2}))?$').firstMatch(text);
+  if (match == null) return null;
+  final pesos = int.parse(match.group(1)!);
+  final cents = int.parse((match.group(2) ?? '0').padRight(2, '0'));
+  return pesos * 100 + cents;
+}
+
+String? validatePrice(String? value) {
+  final centavos = parsePesos(value ?? '');
+  if (centavos == null) return 'Enter an amount like 49.50';
+  if (centavos == 0) return 'The price must be above zero';
+  return null;
+}
+
+void main() {
+  print(validatePrice('49.5'));
+  print(validatePrice(''));
+  print(validatePrice('0.00'));
+  print(validatePrice('12.345'));
+  print(parsePesos(' 2,000 '));
+}`,
+          expected: 'null\nEnter an amount like 49.50\nThe price must be above zero\nEnter an amount like 49.50\n200000',
+          choices: [
+            'null\nEnter an amount like 49.50\nThe price must be above zero\nEnter an amount like 49.50\n200000',
+            'null\nnull\nThe price must be above zero\nnull\n2000',
+            'Enter an amount like 49.50\nEnter an amount like 49.50\nThe price must be above zero\nEnter an amount like 49.50\n200000',
+          ],
+          wrongNotes: {
+            'null\nnull\nThe price must be above zero\nnull\n2000': 'An empty string does not match the pattern, and neither does three decimals; and `2,000` is 2000 pesos, which is 200000 centavos.',
+            'Enter an amount like 49.50\nEnter an amount like 49.50\nThe price must be above zero\nEnter an amount like 49.50\n200000': '`49.5` is a valid amount (50 centavos are padded in), so the first validator call returns null, meaning no error.',
+          },
+          hints: [
+            'A validator returns null when the value is fine.',
+            'The pattern allows pesos plus an optional dot and one or two digits only.',
+            '`.padRight(2, \'0\')` makes `.5` mean 50 centavos, and the last line is in centavos.',
+          ],
+          explanation: '49.5 is valid. An empty string and 12.345 (three decimals) do not match the pattern. 0.00 parses to zero, which the second check rejects. And 2,000 pesos is 200000 centavos.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'flutter-dart-08-fix-bug-1',
+          kind: 'fix-bug',
+          title: 'Every field says it is wrong',
+          prompt: 'Whatever is typed, this field shows a red error message. Tap the line that causes it, then pick the fix.',
+          concept: 'validator return values',
+          language: 'dart',
+          code: `TextFormField(
+  validator: (value) {
+    if (value == null || value.isEmpty) {
+      return 'Required';
+    }
+    return '';
+  },
+)`,
+          bugLine: 6,
+          fixes: [
+            { line: 'return null;', correct: true, why: 'A validator returns null to say "no problem". Any non-null string is shown as an error.' },
+            { line: 'return \'OK\';', correct: false, why: 'Any non-null string, including "OK", is shown as an error message.' },
+            { line: 'return false;', correct: false, why: 'The validator must return a String or null, so a `bool` does not compile.' },
+          ],
+          hints: [
+            'What does Flutter do with a validator result that is not null?',
+            'An empty string is still a string, so it is an error.',
+            'Return the value that means "valid".',
+          ],
+          explanation: 'Flutter treats every non-null result as an error message, even an empty string. Returning `null` is the only way to say the input is valid.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'flutter-dart-08-fill-blank-1',
+          kind: 'fill-blank',
+          title: 'Wire up the Form',
+          prompt: 'Fill in the blanks so the Save button validates the form, and errors only show once the person has touched a field.',
+          concept: 'Form and FormState',
+          language: 'dart',
+          code: `class _EntryFormState extends State<EntryForm> {
+  final _formKey = GlobalKey<___>();
+
+  @override
+  Widget build(BuildContext context) {
+    return Form(
+      key: _formKey,
+      autovalidateMode: AutovalidateMode.___,
+      child: Column(
+        children: [
+          TextFormField(
+            validator: (value) => (value ?? '').isEmpty ? 'Required' : null,
+          ),
+          FilledButton(
+            onPressed: () {
+              if (_formKey.currentState!.___()) {
+                debugPrint('saved');
+              }
+            },
+            child: const Text('Save'),
+          ),
+        ],
+      ),
+    );
+  }
+}`,
+          blanks: [
+            { answers: ['FormState'], feedback: 'The key points at the Form\'s own state object, which is `FormState`.' },
+            { answers: ['onUserInteraction'], feedback: '`onUserInteraction` waits until the person has touched a field; `always` would show errors immediately.' },
+            { answers: ['validate'], feedback: '`validate()` runs every validator and returns true when all pass.' },
+          ],
+          bank: ['FormState', 'onUserInteraction', 'validate', 'always', 'submit', 'TextFormState'],
+          hints: [
+            'The key type is named after the Form\'s state object.',
+            'One mode waits for the person to interact before checking.',
+            'The method that runs all validators has a very direct name.',
+          ],
+          explanation: '`GlobalKey<FormState>` gives access to the form, `validate()` runs all validators, and `onUserInteraction` delays errors until a field has been touched.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'flutter-dart-08-scenario-1',
+          kind: 'scenario',
+          title: 'When to show the errors',
+          prompt: 'Choose the validation timing for the sign-up form.',
+          concept: 'validation timing',
+          situation: 'Your sign-up form has an email, a mobile number and a password. In testing, people complain that red messages fill the screen the moment it opens, before they have typed a letter.',
+          options: [
+            { text: 'Validate each field after the person has interacted with it, and every field again when they press Sign up.', consequence: 'The screen opens clean, a field gets feedback only after it has been touched, and pressing Sign up reveals anything still missing.', quality: 'best' },
+            { text: 'Validate only when the person presses Sign up, and show all the messages then.', consequence: 'The screen opens clean, but a person who typed a bad email only finds out at the end, which feels slower.', quality: 'acceptable' },
+            { text: 'Keep validating every field on every rebuild, from the first frame.', consequence: 'This is what caused the complaint: errors appear before the person has done anything.', quality: 'poor' },
+          ],
+          hints: [
+            'What causes the red messages before any typing?',
+            'Feedback is helpful once a person has had a chance to type.',
+            'Look for the Form setting that waits for interaction.',
+          ],
+          explanation: 'Checking after interaction plus a final check on submit gives timely feedback without scolding. Validating only on submit is acceptable but slower to help; validating from the first frame causes the complaint.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'flutter-dart-08-q1',
+        prompt: 'What must a `TextFormField` validator return when the text is acceptable?',
+        choices: [
+          'An empty string, which means no message',
+          'The text that was entered, unchanged',
+          'null',
+          'true',
+        ],
+        answer: 2,
+        explanation: 'The validator returns a String? where null means valid. An empty string is non-null, so it would still be treated as an error.',
+      },
+      {
+        id: 'flutter-dart-08-q2',
+        prompt: 'Why does the item form store prices as centavos parsed from text instead of calling `double.parse`?',
+        choices: [
+          'Doubles cannot be used inside a `TextFormField` at all',
+          'Doubles are slower to parse than integers on a phone',
+          'A double cannot hold values like 0.10 exactly, so integer centavos keep totals exact',
+        ],
+        answer: 2,
+        explanation: 'Binary floating point cannot represent many decimal amounts exactly, so repeated arithmetic drifts. Whole centavos in an `int` do not.',
+      },
+      {
+        id: 'flutter-dart-08-q3',
+        prompt: 'What does `_formKey.currentState!.validate()` do?',
+        choices: [
+          'Saves the text of every field into the controllers',
+          'Runs each field\'s validator, shows the messages, and returns true only if all pass',
+          'Resets all fields to their initial values and clears errors',
+        ],
+        answer: 1,
+        explanation: '`validate()` runs every validator in the form. `save()` calls each field\'s `onSaved`, and `reset()` clears the form.',
+      },
+      {
+        id: 'flutter-dart-08-q4',
+        prompt: 'A screen creates two `TextEditingController`s in its State. What is the correct handling?',
+        choices: [
+          'Create them inside `build` so they are always fresh',
+          'Leave them alone, since the Form disposes controllers when it closes',
+          'Create them once as State fields and call `dispose()` on both in `dispose`',
+        ],
+        answer: 2,
+        explanation: 'A controller created in `build` would be recreated and would lose the text on each rebuild. Controllers are not disposed for you.',
+      },
+    ],
+    task: {
+      title: 'An add-expense form',
+      minutes: 20,
+      steps: [
+        'Create the `parsePesos` and validator functions in a plain `.dart` file and write a few `assert` lines or a test that checks the cases in the lesson.',
+        'Build `ItemForm` and show it in a screen, printing the saved values with `debugPrint`.',
+        'Add a third field for a note that is optional but limited to 40 characters with `maxLength`, and a validator that rejects a name shorter than 2 characters.',
+        'Try `AutovalidateMode.disabled`, `onUserInteraction` and `onUnfocus` and note when the errors appear in each case.',
+      ],
+    },
+  },
+  {
+    id: 'flutter-dart-09',
+    day: 9,
+    title: 'Networking and local storage',
+    summary: 'Fetch JSON with the http package, show loading, error and data states, and save data on the device with shared_preferences or SQLite.',
+    intro: {
+      objectives: [
+        'Fetch and parse JSON with `http`, `jsonDecode` and a `fromJson` factory',
+        'Show loading, error and data states with `FutureBuilder`',
+        'Save small settings with shared_preferences and a list as JSON text',
+        'Choose between key-value storage, SQLite and a cloud database',
+      ],
+      why: 'Most useful apps talk to a server or remember something between launches. Handling a slow or failing network and persisting data correctly is what makes an app feel reliable.',
+    },
+    minutes: 35,
+    skills: ['networking-storage'],
+    body: [
+      { type: 'paragraph', text: "An app that cannot reach the internet, or forgets everything when it closes, is not much of an app. This lesson covers both halves: getting data from a server, and keeping data on the phone. The common thread is that both take time and both can fail, so your code has to wait politely and have a plan for the failure." },
+      { type: 'heading', text: 'Fetching JSON' },
+      { type: 'paragraph', text: "Flutter's docs recommend the **http** package for simple requests, rather than the platform-specific `dart:io` or `dart:html`. Add it with `flutter pub add http`. A request returns a `Future<Response>`; you check the `statusCode`, decode the `body` text with `jsonDecode` (from `dart:convert`), and turn the resulting map into one of your own classes. Anything that goes wrong should surface as an exception, never as quietly missing data." },
+      { type: 'paragraph', text: "Two good habits are built into this code. It takes the `http.Client` as a parameter instead of calling the global `http.get`, which lets a test hand it a fake client and makes the owner of the client responsible for closing it. And it parses JSON with a **pattern**: the `switch` accepts the map only if it has the right keys with the right types, and otherwise throws a clear `FormatException`." },
+      {
+        type: 'code',
+        language: 'dart',
+        label: 'A model and a fetch function',
+        code: `import 'dart:convert';
+
+import 'package:http/http.dart' as http;
+
+class Todo {
+  const Todo({required this.id, required this.title, required this.done});
+
+  final int id;
+  final String title;
+  final bool done;
+
+  factory Todo.fromJson(Map<String, Object?> json) {
+    return switch (json) {
+      {'id': int id, 'title': String title, 'completed': bool done} =>
+        Todo(id: id, title: title, done: done),
+      _ => throw const FormatException('Unexpected todo JSON'),
+    };
+  }
+}
+
+Future<Todo> fetchTodo(http.Client client, int id) async {
+  final response = await client
+      .get(Uri.parse('https://jsonplaceholder.typicode.com/todos/$id'))
+      .timeout(const Duration(seconds: 10));
+  if (response.statusCode != 200) {
+    throw Exception('Server answered \${response.statusCode}');
+  }
+  return Todo.fromJson(jsonDecode(response.body) as Map<String, Object?>);
+}
+
+Future<void> main() async {
+  final client = http.Client();
+  try {
+    final todo = await fetchTodo(client, 1);
+    print('\${todo.id}: \${todo.title} (done: \${todo.done})');
+  } finally {
+    client.close();
+  }
+}`,
+      },
+      { type: 'paragraph', text: "Run with `dart run` and the sample service answers `1: delectus aut autem (done: false)`. `.timeout(...)` turns a request that hangs into an error after ten seconds. The `finally` block closes the client whether the request worked or not." },
+      { type: 'warning', text: 'Mobile systems block plain `http://` traffic by default, so use `https://` URLs. On Android, add `<uses-permission android:name="android.permission.INTERNET"/>` to `AndroidManifest.xml` for release builds; the debug build includes it, so the app can work while you develop and fail only once released.' },
+      { type: 'heading', text: 'Showing loading, error and data' },
+      { type: 'paragraph', text: "A screen that depends on a Future has at least three states: waiting, failed and done. **FutureBuilder** rebuilds as the Future moves between them. The most important rule: **do not create the Future inside `build`**. `build` runs often, so `future: fetchTodo(...)` there would start a new request on every rebuild. Start it once in `initState` and keep it in a field. To retry, assign a new Future inside `setState`." },
+      {
+        type: 'code',
+        language: 'dart',
+        label: 'Three states with FutureBuilder',
+        code: `import 'package:material_ui/material_ui.dart';
+
+class TodoScreen extends StatefulWidget {
+  const TodoScreen({super.key, required this.client});
+
+  final http.Client client;
+
+  @override
+  State<TodoScreen> createState() => _TodoScreenState();
+}
+
+class _TodoScreenState extends State<TodoScreen> {
+  late Future<Todo> _todo;
+
+  @override
+  void initState() {
+    super.initState();
+    _todo = fetchTodo(widget.client, 1);
+  }
+
+  void _retry() {
+    setState(() {
+      _todo = fetchTodo(widget.client, 1);
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return FutureBuilder<Todo>(
+      future: _todo,
+      builder: (context, snapshot) {
+        if (snapshot.connectionState != ConnectionState.done) {
+          return const Center(child: CircularProgressIndicator());
+        }
+        if (snapshot.hasError) {
+          return Column(
+            children: [
+              Text('Could not load: \${snapshot.error}'),
+              FilledButton(onPressed: _retry, child: const Text('Try again')),
+            ],
+          );
+        }
+        return Text(snapshot.data!.title);
+      },
+    );
+  }
+}`,
+      },
+      { type: 'warning', text: 'Write `setState(() { _todo = ...; });` with braces. The shorter `setState(() => _todo = fetchTodo(...))` returns the Future, and Flutter throws "setState() callback argument returned a Future". We hit this while testing this very example.' },
+      {
+        type: 'version',
+        text: 'The Flutter fetch-data recipe uses the `http` package, checks for status code 200, throws otherwise, parses JSON with a `fromJson` factory (the pattern-matching `switch` is one option), and stores the Future in `initState` rather than `build`. The `http` package (publisher dart.dev) was at version 1.6.0, and its page recommends passing a `Client` instead of calling top-level functions, so tests can use `MockClient` from `package:http/testing.dart`, and closing the client when finished.',
+        checked: CHECKED,
+        sources: [DOCS.fetchData, DOCS.http],
+      },
+      { type: 'heading', text: 'Keeping data on the device' },
+      { type: 'paragraph', text: "The Flutter docs have a guide to choosing a database, and its questions are the right ones to ask yourself: what shape is the data, does it stay on the device or sync to the cloud, is it live, and must it work offline?" },
+      {
+        type: 'table',
+        headers: ['Option', 'Good for', 'Notes'],
+        rows: [
+          ['Key-value (`shared_preferences`)', 'Small settings: dark mode, last chosen tab, a shop name', 'Stores int, double, bool, String and List<String>. The package says not to use it for critical data.'],
+          ['Secure storage (`flutter_secure_storage`)', 'Sensitive values such as tokens', 'The docs\' guide recommends it over shared_preferences for sensitive data.'],
+          ['SQLite (`sqflite` or `drift`)', 'Lots of structured, searchable records on the device', 'sqflite gives direct SQL; drift adds type-safe queries, reactive streams and migrations.'],
+          ['Cloud Firestore or Firebase SQL Connect', 'Data shared across devices, live updates, sync', 'Needs a Firebase project and the matching packages.'],
+        ],
+        caption: 'Combine them: settings in key-value, records in SQLite, shared data in the cloud',
+      },
+      { type: 'paragraph', text: "For a setting, shared_preferences is two lines. It now has three APIs, and its page highly encourages new code to use `SharedPreferencesAsync` (always reads the platform store, so it stays correct if something else changes the value) or `SharedPreferencesWithCache` (faster synchronous reads after setup), with the older `SharedPreferences` class scheduled for deprecation." },
+      {
+        type: 'code',
+        language: 'dart',
+        label: 'Saving and loading a setting',
+        code: `import 'package:shared_preferences/shared_preferences.dart';
+
+Future<void> saveShopName(String name) async {
+  final prefs = SharedPreferencesAsync();
+  await prefs.setString('shop_name', name);
+}
+
+Future<String> loadShopName() async {
+  final prefs = SharedPreferencesAsync();
+  return await prefs.getString('shop_name') ?? 'My shop';
+}`,
+      },
+      { type: 'paragraph', text: "`getString` returns a `String?`, because the key may never have been saved, so `??` supplies a default. For a small list, such as a few hundred ledger entries, a simple route is to turn it into one JSON text value and store that. Give every class a `toJson` and a `fromJson`, mirroring what you wrote for the network:" },
+      {
+        type: 'code',
+        language: 'dart',
+        label: 'A list as JSON text',
+        code: `import 'dart:convert';
+
+class Entry {
+  const Entry({required this.item, required this.centavos});
+
+  final String item;
+  final int centavos;
+
+  Map<String, Object?> toJson() => {'item': item, 'centavos': centavos};
+
+  factory Entry.fromJson(Map<String, Object?> json) =>
+      Entry(item: json['item'] as String, centavos: json['centavos'] as int);
+}
+
+void main() {
+  final entries = [
+    const Entry(item: 'Rice', centavos: 5400),
+    const Entry(item: 'Egg', centavos: 1000),
+  ];
+  final text = jsonEncode(entries.map((e) => e.toJson()).toList());
+  print(text);
+
+  final back = (jsonDecode(text) as List<dynamic>)
+      .map((j) => Entry.fromJson(j as Map<String, Object?>))
+      .toList();
+  print(back.length);
+  print(back.first.item);
+}`,
+      },
+      { type: 'paragraph', text: "It prints `[{\"item\":\"Rice\",\"centavos\":5400},{\"item\":\"Egg\",\"centavos\":1000}]`, then `2`, then `Rice`. Once the data grows to thousands of rows or needs searching and filtering, move to SQLite. If you do, the Flutter docs insist on **parameterised queries**: pass values through `whereArgs`, never by building the SQL string yourself." },
+      {
+        type: 'code',
+        language: 'dart',
+        label: 'Safe deletes with sqflite',
+        code: `import 'package:sqflite/sqflite.dart';
+
+Future<void> removeEntry(Database db, int id) async {
+  await db.delete('entries', where: 'id = ?', whereArgs: [id]);
+}`,
+      },
+      {
+        type: 'version',
+        text: 'Checked on this date: shared_preferences 2.5.6 (published by flutter.dev) recommends SharedPreferencesAsync or SharedPreferencesWithCache for new code and says the plugin must not be used for critical data. The docs\' database guide lists Cloud Firestore, Firebase SQL Connect, SQLite (sqflite or drift) and key-value storage, and recommends flutter_secure_storage for sensitive values. The SQLite recipe notes that sqflite supports macOS, iOS and Android only. Flutter 3.50\'s docs added the "choose a database" guide.',
+        checked: CHECKED,
+        sources: [DOCS.sharedPreferences, DOCS.chooseDatabase, DOCS.sqlite, DOCS.whatsNew],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'Fetch with `http`, check `statusCode`, decode with `jsonDecode`, and parse into a class with a `fromJson` factory that throws on unexpected data.',
+          'Pass an `http.Client` in (so tests can fake it) and close it when finished; add a timeout.',
+          'Create a Future once in `initState`, never in `build`, and show loading, error (with retry) and data states with `FutureBuilder`.',
+          'Use shared_preferences for small settings, secure storage for secrets, SQLite for many records, and a cloud database for shared live data.',
+          'Never build SQL by joining strings: use `where` with `whereArgs`.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'flutter-dart-09-predict-output-1',
+          kind: 'predict-output',
+          title: 'Reading decoded JSON',
+          prompt: 'Predict the six lines this program prints.',
+          concept: 'jsonDecode and jsonEncode',
+          language: 'dart',
+          code: `import 'dart:convert';
+
+void main() {
+  const text = '{"name":"Rice","qty":2,"tags":["staple","grain"],"note":null}';
+  final data = jsonDecode(text) as Map<String, dynamic>;
+  print(data['name']);
+  print(data['qty'] * 2);
+  print((data['tags'] as List).length);
+  print(data['note'] ?? 'none');
+  print(data['price']);
+  print(jsonEncode({'ok': true, 'n': 1}));
+}`,
+          expected: 'Rice\n4\n2\nnone\nnull\n{"ok":true,"n":1}',
+          choices: [
+            'Rice\n4\n2\nnone\nnull\n{"ok":true,"n":1}',
+            'Rice\n22\n2\nnull\nnull\n{ok: true, n: 1}',
+            'Rice\n4\n2\nnone\nnone\n{"ok":true,"n":1}',
+          ],
+          wrongNotes: {
+            'Rice\n22\n2\nnull\nnull\n{ok: true, n: 1}': '`qty` is decoded as the number 2, not the text "2", so `* 2` is 4. A null value falls back to `none` with `??`, and `jsonEncode` writes real JSON text with quotes.',
+            'Rice\n4\n2\nnone\nnone\n{"ok":true,"n":1}': 'The `??` fallback is only on the `note` line. A key that is absent from the map, like `price`, gives null and prints null.',
+          },
+          hints: [
+            'JSON numbers decode to Dart numbers, and JSON null to null.',
+            'Only the `note` line uses the `??` fallback.',
+            'A key that does not exist in the map gives null, and `jsonEncode` produces JSON text with double quotes.',
+          ],
+          explanation: '`data[\'qty\']` is the number 2, so doubling it prints 4. The tags list has two items. `note` is null, so `??` picks none. `price` is not in the map, so it is null. `jsonEncode` writes compact JSON text.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'flutter-dart-09-arrange-1',
+          kind: 'arrange',
+          title: 'Build a safe fetch function',
+          prompt: 'Put the lines in order so the function builds the address, makes the request, rejects bad status codes and then parses the JSON.',
+          concept: 'fetching and checking a response',
+          language: 'dart',
+          solution: [
+            'import \'dart:convert\';',
+            'import \'package:http/http.dart\' as http;',
+            'Future<Map<String, Object?>> fetchJson(http.Client client, String address) async {',
+            '  final response = await client.get(Uri.parse(address));',
+            '  if (response.statusCode != 200) {',
+            '    throw Exception(\'Server answered \${response.statusCode}\');',
+            '  }',
+            '  return jsonDecode(response.body) as Map<String, Object?>;',
+            '}',
+          ],
+          alternatives: [
+            [
+              'import \'package:http/http.dart\' as http;',
+              'import \'dart:convert\';',
+              'Future<Map<String, Object?>> fetchJson(http.Client client, String address) async {',
+              '  final response = await client.get(Uri.parse(address));',
+              '  if (response.statusCode != 200) {',
+              '    throw Exception(\'Server answered \${response.statusCode}\');',
+              '  }',
+              '  return jsonDecode(response.body) as Map<String, Object?>;',
+              '}',
+            ],
+          ],
+          reasons: [
+            'The imports come first so that `jsonDecode` is known.',
+            'The http import gives the `http.Client` type used in the signature.',
+            'The signature opens the function.',
+            'The request is made first, and its response is needed by everything after.',
+            'Check the status code before using the body.',
+            'Throw an exception instead of continuing with a bad response.',
+            'Close the `if` block.',
+            'Only after the check do we parse the body.',
+            'Close the function.',
+          ],
+          hints: [
+            'Imports go on top, then the function from signature to closing brace.',
+            'You cannot check a response before you have made the request.',
+            'The status check must come before the line that parses the body.',
+          ],
+          explanation: 'The request produces the response, the check rejects errors, and only then is the body decoded. Parsing an error page as JSON would fail with a confusing FormatException instead of a clear message.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'flutter-dart-09-fix-bug-1',
+          kind: 'fix-bug',
+          title: 'The screen that crashes offline',
+          prompt: 'When the phone is offline, the app crashes with a null check error instead of showing a message. Tap the buggy line and choose the fix.',
+          concept: 'handling the error state',
+          language: 'dart',
+          code: `FutureBuilder<Todo>(
+  future: _todo,
+  builder: (context, snapshot) {
+    if (snapshot.connectionState != ConnectionState.done) {
+      return const CircularProgressIndicator();
+    }
+    return Text(snapshot.data!.title);
+  },
+)`,
+          bugLine: 6,
+          fixes: [
+            { line: 'return snapshot.hasError ? Text(\'Could not load: \${snapshot.error}\') : Text(snapshot.data!.title);', correct: true, why: 'When the Future failed, `data` is null, so the error case must be handled before the bang is used.' },
+            { line: 'return Text(snapshot.data?.title ?? \'\');', correct: false, why: 'It stops the crash, but the person sees a blank screen and no explanation, and the error is hidden.' },
+            { line: 'return Text(snapshot.error.toString());', correct: false, why: 'This always shows the error, including when the request succeeded and `error` is null.' },
+          ],
+          hints: [
+            'When a Future fails, what is in `snapshot.data`?',
+            'The `!` on null is the crash. Check for the error first.',
+            'Use `snapshot.hasError` to choose between an error message and the title.',
+          ],
+          explanation: 'A failed Future leaves `snapshot.data` null, so `snapshot.data!` throws. Handling `hasError` first shows a helpful message, and only a successful result reaches the bang.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'flutter-dart-09-match-1',
+          kind: 'match',
+          title: 'Which storage fits?',
+          prompt: 'Match each need to the storage choice that suits it best.',
+          concept: 'choosing storage',
+          labels: { terms: 'The need', meanings: 'The best fit' },
+          pairs: [
+            { term: 'Remember whether the person turned on dark mode', definition: 'shared_preferences', note: 'A single small setting suits key-value storage.' },
+            { term: 'Keep a login token safe on the phone', definition: 'flutter_secure_storage', note: 'The docs recommend secure storage for sensitive values such as tokens.' },
+            { term: 'Search and filter ten thousand expense records offline by date and category', definition: 'SQLite with sqflite or drift', note: 'Large structured records that need queries fit a relational database.' },
+            { term: 'A shared shopping list that updates live on every family member\'s phone', definition: 'Cloud Firestore', note: 'Live, cross-device data needs a cloud database with realtime sync.' },
+          ],
+          hints: [
+            'Think about size, sensitivity and whether the data is shared.',
+            'One need is a secret, one is a setting, one is a big local table and one is shared.',
+            'Live updates between devices need a service in the cloud.',
+          ],
+          explanation: 'Match the storage to the data: a tiny setting, a secret, a large local dataset, and data shared between devices each have a different natural home.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'flutter-dart-09-q1',
+        prompt: 'Why should `future: fetchTodo(client, 1)` not be written directly inside `build`?',
+        choices: [
+          'Because `FutureBuilder` cannot read a Future made inside a method',
+          'Because `build` runs often, so every rebuild would start a new request',
+          'Because a Future must always be declared `final`, never `late`',
+        ],
+        answer: 1,
+        explanation: '`build` can run many times, for example on every `setState`. Starting the request in `initState` and keeping the Future in a field means one request per screen.',
+      },
+      {
+        id: 'flutter-dart-09-q2',
+        prompt: 'A server answers 404 with an HTML error page. What goes wrong if you skip the `statusCode` check and call `jsonDecode(response.body)`?',
+        choices: [
+          'Nothing; jsonDecode quietly returns an empty map',
+          'It throws a FormatException about the HTML, hiding the real problem (the 404)',
+          'The http package retries the request until it succeeds',
+          'The app is blocked by the operating system',
+        ],
+        answer: 1,
+        explanation: 'HTML is not valid JSON, so the decode fails with an unrelated message. Checking the status first gives a precise error.',
+      },
+      {
+        id: 'flutter-dart-09-q3',
+        prompt: 'Which of these is a security mistake when deleting a row with sqflite?',
+        choices: [
+          '`db.delete(\'entries\', where: \'id = \' + userText)`, building the SQL from text',
+          '`db.delete(\'entries\', where: \'id = ?\', whereArgs: [id])`',
+          'Opening the database once and sharing it across the app',
+        ],
+        answer: 0,
+        explanation: 'Joining text into SQL allows SQL injection. `whereArgs` passes values separately so they can never be read as SQL.',
+      },
+      {
+        id: 'flutter-dart-09-q4',
+        prompt: 'You must store a session token on the phone. According to the Flutter docs\' database guide, what should you use?',
+        choices: [
+          'shared_preferences, because it is the simplest key-value store',
+          'A text file in the app\'s documents folder',
+          'flutter_secure_storage, because the token is sensitive',
+        ],
+        answer: 2,
+        explanation: 'The guide recommends secure storage for sensitive data like authentication tokens. shared_preferences is meant for non-critical settings.',
+      },
+    ],
+    task: {
+      title: 'Fetch it, show it, remember it',
+      minutes: 20,
+      steps: [
+        'Run `flutter pub add http shared_preferences`, then build `TodoScreen` with a real `http.Client` created in `main` and closed when the app ends.',
+        'Turn on airplane mode (or use a wrong address) and confirm that the error message and the retry button appear instead of a crash.',
+        'Save the title of the last todo you loaded with `SharedPreferencesAsync` and show it as "Last time:" when the app starts.',
+        'Write a test that passes a `MockClient` returning a 404 and checks that the error text appears.',
+      ],
+    },
+  },
+  // @@MORE_LESSONS@@
+];
+
+const projects: Project[] = [];
+
+export const flutterDartCourse: Course = {
+  id: 'flutter-dart',
+  kind: 'standard',
+  title: 'Flutter and Dart Development',
+  level: 'intermediate',
+  tagline: 'Build real iOS and Android apps with Dart and Flutter, from widgets and state to testing and release.',
+  description: 'Learn Dart and Flutter from the language up: null safety, async code, widgets, layout, navigation, state, forms, storage, theming and release. Flutter is an alternative to the React Native route, taught on its own terms. You finish with a complete small app that has tests.',
+  finishLine: [],
+  objectives: [],
+  audiences: [],
+  skills: [],
+  lessons,
+  projects,
+  icon: 'phone_iphone',
+  updated: '2026-11-14',
+};

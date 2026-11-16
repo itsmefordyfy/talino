@@ -1,0 +1,2131 @@
+import type { Course, Lesson, Project } from '../../types';
+
+// The subject is stable (HTTP semantics, JSON, OpenAPI), so version notes cite the standard and the date it was checked.
+const CHECKED = '2026-11-14';
+
+const DOCS = {
+  rfc9110: { label: 'RFC 9110: HTTP Semantics', url: 'https://www.rfc-editor.org/rfc/rfc9110.html' },
+  rfc9111: { label: 'RFC 9111: HTTP Caching', url: 'https://www.rfc-editor.org/rfc/rfc9111.html' },
+  rfc9457: { label: 'RFC 9457: Problem Details for HTTP APIs', url: 'https://www.rfc-editor.org/rfc/rfc9457.html' },
+  rfc8259: { label: 'RFC 8259: The JSON Data Interchange Format', url: 'https://www.rfc-editor.org/rfc/rfc8259.html' },
+  rfc3986: { label: 'RFC 3986: URI Generic Syntax', url: 'https://www.rfc-editor.org/rfc/rfc3986.html' },
+  rfc3339: { label: 'RFC 3339: Date and Time on the Internet: Timestamps', url: 'https://www.rfc-editor.org/rfc/rfc3339.html' },
+  rfc8288: { label: 'RFC 8288: Web Linking', url: 'https://www.rfc-editor.org/rfc/rfc8288.html' },
+  rfc5789: { label: 'RFC 5789: PATCH Method for HTTP', url: 'https://www.rfc-editor.org/rfc/rfc5789.html' },
+  rfc7396: { label: 'RFC 7396: JSON Merge Patch', url: 'https://www.rfc-editor.org/rfc/rfc7396.html' },
+  rfc6585: { label: 'RFC 6585: Additional HTTP Status Codes', url: 'https://www.rfc-editor.org/rfc/rfc6585.html' },
+  rfc9745: { label: 'RFC 9745: The Deprecation HTTP Response Header Field', url: 'https://www.rfc-editor.org/rfc/rfc9745.html' },
+  rfc8594: { label: 'RFC 8594: The Sunset HTTP Header Field', url: 'https://www.rfc-editor.org/rfc/rfc8594.html' },
+  rateLimit: { label: 'IETF draft: RateLimit header fields for HTTP', url: 'https://datatracker.ietf.org/doc/draft-ietf-httpapi-ratelimit-headers/' },
+  idempotencyKey: { label: 'IETF draft: The Idempotency-Key HTTP Header Field', url: 'https://datatracker.ietf.org/doc/draft-ietf-httpapi-idempotency-key-header/' },
+  oasIndex: { label: 'OpenAPI Initiative: OpenAPI Specification versions', url: 'https://spec.openapis.org/oas/' },
+  oasLatest: { label: 'OpenAPI Specification (latest)', url: 'https://spec.openapis.org/oas/latest.html' },
+  oasUpgrade: { label: 'OpenAPI Learn: Upgrading from 3.0 to 3.1', url: 'https://learn.openapis.org/upgrading/v3.0-to-v3.1.html' },
+  fowlerRmm: { label: 'Martin Fowler: Richardson Maturity Model', url: 'https://martinfowler.com/articles/richardsonMaturityModel.html' },
+  mdnMethods: { label: 'MDN: HTTP request methods', url: 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Methods' },
+  mdnStatus: { label: 'MDN: HTTP response status codes', url: 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Reference/Status' },
+  mdnCaching: { label: 'MDN: HTTP caching', url: 'https://developer.mozilla.org/en-US/docs/Web/HTTP/Guides/Caching' },
+  mdnFetch: { label: 'MDN: Window.fetch()', url: 'https://developer.mozilla.org/en-US/docs/Web/API/Window/fetch' },
+  mdnTimeout: { label: 'MDN: AbortSignal.timeout()', url: 'https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal/timeout_static' },
+};
+
+// The reference API's OpenAPI description, in five readable parts. Joined in order they are one document that passes
+// `redocly lint` (Redocly CLI 2.78.0) and swagger-parser validation with no warnings (checked 2026-11-14).
+const SPEC = [
+  `openapi: 3.1.0
+info:
+  title: Tindahan API
+  version: 1.0.0
+  description: Products of a small neighbourhood store.
+  license:
+    name: Apache 2.0
+    identifier: Apache-2.0
+servers:
+  - url: https://api.tindahan.example/v1
+paths:
+  /products:
+    get:
+      operationId: listProducts
+      summary: List products
+      security: []
+      parameters:
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 50
+            default: 3
+        - name: offset
+          in: query
+          schema:
+            type: integer
+            minimum: 0
+            default: 0
+      responses:
+        '200':
+          description: One page of products.
+          headers:
+            Link:
+              description: Links to the first, previous, next and last pages.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ProductPage'
+        '400':
+          description: A query parameter is invalid.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+`,
+  `    post:
+      operationId: createProduct
+      summary: Add a product
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ProductInput'
+      responses:
+        '201':
+          description: The product was created.
+          headers:
+            Location:
+              description: URL of the new product.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          description: A field failed validation.
+          content:
+            application/problem+json:
+              schema:
+                $ref: '#/components/schemas/Problem'
+`,
+  `  /products/{productId}:
+    parameters:
+      - name: productId
+        in: path
+        required: true
+        schema:
+          type: integer
+          minimum: 1
+    get:
+      operationId: getProduct
+      summary: Get one product
+      security: []
+      responses:
+        '200':
+          description: The product.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Product'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      operationId: deleteProduct
+      summary: Remove a product
+      responses:
+        '204':
+          description: The product is gone.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '404':
+          $ref: '#/components/responses/NotFound'
+`,
+  `security:
+  - bearerAuth: []
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+  schemas:
+    ProductInput:
+      type: object
+      required: [name, category, priceCentavos, stock]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          maxLength: 80
+        category:
+          type: string
+        priceCentavos:
+          type: integer
+          minimum: 0
+          description: Price in centavos, so 1600 is PHP 16.00.
+        stock:
+          type: integer
+          minimum: 0
+    Product:
+      allOf:
+        - $ref: '#/components/schemas/ProductInput'
+        - type: object
+          required: [id]
+          properties:
+            id:
+              type: integer
+              readOnly: true
+    ProductPage:
+      type: object
+      required: [data, page]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Product'
+        page:
+          type: object
+          properties:
+            limit:
+              type: integer
+            offset:
+              type: integer
+            total:
+              type: integer
+`,
+  `    Problem:
+      type: object
+      required: [title, status]
+      properties:
+        type:
+          type: string
+          format: uri-reference
+          default: about:blank
+        title:
+          type: string
+        status:
+          type: integer
+        detail:
+          type: string
+        errors:
+          type: array
+          items:
+            type: object
+            required: [pointer, detail]
+            properties:
+              pointer:
+                type: string
+              detail:
+                type: string
+  responses:
+    Unauthorized:
+      description: Missing or invalid token.
+      headers:
+        WWW-Authenticate:
+          schema:
+            type: string
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    NotFound:
+      description: There is no such product.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+`,
+];
+
+const lessons: Lesson[] = [
+  {
+    id: 'rest-api-01',
+    day: 1,
+    title: 'What an API is, and HTTP in depth',
+    summary: 'An API is a contract between programs; learn the parts of an HTTP request and response, what safe and idempotent mean, and how to read a status code.',
+    intro: {
+      objectives: [
+        'Read a raw HTTP request and response and name each part',
+        'Explain what "safe" and "idempotent" mean and which methods have them',
+        'Choose the right status code family for a given outcome',
+      ],
+      why: 'Every web or mobile app you build talks to a server through HTTP. If you can read the messages themselves, you can debug any API in minutes and design your own so other developers can guess how it behaves.',
+    },
+    minutes: 25,
+    skills: ['http-fundamentals'],
+    body: [
+      { type: 'paragraph', text: "An **API** (application programming interface) is a contract: one program says \"if you ask me in exactly this way, I will answer in exactly that way\". Think of a restaurant. You never walk into the kitchen. You read a menu (what you may ask for), tell a waiter (the way to ask), and get a plate (the answer). A **web API** is the same arrangement between two programs, usually a mobile app or a website (the client) and a server, with HTTP as the waiter. This course is about designing that menu well, so developers who use it can guess how it behaves without reading your mind." },
+      { type: 'visual', id: 'web-api-request-trace', caption: 'Follow one request from a tap to the database and back. Notice that the client only ever sees the request and the response.' },
+      { type: 'heading', text: 'HTTP is plain text with a fixed shape' },
+      { type: 'paragraph', text: "HTTP (HyperText Transfer Protocol) is how the client and server talk. It is a **request and response** protocol: the client sends one message, the server sends one back, and that is the whole exchange. Both messages are mostly readable text. Here is a real exchange captured from the small reference API we use through this course, a neighbourhood store with products. First the request, as `curl` sends it:" },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'The request',
+        code: 'GET /v1/products/1 HTTP/1.1\nHost: localhost:4100\nUser-Agent: curl/8.7.1\nAccept: */*\n',
+      },
+      { type: 'paragraph', text: "The first line is the **request line**: a **method** (what you want to do), a **path** (which thing), and the protocol version. Then come **headers**, one `Name: value` per line, that describe the request. A blank line ends the headers, and after it an optional **body** may follow. This request is a read, so it has no body. The server answers like this:" },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'The response',
+        code: 'HTTP/1.1 200 OK\nContent-Type: application/json\nCache-Control: private, max-age=0, must-revalidate\nETag: "25bdc99cb0"\n\n{"id":1,"name":"Lucky Me Pancit Canton","category":"noodles","priceCentavos":1600,"stock":40}\n',
+      },
+      { type: 'paragraph', text: "The first line is the **status line**: the protocol version, a three-digit **status code** (200) and a short reason phrase. Headers follow, then a blank line, then the body. Two headers matter right away. `Content-Type` tells the client how to read the body (here JSON). The others you will meet in later lessons: `ETag` and `Cache-Control` are about reuse, and `Location` tells you where a new thing lives. Over HTTP/2 the messages are packed differently on the wire, but the same method, headers, status and body exist. Treat the reason phrase as decoration: clients should read the number." },
+      { type: 'heading', text: 'Methods say what you intend' },
+      { type: 'paragraph', text: "The method is the verb of the request. Two properties of methods will shape every design decision in this course, so learn their meaning precisely. A method is **safe** if it is essentially read-only: calling it should not change anything on the server that the client is responsible for. A method is **idempotent** if making the same request twice leaves the server in the same state as making it once. Pressing a lift's call button is idempotent: ten presses still call one lift. Ordering a meal is not: ten orders is ten meals." },
+      {
+        type: 'table',
+        headers: ['Method', 'Typical use', 'Safe', 'Idempotent'],
+        rows: [
+          ['GET', 'Read a resource or a list', 'Yes', 'Yes'],
+          ['HEAD', 'Like GET, headers only', 'Yes', 'Yes'],
+          ['POST', 'Create something, or run an action', 'No', 'No'],
+          ['PUT', 'Replace a resource completely', 'No', 'Yes'],
+          ['PATCH', 'Change part of a resource', 'No', 'No (not guaranteed)'],
+          ['DELETE', 'Remove a resource', 'No', 'Yes'],
+        ],
+        caption: 'The methods you will use. GET, HEAD, PUT and DELETE are defined this way by RFC 9110; PATCH comes from RFC 5789, which says it is neither safe nor idempotent.',
+      },
+      { type: 'paragraph', text: "Idempotent does not mean \"gives the same response\". The first DELETE of a product answers 204 and the second answers 404, yet the server ends in the same state both times: the product is gone. Remember this table. Lesson 3 uses it to pick methods, and lesson 9 uses it to decide which requests are safe to retry." },
+      { type: 'heading', text: 'Status codes: read the first digit' },
+      {
+        type: 'table',
+        headers: ['Family', 'Meaning', 'Example', 'Who has to act'],
+        rows: [
+          ['1xx', 'Informational, the exchange is still going', '100 Continue', 'Nobody, it is handled for you'],
+          ['2xx', 'It worked', '200 OK, 201 Created, 204 No Content', 'Nobody'],
+          ['3xx', 'Look somewhere else, or reuse what you have', '301 Moved Permanently, 304 Not Modified', 'The client follows or reuses'],
+          ['4xx', 'The client made a mistake', '400 Bad Request, 404 Not Found', 'The client must change the request'],
+          ['5xx', 'The server failed', '500 Internal Server Error, 503 Service Unavailable', 'The server owner must fix it; the client may retry later'],
+        ],
+        caption: 'The first digit tells a client what kind of outcome it got, even for a code it has never seen.',
+      },
+      { type: 'paragraph', text: "That first digit is useful when a server uses a code the client does not know: an unknown 4xx still means \"your request was wrong\". It is also the contract for blame. A 4xx says the caller can fix it; a 5xx says the owner of the server must. Mixing them up (a 500 for a missing field) sends developers hunting in the wrong place. Browsers and `fetch` follow this too, with one surprise:" },
+      {
+        type: 'code',
+        language: 'javascript',
+        label: 'fetch does not throw on 404',
+        code: "async function getProduct(id) {\n  const response = await fetch('http://localhost:4100/v1/products/' + id);\n  if (!response.ok) {\n    // 404, 500 and every other non-2xx status arrive here\n    throw new Error('HTTP ' + response.status);\n  }\n  return response.json();\n}",
+      },
+      { type: 'warning', text: "A `fetch()` promise only rejects when the request could not be made at all, such as a network failure. A 404 or a 500 is a successful round trip as far as `fetch` is concerned, so always check `response.ok` or `response.status` before reading the body." },
+      {
+        type: 'version',
+        text: "The current HTTP semantics are defined by RFC 9110 (June 2022, an Internet Standard), which replaced the older RFC 7231 to 7235 documents. HTTP caching is RFC 9111. The statement that GET, HEAD, OPTIONS and TRACE are safe, and that PUT, DELETE and the safe methods are idempotent, comes from section 9.2 of RFC 9110. Checked against the RFC text on this date.",
+        checked: CHECKED,
+        sources: [DOCS.rfc9110, DOCS.mdnMethods, DOCS.mdnFetch],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'An API is a contract: how to ask, and what you will get back. A web API carries it over HTTP request and response messages.',
+          'A request is a method, a path, headers and an optional body; a response is a status code, headers and an optional body.',
+          'Safe means essentially read-only; idempotent means repeating the request leaves the same server state. GET is both, DELETE and PUT are idempotent, POST is neither.',
+          'The first digit of a status code is the contract: 2xx worked, 3xx look elsewhere, 4xx the client erred, 5xx the server failed.',
+          '`fetch` only rejects on network failure. Check `response.ok` yourself for 4xx and 5xx.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'rest-api-01-predict-1',
+          kind: 'predict-output',
+          title: 'What does the server answer?',
+          story: 'The reference API is running on your laptop. Each command prints only the status code.',
+          prompt: 'Product 1 exists and product 999 does not. The collection URL `/v1/products` accepts GET and POST only. What do the three commands print?',
+          concept: 'reading status codes',
+          language: 'text',
+          code: "curl -s -o /dev/null -w '%{http_code}\\n' localhost:4100/v1/products/1\ncurl -s -o /dev/null -w '%{http_code}\\n' localhost:4100/v1/products/999\ncurl -s -o /dev/null -w '%{http_code}\\n' -X DELETE localhost:4100/v1/products",
+          expected: '200\n404\n405',
+          choices: ['200\n404\n405', '200\n404\n404', '200\n200\n405', '200\n404\n500'],
+          wrongNotes: {
+            '200\n404\n404': 'The third command uses a method the collection does not support at all. That is 405 Method Not Allowed, not "not found": the URL does exist.',
+            '200\n200\n405': 'Product 999 does not exist, so the server cannot return 200 for it.',
+            '200\n404\n500': '500 means the server broke. Here the server understood the request perfectly and refused the method on purpose, which is a 4xx.',
+          },
+          hints: [
+            'Take the commands one at a time: what does each URL point at, and with which method?',
+            'The first asks for something that exists. The second asks for something that does not. The third uses DELETE on a URL that only allows GET and POST.',
+            'Existing resource: 200. Missing resource: 404. A known URL with an unsupported method: 405 Method Not Allowed.',
+          ],
+          explanation: 'A read of an existing product is 200. A read of a missing one is 404 Not Found. DELETE on the collection is a method the URL does not support, so the server answers 405 (and lists the allowed methods in an Allow header). All three are correct answers from a well-behaved server.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'rest-api-01-match-1',
+          kind: 'match',
+          title: 'Which family is it?',
+          prompt: 'Each situation ends in one family of status codes. Match the situation to the family it belongs to.',
+          concept: 'status code families',
+          labels: { terms: 'Situation', meanings: 'Status family' },
+          pairs: [
+            { term: 'A shopper opens the profile of a product that was removed yesterday', definition: '4xx: the client asked for something wrong' },
+            { term: 'The database is down when a perfectly valid request arrives', definition: '5xx: the server failed' },
+            { term: 'A new order is saved and the server confirms it', definition: '2xx: it worked' },
+            { term: 'An old URL now lives at a new address, and the server says where', definition: '3xx: look somewhere else' },
+          ],
+          hints: [
+            'Ask who is responsible for the outcome: the caller, the server, or nobody?',
+            'The removed product and the new address both involve the request being fine or not; the database outage is not the caller\'s doing.',
+            'Success is 2xx, redirection is 3xx, a caller mistake is 4xx and a server fault is 5xx.',
+          ],
+          explanation: 'The first digit assigns responsibility. Asking for a missing product is the caller\'s mistake (4xx), a database outage is the server\'s fault (5xx), a saved order is success (2xx) and a moved URL is a redirect (3xx).',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'rest-api-01-code-challenge-1',
+          kind: 'code-challenge',
+          title: 'Name the family',
+          prompt: 'Write `describeStatus(code)` that returns `"informational"` for 100 to 199, `"success"` for 200 to 299, `"redirect"` for 300 to 399, `"client error"` for 400 to 499 and `"server error"` for 500 to 599.',
+          concept: 'status code families',
+          language: 'javascript',
+          starter: "function describeStatus(code) {\n  // your code here\n  return '';\n}\n",
+          solution: "function describeStatus(code) {\n  if (code >= 500) return 'server error';\n  if (code >= 400) return 'client error';\n  if (code >= 300) return 'redirect';\n  if (code >= 200) return 'success';\n  return 'informational';\n}\n",
+          tests: {
+            kind: 'function',
+            fn: 'describeStatus',
+            cases: [
+              { label: '200', args: [200], expected: 'success' },
+              { label: '204', args: [204], expected: 'success' },
+              { label: '304', args: [304], expected: 'redirect' },
+              { label: '404', args: [404], expected: 'client error' },
+              { label: '503', args: [503], expected: 'server error' },
+              { label: '101', args: [101], expected: 'informational' },
+            ],
+          },
+          hints: [
+            'Compare the number against the start of each family: 500, 400, 300, 200.',
+            'Check the highest range first, so a 503 is not caught by an earlier, looser test.',
+            'if (code >= 500) return "server error"; then the same for 400, 300 and 200; anything left is informational.',
+          ],
+          explanation: 'Each family is a hundred wide, so comparing against 500, 400, 300 and 200 in descending order classifies any code, even one the function has never seen. Clients do the same with unknown codes.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'rest-api-01-q1',
+        prompt: 'A client sends DELETE /v1/products/5 twice. The first answer is 204 and the second is 404. What does that tell you about DELETE?',
+        choices: [
+          'It is not idempotent, because the two responses were different',
+          'It is idempotent: after one call or two, the product is gone',
+          'It is unsafe in the sense that servers must reject the second call',
+          'It is safe, because the second call changed nothing',
+        ],
+        answer: 1,
+        explanation: 'Idempotent is about the server\'s state, not the response. After the first DELETE the product is gone and the second DELETE leaves things exactly so. DELETE is still not safe, since it changes the server.',
+      },
+      {
+        id: 'rest-api-01-q2',
+        prompt: 'In the code `const r = await fetch(url);` the server answers 503. What happens?',
+        choices: [
+          'The promise rejects with an error object',
+          'fetch retries the request automatically until it succeeds',
+          'The promise resolves, and `r.ok` is false',
+          'The promise never settles, because 5xx closes the connection',
+        ],
+        answer: 2,
+        explanation: 'fetch rejects only when no response could be obtained. A 503 is a complete HTTP response, so the promise resolves and your code must check `r.ok` or `r.status`.',
+      },
+      {
+        id: 'rest-api-01-q3',
+        prompt: 'A response carries a status code you have never seen, 418. Which fact is guaranteed by the status code families?',
+        choices: [
+          'It is a server error, because unusual codes come from servers',
+          'It is a success, because the response arrived',
+          'It is a redirect, so a Location header must be present',
+          'It is a client error: the request is what needs to change',
+        ],
+        answer: 3,
+        explanation: 'The first digit is the contract. 4xx means the client\'s request was wrong, even if the specific code is unknown to you.',
+      },
+      {
+        id: 'rest-api-01-q4',
+        prompt: 'Which part of an HTTP response tells the client how to read the body, for example as JSON?',
+        choices: [
+          'The Content-Type header',
+          'The reason phrase after the status code',
+          'The method that the request used',
+          'The first digit of the status code',
+        ],
+        answer: 0,
+        explanation: 'Content-Type names the format of the body, such as application/json. The reason phrase is decoration, and the method belongs to the request, not the response.',
+      },
+    ],
+    task: {
+      title: 'Read real HTTP messages',
+      minutes: 10,
+      steps: [
+        'Open a terminal and run `curl -i https://example.com`. Find the status line, two headers, the blank line and where the body starts.',
+        'Run `curl -i https://example.com/nothing-here` and note the status code. Then run `curl -i -X DELETE https://example.com` and note what the server says to a method it does not allow.',
+        'Open your browser\'s developer tools on any site, open the Network tab, reload, and click one request. Write down its method, status code and one request header.',
+        'For each of the three results, say which status family it belongs to and who has to act.',
+      ],
+    },
+  },
+  {
+    id: 'rest-api-02',
+    day: 2,
+    title: 'REST principles and resources',
+    summary: 'What REST actually means in Fielding\'s definition, what most "REST APIs" really are, and how to think in resources and representations.',
+    intro: {
+      objectives: [
+        'Explain resource, representation and identifier with an everyday example',
+        'Name the REST constraints and say what each one buys you',
+        'Tell an honest "HTTP API with resources" apart from a full hypermedia REST design',
+      ],
+      why: 'Job posts say "REST API" constantly, and interviewers ask what it means. A clear answer, plus the habit of modelling things as resources, is the foundation for every URL and method choice in the rest of this course.',
+    },
+    minutes: 20,
+    skills: ['rest-resources'],
+    body: [
+      { type: 'paragraph', text: "REST is the most overused word in web development. People say \"REST API\" to mean any API that returns JSON over HTTP. That is a fine everyday meaning, but it is not what the word was invented to describe, and knowing the difference makes you a more precise designer. **REST** (Representational State Transfer) is an architectural style that Roy Fielding described in his 2000 doctoral dissertation, as a way to explain why the web itself scaled to billions of pages. It is a list of constraints. A system that follows them gets certain benefits." },
+      { type: 'heading', text: 'Resource, representation, identifier' },
+      { type: 'paragraph', text: "Three words carry the whole idea. A **resource** is any thing the API talks about: a product, an order, today's list of low-stock items. It is the concept, not the bytes. An **identifier** names it, and on the web that is a URL (a type of URI, defined by RFC 3986), such as `/v1/products/1`. A **representation** is a snapshot of the resource's current state in some format, such as the JSON you saw in lesson 1. The client never touches the resource itself. It asks for a representation, or sends one to describe a change." },
+      {
+        type: 'diagram',
+        format: 'mermaid',
+        caption: 'One resource, several possible representations. The client chooses with the Accept header.',
+        source: 'flowchart LR\n  R[Resource: product 1] -->|Accept: application/json| J[JSON text]\n  R -->|Accept: text/html| H[A web page]\n  R -->|Accept: text/csv| C[One CSV row]',
+      },
+      { type: 'paragraph', text: "A shop's printed price list is a good picture. The price of Skyflakes is the resource. The list on the wall and the SMS you send a friend are two representations of the same fact. Change the price and every future representation changes. In your API, `GET /v1/products/1` returns a JSON representation and `PUT /v1/products/1` sends one to replace it. The few HTTP methods are the same for every resource, and that sameness is the point." },
+      { type: 'visual', id: 'web-rest-crud', caption: 'Create, read, update and delete map to POST, GET, PUT or PATCH, and DELETE on one resource. Try each button and read the request it sends.' },
+      { type: 'heading', text: 'The constraints, and what each buys you' },
+      {
+        type: 'table',
+        headers: ['Constraint', 'What it means', 'What you get'],
+        rows: [
+          ['Client-server', 'The user interface and the data storage are separate concerns', 'The app and the server can change independently'],
+          ['Stateless', 'Each request carries everything needed to understand it; no session lives on the server between requests', 'Any server can answer any request, so you can add machines freely'],
+          ['Cacheable', 'Responses say whether they may be reused', 'Fewer requests and faster apps'],
+          ['Uniform interface', 'Identified resources, changed through representations, with self-descriptive messages and hypermedia', 'One generic way to talk to everything: curl, browsers and proxies all understand it'],
+          ['Layered system', 'A client cannot tell whether it talks to the end server or an intermediary', 'Gateways, load balancers and CDNs slot in without the client knowing'],
+          ['Code on demand (optional)', 'The server may send code that the client runs', 'Rarely used in JSON APIs'],
+        ],
+        caption: 'The six constraints of Fielding\'s REST. Code on demand is the only optional one.',
+      },
+      { type: 'paragraph', text: "Statelessness deserves a closer look because you will build it into every API. Suppose the server remembered \"this phone is logged in as Ana\" in its own memory. Once you run two servers behind a load balancer, Ana's second request may reach the server that never met her. The stateless fix is that every request carries its own proof, such as a token in an `Authorization` header (the Authentication and Authorization course covers how tokens work). Any server can then handle any request." },
+      { type: 'heading', text: 'What most "REST APIs" really are' },
+      { type: 'paragraph', text: "Fielding's uniform interface has four parts: identifying resources, changing them through representations, self-descriptive messages, and **hypermedia as the engine of application state**. That last one means responses contain links that tell the client what it can do next, the way a web page links to other pages, so the client follows links instead of building URLs from documentation. Most JSON APIs skip it. They have resources and standard methods, but clients hard-code URL patterns from the docs. Martin Fowler's Richardson Maturity Model describes the steps and reports that Fielding treats the hypermedia step as a precondition of REST." },
+      {
+        type: 'table',
+        headers: ['Level', 'What the API does', 'Example'],
+        rows: [
+          ['0', 'One URL, everything is a POST to it', 'POST /api with {"action": "getProduct", "id": 1}'],
+          ['1', 'Separate resources have their own URLs', '/products/1, /orders/7'],
+          ['2', 'Uses HTTP methods and status codes as defined', 'GET /products/1 answers 200, DELETE answers 204'],
+          ['3', 'Responses carry links to related actions', 'A Link header with rel="next"'],
+        ],
+        caption: 'The Richardson Maturity Model, a teaching ladder rather than a certificate.',
+      },
+      { type: 'paragraph', text: "This course teaches levels 1 and 2 firmly, because that is where almost all value lives, and level 3 in the places it pays for itself: pagination links in lesson 4 and the `Location` header on creation in lesson 3. We will say \"resource-oriented HTTP API\" when we mean the practical design, and keep \"REST\" for the full style. You will meet the loose usage constantly, and it is fine to use, as long as you know what you are leaving out." },
+      { type: 'tip', text: "A good interview answer to \"what is REST?\" has three parts: resources identified by URLs, a small uniform set of methods acting on representations, and stateless requests. Then add honestly that most APIs called REST stop short of hypermedia." },
+      {
+        type: 'version',
+        text: "Fielding's dissertation (University of California, Irvine, 2000) defines the six constraints in chapter 5; that chapter does not mention JSON and touches HTTP methods only briefly. The mapping of REST onto HTTP methods and JSON is a later convention. The Richardson Maturity Model is Leonard Richardson's, described in Martin Fowler's article, which he calls a learning aid rather than a formal definition.",
+        checked: CHECKED,
+        sources: [DOCS.fowlerRmm, DOCS.rfc3986],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'A resource is the thing, a representation is a snapshot of it (usually JSON), and a URL identifies it.',
+          'REST is a set of constraints: client-server, stateless, cacheable, uniform interface and layered system (plus optional code on demand).',
+          'Stateless means every request carries what the server needs, so any server can answer it. That is what lets an API scale out.',
+          'Hypermedia (links that tell the client what to do next) is the part most JSON APIs skip; call them resource-oriented HTTP APIs and be honest about it.',
+          'Level 1 gives each resource its own URL, and level 2 uses the standard methods and status codes properly.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'rest-api-02-match-1',
+          kind: 'match',
+          title: 'Which constraint is at work?',
+          prompt: 'Each situation shows one REST constraint paying off. Match the situation to the constraint.',
+          concept: 'REST constraints',
+          labels: { terms: 'Situation', meanings: 'Constraint' },
+          pairs: [
+            { term: 'A phone sends its token with every call, so the shop can add a second server without logging anyone out', definition: 'Stateless' },
+            { term: 'A CDN in front of the API replies to repeat GETs without the app ever knowing it is there', definition: 'Layered system' },
+            { term: 'The same GET, POST and DELETE work on products, orders and customers, so one HTTP client library covers them all', definition: 'Uniform interface' },
+            { term: 'The server marks a price list as reusable for an hour, so the app skips most requests', definition: 'Cacheable' },
+          ],
+          hints: [
+            'Ask what the benefit in each situation is: scaling, hiding a middle layer, one generic way of talking, or fewer requests.',
+            'The token and the second server are about where the memory of "who is this" lives. The CDN is about something the client cannot see.',
+            'One shared set of methods across all resources is the uniform interface; labelling a response reusable is caching.',
+          ],
+          explanation: 'Stateless requests let any server answer, a layered system hides intermediaries, a uniform interface means one generic client, and cacheable responses let a copy be reused.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'rest-api-02-scenario-1',
+          kind: 'scenario',
+          title: 'Users keep getting logged out',
+          prompt: 'Choose the fix that fits REST best.',
+          concept: 'statelessness',
+          situation: 'Your store API keeps "who is logged in" in the memory of one server process. The shop grows and you add a second server behind a load balancer. Now customers are randomly told to log in again.',
+          options: [
+            { text: 'Make requests self-contained: each call carries a signed token in the Authorization header, and any server can check it.', consequence: 'Every server can serve every request. Adding a third or tenth server needs no coordination.', quality: 'best' },
+            { text: 'Keep the memory sessions but move them into a shared database that both servers read on every request.', consequence: 'It works and is common, but every request now depends on a shared store, which is a new bottleneck and failure point.', quality: 'acceptable' },
+            { text: 'Configure the load balancer to send each customer to the same server every time.', consequence: 'It hides the symptom. If that server restarts, its customers are logged out, and scaling is uneven.', quality: 'poor' },
+          ],
+          hints: [
+            'What does stateless ask of the request itself?',
+            'The problem exists because one server knows something the other does not.',
+            'Let the request carry its own proof, so no server needs to remember the caller.',
+          ],
+          explanation: 'REST\'s stateless constraint puts the information needed to understand a request inside the request. A signed token does that, so any server can answer any call. A shared session store also works, but it reintroduces a central dependency, and pinning customers to one server only hides the problem.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'rest-api-02-q1',
+        prompt: 'In "GET /v1/products/1 with Accept: application/json", which part is the representation?',
+        choices: [
+          'The URL /v1/products/1, because it identifies the product',
+          'The JSON text that comes back describing the product',
+          'The GET method, which says what to do with the product',
+          'The product row stored in the database on the server',
+        ],
+        answer: 1,
+        explanation: 'The URL is the identifier, the product itself is the resource, and what travels over HTTP is a representation: a snapshot of the resource in a format such as JSON.',
+      },
+      {
+        id: 'rest-api-02-q2',
+        prompt: 'Why does the stateless constraint help an API scale?',
+        choices: [
+          'It forbids the server from using a database between requests',
+          'It makes every response small enough to fit in one network packet',
+          'It guarantees that a client never has to send the same request twice',
+          'Any server can handle any request, so you can add servers without sharing memory',
+        ],
+        answer: 3,
+        explanation: 'Because each request carries what the server needs, no server holds private memory about the caller. Adding machines needs no coordination. The server may still use a database; stateless is about conversation state.',
+      },
+      {
+        id: 'rest-api-02-q3',
+        prompt: 'A colleague says their JSON API with /products and /orders URLs, correct methods and status codes is "RESTful, Level 2". What is the most accurate comment?',
+        choices: [
+          'It is not an API at all until every response includes a link',
+          'It cannot be REST because REST forbids JSON',
+          'It is a solid resource-oriented HTTP API; full REST also expects hypermedia links',
+          'It is level 3 because the URLs are nouns',
+        ],
+        answer: 2,
+        explanation: 'Level 2 means resources plus proper methods and status codes. Fielding\'s definition of REST also includes hypermedia, which is level 3, so calling it "REST" is common but loose.',
+      },
+      {
+        id: 'rest-api-02-q4',
+        prompt: 'Which request design breaks the stateless constraint?',
+        choices: [
+          'GET /v1/products?limit=3&offset=3 to read the second page',
+          'GET /v1/orders/7 with an Authorization header on every call',
+          'GET /v1/next-page, where the server remembers which page this client saw last',
+          'GET /v1/products/1 with If-None-Match to reuse a cached copy',
+        ],
+        answer: 2,
+        explanation: 'The server would have to remember each client\'s position between requests. The other three put everything the server needs, such as the offset, the token or the validator, inside the request itself.',
+      },
+    ],
+    task: {
+      title: 'Find the resources in a shop',
+      minutes: 10,
+      steps: [
+        'Pick a business you know (a sari-sari store, a jeepney route, a clinic) and list five nouns it deals with, for example product, order, customer.',
+        'For each noun write the URL of the collection (`/products`) and of one item (`/products/7`).',
+        'Choose one resource and write two different representations of the same item, for example a JSON object and one line of a printed receipt.',
+        'Write one sentence explaining which of the six REST constraints your design would need to respect when two servers handle the shop\'s requests.',
+      ],
+    },
+  },
+  {
+    id: 'rest-api-03',
+    day: 3,
+    title: 'Designing URLs, methods and status codes',
+    summary: 'Name things with nouns, let the method be the verb, and pick the status code that tells the client exactly what happened.',
+    intro: {
+      objectives: [
+        'Turn a verb-style endpoint such as /getUsers into a noun URL plus a method',
+        'Pick between POST, PUT, PATCH and DELETE using what each one guarantees',
+        'Choose the right 2xx, 4xx or 5xx status for common outcomes, including 201 with a Location header',
+      ],
+      why: 'URLs, methods and status codes are the vocabulary of your API. Get them right and a stranger can use it by guessing; get them wrong and every client ends up with special cases and a pile of questions for you.',
+    },
+    minutes: 25,
+    skills: ['url-method-status-design'],
+    body: [
+      { type: 'paragraph', text: "Every API design starts with the same three questions: what do I call the thing, what do I do to it, and how do I report what happened? In HTTP the answers are the URL, the method and the status code. The big idea of this lesson is a split of duties: **the URL is a noun that names a resource, the method is the verb, and the status code is the outcome**. When each part does only its own job, the API becomes predictable." },
+      { type: 'heading', text: 'URLs name things, not actions' },
+      { type: 'paragraph', text: "A beginner's first API often has one URL per action: `/getUsers`, `/createProduct`, `/deleteProduct?id=7`. It works, but it puts the verb in the URL, which is the method's job, so every resource needs its own invented vocabulary and nobody can guess the next endpoint. The noun version needs far fewer names:" },
+      {
+        type: 'table',
+        headers: ['Instead of', 'Use', 'Why'],
+        rows: [
+          ['GET /getProducts', 'GET /products', 'The method already says "read"'],
+          ['POST /createProduct', 'POST /products', 'POST to a collection creates a member'],
+          ['POST /products/delete/7', 'DELETE /products/7', 'The method says "remove"'],
+          ['GET /product?id=7', 'GET /products/7', 'The item\'s identity belongs in the path'],
+          ['GET /Products/7.json', 'GET /products/7', 'The format is negotiated with Accept, not baked into the name'],
+          ['GET /customers/5/orders/list', 'GET /customers/5/orders', '"list" is what GET on a collection already means'],
+        ],
+        caption: 'Verbs and file extensions out, nouns in',
+      },
+      { type: 'paragraph', text: "A few habits keep URLs tidy. Use plural nouns for collections (`/products`) so the item is `/products/7`. Write them in lower case with hyphens, since URL paths are case-sensitive in practice. Nest only when the child has no life without the parent (`/customers/5/orders` is fine), and stop at one level: past that, give the child its own top-level URL and filter with a query string (`/orders?customerId=5`). RFC 3986 reserves characters like `?` and `#` for structure, so the query string, after the `?`, is where filters, sorting and paging go." },
+      { type: 'heading', text: 'The method is the verb' },
+      { type: 'paragraph', text: "Four methods cover nearly everything. **POST to a collection** creates a new member, and the server chooses its id. **PUT to an item** replaces it entirely, so you must send the whole representation, and it is idempotent. **PATCH** changes only the fields you send. **DELETE** removes it. A `PATCH` that sets `stock` to 39 is clearer than a `PUT` that must repeat the name, category and price just to change one number, and sending a `PUT` with only some fields would silently erase the rest. RFC 7396 defines a standard patch format, `application/merge-patch+json`, where `null` means \"remove this field\"." },
+      { type: 'paragraph', text: "What about actions that do not look like create, read, update or delete, such as cancelling an order or sending a receipt? Make the action a noun. A cancellation is a thing that happens, with a time and a reason, so `POST /orders/7/cancellations` creates one. This keeps the uniform interface: you still only use the standard methods." },
+      { type: 'heading', text: 'Status codes report the outcome' },
+      { type: 'paragraph', text: "Here is a real create, captured from the reference server. Notice the status code and the `Location` header:" },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'POST creates a product',
+        code: 'POST /v1/products HTTP/1.1\nContent-Type: application/json\n\n{"name":"Nescafe 3in1","category":"coffee","priceCentavos":1200,"stock":50}\n\nHTTP/1.1 201 Created\nContent-Type: application/json\nLocation: /v1/products/8\nETag: "d3950eaef8"\n\n{"id":8,"name":"Nescafe 3in1","category":"coffee","priceCentavos":1200,"stock":50}\n',
+      },
+      { type: 'paragraph', text: "A successful create answers **201 Created**, and RFC 9110 says the server should include a `Location` header naming the new resource. That header is a tiny piece of hypermedia: the client learns the URL from the response instead of building it. The other common picks are in this table:" },
+      {
+        type: 'table',
+        headers: ['Code', 'Use it when', 'Typical headers or body'],
+        rows: [
+          ['200 OK', 'A read or update worked and there is a body', 'The resource'],
+          ['201 Created', 'POST made a new resource', 'Location, and the new resource'],
+          ['202 Accepted', 'Work was queued and has not happened yet', 'A link to check progress'],
+          ['204 No Content', 'It worked and there is nothing to send, such as DELETE', 'No body'],
+          ['400 Bad Request', 'The request cannot be understood, such as malformed JSON', 'A problem description'],
+          ['401 / 403', 'Not signed in (401) / signed in but not allowed (403)', 'WWW-Authenticate on 401'],
+          ['404 Not Found', 'No such resource', 'A problem description'],
+          ['405 Method Not Allowed', 'The URL exists but not for this method', 'Allow header listing methods that work'],
+          ['409 Conflict', 'The request clashes with current state, such as a duplicate name', 'A problem description'],
+          ['422 Unprocessable Content', 'Valid JSON, but the values break the rules', 'Which fields failed'],
+          ['429 Too Many Requests', 'The client is sending too much', 'Retry-After'],
+          ['500 / 503', 'The server failed / is temporarily unavailable', 'Retry-After on 503 if known'],
+        ],
+        caption: 'Common status codes and when to use them',
+      },
+      { type: 'visual', id: 'web-http-explorer', caption: 'Send each method at a small API and see which status code and headers come back.' },
+      { type: 'paragraph', text: "The three confusable ones are worth a sentence each. **400** means the server cannot even parse your request, such as a cut-off JSON body. **422** means it parsed fine but a value breaks a rule, such as a price of -5. **409** means the request is valid on its own but clashes with what the server currently holds, such as a name that is already taken. Lesson 5 returns to them with error bodies." },
+      { type: 'warning', text: "Never put a read in POST \"because it has a body\", and never use GET for anything that changes data. Browsers, search crawlers and link previews assume GET is safe and will call it freely. A `GET /deleteProduct?id=7` link can be fired by a crawler and wipe your catalog." },
+      {
+        type: 'version',
+        text: "RFC 9110 renamed status 422 to \"Unprocessable Content\"; older documents and some servers, including Node's built-in HTTP module, still print the earlier reason phrase \"Unprocessable Entity\". The number is what counts, and over HTTP/2 there is no reason phrase at all. The Location header on 201, and the Allow header on 405, are both specified in RFC 9110.",
+        checked: CHECKED,
+        sources: [DOCS.rfc9110, DOCS.rfc5789, DOCS.rfc7396, DOCS.mdnStatus],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'The URL is a noun that names a resource, the method is the verb and the status code is the outcome.',
+          'Use plural collections and items by id (`/products`, `/products/7`); keep nesting to one level and put filters in the query string.',
+          'POST to a collection creates (201 plus Location), PUT replaces the whole item, PATCH changes some fields, DELETE removes (204).',
+          'Model actions that fit no verb as nouns, such as `POST /orders/7/cancellations`.',
+          '400 means unparseable, 422 means parsed but invalid, and 409 means it clashes with the current state.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'rest-api-03-fix-bug-1',
+          kind: 'fix-bug',
+          title: 'A read that looks like a command',
+          story: 'A teammate wrote this helper for the product page.',
+          prompt: 'The app should load product 7. Tap the line that breaks the design rules from this lesson, then pick the fix.',
+          concept: 'URL and method design',
+          language: 'javascript',
+          code: "// Load product 7 for the product page\nasync function loadProduct() {\n  const response = await fetch('/v1/getProduct', { method: 'POST', body: JSON.stringify({ id: 7 }) });\n  return response.json();\n}",
+          bugLine: 3,
+          fixes: [
+            { line: "  const response = await fetch('/v1/products/7');", correct: true, why: 'A noun URL with the item\'s id in the path and the default GET method is exactly how a read is expressed.' },
+            { line: "  const response = await fetch('/v1/getProduct/7');", correct: false, why: 'The id moved into the path, but the verb "get" is still in the URL. The method already says read.' },
+            { line: "  const response = await fetch('/v1/products/7', { method: 'POST' });", correct: false, why: 'The URL is right now, but POST is not safe. Caches, crawlers and retries all treat GET as the read.' },
+            { line: "  const response = await fetch('/v1/products', { method: 'GET', body: JSON.stringify({ id: 7 }) });", correct: false, why: 'A GET with a body is not meaningful to servers and caches, and fetch itself refuses it. The id belongs in the URL.' },
+          ],
+          hints: [
+            'Look at the URL and at the method together. Which one is doing the other\'s job?',
+            'The URL contains a verb ("get") and the method is POST for something that only reads.',
+            'Reads are GET (the default for fetch), and the item\'s id goes into the path of a plural collection.',
+          ],
+          explanation: '`GET /v1/products/7` says everything: the noun in the URL, the read in the method. Putting the verb in the path and using POST for a read makes the call unsafe to cache or retry and unlike every other endpoint.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'rest-api-03-match-1',
+          kind: 'match',
+          title: 'Which status does the server send?',
+          prompt: 'Each request produced the situation on the left. Match it to the status the reference server answered with.',
+          concept: 'choosing status codes',
+          labels: { terms: 'What happened', meanings: 'Status' },
+          pairs: [
+            { term: 'POST /v1/products with a body that stops in the middle: {"name": ', definition: '400 Bad Request' },
+            { term: 'POST /v1/products with valid JSON but priceCentavos set to -5', definition: '422 Unprocessable Content' },
+            { term: 'POST /v1/products with a name the store already sells', definition: '409 Conflict' },
+            { term: 'GET /v1/products/999 when there is no product 999', definition: '404 Not Found' },
+            { term: 'DELETE /v1/products/3 worked and there is nothing to report', definition: '204 No Content' },
+            { term: 'POST /v1/products saved a new product', definition: '201 Created' },
+          ],
+          hints: [
+            'First decide whether the request could be read at all, then whether its values were allowed, then whether it clashed with stored data.',
+            'The cut-off body cannot be parsed (400). The negative price parses but breaks a rule (422). The duplicate name clashes with existing data (409).',
+            'Missing resource is 404, a successful delete with nothing to say is 204, and a successful create is 201.',
+          ],
+          explanation: 'The three tricky ones differ by how far the server got. It could not parse the body (400), it parsed it but the value was invalid (422), or the request was fine alone and conflicted with the current state (409).',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'rest-api-03-scenario-1',
+          kind: 'scenario',
+          title: 'Cancel an order',
+          prompt: 'Pick the design that follows this lesson best.',
+          concept: 'modelling actions as resources',
+          situation: 'The store wants customers to cancel an order. A cancellation must record a reason and a refund amount, which staff read later. Your teammates have proposed four endpoints.',
+          options: [
+            { text: 'POST /orders/7/cancellations with a body holding the reason, answering 201 and a Location header for the new cancellation.', consequence: 'A cancellation becomes a resource with its own URL, time and data. You use only standard methods.', quality: 'best' },
+            { text: 'PATCH /orders/7 with {"status": "cancelled"}.', consequence: 'It is valid and simple, but there is nowhere natural to store the reason and the refund, so you end up inventing extra fields on the order.', quality: 'acceptable' },
+            { text: 'POST /cancelOrder with {"orderId": 7}.', consequence: 'A verb in the URL again. Every action needs its own invented endpoint, and clients cannot guess this one.', quality: 'poor' },
+            { text: 'GET /orders/7/cancel, so the shop can email a link.', consequence: 'A GET that changes data. A link preview or crawler that opens the email link will cancel the order.', quality: 'poor' },
+          ],
+          hints: [
+            'Which proposals put a verb in the URL, and which change data with GET?',
+            'The cancellation has its own data: a reason and a refund amount. What is the natural home for data about something that happened?',
+            'Make the cancellation a resource under the order and create it with POST.',
+          ],
+          explanation: 'Because the cancellation carries its own data, modelling it as a noun lets you create it with POST, return 201 with a Location, and read it later with GET. PATCHing a status works for a bare flag. A verb URL or a GET that changes data breaks the uniform interface and the safety of GET.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'rest-api-03-predict-1',
+          kind: 'predict-output',
+          title: 'Delete the same product twice',
+          story: 'Product 5 exists on a fresh reference server.',
+          prompt: 'Each command prints only the status code. What is the output of the three commands, on one line?',
+          concept: 'idempotent DELETE',
+          language: 'text',
+          code: "curl -s -o /dev/null -w '%{http_code} ' -X DELETE localhost:4100/v1/products/5\ncurl -s -o /dev/null -w '%{http_code} ' -X DELETE localhost:4100/v1/products/5\ncurl -s -o /dev/null -w '%{http_code}\\n' localhost:4100/v1/products/5",
+          expected: '204 404 404',
+          choices: ['204 404 404', '204 204 404', '204 404 200', '200 404 404'],
+          wrongNotes: {
+            '204 204 404': 'The second DELETE finds no product 5, because the first one removed it. The server answers 404, even though the final state is unchanged.',
+            '204 404 200': 'The product is gone after the first DELETE, so a later GET cannot find it.',
+            '200 404 404': 'This server answers a successful DELETE with 204: there is nothing to put in a body.',
+          },
+          hints: [
+            'Trace what exists after each command.',
+            'The first DELETE removes the product. After that, asking for product 5 finds nothing.',
+            'First DELETE is 204. The second DELETE and the GET both ask about a product that is gone: 404.',
+          ],
+          explanation: 'DELETE is idempotent because the server ends in the same state (no product 5) after one call or ten. The responses may differ: the first answers 204 and later ones 404, and both are fine.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'rest-api-03-q1',
+        prompt: 'Which endpoint pair best expresses "list the orders of customer 5"?',
+        choices: [
+          'POST /getOrders with {"customerId": 5} in the body',
+          'GET /customer/5/listOrders',
+          'GET /orders/list?customer=5&format=json',
+          'GET /customers/5/orders',
+        ],
+        answer: 3,
+        explanation: 'Plural noun collections, the parent id in the path, and the method as the verb. The others put verbs ("get", "list") in the URL or hide a read in a POST body.',
+      },
+      {
+        id: 'rest-api-03-q2',
+        prompt: 'The only change you need is to set the stock of product 1 to 39. Which request is the best fit?',
+        choices: [
+          'PUT /v1/products/1 with {"stock": 39}, because PUT updates things',
+          'PATCH /v1/products/1 with {"stock": 39}',
+          'POST /v1/products/1/stock with {"value": 39}',
+          'DELETE /v1/products/1 followed by a new POST',
+        ],
+        answer: 1,
+        explanation: 'PATCH changes only the fields you send. PUT means "replace the whole item", so sending just one field would erase or invalidate the rest.',
+      },
+      {
+        id: 'rest-api-03-q3',
+        prompt: 'A POST created a product and the server answered 201. Which header should the response carry?',
+        choices: [
+          'Retry-After: 60, so the client can try again later',
+          'Allow: GET, POST, so the client sees which methods exist',
+          'Location: /v1/products/8, naming the new resource',
+          'WWW-Authenticate, so the client can sign in',
+        ],
+        answer: 2,
+        explanation: 'RFC 9110 says a successful creation should include a Location header with the URL of the new resource, so the client does not have to build it.',
+      },
+      {
+        id: 'rest-api-03-q4',
+        prompt: 'A client tries to create a product with a name that is already used. Which status is the best match?',
+        choices: [
+          '400 Bad Request, because the client sent bad data',
+          '500 Internal Server Error, because the database would refuse it',
+          '404 Not Found, because the name was not available',
+          '409 Conflict, because it clashes with what the server holds',
+        ],
+        answer: 3,
+        explanation: 'The request is well-formed and valid by itself, but it conflicts with the current state of the server. That is the definition of 409. A 500 would wrongly blame the server.',
+      },
+    ],
+    task: {
+      title: 'Rewrite a bad API',
+      minutes: 15,
+      steps: [
+        'Rewrite these as a method plus a noun URL: `GET /getUsers`, `POST /addUser`, `GET /user?id=4`, `POST /user/update/4`, `GET /deleteUser?id=4`.',
+        'For each rewritten call, write the status code the server should answer when it works (200, 201 or 204) and, for the create, the header that names the new user.',
+        'Start the reference-style thinking on paper: list three outcomes that should answer 4xx and name the exact code for each (malformed body, invalid value, duplicate email).',
+        'Write one sentence about which of your rewrites changes data, and why that one must never be a GET.',
+      ],
+    },
+  },
+  {
+    id: 'rest-api-04',
+    day: 4,
+    title: 'JSON payloads, pagination, filtering and sorting',
+    summary: 'Shape JSON that is hard to misread, then let clients ask for exactly the page, subset and order they need.',
+    intro: {
+      objectives: [
+        'Choose JSON types for money, ids and dates that survive every client',
+        'Paginate a list with limit and offset, and explain when a cursor is better',
+        'Build a Link header and design filter and sort query parameters',
+      ],
+      why: 'Lists are the most-called endpoints of any API, and they break first when data grows. A well-shaped payload and a bounded, sortable list keep apps fast and spare you the "why is my total wrong?" bug reports.',
+    },
+    minutes: 30,
+    skills: ['json-pagination'],
+    body: [
+      { type: 'paragraph', text: "Once URLs and methods are settled, the next thing a client developer stares at is your JSON. Good payload design is mostly about removing ways to misread it. Then comes the list problem: a store with seven products can return them all, but a store with seven million cannot. This lesson covers both, with examples captured from the reference API." },
+      { type: 'heading', text: 'Shape JSON so it cannot be misread' },
+      { type: 'paragraph', text: "JSON (RFC 8259) has six kinds of value: objects, arrays, strings, numbers and the literals `true`, `false` and `null`. Text sent between systems must be UTF-8, comments are not allowed, and object member names should be unique, because a duplicate name makes the result depend on the parser. Inside that small language you make three choices that cause most real bugs." },
+      {
+        type: 'table',
+        headers: ['Thing', 'Risky choice', 'Safer choice', 'Why'],
+        rows: [
+          ['Money', '"price": 16.5', '"priceCentavos": 1650', 'Whole numbers add exactly. 0.1 + 0.2 is 0.30000000000000004 in most languages'],
+          ['Big ids', '"id": 9007199254740993', '"id": "9007199254740993"', 'JSON itself has no limit, but JavaScript reads every number as a 64-bit float'],
+          ['Dates', '"created": "14/11/26"', '"created": "2026-11-14T08:30:00Z"', 'RFC 3339 timestamps sort as text and name the time zone'],
+          ['Missing values', 'Sometimes null, sometimes absent', 'Pick one rule and document it', 'Clients cannot tell "unknown" from "not applicable"'],
+          ['Field names', 'price, Stock, item_name', 'price, stock, itemName', 'One naming style, everywhere'],
+        ],
+        caption: 'Payload decisions that save bug reports',
+      },
+      { type: 'paragraph', text: "The big-id row surprises people, so see it for yourself. RFC 8259 notes that integers between -(2^53)+1 and 2^53-1 are the range every implementation agrees on, and JavaScript's `JSON.parse` turns each number into a double:" },
+      {
+        type: 'code',
+        language: 'javascript',
+        label: 'A number that changes on the way in',
+        code: "const parsed = JSON.parse('{\"id\": 9007199254740993}');\nconsole.log(parsed.id);\nconsole.log(Number.MAX_SAFE_INTEGER);",
+      },
+      { type: 'paragraph', text: "That prints `9007199254740992` and `9007199254740991`. The id that arrived is not the id that was sent, and two different ids can collapse into one. Whole-number money is safe (centavos stay well under the limit), but identifiers that may grow past 2^53 should travel as strings. As a rule, send ids as strings if they could ever exceed that range, and keep the same type in every endpoint." },
+      { type: 'paragraph', text: "Finally, wrap list answers in an object, not a bare array. `{\"data\": [...], \"page\": {...}}` leaves room to add paging information, totals and links later without breaking clients, while a top-level array can never grow a sibling field." },
+      { type: 'heading', text: 'Paginate every list' },
+      { type: 'paragraph', text: "An endpoint that returns \"all products\" is a bug that has not happened yet. It gets slower as data grows, can exhaust the phone's memory, and costs data bandwidth on every screen. So every collection returns one **page** at a time, with a sensible default size and a hard maximum. The simplest scheme is `limit` (how many) and `offset` (how many to skip). Here is page two of the store's seven products, three at a time:" },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'GET /v1/products?limit=3&offset=3',
+        code: 'HTTP/1.1 200 OK\nContent-Type: application/json\nLink: </v1/products?limit=3&offset=0>; rel="first", </v1/products?limit=3&offset=0>; rel="prev", </v1/products?limit=3&offset=6>; rel="next", </v1/products?limit=3&offset=6>; rel="last"\n\n{"data":[{"id":4,"name":"Skyflakes","category":"biscuits","priceCentavos":800,"stock":60},{"id":5,"name":"C2 Apple 500ml","category":"drinks","priceCentavos":2500,"stock":30},{"id":6,"name":"Great Taste White","category":"coffee","priceCentavos":900,"stock":80}],"page":{"limit":3,"offset":3,"total":7}}\n',
+      },
+      { type: 'paragraph', text: "Two things are worth copying. The `page` object tells the client where it is. And the **Link header** (RFC 8288, Web Linking) hands over ready-made URLs for the first, previous, next and last pages. A client that follows `rel=\"next\"` until it disappears never needs to compute offsets or know how your paging works, which is hypermedia in its simplest, most useful form. Do validate the inputs too: this server answers `limit=0` with a 400, and caps `limit` at 50." },
+      { type: 'paragraph', text: "Offset paging has a flaw: it counts rows from the start, so when items are added or removed while someone is scrolling, the next page shifts. A newly added product pushes one item from page 1 onto page 2, and the client sees it twice. **Cursor pagination** fixes that. The server returns an opaque `nextCursor` token that records \"continue after the item with id 6\", and the next request asks for the items after that point. It stays stable under inserts and is fast on large tables, but clients cannot jump to page 40." },
+      {
+        type: 'table',
+        headers: ['', 'Offset and limit', 'Cursor'],
+        rows: [
+          ['Jump to page N', 'Yes', 'No, only forward and back'],
+          ['Stable while data changes', 'No, items can repeat or be skipped', 'Yes'],
+          ['Speed on very large tables', 'Slows down as offset grows', 'Stays fast'],
+          ['Good for', 'Admin tables, small collections', 'Feeds, timelines, huge or fast-changing lists'],
+        ],
+        caption: 'Choosing a pagination style',
+      },
+      { type: 'heading', text: 'Filtering and sorting live in the query string' },
+      { type: 'paragraph', text: "Filters narrow the collection and are ordinary query parameters: `GET /v1/products?category=coffee&maxPrice=1000`. Sorting needs a convention, and a common one is a `sort` parameter with a comma-separated list of fields, where a leading minus means descending: `?sort=-priceCentavos,name` is \"most expensive first, then by name\". The minus is a widespread habit, not a standard, so document it. Here is a combined real request: coffee products, priciest first, one per page:" },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'GET /v1/products?category=coffee&sort=-priceCentavos&limit=1',
+        code: 'HTTP/1.1 200 OK\nContent-Type: application/json\nLink: </v1/products?category=coffee&sort=-priceCentavos&limit=1&offset=0>; rel="first", </v1/products?category=coffee&sort=-priceCentavos&limit=1&offset=1>; rel="next", </v1/products?category=coffee&sort=-priceCentavos&limit=1&offset=1>; rel="last"\n\n{"data":[{"id":2,"name":"Kopiko Brown","category":"coffee","priceCentavos":1000,"stock":25}],"page":{"limit":1,"offset":0,"total":2}}\n',
+      },
+      { type: 'warning', text: "Only allow sorting and filtering on fields you have listed. This server answers `?sort=color` with a 400 and the message \"Cannot sort by color\", instead of passing the text to a database. Accepting any field name is how a stranger sorts by your internal columns, or injects something worse." },
+      {
+        type: 'version',
+        text: "JSON is defined by RFC 8259 (it obsoletes RFC 7159) and its section 6 describes the 2^53 integer interoperability range. The Link header is defined by RFC 8288 (it obsoletes RFC 5988); RFC 3339 defines the timestamp format used by most JSON APIs. The `sort=-field` convention and the names `limit`, `offset` and `cursor` are community habits, not standards.",
+        checked: CHECKED,
+        sources: [DOCS.rfc8259, DOCS.rfc8288, DOCS.rfc3339],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'Send money as whole centavos, dates as RFC 3339 text, and ids as strings when they might pass 2^53.',
+          'Wrap lists as `{ "data": [...], "page": {...} }` so you can add fields without breaking clients.',
+          'Never return an unbounded list: use a default page size, a hard maximum and validated `limit` and `offset`.',
+          'Offer a `Link` header with first, prev, next and last; clients follow links instead of computing offsets.',
+          'Offset paging can repeat or skip items when data changes; cursor paging is stable but cannot jump to a page.',
+          'Whitelist filter and sort fields, and document the `-field` convention.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'rest-api-04-code-challenge-1',
+          kind: 'code-challenge',
+          title: 'Cut a page out of a list',
+          prompt: 'Write `paginate(items, limit, offset)` that returns an object `{ data, page }`. `data` is the slice of `items` that starts at `offset` and holds at most `limit` items. `page` is `{ limit, offset, total }`, where `total` is the number of items in the whole list.',
+          concept: 'offset pagination',
+          language: 'javascript',
+          starter: 'function paginate(items, limit, offset) {\n  // return { data, page }\n  return {};\n}\n',
+          solution: 'function paginate(items, limit, offset) {\n  const data = items.slice(offset, offset + limit);\n  return { data, page: { limit, offset, total: items.length } };\n}\n',
+          tests: {
+            kind: 'function',
+            fn: 'paginate',
+            cases: [
+              { label: 'first page', args: [[1, 2, 3, 4, 5, 6, 7], 3, 0], expected: { data: [1, 2, 3], page: { limit: 3, offset: 0, total: 7 } } },
+              { label: 'second page', args: [[1, 2, 3, 4, 5, 6, 7], 3, 3], expected: { data: [4, 5, 6], page: { limit: 3, offset: 3, total: 7 } } },
+              { label: 'short last page', args: [[1, 2, 3, 4, 5, 6, 7], 3, 6], expected: { data: [7], page: { limit: 3, offset: 6, total: 7 } } },
+              { label: 'past the end', args: [[1, 2, 3], 3, 9], expected: { data: [], page: { limit: 3, offset: 9, total: 3 } } },
+              { label: 'empty list', args: [[], 5, 0], expected: { data: [], page: { limit: 5, offset: 0, total: 0 } } },
+            ],
+          },
+          hints: [
+            'An array method already cuts out a range: it takes a start and an end position.',
+            'Use slice(offset, offset + limit). The total is the length of the original array.',
+            'Return { data: items.slice(offset, offset + limit), page: { limit, offset, total: items.length } }.',
+          ],
+          explanation: '`slice` returns whatever exists between the two positions, so a short last page and a page past the end both work without special cases. The total comes from the full list, so clients can show "page 2 of 3".',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'rest-api-04-code-challenge-2',
+          kind: 'code-challenge',
+          title: 'Build the Link header',
+          prompt: 'Write `buildLinkHeader(path, limit, offset, total)` that returns the value of a Link header. Each link looks like `<PATH?limit=L&offset=O>; rel="NAME"` and links are joined with `, `. Always include `first` (offset 0) and `last` (offset of the last page, 0 if the list is empty). Include `prev` only when `offset > 0` (the offset goes back by `limit`, never below 0) and `next` only when `offset + limit < total`. Use the order first, prev, next, last.',
+          concept: 'Link header',
+          language: 'javascript',
+          starter: "function buildLinkHeader(path, limit, offset, total) {\n  const link = (o, rel) => '<' + path + '?limit=' + limit + '&offset=' + o + '>; rel=\"' + rel + '\"';\n  const links = [link(0, 'first')];\n  // add prev and next when they exist, then last\n  return links.join(', ');\n}\n",
+          solution: "function buildLinkHeader(path, limit, offset, total) {\n  const link = (o, rel) => '<' + path + '?limit=' + limit + '&offset=' + o + '>; rel=\"' + rel + '\"';\n  const links = [link(0, 'first')];\n  if (offset > 0) links.push(link(Math.max(0, offset - limit), 'prev'));\n  if (offset + limit < total) links.push(link(offset + limit, 'next'));\n  const last = total === 0 ? 0 : (Math.ceil(total / limit) - 1) * limit;\n  links.push(link(last, 'last'));\n  return links.join(', ');\n}\n",
+          tests: {
+            kind: 'function',
+            fn: 'buildLinkHeader',
+            cases: [
+              { label: 'middle page', args: ['/v1/products', 3, 3, 7], expected: '</v1/products?limit=3&offset=0>; rel="first", </v1/products?limit=3&offset=0>; rel="prev", </v1/products?limit=3&offset=6>; rel="next", </v1/products?limit=3&offset=6>; rel="last"' },
+              { label: 'first page', args: ['/v1/products', 3, 0, 7], expected: '</v1/products?limit=3&offset=0>; rel="first", </v1/products?limit=3&offset=3>; rel="next", </v1/products?limit=3&offset=6>; rel="last"' },
+              { label: 'last page', args: ['/v1/products', 3, 6, 7], expected: '</v1/products?limit=3&offset=0>; rel="first", </v1/products?limit=3&offset=3>; rel="prev", </v1/products?limit=3&offset=6>; rel="last"' },
+              { label: 'empty list', args: ['/v1/products', 5, 0, 0], expected: '</v1/products?limit=5&offset=0>; rel="first", </v1/products?limit=5&offset=0>; rel="last"' },
+              { label: 'one short page', args: ['/v1/products', 10, 0, 4], expected: '</v1/products?limit=10&offset=0>; rel="first", </v1/products?limit=10&offset=0>; rel="last"' },
+            ],
+          },
+          hints: [
+            'The helper `link(o, rel)` already formats one link. You only decide which links exist.',
+            'prev exists when offset > 0, next exists when offset + limit < total, and last is the start of the final page.',
+            'The offset of the last page is (Math.ceil(total / limit) - 1) * limit, or 0 for an empty list. Push prev and next conditionally, then last.',
+          ],
+          explanation: 'The header is just a list of the pages that are reachable from here. First and last are always present, prev and next only when there is somewhere to go. This is the same logic the reference server used to produce the header in this lesson.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'rest-api-04-predict-1',
+          kind: 'predict-output',
+          title: 'The id that changed',
+          prompt: 'A JavaScript client reads this JSON. What does it print?',
+          concept: 'JSON numbers and money',
+          language: 'javascript',
+          code: "const parsed = JSON.parse('{\"id\": 9007199254740993, \"priceCentavos\": 1650}');\nconsole.log(parsed.id);\nconsole.log(Number.isSafeInteger(parsed.id));\nconsole.log(0.1 + 0.2 === 0.3);\nconsole.log(parsed.priceCentavos / 100);",
+          expected: '9007199254740992\nfalse\nfalse\n16.5',
+          choices: ['9007199254740992\nfalse\nfalse\n16.5', '9007199254740993\ntrue\ntrue\n16.5', '9007199254740992\nfalse\ntrue\n16.5', '9007199254740993\nfalse\nfalse\n1650'],
+          wrongNotes: {
+            '9007199254740993\ntrue\ntrue\n16.5': 'JSON.parse turns every number into a 64-bit float, and that id is just past what a float can hold exactly: the value is rounded down by one.',
+            '9007199254740992\nfalse\ntrue\n16.5': 'Floating point adds 0.1 and 0.2 slightly inexactly. The result is 0.30000000000000004, so the comparison is false. That is why money travels as whole centavos.',
+            '9007199254740993\nfalse\nfalse\n1650': 'The last line divides 1650 by 100 and prints 16.5. And the id is already rounded by the time it is parsed.',
+          },
+          hints: [
+            'Think about which numbers a 64-bit float can represent exactly.',
+            'The id is one past Number.MAX_SAFE_INTEGER, so it cannot be stored exactly. Adding 0.1 and 0.2 is also not exact.',
+            'The id prints as ...992, isSafeInteger says false, 0.1 + 0.2 === 0.3 is false, and 1650 / 100 is 16.5.',
+          ],
+          explanation: 'Numbers in JSON become doubles in JavaScript. Integers up to 2^53 - 1 are exact, so the id loses a digit and is not a safe integer. Decimal fractions like 0.1 are not exact either, which is why prices travel as whole centavos and big ids as strings.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'rest-api-04-scenario-1',
+          kind: 'scenario',
+          title: 'A feed that keeps growing',
+          prompt: 'Choose the paging design that fits.',
+          concept: 'offset versus cursor',
+          situation: 'The store app shows a live feed of new orders. Several orders arrive every minute. Staff scroll down the feed using offset paging, and they complain that some orders appear twice when they load the next page.',
+          options: [
+            { text: 'Switch the feed to cursor paging: each page returns a nextCursor that means "continue after this order".', consequence: 'New orders no longer shift the pages. The feed shows each order once, and stays fast as history grows.', quality: 'best' },
+            { text: 'Raise the page size to 500 so people rarely need a second page.', consequence: 'It reduces the problem but makes every request heavy, and the shift still happens whenever someone does reach page two.', quality: 'poor' },
+            { text: 'Keep offset paging and let the app remove duplicates by id.', consequence: 'The duplicates disappear, but items can also be skipped when rows are deleted, and you cannot see that from the client.', quality: 'acceptable' },
+          ],
+          hints: [
+            'Why does an inserted row cause a duplicate on the next page?',
+            'Offset counts positions from the start, so insertions at the front shift every later position by one.',
+            'A pointer to "after this item" does not move when other items are inserted ahead of it.',
+          ],
+          explanation: 'Offset paging counts positions, so any insertion or deletion moves the boundary between pages. A cursor names a place in the data ("after order 812"), which stays put as new orders arrive. Removing duplicates in the client hides one symptom and not the skipped rows.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'rest-api-04-q1',
+        prompt: 'A product costs ₱16.50. Which JSON field avoids rounding problems in every language?',
+        choices: [
+          '"price": 16.5',
+          '"price": "₱16.50"',
+          '"priceCentavos": 1650',
+          '"price": 16.50',
+        ],
+        answer: 2,
+        explanation: 'Whole numbers add and compare exactly. Decimal fractions are binary floats in most languages, and a formatted string cannot be summed. 16.5 and 16.50 are the same JSON number anyway.',
+      },
+      {
+        id: 'rest-api-04-q2',
+        prompt: 'Why do some APIs send numeric ids as JSON strings such as "9007199254740993"?',
+        choices: [
+          'Strings are faster to parse than numbers in every language',
+          'JSON has no number type, so ids must always be text',
+          'A JavaScript client would round a huge numeric id and could confuse two ids',
+          'HTTP forbids sending numbers in a response body',
+        ],
+        answer: 2,
+        explanation: 'JSON does have numbers, but JavaScript reads each as a double, exact only up to 2^53 - 1. Past that, two different ids can become the same value. A string keeps the digits intact.',
+      },
+      {
+        id: 'rest-api-04-q3',
+        prompt: 'A client paging with offset sometimes sees the same order twice. What is the cause?',
+        choices: [
+          'Rows inserted at the front pushed items across the page boundary',
+          'The Link header was missing a rel="next" value',
+          'The server sorted the list differently on every request',
+          'The limit parameter was larger than the maximum allowed',
+        ],
+        answer: 0,
+        explanation: 'Offset counts rows from the start, so an insertion shifts every later row by one, and the last item of page 1 can reappear as the first of page 2.',
+      },
+      {
+        id: 'rest-api-04-q4',
+        prompt: 'Where should a client get the URL of the next page of a list?',
+        choices: [
+          'By adding the page size to the last offset it used',
+          'From the rel="next" entry of the Link header the server sent',
+          'From the API documentation, where the URL pattern is written',
+          'By requesting offset 10000 and walking backwards',
+        ],
+        answer: 1,
+        explanation: 'A Link header with rel="next" lets the server own the paging rules, so it can change from offsets to cursors without breaking clients. When no rel="next" is present, the client is on the last page.',
+      },
+      {
+        id: 'rest-api-04-q5',
+        prompt: 'What does the `sort` value `-priceCentavos,name` ask for, in the convention used in this lesson?',
+        choices: [
+          'Cheapest first, then by name from Z to A',
+          'Only fields called priceCentavos and name, in any order',
+          'Alphabetical by name, then cheapest first',
+          'Most expensive first; ties are ordered by name',
+        ],
+        answer: 3,
+        explanation: 'The minus sign marks a descending field, and later fields break ties. This is a common convention rather than a standard, which is why the API must document it.',
+      },
+    ],
+    task: {
+      title: 'Page through a list yourself',
+      minutes: 15,
+      steps: [
+        'Write an array of ten product objects with an `id`, a `name` and a `priceCentavos`. In a scratch file, write a `paginate(items, limit, offset)` function like the one in the lesson and print page 2 with a limit of 4.',
+        'Write down the exact Link header a server should send for that second page, with first, prev, next and last. Check the offsets by hand.',
+        'Write a request that returns only products under ₱20, sorted most expensive first, three per page. Use the query-string conventions from the lesson.',
+        'Decide whether this list is better with offset or cursor paging and write one sentence of reasoning.',
+      ],
+    },
+  },
+  {
+    id: 'rest-api-05',
+    day: 5,
+    title: 'Errors and validation',
+    summary: 'Make failures useful: the right status, a standard problem-details body, every field error at once, and nothing secret in the message.',
+    intro: {
+      objectives: [
+        'Write an error response in the RFC 9457 problem-details format',
+        'Validate a payload and report every failing field with a JSON Pointer',
+        'Decide what an error may and may not reveal to the caller',
+      ],
+      why: 'A client developer spends more time handling your errors than your successes. A consistent, machine-readable error format is the difference between a 10-minute integration and a week of guessing from log lines.',
+    },
+    minutes: 25,
+    skills: ['error-design'],
+    body: [
+      { type: 'paragraph', text: "Think about the last time an app showed you \"Something went wrong\". It told you nothing: was your internet down, did you type something wrong, was the server broken? An API can say much more. Every error answer has two audiences. A **program** (the client code) needs to know what kind of failure it is, so it can decide whether to retry, show a form message or log the user out. A **person** (the developer, or sometimes the user) needs words that explain it. A good error response serves both, and does so in the same shape from every endpoint." },
+      { type: 'heading', text: 'Status first, body second' },
+      { type: 'paragraph', text: "The status code is the first line of defence, and it must be honest. Return 4xx when the caller can fix it and 5xx when only you can. The worst habit is answering `200 OK` with a body like `{\"success\": false}`: monitoring tools, caches, retry logic and `fetch`'s `response.ok` all believe the request worked. Lesson 3's three confusable codes apply here: 400 for a request you cannot parse, 422 for valid JSON whose values break the rules, 409 for a conflict with current state. Add 415 when the body is not a type you accept, and 404 and 405 when the URL or method is wrong." },
+      { type: 'heading', text: 'Problem details: a standard body for errors' },
+      { type: 'paragraph', text: "You could invent your own error JSON, and every company has. RFC 9457 (Problem Details for HTTP APIs) gives you a standard one, so clients can reuse their error handling across APIs. It is sent with the media type `application/problem+json` and has five optional members:" },
+      {
+        type: 'table',
+        headers: ['Member', 'What it holds', 'Example'],
+        rows: [
+          ['type', 'A URI that identifies the kind of problem. Defaults to "about:blank", meaning "nothing beyond the status code"', 'https://api.tindahan.example/problems/validation'],
+          ['title', 'A short summary of the kind of problem, the same every time', 'Your request has invalid fields'],
+          ['status', 'The HTTP status code, repeated for convenience', '422'],
+          ['detail', 'An explanation of this occurrence, to help the caller fix it. Clients should not parse it', '2 field(s) failed validation.'],
+          ['instance', 'A URI identifying this occurrence, such as a trace id you can find in your logs', '/traces/9f2c1a'],
+        ],
+        caption: 'The members of a problem-details object (RFC 9457)',
+      },
+      { type: 'paragraph', text: "You can add your own **extension members** when a problem needs more data, and clients must ignore ones they do not know. Validation errors are the classic case. Here is the real answer from the reference server for a product with an empty name and a negative price:" },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'A 422 with problem details',
+        code: 'HTTP/1.1 422 Unprocessable Entity\nContent-Type: application/problem+json\n\n{\n  "type": "https://api.tindahan.example/problems/validation",\n  "title": "Your request has invalid fields",\n  "status": 422,\n  "detail": "2 field(s) failed validation.",\n  "errors": [\n    { "pointer": "#/name", "detail": "must be a string of 1 to 80 characters" },\n    { "pointer": "#/priceCentavos", "detail": "must be a whole number of centavos, 0 or more" }\n  ]\n}\n',
+      },
+      { type: 'paragraph', text: "The `errors` array is an extension member. Each entry carries a **JSON Pointer** (`#/name` means \"the `name` property of the request body\"), so a form can highlight exactly the field that failed. Notice that both problems came back in one answer. Reporting only the first error forces the user into a loop of submit, fix, submit, which is slow and annoying. The server's older reason phrase is printed above as Node prints it; the number 422 is what counts." },
+      { type: 'heading', text: 'Validate at the door' },
+      { type: 'paragraph', text: "Never trust input. Validate every body, path parameter and query parameter when it arrives, before it reaches your logic or your database. Check the type, whether it is required, the range or length, and the format. Collect all failures instead of throwing on the first. This function does that for the product payload; it is pure logic, so it works in any framework:" },
+      {
+        type: 'code',
+        language: 'javascript',
+        label: 'Collect every failure',
+        code: "function validateProduct(body) {\n  const errors = [];\n  if (typeof body.name !== 'string' || body.name.length < 1 || body.name.length > 80) {\n    errors.push({ pointer: '#/name', detail: 'must be 1 to 80 characters' });\n  }\n  if (!Number.isInteger(body.priceCentavos) || body.priceCentavos < 0) {\n    errors.push({ pointer: '#/priceCentavos', detail: 'must be a whole number, 0 or more' });\n  }\n  return errors;\n}\n\nconsole.log(JSON.stringify(validateProduct({ name: '', priceCentavos: -5 })));",
+      },
+      { type: 'paragraph', text: "It prints both failures as an array, `[{\"pointer\":\"#/name\",...},{\"pointer\":\"#/priceCentavos\",...}]`. An empty array means the body is acceptable. Your request handler then turns a non-empty array into a 422 with the `errors` extension. (The Node.js and Express course covers wiring this into middleware; here we only design the contract.)" },
+      { type: 'heading', text: 'What an error must never say' },
+      { type: 'paragraph', text: "RFC 9457 is blunt about this: information in a problem object must be vetted, because it can leak implementation details or private data. A stack trace, a SQL fragment, a file path or an internal hostname hands an attacker a map. So for a 500, tell the client only that it was your fault, give it an identifier, and keep the rest in your logs:" },
+      {
+        type: 'code',
+        language: 'json',
+        label: 'A safe 500',
+        code: '{\n  "type": "about:blank",\n  "title": "Internal Server Error",\n  "status": 500,\n  "detail": "Something went wrong on our side. Quote this id if you contact support.",\n  "instance": "/traces/9f2c1a"\n}',
+      },
+      { type: 'tip', text: "Apply the same care to authentication: a login that answers \"no such email\" for unknown accounts and \"wrong password\" for known ones lets anyone list your users. The Authentication and Authorization course covers this, but the rule starts here: errors should say what the caller needs, not what an attacker wants." },
+      {
+        type: 'version',
+        text: "Problem Details is RFC 9457 (July 2023), which obsoletes RFC 7807 and adds a registry of common problem types and clearer rules for several problems at once. The media type `application/problem+json` and the five members above are unchanged from RFC 7807. The `errors` array shown here is an example of an extension member, not part of the standard.",
+        checked: CHECKED,
+        sources: [DOCS.rfc9457, DOCS.rfc9110],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'Use an honest status: 4xx when the caller can fix it, 5xx when you must. Never answer 200 with an error in the body.',
+          'Send errors as `application/problem+json` with type, title, status, detail and instance, plus extension members you need.',
+          'Report every validation failure at once, each with a JSON Pointer to the offending field.',
+          'Validate type, required, range and format at the boundary, before anything else touches the data.',
+          'Never leak stack traces, SQL or internals; send a trace id and keep the details in your logs.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'rest-api-05-code-challenge-1',
+          kind: 'code-challenge',
+          title: 'Validate a product',
+          prompt: 'Write `validateProduct(body)` that returns an array of errors, each `{ pointer, detail }`, in this order: `name` must be a string of 1 to 80 characters (pointer `#/name`, detail `must be 1 to 80 characters`); `priceCentavos` must be a whole number that is 0 or more (pointer `#/priceCentavos`, detail `must be a whole number, 0 or more`); `stock` follows the same rule as the price (pointer `#/stock`). Return an empty array when everything is valid. Report every failure, not just the first.',
+          concept: 'validation',
+          language: 'javascript',
+          starter: 'function validateProduct(body) {\n  const errors = [];\n  // check name, priceCentavos and stock\n  return errors;\n}\n',
+          solution: "function validateProduct(body) {\n  const errors = [];\n  if (typeof body.name !== 'string' || body.name.length < 1 || body.name.length > 80) {\n    errors.push({ pointer: '#/name', detail: 'must be 1 to 80 characters' });\n  }\n  if (!Number.isInteger(body.priceCentavos) || body.priceCentavos < 0) {\n    errors.push({ pointer: '#/priceCentavos', detail: 'must be a whole number, 0 or more' });\n  }\n  if (!Number.isInteger(body.stock) || body.stock < 0) {\n    errors.push({ pointer: '#/stock', detail: 'must be a whole number, 0 or more' });\n  }\n  return errors;\n}\n",
+          tests: {
+            kind: 'function',
+            fn: 'validateProduct',
+            cases: [
+              { label: 'valid', args: [{ name: 'Piattos', priceCentavos: 2000, stock: 3 }], expected: [] },
+              { label: 'two problems', args: [{ name: '', priceCentavos: -5, stock: 1 }], expected: [{ pointer: '#/name', detail: 'must be 1 to 80 characters' }, { pointer: '#/priceCentavos', detail: 'must be a whole number, 0 or more' }] },
+              { label: 'missing fields', args: [{}], expected: [{ pointer: '#/name', detail: 'must be 1 to 80 characters' }, { pointer: '#/priceCentavos', detail: 'must be a whole number, 0 or more' }, { pointer: '#/stock', detail: 'must be a whole number, 0 or more' }] },
+              { label: 'price with centavos fraction', args: [{ name: 'Skyflakes', priceCentavos: 12.5, stock: 0 }], expected: [{ pointer: '#/priceCentavos', detail: 'must be a whole number, 0 or more' }] },
+              { label: 'price sent as text', args: [{ name: 'Kopiko', priceCentavos: '1000', stock: 5 }], expected: [{ pointer: '#/priceCentavos', detail: 'must be a whole number, 0 or more' }] },
+            ],
+          },
+          hints: [
+            'Build an errors array and add to it with push, one check after another, so no failure hides another.',
+            'Number.isInteger(value) is false for text, for missing values and for fractions. Check it together with the range.',
+            'Three separate if statements: name (type and length), priceCentavos (integer and >= 0), stock (the same). Push the exact pointer and detail from the prompt.',
+          ],
+          explanation: 'Each rule is its own `if`, so every failing field is reported together. `Number.isInteger` rejects text, undefined and fractions in one test, and the range check handles negatives.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'rest-api-05-predict-1',
+          kind: 'predict-output',
+          title: 'Three kinds of bad request',
+          story: 'The reference API is running. curl prints the status code and the Content-Type of each answer.',
+          prompt: 'Request 1 sends `{"name":"","category":"coffee","priceCentavos":-5,"stock":1}` as JSON. Request 2 sends the cut-off text `{"name": ` as JSON. Request 3 sends `name=x` with Content-Type text/plain. What do the three commands print?',
+          concept: 'error statuses and media type',
+          language: 'text',
+          code: "curl -s -o /dev/null -w '%{http_code} %{content_type}\\n' -X POST localhost:4100/v1/products -H 'Content-Type: application/json' -d '{\"name\":\"\",\"category\":\"coffee\",\"priceCentavos\":-5,\"stock\":1}'\ncurl -s -o /dev/null -w '%{http_code} %{content_type}\\n' -X POST localhost:4100/v1/products -H 'Content-Type: application/json' -d '{\"name\": '\ncurl -s -o /dev/null -w '%{http_code} %{content_type}\\n' -X POST localhost:4100/v1/products -H 'Content-Type: text/plain' -d 'name=x'",
+          expected: '422 application/problem+json\n400 application/problem+json\n415 application/problem+json',
+          choices: [
+            '422 application/problem+json\n400 application/problem+json\n415 application/problem+json',
+            '400 application/problem+json\n400 application/problem+json\n400 application/problem+json',
+            '422 application/json\n400 application/json\n415 application/json',
+            '422 application/problem+json\n422 application/problem+json\n400 application/problem+json',
+          ],
+          wrongNotes: {
+            '400 application/problem+json\n400 application/problem+json\n400 application/problem+json': 'A single 400 for everything hides what went wrong. Valid JSON with bad values is 422, and a body type the server does not accept is 415.',
+            '422 application/json\n400 application/json\n415 application/json': 'The statuses are right, but the error bodies use the problem-details media type, application/problem+json, not plain JSON.',
+            '422 application/problem+json\n422 application/problem+json\n400 application/problem+json': 'A body that is not valid JSON cannot reach the field checks, so it is a 400. And the text/plain body is the wrong media type altogether, which is 415.',
+          },
+          hints: [
+            'Decide how far the server gets with each request: can it accept the media type, can it parse the body, do the values pass the rules?',
+            'Request 3 fails first, on the media type. Request 2 passes that but cannot be parsed. Request 1 parses but has invalid values.',
+            '415 Unsupported Media Type, 400 Bad Request and 422 Unprocessable Content. All errors use the problem-details media type.',
+          ],
+          explanation: 'The server checks in order: the media type (415), whether the body parses (400), then the values (422). Each answer is sent as application/problem+json, so the client can use one error handler for all three.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'rest-api-05-fix-bug-1',
+          kind: 'fix-bug',
+          title: 'The error that says 200',
+          story: 'This plain Node handler runs whenever something unexpected breaks.',
+          prompt: 'Monitoring shows no errors during an outage, yet the logs are full of crashes. Tap the line that makes the failure look like a success, then pick the fix.',
+          concept: 'honest status codes',
+          language: 'javascript',
+          code: "function handleError(res, error) {\n  console.error(error);\n  res.writeHead(200, { 'Content-Type': 'application/problem+json' });\n  res.end(JSON.stringify({ title: 'Internal Server Error', status: 500 }));\n}",
+          bugLine: 3,
+          fixes: [
+            { line: "  res.writeHead(500, { 'Content-Type': 'application/problem+json' });", correct: true, why: 'The HTTP status now matches the problem body: the server failed, so 5xx. Clients, caches and monitors all see an error.' },
+            { line: "  res.writeHead(400, { 'Content-Type': 'application/problem+json' });", correct: false, why: '400 blames the caller for a bug in your server. 4xx means the client can fix it, which is not true here.' },
+            { line: "  res.writeHead(404, { 'Content-Type': 'application/problem+json' });", correct: false, why: '404 says the resource does not exist. The URL was fine; the server crashed while handling it.' },
+            { line: "  res.writeHead(200, { 'Content-Type': 'text/plain' });", correct: false, why: 'The status is still 200, so every tool believes it worked, and the body is no longer machine-readable.' },
+          ],
+          hints: [
+            'Compare the status in writeHead with the status inside the JSON body.',
+            'The body says 500 but the header sends 200. Which one do caches, fetch and monitors read?',
+            'Change the first argument of writeHead to the code that means the server failed.',
+          ],
+          explanation: 'The HTTP status is what every client, proxy and monitor reads. Sending 200 with an error body makes outages invisible and `response.ok` true. The status must agree with the body, and a server fault is a 5xx.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'rest-api-05-scenario-1',
+          kind: 'scenario',
+          title: 'The database fell over',
+          prompt: 'Pick the response that a careful API sends.',
+          concept: 'what errors reveal',
+          situation: 'A request reaches your server, and the database driver throws: "connection refused to 10.0.3.14:5432 for user tindahan_app". You must answer the client.',
+          options: [
+            { text: 'Log the full error with a trace id on the server, and send a 500 problem-details body that says it was a server problem and carries only that trace id.', consequence: 'The client learns it was not their fault and has an id to quote. Nothing about your network or users is exposed, and you can find the log line.', quality: 'best' },
+            { text: 'Send a 500 with detail set to the driver\'s message so developers can debug it faster.', consequence: 'You have just published an internal IP address, a port and a database user name to anyone who can trigger the error.', quality: 'poor' },
+            { text: 'Send 200 with {"success": false, "message": "try again"}.', consequence: 'Retry logic, caches and monitoring all treat it as a success. The outage is invisible until users complain.', quality: 'poor' },
+          ],
+          hints: [
+            'Who is each part of the message for: the client, or you?',
+            'The details of the failure are valuable to you and dangerous to a stranger.',
+            'Keep the detail in your logs, send an honest 5xx, and connect the two with an identifier.',
+          ],
+          explanation: 'RFC 9457 warns that error details must be vetted before sending. The honest status tells the client what kind of failure it is, the trace id lets support find the log line, and the internals stay on the server.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'rest-api-05-q1',
+        prompt: 'A form posts valid JSON, but the price is -5 and the name is empty. Which response helps the form the most?',
+        choices: [
+          '422 with application/problem+json listing both failing fields by JSON Pointer',
+          '400 with the text "Bad request" and no body',
+          '200 with {"error": "invalid"} so the client always parses a body',
+          '500 with the first validation error found in the detail field',
+        ],
+        answer: 0,
+        explanation: 'The values break the rules, so 422. Listing every failing field by pointer lets the form highlight both at once, and the problem+json type lets shared error handling work.',
+      },
+      {
+        id: 'rest-api-05-q2',
+        prompt: 'What does a client do with the `detail` member of a problem-details object?',
+        choices: [
+          'Parses it to decide which field to highlight',
+          'Shows or logs it for people, and relies on type and status to decide what to do',
+          'Compares it with a list of known messages to pick the retry delay',
+          'Ignores it, because the member is not allowed to contain readable text',
+        ],
+        answer: 1,
+        explanation: 'RFC 9457 says consumers should not parse detail: it is human-readable text for this occurrence. Programs should branch on type, status and structured extension members like an errors array.',
+      },
+      {
+        id: 'rest-api-05-q3',
+        prompt: 'Why should a validator collect every failure instead of stopping at the first?',
+        choices: [
+          'Because the HTTP specification forbids returning a single error',
+          'Because it uses less memory than throwing an exception',
+          'Because 422 can only be sent when at least two errors exist',
+          'Because the user can fix everything in one try instead of a submit-fix loop',
+        ],
+        answer: 3,
+        explanation: 'Reporting all problems at once saves round trips and frustration. Nothing in HTTP requires or forbids it; it is simply better for the caller.',
+      },
+      {
+        id: 'rest-api-05-q4',
+        prompt: 'Which statement about the `type` member of a problem object is correct?',
+        choices: [
+          'It must be a URL that returns an HTML page when opened',
+          'It holds the name of the programming language that raised the error',
+          'It is a URI that identifies the kind of problem, and it defaults to about:blank',
+          'It holds the HTTP method that the client used',
+        ],
+        answer: 2,
+        explanation: 'The type URI is the primary identifier for a class of problem, and clients should not fetch it automatically. When absent it is about:blank, meaning the problem has no meaning beyond the status code.',
+      },
+    ],
+    task: {
+      title: 'Design the errors of a sign-up form',
+      minutes: 15,
+      steps: [
+        'List four things that can go wrong when a customer registers: a missing email, an invalid email format, an email that already exists, and the database being down.',
+        'For each, write the status code and a problem-details JSON body (type, title, status, detail). Use an `errors` array with JSON Pointers for the validation ones.',
+        'Write a `validateRegistration(body)` function in a scratch file that returns an array of `{ pointer, detail }` for the first two problems and run it with a good and a bad body.',
+        'Cross out anything in your 500 body that would help an attacker, and add a trace id instead.',
+      ],
+    },
+  },
+  {
+    id: 'rest-api-06',
+    day: 6,
+    title: 'Versioning and keeping old clients working',
+    summary: 'Know which changes break clients, evolve an API additively first, and retire old behaviour with versions, deprecation headers and a sunset date.',
+    intro: {
+      objectives: [
+        'Sort an API change into breaking or non-breaking',
+        'Compare URL, header and additive approaches to versioning and pick one with reasons',
+        'Announce a deprecation with the Deprecation and Sunset headers',
+      ],
+      why: 'Once other people\'s apps call your API, you can no longer change it freely. Knowing how to evolve it without breaking them is what separates a hobby API from one a company can depend on.',
+    },
+    minutes: 25,
+    skills: ['versioning'],
+    body: [
+      { type: 'paragraph', text: "A web page you deploy today is the web page every visitor gets tomorrow. A mobile app is different. Somebody installed version 1.0 of the store's app two years ago, turned off automatic updates, and it still calls your API every morning. You cannot update their phone. Everything you publish in an API is a **promise** to every client that already uses it, and this lesson is about how to change your mind without breaking those promises." },
+      { type: 'heading', text: 'What counts as breaking?' },
+      { type: 'paragraph', text: "A change is **breaking** if a client that worked yesterday, without being changed, stops working today. The rule of thumb is that anything you take away, rename, tighten or reinterpret is breaking, and anything you only add is usually safe. The sneakiest breaks change the meaning but not the shape. If `priceCentavos` quietly starts holding pesos, every JSON field is still there and every price is suddenly 100 times too small." },
+      {
+        type: 'table',
+        headers: ['Change', 'Breaking?', 'Why'],
+        rows: [
+          ['Add a new endpoint', 'No', 'Nobody calls it yet'],
+          ['Add an optional field to a request', 'No', 'Old clients simply do not send it'],
+          ['Add a field to a response', 'Usually not', 'Safe if clients ignore fields they do not know'],
+          ['Add a new value to an enum such as order status', 'Sometimes', 'A client with a strict switch may crash on the new value'],
+          ['Remove or rename a field or endpoint', 'Yes', 'Clients that read it get nothing'],
+          ['Change a field\'s type or unit', 'Yes', 'The same JSON now means something else'],
+          ['Make an optional request field required', 'Yes', 'Existing requests start failing with 422'],
+          ['Tighten validation or change a status code', 'Yes', 'Requests that worked are now rejected, or handled differently'],
+        ],
+        caption: 'A checklist for reviewing any API change',
+      },
+      { type: 'paragraph', text: "Adding to responses is safe only because of an agreement called the **tolerant reader**: clients must ignore fields they do not recognise. Write that rule into your documentation on day one, because it is what lets you grow an API for years without a new version. Clients that fail on unknown fields turn every addition into a breaking change." },
+      { type: 'heading', text: 'Version only when you must' },
+      { type: 'paragraph', text: "The cheapest versioning strategy is no new version at all. **Evolve additively**: add `quantity` next to `stock`, keep returning both, and mark the old one deprecated. Most changes fit this pattern. When a change cannot be additive, such as a redesigned resource model, you need a parallel version of the API that old clients keep using." },
+      {
+        type: 'table',
+        headers: ['Approach', 'Example', 'Strength', 'Weakness'],
+        rows: [
+          ['Version in the path', 'GET /v2/products/1', 'Obvious, easy to route, cache and try in a browser or curl', 'The URL of a resource changes between versions'],
+          ['Version in a header or media type', 'Accept: application/vnd.tindahan.v2+json', 'URLs stay stable, which suits a pure resource model', 'Hidden from casual testing; easy to forget in a client'],
+          ['Version in a query parameter', 'GET /products/1?version=2', 'Easy to add', 'Gets mixed up with filters and is easy to cache wrongly'],
+          ['Dated versions', 'Header "Api-Version: 2026-11-01"', 'Small, frequent, clear steps', 'Needs infrastructure to keep many old behaviours alive'],
+        ],
+        caption: 'Four ways to name a version',
+      },
+      { type: 'paragraph', text: "There is no single correct answer, and this is a judgment call. For most teams a sensible recipe is: put a **major version in the path** (`/v1`), evolve additively inside it, and cut `/v2` only for a true break. The reference API in this course uses `/v1` for that reason. Whatever you choose, apply it everywhere and write it down." },
+      { type: 'heading', text: 'Retiring something politely' },
+      { type: 'paragraph', text: "When a field or version is on its way out, tell clients in the responses themselves, not only in a blog post that nobody reads. Two headers exist for this. `Deprecation` (RFC 9745) carries the date from which the resource is considered deprecated, as a Unix timestamp with an `@` in front. `Sunset` (RFC 8594) carries the date the resource is expected to stop responding, as an HTTP date. A `Link` header with the relation `deprecation` points to the migration guide. This is a real answer from the reference server's legacy route:" },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'GET /v1/legacy/products/1',
+        code: 'HTTP/1.1 200 OK\nContent-Type: application/json\nDeprecation: @1806537599\nSunset: Wed, 30 Jun 2027 23:59:59 GMT\nLink: </docs/migrate-to-v2>; rel="deprecation"; type="text/html"\n\n{"id":1,"name":"Lucky Me Pancit Canton","stock":40}\n',
+      },
+      { type: 'paragraph', text: "`@1806537599` is 31 March 2027, 23:59:59 UTC, and the sunset date comes later, as RFC 9745 requires. Headers alone do not move anyone, so combine them with a process: measure which clients still call the old version (log the version and the app that called), contact the stragglers, keep both versions running for the announced period, and only then retire the old one. After the sunset date, 410 Gone is the honest answer for a resource that will not come back." },
+      { type: 'tip', text: "Log a client identifier and version on every request, even before you need to deprecate anything. When the day comes, \"who still uses v1?\" becomes a database query instead of a guess." },
+      {
+        type: 'version',
+        text: "The Deprecation header is RFC 9745 (March 2025, Standards Track): its value is a Structured Fields date such as @1688169599, and it can be paired with a Link relation of type deprecation. The Sunset header is RFC 8594, which is Informational rather than a Standards Track document, and uses an HTTP date. Neither header changes how a resource behaves; both are hints for clients and tools.",
+        checked: CHECKED,
+        sources: [DOCS.rfc9745, DOCS.rfc8594, DOCS.rfc9110],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'A change is breaking if an unchanged client that worked before now fails, including silent changes of meaning or units.',
+          'Adding is usually safe, provided clients are tolerant readers that ignore unknown fields.',
+          'Prefer additive evolution; when you must break, put a major version in the path and keep the old one running.',
+          'Announce retirement in the responses with the Deprecation and Sunset headers and a Link to the migration guide.',
+          'Measure who still uses an old version before removing it, then answer 410 Gone afterwards.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'rest-api-06-match-1',
+          kind: 'match',
+          title: 'Breaking or safe?',
+          prompt: 'The store\'s product response used to look like `{ "id": 1, "name": "...", "stock": 40, "priceCentavos": 1600 }`. For each change, pick the effect it has on a client that was not updated.',
+          concept: 'breaking changes',
+          labels: { terms: 'The change', meanings: 'Effect on old clients' },
+          pairs: [
+            { term: 'The response gains an optional "brand" field', definition: 'Safe: old clients ignore the field they do not know' },
+            { term: '"stock" is renamed to "quantity"', definition: 'Breaking: clients that read "stock" now get nothing' },
+            { term: 'priceCentavos now holds pesos, with the same field name and type', definition: 'Breaking, silently: every price is 100 times too small and nothing errors' },
+            { term: 'POST /products now requires a "category" that used to be optional', definition: 'Breaking: old requests start failing with 422' },
+          ],
+          hints: [
+            'For each change ask: does a client that never changed still get what it expects?',
+            'Adding an optional response field leaves every old read working. Renaming a field removes something clients read.',
+            'The pesos change keeps the same shape but changes the meaning, which is the hardest break to notice.',
+          ],
+          explanation: 'Only the addition is safe. Renaming removes a field, requiring a previously optional field rejects old requests, and a change of unit keeps the shape while changing the meaning, so the client keeps running and shows wrong prices.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'rest-api-06-scenario-1',
+          kind: 'scenario',
+          title: 'Rename the stock field',
+          prompt: 'Choose the safest way to get "quantity" into the API.',
+          concept: 'additive evolution',
+          situation: 'Version 1.0 of the store app, installed on 40,000 phones, reads "stock" from /v1/products. The design team wants the field called "quantity" from now on. Many of those users have automatic updates off.',
+          options: [
+            { text: 'Return both "quantity" and "stock" with the same value, document "stock" as deprecated, send Deprecation and Sunset headers, and remove "stock" in a later version once traffic from old apps is gone.', consequence: 'Old apps keep working. New apps use the new name. You retire the old name only when your logs show nobody reads it.', quality: 'best' },
+            { text: 'Rename the field in /v1 and ask everyone to update their app.', consequence: 'Every old app shows empty stock numbers at once, and users who cannot or will not update are stuck.', quality: 'poor' },
+            { text: 'Leave /v1 alone and publish a /v2 that has "quantity", keeping /v1 running indefinitely.', consequence: 'Safe for clients, but you now maintain two versions for a change that did not need one.', quality: 'acceptable' },
+          ],
+          hints: [
+            'What would you do if you could never force an app to update?',
+            'Adding a field is safe. Removing one is the breaking step, so delay it.',
+            'Add the new field, keep the old one, announce the retirement date, and remove the old one later.',
+          ],
+          explanation: 'Additive evolution gets the new name out without breaking anyone: both fields live side by side for a documented period. A full new version is also safe but costs more to maintain, and renaming in place breaks every installed app that has not updated.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'rest-api-06-code-challenge-1',
+          kind: 'code-challenge',
+          title: 'Find the breaking changes',
+          prompt: 'Write `breakingChanges(oldFields, newFields)`. Each argument is an object that maps a field name to its type name, such as `{ id: "number", name: "string" }`. Return an array of strings, one per field of `oldFields`, in the order of `oldFields`: `"removed: NAME"` if `newFields` no longer has it, or `"changed: NAME"` if it is still there with a different type. Fields that exist only in `newFields` are additions and are not reported.',
+          concept: 'breaking changes',
+          language: 'javascript',
+          starter: 'function breakingChanges(oldFields, newFields) {\n  const problems = [];\n  // check each old field\n  return problems;\n}\n',
+          solution: "function breakingChanges(oldFields, newFields) {\n  const problems = [];\n  const newNames = Object.keys(newFields);\n  for (const name of Object.keys(oldFields)) {\n    if (!newNames.includes(name)) {\n      problems.push('removed: ' + name);\n    } else if (newFields[name] !== oldFields[name]) {\n      problems.push('changed: ' + name);\n    }\n  }\n  return problems;\n}\n",
+          tests: {
+            kind: 'function',
+            fn: 'breakingChanges',
+            cases: [
+              { label: 'a rename', args: [{ id: 'number', name: 'string', stock: 'number' }, { id: 'number', name: 'string', quantity: 'number' }], expected: ['removed: stock'] },
+              { label: 'a type change and an addition', args: [{ id: 'number', price: 'number' }, { id: 'string', price: 'number', brand: 'string' }], expected: ['changed: id'] },
+              { label: 'only additions', args: [{ a: 'string' }, { a: 'string', b: 'number' }], expected: [] },
+              { label: 'two problems in old order', args: [{ a: 'string', b: 'number', c: 'boolean' }, { a: 'number', c: 'boolean' }], expected: ['changed: a', 'removed: b'] },
+            ],
+          },
+          hints: [
+            'Loop over the field names of the OLD object, since a break is something that used to exist.',
+            'Object.keys(newFields) gives the new names; .includes(name) tells you whether the field survived.',
+            'If it is missing, push "removed: " plus the name; otherwise compare the two types and push "changed: " plus the name when they differ.',
+          ],
+          explanation: 'A break is something a client could rely on that is no longer true, so you walk the old fields and look for what disappeared or changed type. Fields that appear only in the new version are additions, which tolerant clients ignore.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'rest-api-06-arrange-1',
+          kind: 'arrange',
+          title: 'Retire v1 without surprises',
+          prompt: 'Put the steps of a polite retirement in order, from the first thing you do to the last.',
+          concept: 'deprecation process',
+          language: 'text',
+          solution: [
+            'Ship /v2 alongside /v1 and keep both running',
+            'Add Deprecation, Sunset and a Link to the migration guide on every /v1 response',
+            'Log which clients still call /v1 and how often',
+            'Contact the clients that are still calling it as the date approaches',
+            'After the sunset date, answer /v1 with 410 Gone',
+          ],
+          reasons: [
+            'Clients need somewhere to go before the old thing is announced as going away.',
+            'The announcement belongs in the responses themselves, with a date.',
+            'You need numbers to know who would break.',
+            'Headers do not move everyone; talk to the clients who are still there.',
+            'Only after the announced date do you actually switch it off.',
+          ],
+          hints: [
+            'You cannot ask people to move before there is something to move to.',
+            'The announcement with a date comes after the new version exists and before anything is switched off.',
+            'Parallel versions first, then the headers, then measuring and contacting, and finally the 410.',
+          ],
+          explanation: 'A polite retirement always runs in this order: the replacement exists, the plan is published with a date, you watch who is affected and help them, and only then does the old thing stop answering.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'rest-api-06-q1',
+        prompt: 'Which change to a deployed API is breaking for existing clients?',
+        choices: [
+          'Adding a new optional query parameter to GET /v1/products',
+          'Adding a brand-new endpoint, POST /v1/suppliers',
+          'Making the existing "category" field of POST /v1/products required',
+          'Adding a "brand" field to every product in a response',
+        ],
+        answer: 2,
+        explanation: 'Requests that used to succeed without "category" would now be rejected. The other three only add something that old clients can ignore or never call.',
+      },
+      {
+        id: 'rest-api-06-q2',
+        prompt: 'Why do many public APIs put the major version in the URL path, as in /v2/products?',
+        choices: [
+          'HTTP caches refuse to store responses unless a version is in the path',
+          'It is visible, simple to route, and easy to try in a browser or with curl',
+          'The URL standard requires every path to start with a version number',
+          'It guarantees that a client can never call two versions at once',
+        ],
+        answer: 1,
+        explanation: 'Path versions are easy to see, route and test. The trade-off is that a resource\'s URL changes between versions, which is why some teams prefer headers.',
+      },
+      {
+        id: 'rest-api-06-q3',
+        prompt: 'What does `Sunset: Wed, 30 Jun 2027 23:59:59 GMT` tell a client?',
+        choices: [
+          'The resource has already been deleted',
+          'The client must stop sending requests for the rest of that day',
+          'The API will answer 429 for everyone after that time',
+          'The resource is expected to stop responding at that date and time',
+        ],
+        answer: 3,
+        explanation: 'Sunset (RFC 8594) announces when a resource is expected to stop responding. It is a hint for planning, not a guarantee and not an instruction to stop calling today.',
+      },
+      {
+        id: 'rest-api-06-q4',
+        prompt: 'Why does a mobile app make breaking changes especially costly?',
+        choices: [
+          'Old app versions stay installed for years, and you cannot force every phone to update',
+          'Mobile networks are too slow to send a changed JSON field',
+          'App stores reject any API that has more than one version',
+          'Phones cannot read headers such as Deprecation and Sunset',
+        ],
+        answer: 0,
+        explanation: 'Unlike a website, an installed app is a client you cannot redeploy. Every version you ever shipped may still be calling your API, so changes need an overlap period.',
+      },
+    ],
+    task: {
+      title: 'Review an API change',
+      minutes: 15,
+      steps: [
+        'Write the JSON of a product with five fields. Now invent six changes: rename one field, add one, change a type, remove one, add an enum value, and change a unit.',
+        'Mark each change as breaking, safe or "depends", and write one line of reasoning for each.',
+        'For one breaking change, draft the three response headers (Deprecation, Sunset, Link) you would send. Use a Unix timestamp with `@` for Deprecation and an HTTP date for Sunset.',
+        'Write a one-sentence note for your API documentation that tells clients to ignore unknown fields.',
+      ],
+    },
+  },
+  {
+    id: 'rest-api-07',
+    day: 7,
+    title: 'Authentication and rate limiting for APIs',
+    summary: 'The design decisions around credentials and limits: where tokens travel, 401 versus 403, object-level checks, and 429 with Retry-After and RateLimit headers.',
+    intro: {
+      objectives: [
+        'Decide how an API receives credentials and reports 401, 403 and 404 correctly',
+        'Explain why every request needs its own authorization check, not only a login',
+        'Design a rate limit and report it with 429, Retry-After and RateLimit headers',
+      ],
+      why: 'A public API is attacked and overloaded the day it goes live. Knowing the HTTP side of credentials and limits lets you protect it and lets client developers recover from limits instead of guessing.',
+    },
+    minutes: 25,
+    skills: ['api-security-limits'],
+    body: [
+      { type: 'paragraph', text: "This lesson is about the HTTP design around security, not the cryptography. The Authentication and Authorization course teaches how passwords are hashed, how sessions and JWTs work and how OAuth is built, and the Node.js and Express course shows how to implement them. Here we decide the parts an API designer owns: how credentials travel on the wire, what each failure looks like to the client, and how to stop one client from using more than its share." },
+      { type: 'heading', text: 'Where credentials go' },
+      { type: 'paragraph', text: "Statelessness from lesson 2 means every request proves who it is. The standard place is the `Authorization` request header. For tokens the common form is the Bearer scheme from RFC 6750: `Authorization: Bearer <token>`. Never put a token or key in the URL, such as `?apiKey=...`. URLs are written to server logs, browser history, proxy logs and the `Referer` header of the next page, and RFC 6750 itself says the query-parameter form is not recommended for exactly this reason. And serve the API only over HTTPS, since anything in a header travels in clear text otherwise." },
+      { type: 'paragraph', text: "Two kinds of credential look alike but are different. An **API key** identifies an application, and a **user token** identifies a person acting through an application. A key shipped inside a mobile app can be extracted by anyone who downloads the app, so it is an identifier and a way to count usage, never a real secret. Real secrets live on your server, and the app authenticates a user to your server with a token." },
+      { type: 'heading', text: '401, 403 and 404 are three different answers' },
+      {
+        type: 'table',
+        headers: ['Status', 'Means', 'The client should', 'Example'],
+        rows: [
+          ['401 Unauthorized', 'No valid credentials. The response must include a WWW-Authenticate header naming how to authenticate', 'Sign in or refresh the token, then retry', 'Missing token, expired token'],
+          ['403 Forbidden', 'The server understood who you are and refuses. Repeating with the same credentials will not help', 'Stop, or ask for different access', 'A customer calls an admin-only endpoint'],
+          ['404 Not Found', 'No such resource, or the server chooses not to reveal that one exists', 'Treat as missing', 'A customer asks for another customer\'s private order'],
+        ],
+        caption: '401 is about who you are, 403 about what you may do',
+      },
+      { type: 'paragraph', text: "The names are confusing: 401 is titled \"Unauthorized\" but really means \"unauthenticated\". RFC 9110 explicitly allows a server that wants to hide a resource's existence to send 404 instead of 403. That is a sensible choice for private data, because \"403 Forbidden\" confirms that order 8 exists." },
+      { type: 'heading', text: 'Check authorization on every object' },
+      { type: 'paragraph', text: "The number one problem on OWASP's 2023 API Security Top 10 is **Broken Object Level Authorization**. It happens when an API checks that the caller is logged in but forgets to check that this order belongs to this caller. A customer changes `/v1/orders/7` to `/v1/orders/8` and reads a stranger's order. The fix is a rule, not a trick: on every request that reads or changes a resource by id, ask \"may this caller touch this one?\". Hiding ids or making them random does not replace that check." },
+      { type: 'heading', text: 'Rate limiting' },
+      { type: 'paragraph', text: "A **rate limit** caps how many requests a client may send in a period. It protects your servers and your bill, keeps one noisy client from starving the others, and slows password guessing. The limit belongs to a client identity: a user, an API key, or as a last resort an IP address. The algorithms trade accuracy for cost:" },
+      {
+        type: 'table',
+        headers: ['Algorithm', 'How it works', 'Trade-off'],
+        rows: [
+          ['Fixed window', 'Count requests in each clock minute; reset at :00', 'Cheap, but a client can send a double burst across the boundary'],
+          ['Sliding window', 'Count requests in the last 60 seconds, measured from now', 'Smoother and fairer, needs more bookkeeping'],
+          ['Token bucket', 'A bucket refills at a steady rate and each request takes a token', 'Allows short bursts but a steady long-run rate'],
+        ],
+        caption: 'Three common limiting strategies',
+      },
+      { type: 'paragraph', text: "When a client goes over, answer **429 Too Many Requests** (RFC 6585) with a `Retry-After` header holding the number of seconds to wait, so the client does not hammer you blindly. Here is the reference server with a limit of five requests per 60 seconds. This is the sixth request:" },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'The sixth request in a minute',
+        code: 'HTTP/1.1 429 Too Many Requests\nContent-Type: application/problem+json\nRetry-After: 60\nRateLimit-Policy: "default";q=5;w=60\nRateLimit: "default";r=0;t=60\n\n{"type":"about:blank","title":"Too Many Requests","status":429,"detail":"Limit of 5 requests per 60 seconds reached."}\n',
+      },
+      { type: 'paragraph', text: "The two `RateLimit` headers come from an IETF draft. `RateLimit-Policy` describes the quota: a name, `q` for the quota size and `w` for the window in seconds. `RateLimit` says what is left right now: `r` remaining and `t` seconds until the window resets. Sending them on every successful response, not only on 429, lets a polite client slow down before it is cut off. Be careful about their status: this is a work in progress. Many APIs still send the older, unstandardised `X-RateLimit-Limit`, `X-RateLimit-Remaining` and `X-RateLimit-Reset`, and those names have meant different things in different APIs (the reset has been seconds, milliseconds or a timestamp). Document what yours mean." },
+      { type: 'warning', text: "Rate limits slow honest clients and stop accidents, but they are not a security wall. They do not replace authentication or authorization checks, and a determined attacker spreads requests across many identities." },
+      {
+        type: 'version',
+        text: "As of this date, draft-ietf-httpapi-ratelimit-headers is revision 11 (last updated 23 May 2026), an active Internet-Draft of the IETF HTTPAPI working group with intended Standards Track status. It is not an RFC, so its field names and syntax could still change; check the draft before relying on it. RFC 6585 defines 429, RFC 9110 defines Retry-After (section 10.2.3), 401 with WWW-Authenticate, and 403. The OWASP API Security Top 10 is the 2023 edition.",
+        checked: CHECKED,
+        sources: [DOCS.rateLimit, DOCS.rfc6585, DOCS.rfc9110, { label: 'RFC 6750: OAuth 2.0 Bearer Token Usage', url: 'https://www.rfc-editor.org/rfc/rfc6750.html' }, { label: 'OWASP API Security Top 10 (2023)', url: 'https://api-security.owasp.org/editions/2023/en/0x11-t10' }],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'Credentials go in the Authorization header over HTTPS, never in the URL. An API key in a mobile app is an identifier, not a secret.',
+          '401 means "not authenticated" (and needs WWW-Authenticate), 403 means "known but not allowed", and 404 may hide that a private resource exists.',
+          'Check object-level access on every request that uses an id: logged in is not the same as allowed to see this one.',
+          'Rate limit per client identity and answer 429 with Retry-After; send RateLimit headers on every response so clients can pace themselves.',
+          'The RateLimit headers are an IETF draft, not yet a standard; document your own meaning for any X-RateLimit headers you use.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'rest-api-07-scenario-1',
+          kind: 'scenario',
+          title: 'A customer tries an admin action',
+          prompt: 'Pick the status the API should return.',
+          concept: '401 versus 403',
+          situation: 'Ana is signed in, with a valid token, as a customer of the store. Her app calls DELETE /v1/products/3, which only staff may do. Anyone can already see that product 3 exists, because the catalog is public.',
+          options: [
+            { text: '403 Forbidden: the server knows who she is and refuses the action.', consequence: 'The app learns that signing in again will not help and can show "you do not have access".', quality: 'best' },
+            { text: '404 Not Found, to hide the action.', consequence: 'It works, but the product is public, so hiding it gains nothing, and a developer will waste time wondering why a visible product is "missing".', quality: 'acceptable' },
+            { text: '401 Unauthorized with a WWW-Authenticate header.', consequence: 'The app thinks her token is the problem, asks her to sign in, and she lands in the same error again.', quality: 'poor' },
+          ],
+          hints: [
+            'Is the problem that the server does not know who she is, or that she is not allowed?',
+            '401 is about missing or invalid credentials. She has valid ones.',
+            'Authenticated but not permitted is 403. A 404 is for when the existence of the thing is itself secret.',
+          ],
+          explanation: 'Authentication succeeded and authorization failed, which is the definition of 403. A 401 would send the client in a pointless sign-in loop, and 404 is reserved for cases where you want to hide that a resource exists.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'rest-api-07-code-challenge-1',
+          kind: 'code-challenge',
+          title: 'How long until I may retry?',
+          prompt: 'Write `waitSeconds(timestamps, now, limit, windowMs)` for a sliding-window limiter. `timestamps` holds the times (in milliseconds) of a client\'s earlier requests. Only requests newer than `now - windowMs` count. If fewer than `limit` of them count, return `0`. Otherwise return how many whole seconds, rounded up, until the oldest counted request leaves the window: `Math.ceil((oldest + windowMs - now) / 1000)`. That number is the value of the `Retry-After` header.',
+          concept: 'rate limiting',
+          language: 'javascript',
+          starter: 'function waitSeconds(timestamps, now, limit, windowMs) {\n  // keep only the timestamps inside the window\n  return 0;\n}\n',
+          solution: 'function waitSeconds(timestamps, now, limit, windowMs) {\n  const recent = timestamps.filter((t) => t > now - windowMs);\n  if (recent.length < limit) return 0;\n  const oldest = Math.min(...recent);\n  return Math.ceil((oldest + windowMs - now) / 1000);\n}\n',
+          tests: {
+            kind: 'function',
+            fn: 'waitSeconds',
+            cases: [
+              { label: 'no requests yet', args: [[], 100000, 3, 60000], expected: 0 },
+              { label: 'under the limit', args: [[90000, 95000], 100000, 3, 60000], expected: 0 },
+              { label: 'at the limit', args: [[70000, 80000, 90000], 100000, 3, 60000], expected: 30 },
+              { label: 'old requests do not count', args: [[10000, 80000, 90000, 95000], 100000, 3, 60000], expected: 40 },
+              { label: 'rounds up', args: [[99500, 99600, 99900], 100000, 3, 60000], expected: 60 },
+            ],
+          },
+          hints: [
+            'First keep only the requests that happened after now - windowMs, using filter.',
+            'If the count of recent requests is below the limit, return 0. Otherwise the client has to wait for the oldest recent request to expire.',
+            'oldest = Math.min(...recent); the wait is Math.ceil((oldest + windowMs - now) / 1000).',
+          ],
+          explanation: 'A sliding window only remembers requests from the last windowMs. When the client is at the limit, the earliest moment it may send again is when its oldest counted request slides out of the window, and that is exactly what Retry-After should say.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'rest-api-07-predict-1',
+          kind: 'predict-output',
+          title: 'Hit the limit',
+          story: 'The reference server allows 5 requests per 60 seconds on /v1/limited. The counter starts at zero.',
+          prompt: 'The loop sends six requests, each printing its status code. What is the output?',
+          concept: '429 Too Many Requests',
+          language: 'text',
+          code: "for i in 1 2 3 4 5 6; do\n  curl -s -o /dev/null -w '%{http_code}\\n' localhost:4100/v1/limited\ndone",
+          expected: '200\n200\n200\n200\n200\n429',
+          choices: ['200\n200\n200\n200\n200\n429', '200\n200\n200\n200\n429\n429', '200\n200\n200\n200\n200\n503', '429\n429\n429\n429\n429\n429'],
+          wrongNotes: {
+            '200\n200\n200\n200\n429\n429': 'The quota is 5, so the first five requests are allowed. Only the sixth goes over.',
+            '200\n200\n200\n200\n200\n503': '503 means the server is unavailable. A client that is over its quota is told 429 Too Many Requests.',
+            '429\n429\n429\n429\n429\n429': 'The counter starts at zero, so the first five requests are inside the limit.',
+          },
+          hints: [
+            'How many requests does the limit allow, and which request is the first one over it?',
+            'The limit is 5 per window. Requests 1 to 5 are inside it.',
+            'Five 200 responses, then the sixth is rejected with the status defined for too many requests.',
+          ],
+          explanation: 'A quota of five means the first five requests succeed and the sixth is refused with 429. The Retry-After header on that answer tells the client how long to wait before the window frees up.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'rest-api-07-q1',
+        prompt: 'Where should an API client send a bearer token?',
+        choices: [
+          'In the Authorization header, over HTTPS',
+          'In a query parameter, so it shows up in access logs for debugging',
+          'In the path, for example /v1/abc123/products',
+          'In a JSON field of every GET request body',
+        ],
+        answer: 0,
+        explanation: 'The Authorization header keeps the token out of URLs, which end up in logs, browser history and Referer headers. GET requests have no meaningful body.',
+      },
+      {
+        id: 'rest-api-07-q2',
+        prompt: 'A request arrives with no token at all, to an endpoint that needs one. What is the correct answer?',
+        choices: [
+          '403 Forbidden, because the caller is not allowed in',
+          '401 Unauthorized with a WWW-Authenticate header',
+          '404 Not Found, so the endpoint seems not to exist',
+          '400 Bad Request, because the header is missing',
+        ],
+        answer: 1,
+        explanation: 'The server does not know who is calling, which is a failure of authentication, so 401. RFC 9110 requires a 401 response to include WWW-Authenticate.',
+      },
+      {
+        id: 'rest-api-07-q3',
+        prompt: 'A signed-in customer edits the id in /v1/orders/7 to 8 and sees another person\'s order. Which problem is this?',
+        choices: [
+          'Unrestricted resource consumption, because too many ids can be requested',
+          'A missing HTTPS certificate on the API server',
+          'A weak password hashing algorithm for customer accounts',
+          'Broken object level authorization: the API never checks that this order is theirs',
+        ],
+        answer: 3,
+        explanation: 'The caller was authenticated, but the server did not check access to this particular object. That is API1 on the OWASP API Security Top 10 (2023).',
+      },
+      {
+        id: 'rest-api-07-q4',
+        prompt: 'What is the standing of the RateLimit and RateLimit-Policy header fields on this lesson\'s date?',
+        choices: [
+          'Required by RFC 9110 for every API that sets a limit',
+          'Deprecated in favour of the X-RateLimit-Remaining header',
+          'An active IETF Internet-Draft, so the syntax could still change',
+          'Removed from the specification after the 2024 review',
+        ],
+        answer: 2,
+        explanation: 'The headers are defined in draft-ietf-httpapi-ratelimit-headers, still a draft. That is why you should read the current draft and document your own behaviour, and why X-RateLimit-* headers remain common.',
+      },
+    ],
+    task: {
+      title: 'Plan the limits and errors of an API',
+      minutes: 15,
+      steps: [
+        'Pick an API you could build (a store, a clinic booking). List three endpoints and say which need a signed-in user and which are public.',
+        'For each endpoint write what a caller with no token, a customer token and a staff token should get: 401, 403, 404 or success.',
+        'Choose a limit for a signed-in user (for example 60 requests per minute) and write the full 429 response headers, using Retry-After and the two RateLimit headers.',
+        'Write one sentence about which object-level check protects "get order by id".',
+      ],
+    },
+  },
+  {
+    id: 'rest-api-08',
+    day: 8,
+    title: 'Documenting an API with OpenAPI',
+    summary: 'Describe an API in a machine-readable OpenAPI file, reuse schemas with $ref, and validate the file with a real linter.',
+    intro: {
+      objectives: [
+        'Read and write the main parts of an OpenAPI 3.1 document',
+        'Reuse schemas and responses with $ref and components',
+        'Validate a specification with a real tool and read its errors',
+      ],
+      why: 'Documentation that a machine can read is documentation that stays true: it can render a reference site, test the server, generate client code and fail a build when someone breaks the contract. Employers expect API work to come with an OpenAPI file.',
+    },
+    minutes: 30,
+    skills: ['openapi-docs'],
+    body: [
+      { type: 'paragraph', text: "A wiki page that says \"POST /products takes a name and a price\" is out of date the first time someone changes the code. The **OpenAPI Specification** (OAS) fixes this by describing an HTTP API in a structured file, written in YAML or JSON, that tools can read. From one file you can render browsable documentation (Swagger UI and Redoc do), run a mock server before the real one exists, generate client libraries, check that responses match the description, and **lint** the file, meaning check it against rules. Think of it as the menu from lesson 1, printed in a format that machines can also read." },
+      { type: 'paragraph', text: "There are two ways to work. In **design-first**, you write the OpenAPI file, agree on it with the people who will call it, and then build the server to match. In **code-first**, you write the server and generate the file from it. Design-first fits this course: the contract is the design, and you can argue about status codes in a pull request before any code exists." },
+      { type: 'heading', text: 'The shape of a document' },
+      {
+        type: 'table',
+        headers: ['Top-level field', 'What it holds'],
+        rows: [
+          ['openapi', 'The version of the specification the file follows, such as 3.1.0 (required)'],
+          ['info', 'Title, version of your API and a description (title and version are required)'],
+          ['servers', 'The base URLs the API is served from'],
+          ['paths', 'Every URL, with the methods ("operations") it supports'],
+          ['components', 'Reusable pieces: schemas, responses, parameters, security schemes'],
+          ['security', 'Which security schemes apply to the operations by default'],
+        ],
+        caption: 'The parts of an OpenAPI document you will use most',
+      },
+      { type: 'paragraph', text: "Each path holds operations (`get`, `post`, `delete`...), and each operation lists its parameters, its request body and its responses by status code. An `operationId` gives the operation a unique name, which code generators use as the function name. Each response says what it means and what its body looks like. The body shape is a **schema**, written in JSON Schema: an `object` with `properties`, a `type` for each, and a `required` list for the properties that must be present." },
+      { type: 'heading', text: 'Write it once, point to it everywhere' },
+      { type: 'paragraph', text: "If every operation repeated the product shape, changing a field would mean editing ten places. Instead you define the schema once under `components`, and refer to it with `$ref`, a JSON pointer written as a string: `$ref: '#/components/schemas/Product'` means \"the Product schema in this same file\". The same trick works for responses, so the 404 problem answer is written once and used by every operation that needs it." },
+      { type: 'paragraph', text: "Here is the whole reference API from this course as one OpenAPI file, in five parts. Read it as a client developer would. Part 1 is the header and the list and create operations:" },
+      { type: 'code', language: 'yaml', label: 'Part 1: info, servers and /products', code: SPEC[0] },
+      { type: 'paragraph', text: "Look at the details that carry the design from earlier lessons: the `limit` and `offset` parameters have a `minimum`, a `maximum` and a `default`; the 200 response lists the `Link` header; the 201 response lists the `Location` header; and errors use the `application/problem+json` media type. Part 2 continues under `paths:` with the single-product URL. The `{productId}` in the path is a **path parameter**, declared once for every method of that path:" },
+      { type: 'code', language: 'yaml', label: 'Part 2: /products/{productId}', code: SPEC[1] },
+      { type: 'paragraph', text: "Parts 3 to 5 sit at the top level, after `paths:`. First the default security (a bearer token, as in lesson 7) and the schemas. Note that reads set `security: []` to say \"no token needed\", which overrides the default, while the create and delete operations inherit the bearer requirement:" },
+      { type: 'code', language: 'yaml', label: 'Part 3: security and the product schemas', code: SPEC[2] },
+      { type: 'paragraph', text: "`Product` is built with `allOf`: it is everything in `ProductInput` plus a read-only `id`. A client sends `ProductInput` and gets `Product` back, and the two never drift apart. The rest of `components` holds the error schema and the shared responses:" },
+      { type: 'code', language: 'yaml', label: 'Part 4: the error schema and shared responses', code: SPEC[3] },
+      { type: 'paragraph', text: "Join parts 1 to 4 in one file in the order shown, indenting nothing further, and you have a complete specification. (The fifth chunk is only the tail of the shared responses; the numbering is just how this page splits the file.)" },
+      { type: 'code', language: 'yaml', label: 'Part 5: the last shared response', code: SPEC[4] },
+      { type: 'heading', text: 'Validate it with a real tool' },
+      { type: 'paragraph', text: "A specification nobody checks becomes fiction too, so lint it. One option is the Redocly CLI, run with `npx @redocly/cli lint tindahan.yaml`. The complete file above passes with no warnings under Redocly CLI 2.78.0 and under the swagger-parser library. A file with mistakes gives readable messages. This is the real output for a file whose `info` has no `version` and whose `$ref` points at a schema that does not exist (shortened):" },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'Linting a broken file',
+        code: '[1] broken.yaml:2:1 at #/info\n\nThe field `version` must be present on this level.\n\nError was generated by the struct rule.\n\n[2] broken.yaml:13:17 at #/paths/~1products/get/responses/200/content/application~1json/schema\n\nCan\'t resolve $ref\n\n13 |     $ref: \'#/components/schemas/ProductPage\'\n   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^\n\nError was generated by the no-unresolved-refs rule.\n',
+      },
+      { type: 'tip', text: "Run the linter in your build so a pull request fails when the specification is invalid. Better, compare it against a real response: a description that does not match the server is worse than none." },
+      {
+        type: 'version',
+        text: "On this date the OpenAPI Initiative's site lists the latest releases as 3.2.1 (also 3.2.0), 3.1.2 (3.1.1, 3.1.0) and 3.0.4, and 2.0 for the older Swagger format. OpenAPI 3.1 aligns the Schema Object with JSON Schema draft 2020-12: the 3.0-only `nullable: true` is gone (write `type: [string, 'null']`) and `example` became `examples`. The files in this lesson declare `openapi: 3.1.0` because it is the version most tools support today; check which versions your tools accept before using a newer one. The examples were validated with Redocly CLI 2.78.0 and swagger-parser.",
+        checked: CHECKED,
+        sources: [DOCS.oasIndex, DOCS.oasLatest, DOCS.oasUpgrade],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'OpenAPI describes an HTTP API in a YAML or JSON file that tools can read: documentation, mocks, generated clients and tests all come from it.',
+          'A document has openapi, info, servers, paths and components. Each operation lists its parameters, request body and responses by status code.',
+          'Define schemas, responses and security once under components and point to them with $ref.',
+          'OpenAPI 3.1 schemas are JSON Schema 2020-12; nullable became a type array that includes "null".',
+          'Lint the file with a real tool in your build, and keep it honest by checking it against real responses.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'rest-api-08-fix-bug-1',
+          kind: 'fix-bug',
+          title: 'The reference that points nowhere',
+          story: 'The linter says "Can\'t resolve $ref" on this file.',
+          prompt: 'Tap the line with the typo, then pick the fix that makes the $ref resolve to the Product schema defined under components.',
+          concept: '$ref',
+          language: 'yaml',
+          code: "paths:\n  /products/{productId}:\n    get:\n      operationId: getProduct\n      responses:\n        '200':\n          description: The product.\n          content:\n            application/json:\n              schema:\n                $ref: '#/components/schema/Product'\ncomponents:\n  schemas:\n    Product:\n      type: object",
+          bugLine: 11,
+          fixes: [
+            { line: "                $ref: '#/components/schemas/Product'", correct: true, why: 'The pointer now follows the real structure of the file: components, then schemas, then Product.' },
+            { line: "                $ref: '#/components/schemas/product'", correct: false, why: 'Names are case-sensitive, and the schema is called Product. Also the original typo was in "schema", not in the final name.' },
+            { line: "                $ref: 'components/schemas/Product'", correct: false, why: 'A reference inside the same file starts with # and a slash. Without the # it is read as a path to another file.' },
+            { line: "                $ref: '#/schemas/Product'", correct: false, why: 'The schemas live under components, so the pointer must include it.' },
+          ],
+          hints: [
+            'Compare the $ref text with the keys at the bottom of the file, one level at a time.',
+            'The pointer says components, then "schema". What does the file call that key?',
+            'The key under components is schemas, in the plural.',
+          ],
+          explanation: 'A $ref is a path through the document: # is the file root, then each key in turn. The file defines components, then schemas, so a missing "s" makes the pointer lead nowhere. Linters report exactly this as an unresolved $ref.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'rest-api-08-fill-blank-1',
+          kind: 'fill-blank',
+          title: 'Finish the 201 response',
+          prompt: 'A successful create returns the URL of the new product in a header. Fill in the blank with the header\'s name.',
+          concept: 'documenting responses',
+          language: 'yaml',
+          code: "'201':\n  description: The product was created.\n  headers:\n    ___:\n      description: URL of the new product.\n      schema:\n        type: string\n  content:\n    application/json:\n      schema:\n        $ref: '#/components/schemas/Product'",
+          blanks: [{ answers: ['Location'], feedback: 'The header that names a newly created resource is Location, as lesson 3 showed.' }],
+          bank: ['Location', 'ETag', 'Allow', 'Retry-After'],
+          hints: [
+            'Which header did the 201 response carry in lesson 3?',
+            'It tells the client where the new resource lives.',
+            'It is Location.',
+          ],
+          explanation: 'A 201 response should carry a Location header with the URL of the created resource, so the OpenAPI file lists it. ETag is about reuse, Allow lists methods and Retry-After is for limits.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'rest-api-08-match-1',
+          kind: 'match',
+          title: 'Where does it go?',
+          prompt: 'Each need belongs in one part of an OpenAPI document. Match the need to the part.',
+          concept: 'structure of an OpenAPI document',
+          labels: { terms: 'What you need to write', meanings: 'Where it goes' },
+          pairs: [
+            { term: 'The API\'s title, its version and a description for the docs site', definition: 'info' },
+            { term: 'The base address https://api.tindahan.example/v1', definition: 'servers' },
+            { term: 'The GET and POST operations of /products, with their responses', definition: 'paths' },
+            { term: 'A Product schema that ten operations share', definition: 'components' },
+          ],
+          hints: [
+            'Think about which part is about the API as a whole and which is about individual URLs.',
+            'Anything reused by more than one operation is defined once somewhere else and referenced.',
+            'info describes the API, servers holds base URLs, paths holds the operations, and components holds reusable schemas.',
+          ],
+          explanation: 'info names the API, servers says where it lives, paths lists each URL and its operations, and components holds the pieces that paths refer to with $ref.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'rest-api-08-code-challenge-1',
+          kind: 'code-challenge',
+          title: 'A tiny linter',
+          prompt: 'Write `operationsWithoutId(spec)`. `spec.paths` is an object that maps each path to an object whose keys include the HTTP methods in lower case (`get`, `put`, `post`, `delete`, `patch`) and sometimes other keys such as `parameters`. Return an array of strings like `"POST /products"` (method in capitals, then the path) for every operation that has no `operationId`. Check the methods in the order `get`, `put`, `post`, `delete`, `patch`, and go through the paths in the order they appear.',
+          concept: 'linting a specification',
+          language: 'javascript',
+          starter: "function operationsWithoutId(spec) {\n  const methods = ['get', 'put', 'post', 'delete', 'patch'];\n  const missing = [];\n  // visit every path and every method\n  return missing;\n}\n",
+          solution: "function operationsWithoutId(spec) {\n  const methods = ['get', 'put', 'post', 'delete', 'patch'];\n  const missing = [];\n  for (const path of Object.keys(spec.paths)) {\n    for (const method of methods) {\n      const operation = spec.paths[path][method];\n      if (operation && !operation.operationId) {\n        missing.push(method.toUpperCase() + ' ' + path);\n      }\n    }\n  }\n  return missing;\n}\n",
+          tests: {
+            kind: 'function',
+            fn: 'operationsWithoutId',
+            cases: [
+              { label: 'two missing', args: [{ paths: { '/products': { get: { operationId: 'listProducts' }, post: { summary: 'Add' } }, '/products/{productId}': { parameters: [{ name: 'productId' }], get: {}, delete: { operationId: 'deleteProduct' } } } }], expected: ['POST /products', 'GET /products/{productId}'] },
+              { label: 'all named', args: [{ paths: { '/orders': { get: { operationId: 'listOrders' } } } }], expected: [] },
+              { label: 'no paths', args: [{ paths: {} }], expected: [] },
+              { label: 'method order', args: [{ paths: { '/a': { post: {}, get: {}, delete: {} } } }], expected: ['GET /a', 'POST /a', 'DELETE /a'] },
+            ],
+          },
+          hints: [
+            'You need two loops: one over the path keys, one over the list of method names.',
+            'spec.paths[path][method] is the operation, or undefined when the path has no such method. Skip those.',
+            'When the operation exists and operation.operationId is falsy, push method.toUpperCase() + " " + path.',
+          ],
+          explanation: 'A linter is just code that walks the document and reports what breaks a rule. Looping over a fixed list of methods ignores keys like `parameters`, and checking that the operation exists skips methods the path does not offer.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'rest-api-08-q1',
+        prompt: 'What is the main advantage of describing an API in an OpenAPI file instead of a wiki page?',
+        choices: [
+          'Tools can read it to render docs, generate clients, mock the server and lint the contract',
+          'HTTP servers refuse requests that are not listed in the file',
+          'It lets the API skip status codes, since the file already says what happens',
+          'It makes the API faster because the server can cache the file',
+        ],
+        answer: 0,
+        explanation: 'A machine-readable contract can be consumed by many tools and checked automatically. It does not change how HTTP works or make the server faster.',
+      },
+      {
+        id: 'rest-api-08-q2',
+        prompt: 'What does `$ref: \'#/components/schemas/Product\'` mean?',
+        choices: [
+          'Download the Product schema from the server named in the servers list',
+          'Use the schema called Product defined in components.schemas of this same file',
+          'Create a new Product schema each time this line is reached',
+          'Copy the Product schema from the previous operation of the file',
+        ],
+        answer: 1,
+        explanation: 'A $ref is a pointer: # means this file, then each segment names a key to follow. It lets you define a schema once and reuse it.',
+      },
+      {
+        id: 'rest-api-08-q3',
+        prompt: 'In OpenAPI 3.1, how do you say that a string property may also be null?',
+        choices: [
+          '`nullable: true`, exactly as in OpenAPI 3.0',
+          'Leave out `type`, because every value may be null',
+          '`type: [string, \'null\']`, since 3.1 uses JSON Schema 2020-12',
+          'Add `required: false` to the property',
+        ],
+        answer: 2,
+        explanation: 'OpenAPI 3.1 aligns with JSON Schema, which has no nullable keyword: you list "null" among the allowed types.',
+      },
+      {
+        id: 'rest-api-08-q4',
+        prompt: 'A schema has `required: [name, stock]`. What does that mean for a request body validated against it?',
+        choices: [
+          'The properties name and stock may only contain values of the text type',
+          'The properties name and stock must be present in the object',
+          'Only name and stock are allowed, and any other property is rejected',
+          'The server must answer 201 for every body that has them',
+        ],
+        answer: 1,
+        explanation: '`required` lists the properties that must exist. It does not fix their types (properties does that) and does not forbid extra properties on its own.',
+      },
+    ],
+    task: {
+      title: 'Write and lint a small OpenAPI file',
+      minutes: 20,
+      steps: [
+        'In an empty folder create `shop.yaml` with `openapi: 3.1.0`, an `info` block (title and version) and a `servers` entry.',
+        'Add the path `/products` with a `get` operation that has an `operationId`, a 200 response and a `Product` schema defined under `components` and referenced with `$ref`.',
+        'Run `npx @redocly/cli lint shop.yaml`. Fix every error it reports.',
+        'Now break the file on purpose: remove the `version` field, and change `schemas` to `schema` in the pointer. Read both messages and note which rule produced each one.',
+      ],
+    },
+  },
+  // @@MORE_LESSONS@@
+];
+
+const projects: Project[] = [];
+
+export const restApiCourse: Course = {
+  id: 'rest-api',
+  kind: 'standard',
+  title: 'REST API Development',
+  level: 'intermediate',
+  tagline: 'Design HTTP APIs that other developers can use without asking you questions.',
+  description: 'Learn to design web APIs independent of any framework: resources and URLs, methods and status codes, JSON, pagination, errors, versioning, security basics, caching and documentation with OpenAPI. Every example was run against a real reference server, and you finish by writing and validating a complete OpenAPI specification.',
+  finishLine: ['A complete, validated OpenAPI specification for an API you designed', 'A written design rationale that you can defend in an interview', 'The vocabulary to review any API and say what is wrong with it'],
+  objectives: [
+    'Read raw HTTP requests and responses and choose methods and status codes with their standard meanings',
+    'Model a problem as resources with clean, predictable URLs',
+    'Design pagination, filtering, sorting and error responses that clients can handle',
+    'Evolve an API without breaking existing clients',
+    'Describe an API with OpenAPI and validate it with a real tool',
+  ],
+  audiences: ['fresh-grad', 'career-changer', 'experienced-dev', 'builder'],
+  skills: [
+    { id: 'http-fundamentals', label: 'HTTP fundamentals' },
+    { id: 'rest-resources', label: 'REST and resources' },
+    { id: 'url-method-status-design', label: 'URLs, methods and status codes' },
+    { id: 'json-pagination', label: 'JSON, pagination and filtering' },
+    { id: 'error-design', label: 'Errors and validation' },
+    { id: 'versioning', label: 'Versioning' },
+    { id: 'api-security-limits', label: 'API security and rate limits' },
+    { id: 'openapi-docs', label: 'OpenAPI documentation' },
+    { id: 'idempotency-caching', label: 'Idempotency and caching' },
+    { id: 'api-consumption', label: 'Consuming APIs well' },
+  ],
+  lessons,
+  projects,
+  icon: 'api',
+  updated: '2026-11-14',
+};

@@ -1,0 +1,1598 @@
+import type { Course, Lesson, Project } from '../../types';
+
+const CHECKED = '2026-11-14';
+
+const DOCS = {
+  manualHome: { label: 'MongoDB Manual: release notes (current stable and previous releases)', url: 'https://www.mongodb.com/docs/manual/release-notes/' },
+  documents: { label: 'MongoDB Manual: Documents', url: 'https://www.mongodb.com/docs/manual/core/document/' },
+  bson: { label: 'MongoDB Manual: BSON types', url: 'https://www.mongodb.com/docs/manual/reference/bson-types/' },
+  limits: { label: 'MongoDB Manual: Limits and thresholds', url: 'https://www.mongodb.com/docs/manual/reference/limits/' },
+  freeLimits: { label: 'Atlas docs: Atlas Free cluster limits', url: 'https://www.mongodb.com/docs/atlas/reference/free-shared-limitations/' },
+  freeBackup: { label: 'Atlas docs: Free cluster backups', url: 'https://www.mongodb.com/docs/atlas/backup/cloud-backup/free-cluster-backup/' },
+  freeCluster: { label: 'Atlas docs: Deploy a Free cluster', url: 'https://www.mongodb.com/docs/atlas/tutorial/deploy-free-tier-cluster/' },
+  dbUsers: { label: 'Atlas docs: Configure database users', url: 'https://www.mongodb.com/docs/atlas/security-add-mongodb-users/' },
+  ipList: { label: 'Atlas docs: Configure IP access list entries', url: 'https://www.mongodb.com/docs/atlas/security/ip-access-list/' },
+  atlasStart: { label: 'Atlas docs: Get started (local deployments and the Atlas CLI)', url: 'https://www.mongodb.com/docs/atlas/getting-started/' },
+  atlasConnect: { label: 'Atlas docs: Connect to a cluster via client libraries', url: 'https://www.mongodb.com/docs/atlas/driver-connection/' },
+  connString: { label: 'MongoDB Manual: Connection strings', url: 'https://www.mongodb.com/docs/manual/reference/connection-string/' },
+  mongoshConnect: { label: 'MongoDB Shell docs: Connect to a deployment', url: 'https://www.mongodb.com/docs/mongodb-shell/connect/' },
+  insert: { label: 'MongoDB Manual: Insert documents', url: 'https://www.mongodb.com/docs/manual/tutorial/insert-documents/' },
+  crud: { label: 'MongoDB Manual: CRUD operations', url: 'https://www.mongodb.com/docs/manual/crud/' },
+  queryOps: { label: 'MongoDB Manual: Query predicates and operators', url: 'https://www.mongodb.com/docs/manual/reference/mql/query-predicates/' },
+  updateOps: { label: 'MongoDB Manual: Update operators', url: 'https://www.mongodb.com/docs/manual/reference/mql/update/' },
+  regex: { label: 'MongoDB Manual: $regex', url: 'https://www.mongodb.com/docs/manual/reference/operator/query/regex/' },
+  projection: { label: 'MongoDB Manual: Project fields to return from a query', url: 'https://www.mongodb.com/docs/manual/tutorial/project-fields-from-query-results/' },
+  skip: { label: 'MongoDB Manual: cursor.skip()', url: 'https://www.mongodb.com/docs/manual/reference/method/cursor.skip/' },
+  queryArrays: { label: 'MongoDB Manual: Query an array of embedded documents', url: 'https://www.mongodb.com/docs/manual/tutorial/query-array-of-documents/' },
+  modelBest: { label: 'MongoDB Manual: Best practices for data modeling', url: 'https://www.mongodb.com/docs/manual/data-modeling/best-practices/' },
+  embedding: { label: 'MongoDB Manual: Embedded data in your schema', url: 'https://www.mongodb.com/docs/manual/data-modeling/embedding/' },
+  referencing: { label: 'MongoDB Manual: Reference data in your schema', url: 'https://www.mongodb.com/docs/manual/data-modeling/referencing/' },
+  unbounded: { label: 'MongoDB Manual: Avoid unbounded arrays', url: 'https://www.mongodb.com/docs/manual/data-modeling/design-antipatterns/unbounded-arrays/' },
+  monetary: { label: 'MongoDB Manual: Model monetary data', url: 'https://www.mongodb.com/docs/manual/tutorial/model-monetary-data/' },
+  esr: { label: 'MongoDB Manual: The ESR (Equality, Sort, Range) guideline', url: 'https://www.mongodb.com/docs/manual/tutorial/equality-sort-range-guideline/' },
+  compound: { label: 'MongoDB Manual: Compound indexes', url: 'https://www.mongodb.com/docs/manual/core/indexes/index-types/index-compound/' },
+  explain: { label: 'MongoDB Manual: Explain results', url: 'https://www.mongodb.com/docs/manual/reference/explain-results/' },
+  ttl: { label: 'MongoDB Manual: TTL indexes', url: 'https://www.mongodb.com/docs/manual/core/index-ttl/' },
+  indexProps: { label: 'MongoDB Manual: Index properties', url: 'https://www.mongodb.com/docs/manual/core/indexes/index-properties/' },
+  aggregation: { label: 'MongoDB Manual: Aggregation pipeline', url: 'https://www.mongodb.com/docs/manual/core/aggregation-pipeline/' },
+  aggStages: { label: 'MongoDB Manual: Aggregation stages', url: 'https://www.mongodb.com/docs/manual/reference/mql/aggregation-stages/' },
+  aggOptimize: { label: 'MongoDB Manual: Aggregation pipeline optimization', url: 'https://www.mongodb.com/docs/manual/core/aggregation-pipeline-optimization/' },
+  lookup: { label: 'MongoDB Manual: $lookup (aggregation)', url: 'https://www.mongodb.com/docs/manual/reference/operator/aggregation/lookup/' },
+  driverStart: { label: 'Node.js driver docs: Get started', url: 'https://www.mongodb.com/docs/drivers/node/current/get-started/' },
+  driverCompat: { label: 'MongoDB driver compatibility: Node.js driver', url: 'https://www.mongodb.com/docs/drivers/compatibility/' },
+  mongoClient: { label: 'Node.js driver docs: Create a MongoClient', url: 'https://www.mongodb.com/docs/drivers/node/current/connect/mongoclient/' },
+  schemaValidation: { label: 'MongoDB Manual: Schema validation', url: 'https://www.mongodb.com/docs/manual/core/schema-validation/' },
+  validationLevel: { label: 'MongoDB Manual: Specify validation level for existing documents', url: 'https://www.mongodb.com/docs/manual/core/schema-validation/specify-validation-level/' },
+  validationAction: { label: 'MongoDB Manual: Choose how to handle invalid documents', url: 'https://www.mongodb.com/docs/manual/core/schema-validation/handle-invalid-documents/' },
+  transactions: { label: 'MongoDB Manual: Transactions', url: 'https://www.mongodb.com/docs/manual/core/transactions/' },
+  writeConcern: { label: 'MongoDB Manual: Write concern', url: 'https://www.mongodb.com/docs/manual/reference/write-concern/' },
+  nodeTransactions: { label: 'Node.js driver docs: Transactions', url: 'https://www.mongodb.com/docs/drivers/node/current/crud/transactions/' },
+  search: { label: 'MongoDB Search overview', url: 'https://www.mongodb.com/docs/atlas/atlas-search/' },
+  vectorSearch: { label: 'MongoDB Vector Search overview', url: 'https://www.mongodb.com/docs/atlas/atlas-vector-search/vector-search-overview/' },
+  dump: { label: 'MongoDB Database Tools: mongodump', url: 'https://www.mongodb.com/docs/database-tools/mongodump/' },
+  owaspNoSql: { label: 'OWASP Web Security Testing Guide: NoSQL injection', url: 'https://wstg.owasp.org/latest/4-Web_Application_Security_Testing/07-Injection/05.6-NoSQL_Injection' },
+  expressErrors: { label: 'Express docs: Error handling', url: 'https://expressjs.com/en/guide/error-handling.html' },
+};
+
+const lessons: Lesson[] = [
+  {
+    id: 'mongodb-01',
+    day: 1,
+    title: 'Documents versus tables, and setting up Atlas',
+    summary: 'See how MongoDB stores one record as a document, compare that honestly with tables, and get a free Atlas cluster you can connect to safely.',
+    intro: {
+      objectives: [
+        'Explain what a document, a collection and a database are, and how they map to rows, tables and databases',
+        'Choose between a document database and a relational one for a given problem',
+        'Set up an Atlas free cluster with a database user, an IP access list entry and a connection string kept out of your code',
+      ],
+      why: 'Most job posts that mention Node.js also mention MongoDB, and the first hour decides whether you enjoy it: if the setup and the vocabulary are clear, everything later is just practice.',
+    },
+    minutes: 25,
+    skills: ['documents-bson', 'atlas-setup'],
+    body: [
+      { type: 'paragraph', text: "A database is a program that stores your data safely and lets you ask questions about it quickly. The two shapes you will meet most are **tables** and **documents**. In the PostgreSQL and SQL course you stored data in tables: every row has the same columns, and a customer's order is spread over several tables that you join back together when you read it. MongoDB takes the other approach, and this course teaches it properly, from the first insert to a working API." },
+      { type: 'paragraph', text: "Think of a sari-sari store's paper notebook. A table is like a ledger page with fixed columns: date, item, quantity, price, one line per sale. A document is like an order slip: one slip holds the customer's name, the date and every item on the order, all together. If you want to know what Ana ordered, you pick up one slip instead of collecting lines from five different pages." },
+      { type: 'heading', text: 'Documents, collections and databases' },
+      { type: 'paragraph', text: "A MongoDB **document** is a record made of named fields and values, written like a JavaScript object. A **collection** is a group of documents, such as `products` or `orders`. A **database** is a group of collections, such as `tindahan`. You will use this store (`tindahan` means a small shop) as the example for the whole course." },
+      {
+        type: 'code',
+        language: 'javascript',
+        label: 'One product, as a document',
+        code: `{
+  _id: ObjectId('6af773bc8aac62eecb5718c3'),
+  name: 'Kapeng Barako 200g',
+  category: 'coffee',
+  price: 185,
+  stock: 40,
+  tags: ['local', 'roasted'],
+  supplier: { name: 'Batangas Roasters', city: 'Lipa' }
+}`,
+      },
+      { type: 'paragraph', text: "Read it field by field. `name`, `category`, `price` and `stock` hold simple values. `tags` holds an **array** (a list). `supplier` holds a whole **embedded document**, a record inside the record. A table cell cannot hold a list or a record, which is the main reason people reach for documents when the data is naturally nested." },
+      {
+        type: 'table',
+        headers: ['In a relational database', 'In MongoDB', 'Difference that matters'],
+        rows: [
+          ['Database', 'Database', 'The same idea: a named container for everything one app stores'],
+          ['Table', 'Collection', 'A collection does not force every document to have the same fields'],
+          ['Row', 'Document', 'A document can contain arrays and other documents'],
+          ['Column', 'Field', 'Fields are per document, not declared once for the whole collection'],
+          ['Primary key', '`_id` field', 'Every document has a unique `_id`; if you do not give one, MongoDB creates it'],
+          ['JOIN', '`$lookup`, or embed the data', 'You usually store related data together so you need fewer joins'],
+        ],
+        caption: 'The vocabulary maps over; the shape of the data is what changes',
+      },
+      { type: 'heading', text: 'What is inside: BSON and the _id' },
+      { type: 'paragraph', text: "MongoDB stores documents in **BSON**, a binary form of JSON. It looks like JSON to you, but it has more types than JSON does: real dates, 32-bit and 64-bit integers, exact decimals (`Decimal128`) and `ObjectId`. The `ObjectId` is the default `_id`: a 12-byte value that starts with the time it was created, so it is unique, quick to make and roughly in creation order. When you insert a document without an `_id`, the driver adds one for you." },
+      {
+        type: 'version',
+        text: "The manual documents the BSON types (Double, ObjectId, Date, Decimal128 and more) and says an ObjectId is 12 bytes: a 4-byte timestamp plus random and counter values. Each document needs a unique `_id`, which acts as its primary key, and the maximum BSON document size is 16 mebibytes. These pages are in the current manual, which at the time of checking lists MongoDB 9.0 as the stable release.",
+        checked: CHECKED,
+        sources: [DOCS.bson, DOCS.documents, DOCS.limits, DOCS.manualHome],
+      },
+      { type: 'warning', text: "Money needs care. A normal JavaScript number is a binary floating-point value and cannot store most decimals exactly (0.1 + 0.2 gives 0.30000000000000004). The manual suggests either the `Decimal128` type or a whole number scaled up, such as centavos. This course keeps prices as whole pesos so the examples stay easy to read; build real shops with centavos." },
+      { type: 'heading', text: 'Flexible does not mean careless' },
+      { type: 'paragraph', text: "Two documents in one collection may have different fields. A bottled water has `sizeMl`, a coffee has `tags`, and MongoDB accepts both. That freedom helps when your product changes every week. It also means nothing stops a typo like `prise: 20` unless you add rules, which lesson 8 teaches. The honest summary: MongoDB moves some of the schema work from the database into your design and your code, and you should do that work on purpose." },
+      {
+        type: 'table',
+        headers: ['Reach for MongoDB when', 'Reach for PostgreSQL when'],
+        rows: [
+          ['You read and write one whole object at a time (an order with its items, a user profile)', 'Many different questions join the same facts together (reports across customers, products, suppliers)'],
+          ['The shape of the data varies or changes often, such as product catalogues or event logs', 'Rules between records must be enforced by the database, such as foreign keys and exact constraints'],
+          ['Your team already writes JavaScript or JSON all day', 'You rely on SQL, mature reporting tools and multi-row transactions everywhere'],
+        ],
+        caption: 'Both are good databases; they are good at different shapes of problem',
+      },
+      { type: 'heading', text: 'Setting up: Atlas, your free cloud cluster' },
+      { type: 'paragraph', text: "**MongoDB Atlas** is MongoDB's hosted service: it runs the database for you in the cloud. A **cluster** is the running database; on Atlas it is a group of three servers that copy each other's data, so one can fail without losing anything. You can deploy a Free cluster to learn, with no card needed according to the docs' Get Started guide. Four steps connect you, and each one protects you from a different mistake." },
+      {
+        type: 'list',
+        ordered: true,
+        items: [
+          '**Create a free cluster.** Sign in to Atlas, choose the Free tier, and pick a nearby region if the list offers one.',
+          '**Create a database user.** This is the username and password your app uses. It is separate from your Atlas login, which only manages the Atlas website.',
+          '**Add your IP address to the IP access list.** Atlas refuses connections from any address that is not on the list. Add your current address, not everyone.',
+          '**Copy the connection string** from the Connect dialog, choose the Drivers option, and replace the password placeholder with your real password.',
+        ],
+      },
+      {
+        type: 'code',
+        language: 'bash',
+        label: 'Connect with mongosh (the shell prompts for the password)',
+        code: `mongosh "mongodb+srv://cluster0.example.mongodb.net/" --username shopapp`,
+      },
+      { type: 'paragraph', text: "That `mongodb+srv://` address is the connection string, and it contains secrets once your password is in it. If you push it to GitHub, scanners will find it in minutes. So keep it in a file named `.env` that Git ignores, and read it from `process.env` in code. If your password contains characters like `@` or `:`, the docs say you must percent-encode them in the string (for example `@` becomes `%40`)." },
+      {
+        type: 'code',
+        language: 'bash',
+        label: '.gitignore and .env',
+        code: `# .gitignore
+.env
+node_modules
+
+# .env (this file is never committed)
+MONGODB_URI=mongodb+srv://shopapp:<db_password>@cluster0.example.mongodb.net/tindahan?retryWrites=true&w=majority`,
+      },
+      {
+        type: 'version',
+        text: "Atlas Free clusters (formerly called M0) run MongoDB 8.0 at the time of checking, are limited to one per project and 0.5 GB of data, allow up to 500 connections and 100 operations per second, and are paused after 30 days with no connections. The docs warn that adding a /0 range such as 0.0.0.0/0 to the IP access list allows access from anywhere and can expose your deployment, so prefer your own address. Limits like these change; the Free cluster limits page is the one to recheck.",
+        checked: CHECKED,
+        sources: [DOCS.freeLimits, DOCS.ipList, DOCS.dbUsers, DOCS.freeCluster, DOCS.atlasConnect, DOCS.driverStart, DOCS.atlasStart],
+      },
+      { type: 'paragraph', text: "You can also practise without the cloud: install MongoDB Community on your laptop, or run a local Atlas deployment with the Atlas CLI (the docs show `atlas local setup`, which needs Docker). Everything in lessons 2 to 7 works the same on a local server. Once you are connected, try the first commands." },
+      {
+        type: 'code',
+        language: 'javascript',
+        label: 'Your first session in mongosh',
+        code: `use tindahan
+db.products.insertOne({ name: 'Kapeng Barako 200g', category: 'coffee', price: 185, stock: 40 })
+db.products.find()`,
+      },
+      { type: 'paragraph', text: "`use tindahan` switches to a database, which MongoDB creates the first time you save something into it. `insertOne` saves one document and answers `{ acknowledged: true, insertedId: ObjectId('...') }`, with the id it generated. `find()` with no filter returns every document in the `products` collection, and the collection itself was created by that first insert. Nothing to define first." },
+      {
+        type: 'takeaways',
+        items: [
+          'A document is a record of named fields that may hold arrays and other documents; documents live in collections, collections in databases.',
+          'MongoDB stores BSON, which adds dates, integers, decimals and `ObjectId` to JSON. Every document has a unique `_id`.',
+          'Flexible schemas are a trade: you gain speed of change and take on the job of keeping data consistent. PostgreSQL is stronger when rules between records matter most.',
+          'To use Atlas you need a cluster, a database user, an IP access list entry and a connection string.',
+          'Never put the connection string in your code or Git: keep it in an ignored `.env` file and read `process.env.MONGODB_URI`.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'mongodb-01-match-1',
+          kind: 'match',
+          title: 'Name the piece',
+          story: 'A friend describes her shop app in her own words. You translate it into MongoDB vocabulary.',
+          prompt: 'Match each description from her app with the MongoDB or Atlas idea it is.',
+          concept: 'documents and Atlas basics',
+          labels: { terms: 'What she says', meanings: 'The idea' },
+          pairs: [
+            { term: 'One slip with Ana\'s name, the date and all three items she bought', definition: 'A document with an embedded array', note: 'The whole slip is one record that holds a list inside it.' },
+            { term: 'Every order slip I have ever kept, in one pile', definition: 'A collection', note: 'A group of similar documents is a collection.' },
+            { term: 'The username and password my app logs in with', definition: 'A database user', note: 'This is separate from her Atlas website login.' },
+            { term: 'The list of addresses that may knock on the cluster\'s door', definition: 'The IP access list', note: 'Atlas refuses any address not on this list.' },
+            { term: 'The long address starting mongodb+srv:// with my password inside', definition: 'A connection string kept in .env', note: 'It contains a secret, so it must stay out of the code and out of Git.' },
+          ],
+          hints: [
+            'Decide first whether each phrase describes one record, a group of records, or something about access.',
+            'Two of the five are about getting in: one says who you are, the other says where you are connecting from.',
+            'The phrase with the password inside is the one that must never go into your code.',
+          ],
+          explanation: 'Each term answers a different question: what a record is (document), where records are grouped (collection), who is connecting (database user), from where (IP access list) and how the app finds the cluster (connection string, kept secret).',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'mongodb-01-fix-bug-1',
+          kind: 'fix-bug',
+          title: 'The password in the code',
+          story: 'You are about to push your first Node.js file to GitHub.',
+          prompt: 'One line leaks a secret to everyone who can see the repository. Tap that line, then choose the fix.',
+          concept: 'keeping credentials out of code',
+          language: 'javascript',
+          code: "import { MongoClient } from 'mongodb';\n\nconst client = new MongoClient('mongodb+srv://shopapp:Sup3rS3cret@cluster0.example.mongodb.net/tindahan');\nawait client.connect();",
+          bugLine: 3,
+          lineNote: 'That line is fine. Look for the one that contains the password.',
+          fixes: [
+            { line: 'const client = new MongoClient(process.env.MONGODB_URI);', correct: true, why: 'The address and password now live in an environment variable, set from an ignored .env file, so the code can be shared safely.' },
+            { line: "const client = new MongoClient(process.env.MONGODB_URI || 'mongodb+srv://shopapp:Sup3rS3cret@cluster0.example.mongodb.net/tindahan');", correct: false, why: 'The fallback still contains the password, so the secret is still in the repository.' },
+            { line: "const client = new MongoClient(atob('bW9uZ29kYitzcnY6Ly9zaG9wYXBw'));", correct: false, why: 'Base64 is an encoding, not encryption. Anyone can decode it, so the secret is only disguised.' },
+            { line: "const client = new MongoClient('mongodb+srv://shopapp:****@cluster0.example.mongodb.net/tindahan');", correct: false, why: 'This would not connect, and replacing the stars with the real password just brings the leak back.' },
+          ],
+          hints: [
+            'The line that builds the client holds everything an attacker needs.',
+            'Secrets belong outside the source code, where Git does not see them.',
+            'Read the address from process.env.MONGODB_URI, filled from an ignored .env file.',
+          ],
+          explanation: 'Code is shared; secrets are not. Reading the connection string from an environment variable keeps the password out of Git, and you can change it without editing the code.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'mongodb-01-scenario-1',
+          kind: 'scenario',
+          title: 'Timeout from the new cafe',
+          prompt: 'Pick the best first step.',
+          concept: 'the IP access list',
+          situation: 'Your app connected to Atlas fine at home all week. Today you are at a cafe, and the same code now fails after about 30 seconds with a server selection timeout. The password has not changed.',
+          options: [
+            { text: 'Check whether the cafe network\'s public IP address is on the project\'s IP access list, and add it if not.', consequence: 'Your public address changed when the network changed. Adding it fixes the connection, and you can remove it later.', quality: 'best' },
+            { text: 'Add 0.0.0.0/0 to the access list so no address ever fails again.', consequence: 'It connects, but now every address on the internet may try to log in. The docs warn this can expose your deployment.', quality: 'poor' },
+            { text: 'Delete the database user and create a new one with a new password.', consequence: 'A time-out is not a wrong password (that fails fast with an authentication error), so this changes nothing and now you have to update every app that used the old password.', quality: 'poor' },
+            { text: 'Reinstall the mongodb package in case it broke.', consequence: 'The same code worked yesterday, so the package is not the problem. You lose time and the error stays.', quality: 'acceptable' },
+          ],
+          hints: [
+            'What changed between home and the cafe? Not your code or your password.',
+            'Atlas only answers connections from addresses it has been told about.',
+            'The network gave you a different public IP address, so it needs to be on the list.',
+          ],
+          explanation: 'Atlas checks the IP access list before it checks the password, so a new network looks like silence, not an error message about credentials. Add only the address you need, and prefer that over opening everything.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'mongodb-01-q1',
+        prompt: 'A collection of products holds one document with a `tags` array and another with no `tags` field at all. What happens?',
+        choices: [
+          'MongoDB rejects the second insert because it does not match the first document',
+          'Both are stored; MongoDB does not force the same fields unless you add a validation rule',
+          'MongoDB adds an empty `tags` array to the second document so they match',
+          'Both are stored, but the collection becomes read-only until the shapes agree',
+        ],
+        answer: 1,
+        explanation: 'A collection has no fixed columns. Documents may differ, and consistency is up to your design and any validation rules you add later.',
+      },
+      {
+        id: 'mongodb-01-q2',
+        prompt: 'You insert `{ name: "Pandesal" }` without an `_id`. Which statement is true afterwards?',
+        choices: [
+          'The insert fails, because every document must bring its own `_id`',
+          'The document has no key, so you can only find it by `name`',
+          'The driver adds a unique `ObjectId` as `_id` for you',
+          'MongoDB stores a counter 1, 2, 3 as the `_id`, like a table row number',
+        ],
+        answer: 2,
+        explanation: 'If you omit `_id`, the driver generates an `ObjectId`. It is not a simple counter, it is a 12-byte value that starts with a timestamp.',
+      },
+      {
+        id: 'mongodb-01-q3',
+        prompt: 'Which order of facts best describes a shop whose data is joined across many tables for reports and needs database-enforced foreign keys?',
+        choices: [
+          'Use MongoDB, because documents are always faster than any join',
+          'Use MongoDB, because relationships are not possible in a relational database',
+          'Either is fine, because the two are interchangeable for every problem',
+          'PostgreSQL is probably the better fit, because constraints and joins are what it is strong at',
+        ],
+        answer: 3,
+        explanation: 'The decision follows the shape of the problem. Many joined questions and database-enforced rules favour a relational database; whole-object reads and changing shapes favour documents.',
+      },
+      {
+        id: 'mongodb-01-q4',
+        prompt: 'Your app connects with `mongodb+srv://shopapp:<db_password>@...`. Where should the real password live?',
+        choices: [
+          'In an environment variable loaded from a `.env` file that is listed in `.gitignore`',
+          'In a constant at the top of the JavaScript file, so the app always has it',
+          'In a comment in the README, so teammates can find it',
+          'In the database user\'s name, because usernames are not secret',
+        ],
+        answer: 0,
+        explanation: 'Credentials stay out of source files and out of Git. An ignored `.env` file keeps them on your machine and out of the repository.',
+      },
+    ],
+    task: {
+      title: 'Connect and save your first document',
+      minutes: 20,
+      steps: [
+        'Create an Atlas Free cluster (or install MongoDB Community locally, or use `atlas local setup` if you have Docker).',
+        'Create a database user, add your current IP address to the IP access list, and copy the connection string.',
+        'Connect with `mongosh` using `--username`, switch to a database called `tindahan`, and insert two products with different fields.',
+        'Run `db.products.find()` and look at the generated `_id` values. Then create a `.gitignore` with `.env` in it, and a `.env` file holding your connection string.',
+      ],
+    },
+  },
+  {
+    id: 'mongodb-02',
+    day: 2,
+    title: 'CRUD in MongoDB',
+    summary: 'Create, read, update and delete documents with insertOne, find, updateOne, deleteOne and their many-document versions, and read what each one reports back.',
+    intro: {
+      objectives: [
+        'Insert one or many documents and read back the generated `_id`',
+        'Update fields with `$set`, `$inc`, `$unset` and `$push` instead of rewriting whole documents',
+        'Read the result of an update or delete to know whether anything really changed',
+      ],
+      why: 'Every app you will build on MongoDB is these four verbs with different filters. If you can predict exactly what each call changes, you can also predict what it can break.',
+    },
+    minutes: 25,
+    skills: ['crud'],
+    body: [
+      { type: 'paragraph', text: "Every database job comes down to four verbs: **create**, **read**, **update** and **delete**, known together as CRUD. Back at the notebook: write a new slip, look one up, correct a figure on it, or tear it out. In MongoDB each verb is a method on a collection, and the same method names appear in the Node.js driver you meet in lesson 7, so what you learn in the shell carries straight over." },
+      { type: 'paragraph', text: "The examples use the `tindahan` database from lesson 1 with eight products. Start with a fresh collection if you want identical results: every command below was run against MongoDB 8.0 with `mongosh` 2.14." },
+      { type: 'heading', text: 'Create: insertOne and insertMany' },
+      {
+        type: 'code',
+        language: 'javascript',
+        label: 'Insert one document, then several',
+        code: `db.products.insertOne({ sku: 'X-1', name: 'Temp A', price: 1 })
+// { acknowledged: true, insertedId: ObjectId('...') }
+
+db.products.insertMany([
+  { sku: 'X-2', name: 'Temp B', price: 2 },
+  { sku: 'X-3', name: 'Temp C', price: 3 },
+])
+// { acknowledged: true, insertedIds: { '0': ObjectId('...'), '1': ObjectId('...') } }`,
+      },
+      { type: 'paragraph', text: "`acknowledged: true` means the server accepted the write. The `_id` values are the ones MongoDB made. If you supply your own `_id` and it already exists, the insert fails with a **duplicate key** error, code `11000`: ids must be unique in a collection." },
+      { type: 'heading', text: 'Read: find and findOne' },
+      { type: 'paragraph', text: "`find(filter)` returns every matching document, as a cursor that mongosh prints in pages. `findOne(filter)` returns the first match as a document, or `null` when nothing matches. An empty filter `{}` matches everything. The next lesson teaches the filter language in depth; for now `{ sku: 'KP-001' }` means \"the document whose `sku` field equals KP-001\"." },
+      {
+        type: 'code',
+        language: 'javascript',
+        label: 'Reading',
+        code: `db.products.find({ category: 'coffee' })
+db.products.findOne({ sku: 'KP-001' })
+db.products.countDocuments({ stock: { $gt: 0 } })   // 7`,
+      },
+      { type: 'heading', text: 'Update: change fields, not whole documents' },
+      { type: 'paragraph', text: "`updateOne(filter, update)` finds the first document that matches and changes it. The second argument must use **update operators**, which say *how* to change a field. The three you will use daily are `$set` (give a field a value, creating it if needed), `$inc` (add a number, negative to subtract) and `$unset` (remove a field). `$push` adds an item to an array, `$addToSet` adds it only if it is not already there, and `$pull` removes matching items." },
+      {
+        type: 'code',
+        language: 'javascript',
+        label: 'Update operators',
+        code: `db.products.updateOne({ sku: 'X-1' }, { $set: { price: 5 }, $inc: { stock: 3 } })
+// { acknowledged: true, insertedId: null, matchedCount: 1, modifiedCount: 1, upsertedCount: 0 }
+
+db.products.updateOne({ sku: 'X-1' }, { $unset: { stock: '' } })
+db.products.updateMany({ sku: /^X-/ }, { $push: { tags: 'temp' } })`,
+      },
+      { type: 'paragraph', text: "Read the result. `matchedCount` is how many documents the filter found, `modifiedCount` how many actually changed. They differ more often than you would think: setting a field to the value it already has matches one document and modifies zero. And if nothing matches, the update does not fail: it reports `matchedCount: 0` and silently does nothing, so always check the counts when it matters." },
+      { type: 'warning', text: "An update without operators is rejected. `updateOne({ sku: 'KP-001' }, { price: 1 })` throws `MongoInvalidArgumentError: Update document requires atomic operators` in mongosh 2.14, which protects you from the old mistake of overwriting a document with a partial one. If you really want to replace the whole document, use `replaceOne`, which keeps only the new fields (and the `_id`): after `replaceOne({ sku: 'X-2' }, { name: 'Temp B v2' })` the product has lost its `sku` and `price`." },
+      { type: 'paragraph', text: "**Upsert** means update-or-insert: add `{ upsert: true }` and when no document matches, MongoDB inserts one built from the filter and the update. It is handy for counters and for sync jobs that run twice." },
+      { type: 'heading', text: 'Why $inc and not read, subtract, write' },
+      { type: 'paragraph', text: "Fifty customers buy the last coffee bags at the same moment. If your code reads the stock, subtracts one and writes the number back, two requests can read 100 at the same time and both write 99, so one sale is lost. We ran exactly that in Node, from a stock of 100 with fifty concurrent buyers: read-modify-write ended at 99 in our run instead of 50 (the exact number varies from run to run), while `$inc: { stock: -1 }` ended at exactly 50. A write to one document is **atomic**: `$inc` is applied by the server as a single step, so the sales are never lost." },
+      { type: 'heading', text: 'Delete: deleteOne and deleteMany' },
+      {
+        type: 'code',
+        language: 'javascript',
+        label: 'Deleting',
+        code: `db.products.deleteOne({ sku: 'X-1' })        // { acknowledged: true, deletedCount: 1 }
+db.products.deleteMany({ sku: /^X-/ })       // removes every X- product`,
+      },
+      { type: 'warning', text: "`deleteMany({})` deletes every document in the collection, and `updateMany({}, ...)` changes every one. Before a destructive command, run `find` or `countDocuments` with the same filter and look at what comes back. The habit takes ten seconds and has saved many weekends." },
+      {
+        type: 'table',
+        headers: ['Verb', 'One', 'Many', 'Tells you'],
+        rows: [
+          ['Create', '`insertOne(doc)`', '`insertMany([docs])`', '`insertedId` or `insertedIds`'],
+          ['Read', '`findOne(filter)`', '`find(filter)`', 'The document(s), or `null` for none'],
+          ['Update', '`updateOne(filter, update)`', '`updateMany(filter, update)`', '`matchedCount`, `modifiedCount`'],
+          ['Replace', '`replaceOne(filter, doc)`', '(none)', 'Same counts; the document is swapped whole'],
+          ['Delete', '`deleteOne(filter)`', '`deleteMany(filter)`', '`deletedCount`'],
+        ],
+        caption: 'The CRUD methods at a glance',
+      },
+      {
+        type: 'version',
+        text: "Checked against the current MongoDB manual (server 9.0 docs; commands run on 8.0.1 with mongosh 2.14.2): inserts add an `_id` when you omit it, update operators such as `$set`, `$inc`, `$unset` and `$push` are listed in the update operators reference, and an operation on a single document is atomic. The result field names above (`matchedCount`, `modifiedCount`, `deletedCount`) are what mongosh printed in our run.",
+        checked: CHECKED,
+        sources: [DOCS.crud, DOCS.insert, DOCS.updateOps, DOCS.transactions],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'CRUD is `insertOne/Many`, `find/findOne`, `updateOne/Many` and `deleteOne/Many`, plus `replaceOne` when you really want to swap a whole document.',
+          'Updates use operators: `$set` sets, `$inc` adds, `$unset` removes, `$push` and `$addToSet` add to arrays. An update without operators is refused.',
+          '`matchedCount` and `modifiedCount` can differ, and a filter that matches nothing is not an error, so check the counts.',
+          'Use `$inc` instead of read, change, write: a single-document update is atomic, so concurrent buyers do not lose sales.',
+          'Look before you delete: run `find` with the same filter first, and be careful with `{}`.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'mongodb-02-predict-output-1',
+          kind: 'predict-output',
+          title: 'Matched is not the same as modified',
+          prompt: 'The Kapeng Barako (sku KP-001) starts with price 185 and stock 40. What do these lines print? Each print shows matchedCount then modifiedCount, and the last line shows the stock.',
+          concept: 'reading update results',
+          language: 'text',
+          code: "const a = db.products.updateOne({ sku: 'KP-001' }, { $set: { price: 185 } });\nconst b = db.products.updateOne({ sku: 'KP-001' }, { $inc: { stock: -5 } });\nconst c = db.products.updateOne({ sku: 'XX-000' }, { $inc: { stock: -5 } });\nprint(a.matchedCount, a.modifiedCount);\nprint(b.matchedCount, b.modifiedCount);\nprint(c.matchedCount, c.modifiedCount);\nprint(db.products.findOne({ sku: 'KP-001' }).stock);",
+          expected: '1 0\n1 1\n0 0\n35',
+          choices: ['1 0\n1 1\n0 0\n35', '1 1\n1 1\n0 0\n35', '1 1\n1 1\n1 1\n35', '1 0\n1 1\n0 0\n40'],
+          wrongNotes: {
+            '1 1\n1 1\n0 0\n35': 'The first update sets price to 185, which it already is, so nothing changes and modifiedCount is 0.',
+            '1 1\n1 1\n1 1\n35': 'There is no product with sku XX-000, so the third update matches nothing. Matching nothing is not an error, it just reports 0 and 0.',
+            '1 0\n1 1\n0 0\n40': 'The second update subtracts 5 from the stock, so the stock afterwards is 35, not 40.',
+          },
+          hints: [
+            'For each update, ask two things: does the filter find a document, and does the update change a value?',
+            'Setting price to 185 when it is already 185 matches the document but changes nothing.',
+            'The third filter finds no product, so it reports 0 and 0, and the stock only went down once, from 40 to 35.',
+          ],
+          explanation: 'matchedCount counts documents the filter found, modifiedCount counts documents whose content really changed. A no-op set matches but does not modify, and an update that matches nothing quietly reports zeros.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'mongodb-02-fix-bug-1',
+          kind: 'fix-bug',
+          title: 'The update that is refused',
+          story: 'The price of the Kapeng Barako went up and you want to record it.',
+          prompt: 'This command throws an error in mongosh. Tap the line with the bug, then choose the fix that changes only the price.',
+          concept: 'update operators',
+          language: 'text',
+          code: "use('tindahan');\ndb.products.updateOne(\n  { sku: 'KP-001' },\n  { price: 190 }\n);",
+          bugLine: 4,
+          lineNote: 'That line is fine. The problem is in how the new price is written.',
+          fixes: [
+            { line: '  { $set: { price: 190 } }', correct: true, why: '$set changes only the price field and leaves name, stock and everything else as they were.' },
+            { line: '  { $inc: { price: 190 } }', correct: false, why: '$inc adds 190 to the current price, so the price would become 375.' },
+            { line: '  { $set: 190 }', correct: false, why: '$set needs a field name, as in { $set: { price: 190 } }. A bare number is not a valid update.' },
+            { line: '  { $unset: { price: 190 } }', correct: false, why: '$unset removes the field. The product would have no price at all.' },
+          ],
+          hints: [
+            'An update needs an operator that says how to change the field.',
+            'You want to give the price field a new value, not add to it or remove it.',
+            'Use $set with the field name inside: { $set: { price: 190 } }.',
+          ],
+          explanation: 'Update operators describe the change, and MongoDB refuses a plain document so you cannot overwrite a record by accident. $set is the operator for giving a field a value.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'mongodb-02-code-challenge-1',
+          kind: 'code-challenge',
+          title: 'Build your own updateOne',
+          prompt: 'Write applyUpdate(doc, update) for a plain JavaScript object. It returns a new object with the update applied, without changing the original. Support $set (give a field a value), $inc (add a number; a missing field counts as 0) and $unset (remove a field).',
+          concept: 'what update operators do',
+          language: 'javascript',
+          starter: "function applyUpdate(doc, update) {\n  // copy doc, then apply $set, $inc and $unset\n  return doc;\n}",
+          solution: "function applyUpdate(doc, update) {\n  const result = { ...doc };\n  const sets = update.$set || {};\n  for (const key of Object.keys(sets)) {\n    result[key] = sets[key];\n  }\n  const incs = update.$inc || {};\n  for (const key of Object.keys(incs)) {\n    result[key] = (result[key] || 0) + incs[key];\n  }\n  const unsets = update.$unset || {};\n  for (const key of Object.keys(unsets)) {\n    delete result[key];\n  }\n  return result;\n}",
+          tests: {
+            kind: 'function',
+            fn: 'applyUpdate',
+            cases: [
+              { label: '$set changes a field', args: [{ name: 'Kape', price: 10 }, { $set: { price: 12 } }], expected: { name: 'Kape', price: 12 } },
+              { label: '$inc subtracts', args: [{ name: 'Kape', stock: 40 }, { $inc: { stock: -5 } }], expected: { name: 'Kape', stock: 35 } },
+              { label: '$inc creates a missing field', args: [{ name: 'Kape' }, { $inc: { sold: 2 } }], expected: { name: 'Kape', sold: 2 } },
+              { label: '$unset removes a field', args: [{ name: 'Kape', stock: 3 }, { $unset: { stock: '' } }], expected: { name: 'Kape' } },
+              { label: 'several operators at once', args: [{ name: 'Kape', price: 10, stock: 5 }, { $set: { price: 11 }, $inc: { stock: 1 } }], expected: { name: 'Kape', price: 11, stock: 6 } },
+              { label: 'the original is not changed', args: [{ a: 1 }, { $set: { a: 2 } }], expected: { a: 2 }, hidden: true },
+            ],
+          },
+          hints: [
+            'Start with const result = { ...doc } so the original object is never touched.',
+            'Loop over Object.keys(update.$set) and assign each value; do the same for $inc, adding to (result[key] || 0).',
+            'For $unset use delete result[key] inside a loop over the keys of update.$unset. Use || {} so an operator that is missing is skipped.',
+          ],
+          explanation: 'MongoDB applies each operator to the stored document on the server. Writing it yourself shows what they do: $set assigns, $inc adds to a number that may not exist yet, and $unset deletes the field. Working on a copy matches how a database returns a changed document without mutating your input.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'mongodb-02-q1',
+        prompt: 'Thirty customers order the same coffee at once. Which update keeps the stock correct?',
+        choices: [
+          'Read the stock into a variable, subtract one in JavaScript, then `$set` the result',
+          'Run `insertOne` with a new stock number for every order and read the latest',
+          '`updateOne({ sku }, { $inc: { stock: -1 } })` for every order',
+          'Use `replaceOne` with the full product so the stock is always exact',
+        ],
+        answer: 2,
+        explanation: '`$inc` is applied atomically on the server. Reading first leaves a gap in which two requests see the same number and one sale is lost.',
+      },
+      {
+        id: 'mongodb-02-q2',
+        prompt: 'You run `db.products.replaceOne({ sku: "DR-001" }, { name: "Water" })`. What does the stored product look like afterwards?',
+        choices: [
+          'It has the new name and keeps its sku, price and stock',
+          'It has only `_id` and `name`; every other field is gone',
+          'MongoDB refuses, because a replacement needs `$set`',
+          'It has two copies: the old document and the new one',
+        ],
+        answer: 1,
+        explanation: '`replaceOne` swaps the whole document and keeps only the `_id`. Use `$set` through `updateOne` when you want to change one field.',
+      },
+      {
+        id: 'mongodb-02-q3',
+        prompt: 'An update reports `matchedCount: 1, modifiedCount: 0`. What is the most likely explanation?',
+        choices: [
+          'The document was found but the update left it exactly as it was, such as setting a field to its current value',
+          'The update failed halfway and was rolled back by the server',
+          'The filter matched nothing, so MongoDB invented a document',
+          'The server is read-only, so it matched but could not write',
+        ],
+        answer: 0,
+        explanation: 'Matched means the filter found a document; modified means something really changed. A no-op update matches and modifies nothing. A filter that matches nothing reports `matchedCount: 0`.',
+      },
+      {
+        id: 'mongodb-02-q4',
+        prompt: 'You want to remove all cancelled orders. What is the safest first step?',
+        choices: [
+          'Run `deleteMany({ status: "cancelled" })` and look at `deletedCount` afterwards',
+          'Run `find({ status: "cancelled" })` or `countDocuments` with the same filter and check the result',
+          'Run `deleteMany({})`, because an empty filter only removes cancelled documents',
+          'Run `deleteOne` repeatedly until none are left',
+        ],
+        answer: 1,
+        explanation: 'Looking with the same filter first shows exactly what would be deleted. Afterwards it is too late, and an empty filter `{}` matches every document.',
+      },
+    ],
+    task: {
+      title: 'Run the whole CRUD loop',
+      minutes: 15,
+      steps: [
+        'Insert three products with `insertMany`, including a `tags` array on at least one.',
+        'Use `$inc` to lower one stock, `$set` to change a price and `$push` to add a tag. Print the result of each update and explain `matchedCount` and `modifiedCount` in your own words.',
+        'Try an update with no operator and read the error. Then try one with a filter that matches nothing.',
+        'Count the products with a filter, then delete one with the same filter and confirm `deletedCount`.',
+      ],
+    },
+  },
+  {
+    id: 'mongodb-03',
+    day: 3,
+    title: 'Query operators and projections',
+    summary: 'Describe exactly which documents you want with comparison, logical and array operators, then choose which fields, order and how many come back.',
+    intro: {
+      objectives: [
+        'Write filters with comparison, logical, existence and array operators',
+        'Reach into embedded documents with dot notation and match array items with `$elemMatch`',
+        'Use projection, `sort`, `skip` and `limit` to shape the result',
+      ],
+      why: 'Almost every screen in an app is a query: a product list, a search, a report. Knowing the operators lets you ask the database for exactly what you need instead of fetching everything and filtering in JavaScript.',
+    },
+    minutes: 28,
+    skills: ['query-operators'],
+    body: [
+      { type: 'paragraph', text: "A **filter** is a document that describes the documents you want. You have already written the simplest kind, `{ category: 'coffee' }`, which means \"the `category` field equals coffee\". A **query** is a filter plus options that shape the result: which fields to return, in what order, and how many. Think of asking the shop assistant: \"Show me the drinks under fifty pesos, cheapest first, and just tell me the names.\" That sentence has a filter, a sort and a projection." },
+      { type: 'heading', text: 'Comparison operators' },
+      { type: 'paragraph', text: "An operator is a key that starts with `$` and sits inside the field's value. `$gt` (greater than), `$gte`, `$lt`, `$lte`, `$ne` (not equal), `$in` (equals any value in a list) and `$nin` (equals none of them) cover most needs. Two limits on the same field go in one object, because a filter cannot repeat a key." },
+      {
+        type: 'code',
+        language: 'javascript',
+        label: 'Comparison operators (results from our eight products)',
+        code: `db.products.find({ price: { $gte: 60, $lt: 100 } })
+// Calamansi juice 1L, Chicharon 100g, Dishwashing liquid 500ml
+
+db.products.find({ category: { $in: ['bakery', 'snacks'] } })
+// Pandesal 12 pcs, Ensaymada, Chicharon 100g`,
+      },
+      { type: 'heading', text: 'Several conditions: AND, OR, NOT' },
+      { type: 'paragraph', text: "Fields listed together in one filter are joined with **AND**: `{ category: 'coffee', stock: { $gt: 0 } }` means coffee that is in stock. For **OR** you write `$or` with a list of filters, and `$and`, `$nor` and `$not` exist too. The classic first bug is repeating a key, because a JavaScript object keeps only the last one." },
+      {
+        type: 'code',
+        language: 'javascript',
+        label: '$or, and the repeated-key trap',
+        code: `db.products.find({ $or: [{ stock: 0 }, { price: { $lt: 30 } }] })
+// 3-in-1 Coffee 30 sachets (no stock), Bottled water 500ml (cheap)
+
+// Wrong: the second category silently replaces the first
+db.products.find({ category: 'coffee', category: 'bakery', stock: { $gt: 0 } })
+// Pandesal, Ensaymada  (the coffee is missing!)
+
+// Right: one key, $in
+db.products.find({ category: { $in: ['coffee', 'bakery'] }, stock: { $gt: 0 } })
+// Kapeng Barako, Pandesal, Ensaymada`,
+      },
+      { type: 'heading', text: 'Missing fields, null and types' },
+      { type: 'paragraph', text: "`{ tags: { $exists: false } }` finds documents with no `tags` field at all (only the Chicharon in our data). Be careful with `null`: `{ a: null }` matches documents where `a` is null **or missing**, so in a test collection of `{a:1}`, `{a:null}` and `{b:2}` it matched two documents. Comparisons also stay inside one type: in a collection holding `{n: '9'}` (text) and `{n: 10}` (number), `{ n: { $gt: 5 } }` matches only the number. A text \"9\" is never greater than a number 5, so mixed types hide documents from your query." },
+      { type: 'heading', text: 'Dot notation and arrays' },
+      { type: 'paragraph', text: "To look inside an embedded document, join the names with a dot and put the whole path in quotes: `{ 'supplier.city': 'Lipa' }`. For arrays, `{ tags: 'local' }` matches any document whose array **contains** that value. `$all` needs every listed value, and `$size` matches an exact length." },
+      {
+        type: 'code',
+        language: 'javascript',
+        label: 'Array filters',
+        code: `db.products.find({ tags: 'local' })                       // Kapeng Barako, Calamansi, Pandesal
+db.products.find({ tags: { $all: ['local', 'cold'] } })  // Calamansi juice 1L
+db.products.find({ tags: { $size: 2 } })                 // those with exactly two tags
+db.products.find({ name: /^pan/i })                      // regular expression: Pandesal`,
+      },
+      { type: 'paragraph', text: "Arrays of embedded documents have one more trap. Suppose order 1 holds Kapeng Barako x2 and water x10, and order 2 holds Kapeng Barako x10 and water x1. You want orders with **at least ten Kapeng Barako**. Two separate conditions on the array match order 1 as well, because one item has the right sku and a different item has a quantity of 10. `$elemMatch` forces both conditions to hold for the same item." },
+      {
+        type: 'code',
+        language: 'javascript',
+        label: '$elemMatch keeps conditions on one item',
+        code: `// Both orders match: the conditions can be met by different items
+db.orders.find({ 'items.sku': 'KP-001', 'items.qty': { $gte: 10 } })
+
+// Only order 2 (Ben): the same item must satisfy both
+db.orders.find({ items: { $elemMatch: { sku: 'KP-001', qty: { $gte: 10 } } } })`,
+      },
+      { type: 'heading', text: 'Projection, sort, skip and limit' },
+      { type: 'paragraph', text: "The second argument to `find` is the **projection**: which fields to return. `1` includes a field and `0` excludes it. You may list inclusions or exclusions but not both in one projection, except for `_id`, which is returned unless you set `_id: 0`. Mixing them is an error: `{ name: 1, tags: 0 }` fails with \"Cannot do exclusion on field tags in inclusion projection\". Projecting sends less data over the network, which matters when documents are large." },
+      {
+        type: 'code',
+        language: 'javascript',
+        label: 'Shape the result',
+        code: `db.products.find({ category: 'bakery' }, { name: 1, price: 1, _id: 0 }).sort({ price: -1 })
+// { name: 'Pandesal 12 pcs', price: 45 }, { name: 'Ensaymada', price: 35 }
+
+db.products.find({}, { name: 1, _id: 0 }).sort({ price: -1 }).skip(1).limit(2)
+// the 2nd and 3rd most expensive: 3-in-1 Coffee, Calamansi juice`,
+      },
+      { type: 'paragraph', text: "`sort({ price: -1 })` sorts descending, `1` ascending. `limit(n)` caps how many documents come back and `skip(n)` jumps over the first n, which is how simple paging works. The docs warn that `skip` makes the server scan past the skipped results, so it slows down as the offset grows, and suggest range queries for deep paging." },
+      {
+        type: 'table',
+        headers: ['You want to...', 'Write'],
+        rows: [
+          ['Compare numbers or dates', '`{ price: { $gte: 60, $lt: 100 } }`'],
+          ['Match any of several values', '`{ category: { $in: [\'bakery\', \'snacks\'] } }`'],
+          ['Combine alternatives', '`{ $or: [ {...}, {...} ] }`'],
+          ['Look inside an embedded document', '`{ \'supplier.city\': \'Lipa\' }`'],
+          ['Match several conditions on one array item', '`{ items: { $elemMatch: { sku: \'KP-001\', qty: { $gte: 10 } } } }`'],
+          ['Return only some fields', '`find(filter, { name: 1, _id: 0 })`'],
+        ],
+        caption: 'Filter recipes',
+      },
+      {
+        type: 'version',
+        text: "Operators and behaviour above are from the current MongoDB manual (server 9.0 docs) and were run on a MongoDB 8.0.1 server with mongosh 2.14.2. The manual describes `$elemMatch` for arrays of embedded documents, regular expressions (case-sensitive prefix expressions can use an index, case-insensitive ones are less efficient), and notes that `skip()` gets slower as the offset increases.",
+        checked: CHECKED,
+        sources: [DOCS.queryOps, DOCS.queryArrays, DOCS.regex, DOCS.projection, DOCS.skip],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'A filter lists conditions joined by AND; use `$or`, `$nor` and `$not` for the rest. Never repeat a key in one filter object: use `$in` or `$or` instead.',
+          'Operators start with `$`: `$gt`, `$gte`, `$lt`, `$lte`, `$ne`, `$in`, `$nin`, `$exists`, `$all`, `$size`, `$elemMatch`.',
+          '`{ a: null }` matches missing fields too, and comparisons only match values of the same type.',
+          'Use dot notation for embedded documents and `$elemMatch` when several conditions must hold on the same array item.',
+          'Projection (`1` or `0`, not mixed except `_id`), `sort`, `skip` and `limit` shape the result; large `skip` values are slow.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'mongodb-03-code-challenge-1',
+          kind: 'code-challenge',
+          title: 'Build the filter for a product search',
+          story: 'Your shop app has a search screen with optional boxes: category, lowest price, highest price and an "in stock only" switch.',
+          prompt: 'Write buildFilter(options) that returns the MongoDB filter object. Only add a condition when its option is given: category becomes { category }, minPrice and maxPrice become price: { $gte, $lte } (only the ones given), and onlyInStock true becomes stock: { $gt: 0 }. With no options it returns {}.',
+          concept: 'building filters',
+          language: 'javascript',
+          starter: "function buildFilter(options) {\n  const filter = {};\n  // add each condition only when its option is given\n  return filter;\n}",
+          solution: "function buildFilter(options) {\n  const filter = {};\n  if (options.category) {\n    filter.category = options.category;\n  }\n  const price = {};\n  if (options.minPrice !== undefined) {\n    price.$gte = options.minPrice;\n  }\n  if (options.maxPrice !== undefined) {\n    price.$lte = options.maxPrice;\n  }\n  if (Object.keys(price).length > 0) {\n    filter.price = price;\n  }\n  if (options.onlyInStock) {\n    filter.stock = { $gt: 0 };\n  }\n  return filter;\n}",
+          tests: {
+            kind: 'function',
+            fn: 'buildFilter',
+            cases: [
+              { label: 'no options', args: [{}], expected: {} },
+              { label: 'category only', args: [{ category: 'coffee' }], expected: { category: 'coffee' } },
+              { label: 'price range', args: [{ minPrice: 60, maxPrice: 100 }], expected: { price: { $gte: 60, $lte: 100 } } },
+              { label: 'only a maximum', args: [{ maxPrice: 50 }], expected: { price: { $lte: 50 } } },
+              { label: 'in stock only', args: [{ onlyInStock: true }], expected: { stock: { $gt: 0 } } },
+              { label: 'everything together', args: [{ category: 'drinks', minPrice: 20, onlyInStock: true }], expected: { category: 'drinks', price: { $gte: 20 }, stock: { $gt: 0 } } },
+              { label: 'switch off means no condition', args: [{ onlyInStock: false }], expected: {}, hidden: true },
+            ],
+          },
+          hints: [
+            'Start from an empty filter object and add a key only inside an if that checks the option.',
+            'Collect $gte and $lte in a small price object first, then attach it to filter.price only if it has at least one key.',
+            'Use options.minPrice !== undefined, not just a truthy check, so a minimum of 0 still counts.',
+          ],
+          explanation: 'Building the filter piece by piece keeps conditions out unless the user asked for them. Putting both price limits in one `price` object is the same rule as in the shell: one key per field, with several operators inside it.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'mongodb-03-fix-bug-1',
+          kind: 'fix-bug',
+          title: 'Where did the coffee go?',
+          story: 'You want every coffee or bakery product that is in stock. The result shows only bakery items.',
+          prompt: 'Tap the line with the bug, then choose the fix that returns Kapeng Barako, Pandesal and Ensaymada.',
+          concept: 'repeated keys and $in',
+          language: 'text',
+          code: "db.products.find({\n  category: 'coffee',\n  category: 'bakery',\n  stock: { $gt: 0 }\n})",
+          bugLine: 3,
+          lineNote: 'Look at which lines name the same field twice. Only the line that carries the lost value can be the bug.',
+          fixes: [
+            { line: "  category: { $in: ['coffee', 'bakery'] },", correct: true, why: 'One key, with $in matching either value. The coffee products are back.' },
+            { line: "  $and: [{ category: 'coffee' }, { category: 'bakery' }],", correct: false, why: 'A product has one category, so it can never be coffee AND bakery. This returns nothing.' },
+            { line: "  category: 'coffee' || 'bakery',", correct: false, why: "JavaScript evaluates 'coffee' || 'bakery' to 'coffee' before MongoDB sees it, so bakery is lost instead." },
+            { line: "  category: ['coffee', 'bakery'],", correct: false, why: 'An array as the value means the category field itself must equal that exact array, which no product has.' },
+          ],
+          hints: [
+            'In a JavaScript object, a repeated key keeps only the last value, so the first condition vanished.',
+            'You need a single `category` key that accepts either of two values.',
+            'Use $in with a list: { $in: [\'coffee\', \'bakery\'] }.',
+          ],
+          explanation: 'The filter object never reaches MongoDB with two `category` keys: JavaScript has already dropped the first. Expressing "either value" with `$in` (or `$or`) puts both options into one key.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'mongodb-03-match-1',
+          kind: 'match',
+          title: 'Which operator answers the question?',
+          prompt: 'The shop owner asks questions. Match each one to the query piece that answers it.',
+          concept: 'choosing operators',
+          labels: { terms: 'The owner asks', meanings: 'You write' },
+          pairs: [
+            { term: 'Which items did we run out of, or sell for under thirty pesos?', definition: '$or with a stock test and a price test', note: 'Either condition is enough, so the two tests are alternatives.' },
+            { term: 'Which orders had at least ten bags of Barako in a single line?', definition: '$elemMatch on the items array', note: 'The sku and the quantity must be true on the same line item.' },
+            { term: 'Show me only the names, cheapest first, three at most.', definition: 'A projection with sort and limit', note: 'Projection picks fields; sort and limit shape the list.' },
+            { term: 'Which products have no tags yet?', definition: '{ tags: { $exists: false } }', note: 'The field is missing entirely.' },
+            { term: 'Which suppliers are based in Lipa?', definition: "Dot notation: 'supplier.city'", note: 'The city lives inside an embedded document.' },
+          ],
+          hints: [
+            'Two of the questions are about shape (which fields, how many) and the others are about conditions.',
+            '"At least ten in a single line" is the phrase that tells you two array conditions must hold on one item.',
+            'A supplier inside the product is an embedded document, reached with a dot.',
+          ],
+          explanation: 'Each question has a keyword: "or" gives `$or`, "in a single line" gives `$elemMatch`, "only the names" gives a projection, "no tags yet" gives `$exists: false`, and a city inside the supplier gives a dotted path.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'mongodb-03-q1',
+        prompt: 'What does `db.products.find({ price: { $gte: 20 }, stock: { $gt: 0 } })` return?',
+        choices: [
+          'Products with a price of at least 20 or with stock above zero',
+          'Only the first product that has a price of at least 20',
+          'Products with a price of at least 20 and stock above zero',
+          'Products whose price and stock are the same number',
+        ],
+        answer: 2,
+        explanation: 'Conditions in one filter are joined with AND. You write `$or` explicitly when either one is enough.',
+      },
+      {
+        id: 'mongodb-03-q2',
+        prompt: 'A collection has `{ a: 1 }`, `{ a: null }` and `{ b: 2 }`. How many documents does `find({ a: null })` return?',
+        choices: [
+          'One, only the document where `a` is null',
+          'Three, because null matches every document',
+          'None, because null cannot be used in a filter',
+          'Two: the one with `a: null` and the one with no `a` at all',
+        ],
+        answer: 3,
+        explanation: 'A null filter matches both a null value and a missing field. Use `$exists` when you need to tell them apart.',
+      },
+      {
+        id: 'mongodb-03-q3',
+        prompt: 'You want orders in which a single line item is Barako AND has quantity 10 or more. Which filter is right?',
+        choices: [
+          '`{ \'items.sku\': \'KP-001\', \'items.qty\': { $gte: 10 } }`',
+          '`{ items: { $elemMatch: { sku: \'KP-001\', qty: { $gte: 10 } } } }`',
+          '`{ items: { sku: \'KP-001\', qty: 10 } }`',
+          '`{ items: \'KP-001\', qty: { $gte: 10 } }`',
+        ],
+        answer: 1,
+        explanation: 'Two dotted conditions can be met by different items. `$elemMatch` requires one item to satisfy both. The third filter would only match an item exactly equal to that whole embedded document.',
+      },
+      {
+        id: 'mongodb-03-q4',
+        prompt: 'Which projection is valid?',
+        choices: [
+          '`{ name: 1, tags: 0 }`',
+          '`{ name: 1, price: 1, _id: 0 }`',
+          '`{ name: 0, price: 1 }`',
+          '`{ name: true, tags: false }`',
+        ],
+        answer: 1,
+        explanation: 'You can include fields or exclude fields, but not mix them, with one exception: `_id`, which can be excluded alongside inclusions.',
+      },
+    ],
+    task: {
+      title: 'Ask the shop ten questions',
+      minutes: 20,
+      steps: [
+        'Load the eight sample products into your `tindahan` database (or insert similar ones).',
+        'Write five filters: a price range, an `$in` list, an `$or`, a `$exists: false` and a dotted path on an embedded `supplier`.',
+        'Insert two orders with an `items` array as in the lesson and prove the difference between dotted conditions and `$elemMatch`.',
+        'Finish with a query that uses a projection, `sort`, `skip` and `limit` together, and say in one sentence what it returns.',
+      ],
+    },
+  },
+  {
+    id: 'mongodb-04',
+    day: 4,
+    title: 'Data modelling: embed or reference',
+    summary: 'Decide, for each relationship in your data, whether to nest it inside the parent document or link to it by id, and avoid the traps of unbounded arrays and stale copies.',
+    intro: {
+      objectives: [
+        'Choose between embedding and referencing using the way the app reads and changes the data',
+        'Design an order document that keeps a snapshot of what was bought',
+        'Spot an array that will grow without limit and move it out of its parent',
+      ],
+      why: 'In MongoDB the model decides how fast and how simple every later query is. A good model makes the common screen one read; a bad one forces many queries and awkward updates, and it is expensive to change once real data exists.',
+    },
+    minutes: 28,
+    skills: ['data-modelling'],
+    body: [
+      { type: 'paragraph', text: "In a relational database you usually start by splitting data into clean tables and joining them when you read. MongoDB asks you to start from a different question: **how does the application read and change this data?** Data that is used together should be stored together. A relationship between two kinds of data can then be modelled in one of two ways: **embed** the related data inside the parent document, or **reference** it by storing its `_id` and keeping it in its own collection." },
+      { type: 'paragraph', text: "Picture packing for a day trip. The sandwich and the water you will eat together go into one lunchbox: one thing to pick up. The pantry at home stays at home, and you only write down what is in it. Embedding is the lunchbox, referencing is the pantry list." },
+      { type: 'heading', text: 'Embedding: keep it together' },
+      {
+        type: 'code',
+        language: 'javascript',
+        label: 'An order with its items embedded',
+        code: `{
+  _id: 1,
+  customerId: 'c-ana',
+  status: 'paid',
+  createdAt: ISODate('2026-10-02'),
+  items: [
+    { sku: 'KP-001', name: 'Kapeng Barako 200g', qty: 2, price: 185 },
+    { sku: 'DR-001', name: 'Bottled water 500ml', qty: 6, price: 20 }
+  ]
+}`,
+      },
+      { type: 'paragraph', text: "Showing an order screen needs one read: the order and its items come back in one document. The manual lists the benefits of embedding as better read performance, related data fetched in a single operation, and the ability to update related data in one atomic write. If you change the status and one item together, both changes happen or neither does." },
+      { type: 'heading', text: 'Referencing: link by id' },
+      {
+        type: 'code',
+        language: 'javascript',
+        label: 'Reviews kept in their own collection',
+        code: `// products
+{ _id: 'KP-001', name: 'Kapeng Barako 200g', price: 185 }
+
+// reviews: one document per review, pointing at the product
+{ _id: ObjectId('...'), productId: 'KP-001', author: 'Ben', stars: 5, text: 'Strong and smooth.', createdAt: ISODate('2026-10-12') }`,
+      },
+      { type: 'paragraph', text: "Why not embed the reviews inside the product? A popular product could collect thousands of them. An array that grows without a limit is called an **unbounded array**, and the manual warns it can push a document toward the **16 MiB** size limit and hurt index performance. Reviews are also written at different times by different people, and they make sense on their own (\"all reviews by Ben\"). That is a reference." },
+      {
+        type: 'table',
+        headers: ['Embed when', 'Reference when'],
+        rows: [
+          ['The child is a part of the parent ("has-a", "contains"), like items in an order', 'The child can exist and be queried on its own, like reviews or customers'],
+          ['You read them together almost every time', 'You rarely need the child when you load the parent'],
+          ['There are few children, and the number is bounded', 'There are many children, or the number grows without limit'],
+          ['The data changes together', 'The data is written at different times, or by different people'],
+          ['A copy going slightly stale is fine or wanted', 'One shared copy must always be current'],
+        ],
+        caption: 'The decision table, based on the manual\'s guidance on data modelling',
+      },
+      { type: 'heading', text: 'Duplicating on purpose: the snapshot' },
+      { type: 'paragraph', text: "Look again at the order. Each item repeats the product's `name` and `price` even though they also live in `products`. That is deliberate. Next month the Barako may cost 200 pesos, and Ana's October receipt must still say 185. The manual calls this **temporal** duplicate data: it may change later, but the historical value matters. Duplicating data helps reads and costs you the work of keeping copies consistent, so duplicate data that never changes or must keep its old value, and be careful with data that changes often, such as a stock count." },
+      {
+        type: 'diagram',
+        format: 'mermaid',
+        caption: 'The shop model: items are embedded in an order, while customers and reviews are referenced',
+        source: 'erDiagram\n  CUSTOMERS ||--o{ ORDERS : places\n  ORDERS ||--|{ ITEMS : embeds\n  PRODUCTS ||--o{ REVIEWS : receives\n  CUSTOMERS {\n    string _id PK\n    string name\n    array addresses\n  }\n  ORDERS {\n    int _id PK\n    string customerId\n    string status\n    date createdAt\n  }\n  ITEMS {\n    string sku\n    string name\n    int qty\n    int price\n  }\n  PRODUCTS {\n    string _id PK\n    string name\n    int price\n  }\n  REVIEWS {\n    objectId _id PK\n    string productId\n    int stars\n  }',
+      },
+      { type: 'heading', text: 'Joining referenced data' },
+      { type: 'paragraph', text: "When you do need a referenced document, you have two options. Run a second query (find the order, then find its customer by `customerId`), or use the aggregation stage `$lookup` that you will meet in lesson 6, which joins collections inside the database. The docs note that `$lookup` performs best when the foreign field is indexed, and that if you rely on it a lot you should consider an embedded model instead. Unlike a relational database, MongoDB does not check that `customerId` points to a real customer: that is up to your code." },
+      { type: 'heading', text: 'Four questions before you decide' },
+      {
+        type: 'list',
+        ordered: true,
+        items: [
+          '**Read together?** If nearly every read needs both pieces, lean to embedding.',
+          '**How many, and does it grow?** A handful (addresses, order lines) can be embedded; thousands (reviews, log entries) cannot.',
+          '**Does the child stand alone?** If you query reviews without the product, give them a collection.',
+          '**How often do the duplicated values change?** Rarely or never: copy freely. Often: reference.',
+        ],
+      },
+      { type: 'paragraph', text: "There is no single right answer, and that is the honest trade-off against PostgreSQL. A normalised relational design is flexible for questions you have not thought of yet, because you can join anything to anything, and the database enforces the links with foreign keys. A document model is fast and simple for the questions you designed for, and gets awkward for others. The PostgreSQL and SQL course teaches the first approach; choose a document model when your screens match whole objects." },
+      {
+        type: 'version',
+        text: "The current manual's data modelling best-practices page gives the embed/reference guidance summarised in the table, says duplicate data can be immutable, temporal or sensitive to staleness, and the unbounded-arrays page warns about the 16 MiB limit. The $lookup page notes performance depends on whether the foreign field is indexed. Server docs checked: MongoDB 9.0 manual.",
+        checked: CHECKED,
+        sources: [DOCS.modelBest, DOCS.embedding, DOCS.referencing, DOCS.unbounded, DOCS.lookup],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'Start from how the app reads and changes data, then embed what is read together and reference what grows or stands alone.',
+          'Embedding gives one read and atomic updates; referencing keeps documents small and avoids copies that go stale.',
+          'Unbounded arrays are a design bug: documents are limited to 16 MiB and large arrays slow indexes.',
+          'Copy values on purpose when the historical value matters, like the price on a receipt.',
+          'MongoDB does not enforce references: your code must keep ids valid. Join with a second query or `$lookup`.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'mongodb-04-code-challenge-1',
+          kind: 'code-challenge',
+          title: 'Build the order snapshot',
+          story: 'Checkout sends a list of { sku, qty } lines. You must save an order that still tells the truth after prices change.',
+          prompt: 'Write buildOrder(customerId, lines, products). For each line, find its product by sku in the products array and create an item { sku, name, price, qty } copying the name and price at this moment. Return { customerId, items, total } where total is the sum of price times qty.',
+          concept: 'embedding with a snapshot',
+          language: 'javascript',
+          starter: "function buildOrder(customerId, lines, products) {\n  const items = [];\n  // for each line, find the product and copy its name and price\n  return { customerId, items, total: 0 };\n}",
+          solution: "function buildOrder(customerId, lines, products) {\n  const items = [];\n  let total = 0;\n  for (const line of lines) {\n    const product = products.find((p) => p.sku === line.sku);\n    items.push({ sku: line.sku, name: product.name, price: product.price, qty: line.qty });\n    total = total + product.price * line.qty;\n  }\n  return { customerId, items, total };\n}",
+          tests: {
+            kind: 'function',
+            fn: 'buildOrder',
+            cases: [
+              { label: 'one line', args: ['c-ana', [{ sku: 'KP-001', qty: 2 }], [{ sku: 'KP-001', name: 'Kapeng Barako 200g', price: 185 }]], expected: { customerId: 'c-ana', items: [{ sku: 'KP-001', name: 'Kapeng Barako 200g', price: 185, qty: 2 }], total: 370 } },
+              { label: 'two lines', args: ['c-ben', [{ sku: 'DR-001', qty: 6 }, { sku: 'SN-001', qty: 1 }], [{ sku: 'SN-001', name: 'Pandesal 12 pcs', price: 45 }, { sku: 'DR-001', name: 'Bottled water 500ml', price: 20 }]], expected: { customerId: 'c-ben', items: [{ sku: 'DR-001', name: 'Bottled water 500ml', price: 20, qty: 6 }, { sku: 'SN-001', name: 'Pandesal 12 pcs', price: 45, qty: 1 }], total: 165 } },
+              { label: 'no lines', args: ['c-carla', [], [{ sku: 'KP-001', name: 'Kapeng Barako 200g', price: 185 }]], expected: { customerId: 'c-carla', items: [], total: 0 }, hidden: true },
+            ],
+          },
+          hints: [
+            'Loop over the lines. For each one, products.find((p) => p.sku === line.sku) gives the product.',
+            'Push { sku, name, price, qty } built from the product (name and price) and the line (qty).',
+            'Keep a running total: total = total + product.price * line.qty, then return { customerId, items, total }.',
+          ],
+          explanation: 'The item copies the name and price from the product at the moment of the sale. Later changes to the product leave the old order untouched, and the order can be shown from one document with no lookup.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'mongodb-04-scenario-1',
+          kind: 'scenario',
+          title: 'Comments on a blog post',
+          prompt: 'Choose the model you would ship.',
+          concept: 'embedding versus referencing',
+          situation: 'You are building a blog for a school club. Posts usually get 5 to 20 comments, but a few viral posts get thousands. The post page shows the newest ten comments with a "see all" link, and moderators also need to list every comment written by one user.',
+          options: [
+            { text: 'Keep comments in their own collection with a postId, and embed only the newest ten (a copy) in the post for the page.', consequence: 'The post page is one read, the array stays small, "see all" and the moderator view query the comments collection. You pay a little for keeping the ten copies up to date.', quality: 'best' },
+            { text: 'Embed every comment in the post document.', consequence: 'Fine for most posts, but a viral post grows without limit, the document approaches 16 MiB, and finding one user\'s comments means scanning inside every post.', quality: 'poor' },
+            { text: 'Put comments in their own collection and load them with a second query every time, with nothing embedded.', consequence: 'It works and stays simple, but every page view now needs two queries even though the newest ten are always wanted.', quality: 'acceptable' },
+            { text: 'Store the comments as one long string inside the post.', consequence: 'Nothing can be filtered, counted or moderated by user. You have thrown the structure away.', quality: 'poor' },
+          ],
+          hints: [
+            'Two things pull in opposite directions: the page wants a few comments fast, but the total is unbounded.',
+            'The moderator needs comments by user, so comments have to be queryable on their own.',
+            'You can do both: reference all of them, and embed a small bounded copy of the newest ten.',
+          ],
+          explanation: 'Reading together suggests embedding, but unbounded growth and queries by user suggest a collection. Embedding a bounded subset gives the page its single read without letting the array grow forever.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'mongodb-04-match-1',
+          kind: 'match',
+          title: 'Embed, reference or copy?',
+          prompt: 'Match each design question about a ride-hailing app to the choice that fits it best.',
+          concept: 'modelling choices',
+          labels: { terms: 'The situation', meanings: 'The choice' },
+          pairs: [
+            { term: 'A trip must show the fare and the driver name as they were that day, even if the driver later changes their name', definition: 'Embed a snapshot copy in the trip', note: 'The historical value is what matters, so copy it on purpose.' },
+            { term: 'A driver has a few saved vehicles that are only ever shown on the driver profile', definition: 'Embed the vehicles in the driver document', note: 'A few children, read with the parent: a good fit for embedding.' },
+            { term: 'Each driver completes thousands of trips and you list trips by passenger as well', definition: 'Reference: one trips collection with driverId', note: 'The number is unbounded and trips are queried on their own.' },
+            { term: 'The latest rating average is shown next to the driver but is recalculated every minute', definition: 'Keep it in one place and reference or compute it', note: 'Often-changing data is expensive to keep in many copies.' },
+          ],
+          hints: [
+            'Look for the words that signal growth ("thousands"), history ("as they were that day") or "only ever shown with".',
+            'History means a copy; unbounded means a separate collection.',
+            'The rating changes every minute, so copies would be out of date almost at once.',
+          ],
+          explanation: 'Each situation answers one of the four questions: read together, how many, stands alone, how often it changes. The answer to the question, not a rule of thumb, decides between embedding, referencing and copying.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'mongodb-04-q1',
+        prompt: 'Which relationship is the best candidate for embedding?',
+        choices: [
+          'A product and the tens of thousands of reviews it will collect over the years',
+          'A customer and every order they will ever place',
+          'An order and its three or four line items, always shown together',
+          'A shop and its whole history of daily sales entries',
+        ],
+        answer: 2,
+        explanation: 'Order lines are a small, bounded part of the order and are read with it. The other three grow without limit, which is the sign to reference.',
+      },
+      {
+        id: 'mongodb-04-q2',
+        prompt: 'You store `price: 185` inside each order item although the product has its own price. Why is that good design?',
+        choices: [
+          'It is bad design: duplicates must always be removed to keep one source of truth',
+          'It is required, because MongoDB cannot read a price from another collection',
+          'It saves disk space, because a copied number is smaller than a reference',
+          'The order must keep the price paid even if the product\'s price changes later',
+        ],
+        answer: 3,
+        explanation: 'This is a deliberate snapshot of a value that must not change retroactively. The cost of the duplicate is small because the value is written once and never updated.',
+      },
+      {
+        id: 'mongodb-04-q3',
+        prompt: 'What does MongoDB do to make sure `customerId` in an order points at a real customer?',
+        choices: [
+          'It checks the id against the customers collection on every insert',
+          'Nothing: references are plain values, so your application must keep them valid',
+          'It stores the whole customer inside the order automatically',
+          'It deletes the order when the customer is deleted, like a foreign key cascade',
+        ],
+        answer: 1,
+        explanation: 'MongoDB has no foreign keys. A referenced id is just a value; checking it, and cleaning up when something is deleted, is the job of your code or your validation design.',
+      },
+      {
+        id: 'mongodb-04-q4',
+        prompt: 'A document keeps a `logins` array and pushes one entry per login forever. What is the main problem?',
+        choices: [
+          'The array can grow without bound, towards the 16 MiB document limit, and slow down indexes',
+          'MongoDB refuses arrays with more than 100 items',
+          'Arrays cannot be updated with `$push` after the first insert',
+          'The array is stored separately, so every read needs a join',
+        ],
+        answer: 0,
+        explanation: 'Unbounded arrays are an anti-pattern: document size is capped and big arrays make documents heavy to read and update. Move such data to its own collection or keep a bounded subset.',
+      },
+    ],
+    task: {
+      title: 'Model your own idea',
+      minutes: 20,
+      steps: [
+        'Pick a small app you might build (a boarding house, a bus ticket app, a class attendance tracker). List its main things (entities).',
+        'For each relationship, answer the four questions and write embed or reference, with one sentence of reasoning.',
+        'Write one sample document for each collection, including one deliberate snapshot copy and say why it is safe to duplicate.',
+        'Insert your samples in mongosh and run the single query your main screen would use. Count how many reads it takes.',
+      ],
+    },
+  },
+  {
+    id: 'mongodb-05',
+    day: 5,
+    title: 'Indexes and performance',
+    summary: 'Make queries fast with single and compound indexes, order compound keys with the ESR guideline, and prove the result with explain.',
+    intro: {
+      objectives: [
+        'Explain what an index is and what it costs',
+        'Create single-field, compound, unique and TTL indexes',
+        'Read `explain("executionStats")` to tell a collection scan from an index scan',
+        'Order the fields of a compound index with the Equality, Sort, Range guideline',
+      ],
+      why: 'A query that feels instant with 100 documents can take seconds with a million. Indexes are the single biggest lever on speed, and a missing one is the most common reason a MongoDB app slows down.',
+    },
+    minutes: 30,
+    skills: ['indexes'],
+    body: [
+      { type: 'paragraph', text: "Imagine finding every mention of \"jeepney\" in a 400-page book. Without help you read all 400 pages. With the **index** at the back, you jump to the three page numbers listed. A MongoDB index works the same way: it is a separate, sorted list of the values of some fields, each pointing to its document. Without a suitable index, MongoDB has to do a **collection scan**: read every document in the collection and check it against your filter." },
+      { type: 'paragraph', text: "Every collection already has one index, on `_id`, which is why finding by `_id` is always fast. For anything else you create the index yourself." },
+      { type: 'heading', text: 'Measure first: explain' },
+      { type: 'paragraph', text: "Never guess about performance. Add `.explain('executionStats')` to a query and MongoDB runs it and reports how. Three things matter: the **stage** of the winning plan (`COLLSCAN` is a collection scan, `IXSCAN` an index scan, `FETCH` reading the documents the index pointed to), `totalKeysExamined` (index entries read) and `totalDocsExamined` (documents read), compared with `nReturned`, the documents returned. A healthy query examines about as many as it returns." },
+      {
+        type: 'code',
+        language: 'javascript',
+        label: 'A collection of 50,000 random orders, built in mongosh',
+        code: `const statuses = ['pending', 'paid', 'shipped', 'cancelled'];
+const docs = [];
+for (let i = 0; i < 50000; i++) {
+  docs.push({
+    orderNo: i + 1,
+    customerId: Math.floor(Math.random() * 2000),
+    status: statuses[Math.floor(Math.random() * 4)],
+    total: Math.floor(Math.random() * 5000) + 50,
+    createdAt: new Date(Date.UTC(2026, 0, 1) + Math.floor(Math.random() * 300) * 86400000),
+  });
+}
+db.orders.insertMany(docs);
+
+db.orders.find({ customerId: 77 }).explain('executionStats')
+// stage COLLSCAN, nReturned 21, totalDocsExamined 50000   (your numbers will differ: the data is random)
+
+db.orders.createIndex({ customerId: 1 })   // returns the index name: 'customerId_1'
+db.orders.find({ customerId: 77 }).explain('executionStats')
+// stage FETCH > IXSCAN, nReturned 21, totalKeysExamined 21, totalDocsExamined 21`,
+      },
+      { type: 'paragraph', text: "The first run read all 50,000 documents to return 21. After one `createIndex` call, it read 21 index entries and 21 documents. The `1` means ascending order; `-1` is descending. MongoDB gave the index the name `customerId_1`." },
+      {
+        type: 'diagram',
+        format: 'mermaid',
+        caption: 'What the query planner does with your filter',
+        source: 'flowchart TD\n  A[Query arrives] --> B{Is there an index the query can use?}\n  B -->|No| C[COLLSCAN: read every document]\n  B -->|Yes| D[IXSCAN: walk the index keys]\n  D --> E[FETCH: read only the matching documents]\n  C --> F[Filter, sort, return]\n  E --> F',
+      },
+      { type: 'heading', text: 'Compound indexes and the ESR guideline' },
+      { type: 'paragraph', text: "A **compound index** covers several fields in a fixed order, for example `{ status: 1, createdAt: -1 }`. The order matters a lot. The manual's guideline is **ESR: Equality, Sort, Range**. Put the fields you test with exact equality first, then the field you sort by, then fields you test with a range such as `$gte` or `$lt`. Equality fields first keep the rest of the index in sorted order, and sort before range avoids an in-memory sort." },
+      {
+        type: 'code',
+        language: 'javascript',
+        label: 'Paid orders over 4000, newest first',
+        code: `// The query: equality on status, range on total, sort on createdAt
+db.orders.find({ status: 'paid', total: { $gte: 4000 } }).sort({ createdAt: -1 })
+
+db.orders.createIndex({ status: 1, total: 1, createdAt: -1 }, { name: 'equality_range_sort' })
+// explain: SORT > ... the server still sorts the matches in memory
+
+db.orders.createIndex({ status: 1, createdAt: -1, total: 1 }, { name: 'ESR' })
+// explain: FETCH > IXSCAN, no SORT stage: the index already delivers them newest first`,
+      },
+      { type: 'paragraph', text: "We ran both on 50,000 orders: the equality, range, sort index produced a `SORT` stage, while the ESR index did not (it read a few more index keys instead, which is the trade-off). The manual adds that if your range condition is very selective, putting it before the sort (ERS) can be better. When in doubt, test with `explain` or force an index with `.hint('ESR')`." },
+      { type: 'paragraph', text: "A compound index also serves its **prefixes**: `{ status: 1, createdAt: -1, total: 1 }` helps queries on `status`, on `status` and `createdAt`, and on all three. It does not help a query on `total` alone: in our run that one fell back to a collection scan." },
+      { type: 'heading', text: 'Other index types you will use' },
+      {
+        type: 'table',
+        headers: ['Index', 'Create it with', 'What it is for'],
+        rows: [
+          ['Unique', '`createIndex({ orderNo: 1 }, { unique: true })`', 'Rejects a second document with the same value: the insert fails with error code 11000'],
+          ['Compound', '`createIndex({ status: 1, createdAt: -1 })`', 'Filters and sorts on several fields; follow ESR'],
+          ['Covered query', 'A query whose filter and projection use only indexed fields, with `_id: 0`', 'MongoDB answers from the index alone: `totalDocsExamined` is 0'],
+          ['TTL', '`createIndex({ createdAt: 1 }, { expireAfterSeconds: 3600 })`', 'A background task deletes documents once the date field is older than the limit, good for sessions and logs'],
+        ],
+        caption: 'Four indexes beyond the basic one',
+      },
+      { type: 'heading', text: 'Indexes cost something' },
+      { type: 'paragraph', text: "Every index must be updated on each insert, update of its fields and delete, and it takes memory and disk. Ten careless indexes can make writes slower than the reads they help. A collection can have at most 64 indexes and a compound index at most 32 fields, but the practical rule is much stricter: index the fields your real queries filter and sort on, check with `explain`, and remove indexes nobody uses. On Atlas Free clusters, the Performance Advisor that suggests indexes is not available, so `explain` is your tool." },
+      {
+        type: 'version',
+        text: "The ESR guideline and the compound-index prefix rule are on the manual's pages for compound indexes (server 9.0 docs). Index limits (64 per collection, 32 fields in a compound index) come from the Limits page, and the Free cluster limits page says the Performance Advisor is not available on Free clusters. Our explain runs used a MongoDB 8.0.1 server with random data, so exact counts will differ for you; the stages are what to compare.",
+        checked: CHECKED,
+        sources: [DOCS.esr, DOCS.compound, DOCS.explain, DOCS.indexProps, DOCS.ttl, DOCS.limits, DOCS.freeLimits],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'An index is a sorted copy of some fields that lets MongoDB jump to matches instead of reading every document.',
+          'Use `explain("executionStats")`: look for `IXSCAN` instead of `COLLSCAN`, and for `totalDocsExamined` close to `nReturned`.',
+          'Order compound index fields Equality, Sort, Range; the index also serves its prefixes but not later fields on their own.',
+          'Unique indexes enforce rules, TTL indexes expire old data, and covered queries skip the documents entirely.',
+          'Indexes slow writes and use memory: create the ones your real queries need and no more.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'mongodb-05-predict-output-1',
+          kind: 'predict-output',
+          title: 'Name the indexes',
+          prompt: 'MongoDB names an index from its fields and directions. What does the last line print for this empty collection?',
+          concept: 'index names',
+          language: 'text',
+          code: "db.stock.createIndex({ sku: 1 });\ndb.stock.createIndex({ category: 1, price: -1 });\ndb.stock.createIndex({ sku: 1, category: 1 }, { unique: true });\nprint(db.stock.getIndexes().map((i) => i.name));",
+          expected: "[ '_id_', 'sku_1', 'category_1_price_-1', 'sku_1_category_1' ]",
+          choices: [
+            "[ '_id_', 'sku_1', 'category_1_price_-1', 'sku_1_category_1' ]",
+            "[ 'sku_1', 'category_1_price_-1', 'sku_1_category_1' ]",
+            "[ '_id_', 'sku', 'category_price', 'sku_category' ]",
+            "[ '_id_', 'sku_1', 'category_1_price_-1' ]",
+          ],
+          wrongNotes: {
+            "[ 'sku_1', 'category_1_price_-1', 'sku_1_category_1' ]": 'Every collection gets its own _id index automatically, so _id_ is listed first.',
+            "[ '_id_', 'sku', 'category_price', 'sku_category' ]": 'The generated name is each field followed by its direction (1 or -1), joined by underscores.',
+            "[ '_id_', 'sku_1', 'category_1_price_-1' ]": 'The third createIndex call also creates an index: unique is an option on an index, not a replacement for it.',
+          },
+          hints: [
+            'getIndexes() lists every index on the collection, including one that exists before you create anything.',
+            'The name joins each field and its direction: sku with 1 becomes sku_1.',
+            'A compound index joins all its fields in order: sku_1_category_1.',
+          ],
+          explanation: 'The default `_id_` index is always there, and each createIndex adds one named after its keys and directions. The unique option does not change the name.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'mongodb-05-code-challenge-1',
+          kind: 'code-challenge',
+          title: 'Order the keys: ESR',
+          story: 'You have a list of the fields a query touches and how it uses each one.',
+          prompt: 'Write esrOrder(fields). Each item is { name, kind } where kind is "equality", "sort" or "range". Return the field names in Equality, then Sort, then Range order. Fields of the same kind keep the order they were given in.',
+          concept: 'the ESR guideline',
+          language: 'javascript',
+          starter: "function esrOrder(fields) {\n  const names = [];\n  // equality fields first, then sort, then range\n  return names;\n}",
+          solution: "function esrOrder(fields) {\n  const names = [];\n  const kinds = ['equality', 'sort', 'range'];\n  for (const kind of kinds) {\n    for (const field of fields) {\n      if (field.kind === kind) {\n        names.push(field.name);\n      }\n    }\n  }\n  return names;\n}",
+          tests: {
+            kind: 'function',
+            fn: 'esrOrder',
+            cases: [
+              { label: 'the paid orders query', args: [[{ name: 'total', kind: 'range' }, { name: 'createdAt', kind: 'sort' }, { name: 'status', kind: 'equality' }]], expected: ['status', 'createdAt', 'total'] },
+              { label: 'two equality fields keep their order', args: [[{ name: 'shopId', kind: 'equality' }, { name: 'price', kind: 'range' }, { name: 'status', kind: 'equality' }]], expected: ['shopId', 'status', 'price'] },
+              { label: 'no sort field', args: [[{ name: 'age', kind: 'range' }, { name: 'city', kind: 'equality' }]], expected: ['city', 'age'] },
+              { label: 'empty', args: [[]], expected: [], hidden: true },
+            ],
+          },
+          hints: [
+            'Make a list of the three kinds in the order you want them: equality, sort, range.',
+            'For each kind, walk through the fields and keep the ones of that kind.',
+            'Push each matching field.name onto the result as you go, so the original order inside a kind is kept.',
+          ],
+          explanation: 'ESR is a rule about order: exact matches narrow the index first, the sort field keeps results already in order, and range fields come last. Looping over the kinds in that order, then over the fields, builds the index key list.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'mongodb-05-fix-bug-1',
+          kind: 'fix-bug',
+          title: 'The index that is not quite right',
+          story: 'The orders screen runs find({ status: \'paid\' }).sort({ createdAt: -1 }) on 50,000 orders. Someone added an index, but explain shows it reading all 50,000 index entries.',
+          prompt: 'Tap the line that creates the wrong index, then choose the replacement that follows the ESR guideline.',
+          concept: 'compound index order',
+          language: 'text',
+          code: "db.orders.find({ status: 'paid' }).sort({ createdAt: -1 });\n\ndb.orders.createIndex({ createdAt: -1, status: 1 });",
+          bugLine: 3,
+          lineNote: 'The query on line 1 is fine. Look at the index that is meant to help it.',
+          fixes: [
+            { line: 'db.orders.createIndex({ status: 1, createdAt: -1 });', correct: true, why: 'Equality field first, then the sort field. MongoDB jumps straight to the paid orders and reads them already newest first.' },
+            { line: 'db.orders.createIndex({ status: 1 });', correct: false, why: 'It finds the paid orders quickly, but the sort is not in the index, so MongoDB still sorts them in memory (a SORT stage).' },
+            { line: 'db.orders.createIndex({ createdAt: 1, status: 1 });', correct: false, why: 'Same problem as before: the sort field comes before the equality field, so it still walks entries for other statuses.' },
+            { line: "db.orders.createIndex({ status: 'paid', createdAt: -1 });", correct: false, why: 'Index key values must be 1 or -1 (the direction), not the value you search for.' },
+          ],
+          hints: [
+            'Which field does the query test with an exact match, and which does it sort by?',
+            'ESR says equality fields come before sort fields.',
+            'The status goes first, then createdAt: { status: 1, createdAt: -1 }.',
+          ],
+          explanation: 'With createdAt first, the index lists all orders by date, so MongoDB reads every entry and checks the status as it goes (we measured all 50,000 keys). With status first, the paid orders sit together already sorted by date.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'mongodb-05-q1',
+        prompt: 'An `explain("executionStats")` shows `COLLSCAN`, `nReturned: 12` and `totalDocsExamined: 80000`. What does it tell you?',
+        choices: [
+          'The query is healthy: 12 results is a small number',
+          'MongoDB read all 80,000 documents to return 12, so an index on the filtered field is missing or unusable',
+          'The collection has 12 documents and 80,000 indexes',
+          'The server returned a cached answer without reading the data',
+        ],
+        answer: 1,
+        explanation: 'A collection scan reads every document. Examining far more than you return is the signal to add an index that matches the filter.',
+      },
+      {
+        id: 'mongodb-05-q2',
+        prompt: 'You query `{ shopId: 4, price: { $gt: 100 } }` sorted by `createdAt`. Following ESR, which compound index fits?',
+        choices: [
+          '`{ price: 1, createdAt: 1, shopId: 1 }`',
+          '`{ createdAt: 1, shopId: 1, price: 1 }`',
+          '`{ price: 1, shopId: 1, createdAt: 1 }`',
+          '`{ shopId: 1, createdAt: 1, price: 1 }`',
+        ],
+        answer: 3,
+        explanation: 'shopId is equality, createdAt is the sort, and price is a range, so the order is shopId, createdAt, price.',
+      },
+      {
+        id: 'mongodb-05-q3',
+        prompt: 'You have an index on `{ status: 1, createdAt: -1 }`. Which query can use it to find documents quickly?',
+        choices: [
+          'A filter on `createdAt` alone',
+          'A filter on `createdAt` and nothing else, sorted by status',
+          'A filter on `status` alone',
+          'None of them: a compound index only works when every field is in the query',
+        ],
+        answer: 2,
+        explanation: 'A compound index supports its prefixes, and `status` is the first field. A query that skips the leading field usually cannot use the index efficiently.',
+      },
+      {
+        id: 'mongodb-05-q4',
+        prompt: 'The team proposes an index on every field "just in case". What is the best objection?',
+        choices: [
+          'Indexes can only be created on one field per collection',
+          'Indexes make reads slower because they are always scanned',
+          'Each index is updated on every write and uses memory, so unneeded ones slow writes for no benefit',
+          'MongoDB deletes the extra indexes automatically after a day',
+        ],
+        answer: 2,
+        explanation: 'Indexes speed up the queries that use them but cost work on every insert, update and delete. Create the ones your real queries need.',
+      },
+    ],
+    task: {
+      title: 'Find the slow query and fix it',
+      minutes: 20,
+      steps: [
+        'Run the lesson\'s loop to insert 50,000 random orders into a collection called `orders`.',
+        'Run `find({ customerId: 77 }).explain("executionStats")` and note the stage and the documents examined. Create the index and run it again.',
+        'Write the paid-orders-over-4000-newest-first query. Create one index in the ERS order and one in the ESR order, run explain with `.hint(...)` for each, and compare the stages.',
+        'Run `getIndexes()` and drop the indexes you no longer need with `dropIndex(name)`.',
+      ],
+    },
+  },
+  {
+    id: 'mongodb-06',
+    day: 6,
+    title: 'The aggregation pipeline',
+    summary: 'Answer reporting questions inside the database by chaining $match, $unwind, $group, $sort, $limit and $lookup stages, and learn why the order of stages matters.',
+    intro: {
+      objectives: [
+        'Read and write a pipeline made of `$match`, `$group`, `$sort`, `$limit`, `$unwind`, `$project` and `$lookup`',
+        'Explain what each stage receives and passes on',
+        'Put stages in an efficient order and spot the common mistakes',
+      ],
+      why: 'Totals, rankings and monthly reports are what business owners actually ask for. Doing them in the database with a pipeline is faster and simpler than pulling every document into your app and looping over it.',
+    },
+    minutes: 30,
+    skills: ['aggregation'],
+    body: [
+      { type: 'paragraph', text: "`find` returns documents as they are stored. But a shop owner asks different questions: \"What did each customer spend?\", \"Which products earn the most?\", \"How many orders did we get per month?\" Those answers do not exist as documents; they have to be **computed**. MongoDB does this with the **aggregation pipeline**." },
+      { type: 'paragraph', text: "Think of an assembly line in a bakery. Loaves arrive on a belt. The first worker removes the ones that are not for today's order. The next bags them by customer. The next counts the bags, and the last puts the three biggest bags on a tray. Each worker does one small job and hands the result to the next. A pipeline is that belt: a list of **stages**, where each stage takes documents in, changes them, and passes documents out." },
+      {
+        type: 'code',
+        language: 'javascript',
+        label: 'The shape of a pipeline',
+        code: `db.orders.aggregate([
+  { $match: { status: 'paid' } },        // stage 1
+  { $group: { _id: '$customer', orders: { $sum: 1 } } },   // stage 2
+  { $sort: { orders: -1 } }              // stage 3
+])`,
+      },
+      { type: 'paragraph', text: "`aggregate` takes an array of stages. Each stage is a document with one key, the stage name starting with `$`. Here is a first, complete example on a small `orders` collection of six orders, each with a customer, a status, a date and an `items` array of { sku, qty, price }." },
+      {
+        type: 'table',
+        headers: ['Stage', 'What it does', 'SQL idea'],
+        rows: [
+          ['`$match`', 'Keeps only documents that fit a filter (same filter language as `find`)', 'WHERE'],
+          ['`$group`', 'Collapses documents into one per key and computes totals with accumulators', 'GROUP BY'],
+          ['`$sort` / `$limit`', 'Orders the documents, keeps the first n', 'ORDER BY, LIMIT'],
+          ['`$project` / `$addFields`', 'Chooses or renames fields, or computes new ones', 'SELECT'],
+          ['`$unwind`', 'Turns a document with an array into one document per array item', '(a join to the lines)'],
+          ['`$lookup`', 'Pulls in matching documents from another collection', 'JOIN'],
+          ['`$count`', 'Counts the documents that reach it', 'COUNT(*)'],
+        ],
+        caption: 'The stages you will use most. The PostgreSQL and SQL course teaches the SQL column',
+      },
+      { type: 'heading', text: 'A worked example: the best-selling products' },
+      {
+        type: 'code',
+        language: 'javascript',
+        label: 'Revenue per product, paid orders only, top 3',
+        code: `db.orders.aggregate([
+  { $match: { status: 'paid' } },
+  { $unwind: '$items' },
+  { $group: {
+      _id: '$items.sku',
+      unitsSold: { $sum: '$items.qty' },
+      revenue: { $sum: { $multiply: ['$items.qty', '$items.price'] } }
+  } },
+  { $sort: { revenue: -1 } },
+  { $limit: 3 }
+])
+// [ { _id: 'KP-001', unitsSold: 6, revenue: 1110 },
+//   { _id: 'DR-002', unitsSold: 2, revenue: 170 },
+//   { _id: 'SN-002', unitsSold: 4, revenue: 140 } ]`,
+      },
+      { type: 'paragraph', text: "Follow one document through. `$match` keeps the four paid orders. `$unwind: '$items'` turns each order into one document per item: the four orders have 2, 1, 2 and 2 items, so seven documents come out, for example `{ customer: 'Ana', items: { sku: 'KP-001', qty: 2, price: 185 } }`. `$group` collects those seven by `items.sku`. A string that starts with `$` such as `'$items.qty'` is a **field path**: it means \"the value of that field in the current document\". `$sum` is an **accumulator** that adds up what it is given, and `$multiply` multiplies quantity by price. Finally `$sort` puts the highest revenue first and `$limit` keeps three." },
+      { type: 'paragraph', text: "`$group` always needs `_id`: the value to group by. Use `_id: null` to group everything into one document, handy for grand totals. Other accumulators are `$avg`, `$min`, `$max`, `$first`, `$push` (collect values into an array) and `$addToSet` (the same without duplicates). The order of the groups that come out is not guaranteed, so add a `$sort` whenever the order matters." },
+      { type: 'heading', text: 'Joining with $lookup' },
+      {
+        type: 'code',
+        language: 'javascript',
+        label: 'Add the product name to each result',
+        code: `db.orders.aggregate([
+  { $match: { status: 'paid' } },
+  { $unwind: '$items' },
+  { $group: { _id: '$items.sku', revenue: { $sum: { $multiply: ['$items.qty', '$items.price'] } } } },
+  { $sort: { revenue: -1 } },
+  { $limit: 2 },
+  { $lookup: { from: 'products', localField: '_id', foreignField: 'sku', as: 'product' } },
+  { $project: { _id: 0, sku: '$_id', revenue: 1, name: { $first: '$product.name' } } }
+])
+// [ { revenue: 1110, sku: 'KP-001', name: 'Kapeng Barako 200g' },
+//   { revenue: 170, sku: 'DR-002', name: 'Calamansi juice 1L' } ]`,
+      },
+      { type: 'paragraph', text: "`$lookup` takes the local field (`_id`, which now holds the sku), the foreign field in the other collection and a name for the array it adds. It always produces an array, even for one match, so `$first` picks the product. Notice we joined **after** `$limit`: we only look up two products, not all of them. That is the next idea." },
+      { type: 'heading', text: 'Order matters' },
+      { type: 'paragraph', text: "A stage sees only what the previous one sent. So put `$match` as early as you can: it reduces the documents every later stage must handle, and a `$match` at the start can use an index. We checked with `explain`: with an index on `status`, the pipeline began with an `IXSCAN` rather than reading every order. The manual's optimization page also says the server moves a `$match` ahead of projection stages when it can, but it cannot move one ahead of a `$group` that created the field it tests." },
+      { type: 'warning', text: "Two mistakes catch nearly everyone. A `$match` on `status` placed after a `$group` returns nothing: after grouping, only `_id` and the accumulators exist, so no document has a `status`. And `_id: 'customer'` without the dollar sign groups on the literal word \"customer\": all six orders ended up in one group with `n: 6`. Field paths need the `$`." },
+      {
+        type: 'version',
+        text: "Stage names, accumulators and field paths come from the manual's aggregation pages (server 9.0 docs). Pipelines were run on MongoDB 8.0.1. The optimization page describes moving `$match` earlier, and the $lookup page says its performance depends on whether the foreign field is indexed. Atlas Free clusters allow at most 50 stages in a pipeline, and the docs say they ignore `allowDiskUse`.",
+        checked: CHECKED,
+        sources: [DOCS.aggregation, DOCS.aggStages, DOCS.aggOptimize, DOCS.lookup, DOCS.freeLimits],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'A pipeline is an array of stages; each stage receives the documents the previous one produced.',
+          '`$match` filters, `$group` summarises with accumulators like `$sum`, `$sort` and `$limit` rank, `$unwind` flattens arrays, `$lookup` joins.',
+          'Field paths need a dollar sign (`"$items.qty"`); `$group` needs an `_id`, and `_id: null` gives one grand total.',
+          'Put `$match` first so there is less to process and an index can help; a `$match` after `$group` can only see the grouped fields.',
+          'Group output order is not guaranteed: add `$sort` when order matters.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'mongodb-06-arrange-1',
+          kind: 'arrange',
+          title: 'Build the pipeline in order',
+          story: 'The owner wants the three customers who spent the most on paid orders. Each order has a customer and a total.',
+          prompt: 'Put the lines in order so the pipeline filters first, then groups, then ranks, then trims.',
+          concept: 'stage order',
+          language: 'text',
+          solution: [
+            'db.orders.aggregate([',
+            "  { $match: { status: 'paid' } },",
+            "  { $group: { _id: '$customer', spent: { $sum: '$total' } } },",
+            '  { $sort: { spent: -1 } },',
+            '  { $limit: 3 }',
+            '])',
+          ],
+          reasons: [
+            'The call that starts the pipeline.',
+            'Filter first, so only paid orders reach the later stages.',
+            'Group the paid orders by customer and add up their totals.',
+            'Rank customers by what they spent, largest first.',
+            'Keep only the top three after ranking.',
+            'Close the array and the call.',
+          ],
+          hints: [
+            'The opening and closing lines of the call frame the stages.',
+            'Filtering should happen before grouping, and trimming after ranking.',
+            'Order: $match, $group, $sort, $limit.',
+          ],
+          explanation: 'Each stage works on the output of the one before it. Matching first reduces the work, grouping builds one document per customer, and only then can sort and limit rank them.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'mongodb-06-fix-bug-1',
+          kind: 'fix-bug',
+          title: 'Six orders, one group',
+          story: 'You group the orders by customer and expect three groups (Ana, Ben, Carla). You get one group with n: 6.',
+          prompt: 'Tap the line with the bug, then choose the fix.',
+          concept: 'field paths',
+          language: 'text',
+          code: "db.orders.aggregate([\n  { $group: { _id: 'customer', n: { $sum: 1 } } }\n])",
+          bugLine: 2,
+          lineNote: 'The first and last lines are just the call. The mistake is inside the stage.',
+          fixes: [
+            { line: "  { $group: { _id: '$customer', n: { $sum: 1 } } }", correct: true, why: "The dollar sign makes it a field path, so each order's customer value is used as the group key." },
+            { line: "  { $group: { _id: customer, n: { $sum: 1 } } }", correct: false, why: 'Without quotes, customer is an undefined variable in the shell, so the command fails before reaching MongoDB.' },
+            { line: "  { $group: { customer: '$customer', n: { $sum: 1 } } }", correct: false, why: '$group requires an _id field. Using another name for the key is an error.' },
+            { line: "  { $group: { _id: '$$customer', n: { $sum: 1 } } }", correct: false, why: '$$ names a variable, not a field. There is no variable called customer, so this fails.' },
+          ],
+          hints: [
+            'The text \'customer\' is just a word. How does MongoDB know you mean a field of each order?',
+            'Field paths start with one dollar sign.',
+            "Write _id: '$customer'.",
+          ],
+          explanation: 'A plain string is a constant, so every order got the same group key. A string starting with $ is read as a field path.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'mongodb-06-code-challenge-1',
+          kind: 'code-challenge',
+          title: 'Be the $group stage',
+          prompt: 'Write groupSum(rows, keyField, valueField). It returns an object with one property per distinct key, whose value is the sum of valueField over the rows with that key. This is what { $group: { _id: "$key", total: { $sum: "$value" } } } does.',
+          concept: 'what $group computes',
+          language: 'javascript',
+          starter: "function groupSum(rows, keyField, valueField) {\n  const totals = {};\n  // add each row's value to the total of its key\n  return totals;\n}",
+          solution: "function groupSum(rows, keyField, valueField) {\n  const totals = {};\n  for (const row of rows) {\n    const key = row[keyField];\n    totals[key] = (totals[key] || 0) + row[valueField];\n  }\n  return totals;\n}",
+          tests: {
+            kind: 'function',
+            fn: 'groupSum',
+            cases: [
+              { label: 'units per sku', args: [[{ sku: 'KP-001', qty: 2 }, { sku: 'DR-001', qty: 6 }, { sku: 'KP-001', qty: 3 }], 'sku', 'qty'], expected: { 'KP-001': 5, 'DR-001': 6 } },
+              { label: 'spend per customer', args: [[{ customer: 'Ana', total: 490 }, { customer: 'Ben', total: 135 }, { customer: 'Ana', total: 120 }], 'customer', 'total'], expected: { Ana: 610, Ben: 135 } },
+              { label: 'a single row', args: [[{ a: 'x', n: 7 }], 'a', 'n'], expected: { x: 7 } },
+              { label: 'no rows', args: [[], 'a', 'n'], expected: {}, hidden: true },
+            ],
+          },
+          hints: [
+            'Keep an object totals, and loop over the rows.',
+            'For each row, read the key with row[keyField] and the amount with row[valueField].',
+            'totals[key] = (totals[key] || 0) + row[valueField] starts a new key at 0 the first time.',
+          ],
+          explanation: '$group builds one result per distinct key and keeps a running accumulator for each. The (totals[key] || 0) trick is the same as an accumulator starting at zero for a new group.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'mongodb-06-q1',
+        prompt: 'You want the average order total per customer, but only for paid orders. Which pipeline is right?',
+        choices: [
+          '`[{ $group: { _id: "$customer", avg: { $avg: "$total" } } }, { $match: { status: "paid" } }]`',
+          '`[{ $match: { status: "paid" } }, { $group: { _id: "$customer", avg: { $avg: "$total" } } }]`',
+          '`[{ $group: { _id: "$status", avg: { $avg: "$total" } } }, { $limit: 1 }]`',
+          '`[{ $sort: { total: 1 } }, { $avg: "$total" }]`',
+        ],
+        answer: 1,
+        explanation: 'Filter first, then group. After `$group` there is no `status` field left to match, and `$avg` is an accumulator inside `$group`, not a stage.',
+      },
+      {
+        id: 'mongodb-06-q2',
+        prompt: 'An order has `items: [a, b, c]`. What does `{ $unwind: "$items" }` give you for that order?',
+        choices: [
+          'One document that holds the three items joined into one string',
+          'Three documents, each with the same order fields and one item in `items`',
+          'The same single document, with the array sorted',
+          'Nothing, because arrays cannot be used in a pipeline',
+        ],
+        answer: 1,
+        explanation: '`$unwind` turns an array into one output document per element, copying the other fields. That is what lets `$group` work on individual items.',
+      },
+      {
+        id: 'mongodb-06-q3',
+        prompt: 'Why does `{ $group: { _id: "$customer", n: { $sum: 1 } } }` followed by `{ $match: { customer: "Ana" } }` return an empty result?',
+        choices: [
+          'The group stage deletes the original collection',
+          'Matches by customer name are not allowed after a group',
+          'The `$sum: 1` accumulator removes the customer field',
+          'After `$group` the customer is in `_id`, so no document has a `customer` field to match',
+        ],
+        answer: 3,
+        explanation: 'After grouping, documents contain only `_id` and the accumulators. Match on `_id`, or better, match before grouping.',
+      },
+      {
+        id: 'mongodb-06-q4',
+        prompt: 'What does `$lookup` always put in the field named by `as`?',
+        choices: [
+          'An array of the matching documents, which may be empty or have one item',
+          'The single matching document, or null if there is none',
+          'The count of matching documents',
+          'The `_id` of the first match',
+        ],
+        answer: 0,
+        explanation: '`$lookup` always produces an array, so use `$first`, `$arrayElemAt` or `$unwind` when you expect one match.',
+      },
+    ],
+    task: {
+      title: 'Write your own monthly report',
+      minutes: 20,
+      steps: [
+        'Insert the six sample orders from the lesson (or similar ones) into an `orders` collection.',
+        'Run the best-selling products pipeline and then add the `$lookup` stage to show product names.',
+        'Write a pipeline that counts paid orders per month using `$dateToString: { format: "%Y-%m", date: "$createdAt" }` as the group key.',
+        'Move your `$match` to the end on purpose, look at the result, and write one sentence about why it changed.',
+      ],
+    },
+  },
+  // @@MORE_LESSONS@@
+];
+
+const projects: Project[] = [];
+
+export const mongodbCourse: Course = {
+  id: 'mongodb',
+  kind: 'standard',
+  title: 'MongoDB Complete Guide',
+  level: 'intermediate',
+  tagline: 'Model, query, index and aggregate document data, then ship a Node.js API on MongoDB Atlas.',
+  description: 'Learn MongoDB the way working developers use it: documents and CRUD, query operators, modelling decisions, indexes, the aggregation pipeline and the official Node.js driver. You also learn validation, transactions and safe Atlas setup, and you finish with a document-backed API.',
+  finishLine: [
+    'A document-backed Node.js API that stores data in MongoDB Atlas',
+    'Queries, indexes and an aggregation report you can explain and measure',
+    'A clear way to decide when a document database fits and when PostgreSQL does',
+  ],
+  objectives: [
+    'Create, read, update and delete documents with the MongoDB shell and the Node.js driver',
+    'Write filters with query operators and shape results with projections',
+    'Decide between embedding and referencing when you model data',
+    'Create indexes and check them with explain',
+    'Build aggregation pipelines that group, join and reshape data',
+    'Secure an Atlas cluster and protect credentials in code',
+  ],
+  audiences: ['fresh-grad', 'career-changer', 'experienced-dev', 'builder'],
+  skills: [
+    { id: 'documents-bson', label: 'Documents and BSON' },
+    { id: 'atlas-setup', label: 'Atlas setup' },
+    { id: 'crud', label: 'CRUD operations' },
+    { id: 'query-operators', label: 'Query operators and projections' },
+    { id: 'data-modelling', label: 'Data modelling' },
+    { id: 'indexes', label: 'Indexes and explain' },
+    { id: 'aggregation', label: 'Aggregation pipeline' },
+    { id: 'node-driver', label: 'The Node.js driver' },
+    { id: 'validation-transactions', label: 'Validation and transactions' },
+    { id: 'atlas-security', label: 'Atlas security and backups' },
+  ],
+  lessons,
+  projects,
+  icon: 'database',
+  updated: '2026-11-14',
+};

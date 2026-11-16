@@ -1,0 +1,80 @@
+import { describe, expect, test } from '@jest/globals';
+
+import { cleanWav, cleanWavBase64, decodeBase64, encodeBase64, wavParts } from './wav';
+
+/** A WAV like Gemini's: fmt + data, then a C2PA metadata chunk inside the RIFF container (the real file's layout). */
+function geminiLikeWav(samples: number[], trailing = 64): Uint8Array {
+  const audio = new Uint8Array(samples.length * 2);
+  const view = new DataView(audio.buffer);
+  samples.forEach((sample, index) => view.setInt16(index * 2, sample, true));
+  const meta = new Uint8Array(trailing).fill(0xe7);
+  const out = new Uint8Array(12 + 24 + 8 + audio.length + 8 + meta.length);
+  const dv = new DataView(out.buffer);
+  const tag = (at: number, value: string) => [...value].forEach((char, index) => (out[at + index] = char.charCodeAt(0)));
+  tag(0, 'RIFF');
+  dv.setUint32(4, out.length - 8, true);
+  tag(8, 'WAVE');
+  tag(12, 'fmt ');
+  dv.setUint32(16, 16, true);
+  dv.setUint16(20, 1, true);
+  dv.setUint16(22, 1, true);
+  dv.setUint32(24, 24000, true);
+  dv.setUint32(28, 48000, true);
+  dv.setUint16(32, 2, true);
+  dv.setUint16(34, 16, true);
+  tag(36, 'data');
+  dv.setUint32(40, audio.length, true);
+  out.set(audio, 44);
+  tag(44 + audio.length, 'C2PA');
+  dv.setUint32(48 + audio.length, meta.length, true);
+  out.set(meta, 52 + audio.length);
+  return out;
+}
+
+describe('wavParts', () => {
+  test('finds the audio by the data chunk’s own size, not by "everything after the header"', () => {
+    const wav = geminiLikeWav([1, 2, 3, 4], 100);
+    const parts = wavParts(wav);
+    expect(parts?.audio.length).toBe(8);
+    expect([...new Int16Array(parts!.audio.buffer, parts!.audio.byteOffset, 4)]).toEqual([1, 2, 3, 4]);
+    expect(parts?.format.length).toBe(16);
+  });
+
+  test('is null for anything that is not a readable WAV, and reads a cut-off download to its end', () => {
+    expect(wavParts(new Uint8Array([1, 2, 3]))).toBeNull();
+    expect(wavParts(new TextEncoder().encode('RIFF....WAVEjunk'))).toBeNull();
+    const wav = geminiLikeWav([1, 2, 3, 4]);
+    expect(wavParts(wav.subarray(0, 50))?.audio.length).toBe(6);
+  });
+});
+
+describe('cleanWav', () => {
+  test('keeps the audio exactly and drops the metadata chunk, with sizes that match', () => {
+    const wav = geminiLikeWav([10, -10, 20, -20, 30], 7664);
+    const clean = cleanWav(wav);
+    expect(clean.length).toBe(44 + 10);
+    expect(new TextDecoder().decode(clean).includes('C2PA')).toBe(false);
+    const view = new DataView(clean.buffer, clean.byteOffset);
+    expect(view.getUint32(4, true)).toBe(clean.length - 8);
+    expect(view.getUint32(40, true)).toBe(10);
+    expect(view.getUint32(24, true)).toBe(24000);
+    expect(wavParts(clean)?.audio).toEqual(wavParts(wav)?.audio);
+  });
+
+  test('a file that cannot be read is handed back untouched', () => {
+    const junk = new Uint8Array([9, 9, 9]);
+    expect(cleanWav(junk)).toBe(junk);
+  });
+});
+
+describe('base64', () => {
+  test('round-trips large audio and cleans it in one step', () => {
+    const big = geminiLikeWav(Array.from({ length: 300_000 }, (_, index) => (index % 200) - 100), 8000);
+    expect(decodeBase64(encodeBase64(big))).toEqual(big);
+    const cleaned = decodeBase64(cleanWavBase64(encodeBase64(big)));
+    expect(cleaned.length).toBe(44 + 600_000);
+    expect(cleanWavBase64('!!!not base64')).toBe('!!!not base64');
+    const plain = encodeBase64(new Uint8Array([1, 2, 3]));
+    expect(cleanWavBase64(plain)).toBe(plain);
+  });
+});

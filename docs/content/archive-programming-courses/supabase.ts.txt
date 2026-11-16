@@ -1,0 +1,1825 @@
+import type { Course, Lesson, Project } from '../../types';
+
+const CHECKED = '2026-11-14';
+
+const DOCS = {
+  apiKeys: { label: 'Supabase docs: Understanding API keys', url: 'https://supabase.com/docs/guides/api/api-keys' },
+  securing: { label: 'Supabase docs: Securing your API', url: 'https://supabase.com/docs/guides/api/securing-your-api' },
+  secureData: { label: 'Supabase docs: Securing your data', url: 'https://supabase.com/docs/guides/database/secure-data' },
+  rls: { label: 'Supabase docs: Row Level Security', url: 'https://supabase.com/docs/guides/database/postgres/row-level-security' },
+  arch: { label: 'Supabase docs: Design and architecture', url: 'https://supabase.com/docs/guides/getting-started/architecture' },
+  dataApi: { label: 'Supabase docs: REST API (Data API)', url: 'https://supabase.com/docs/guides/api' },
+  jsInstall: { label: 'Supabase JavaScript reference: Installing', url: 'https://supabase.com/docs/reference/javascript/installing' },
+  jsInit: { label: 'Supabase JavaScript reference: Initializing', url: 'https://supabase.com/docs/reference/javascript/initializing' },
+  jsSelect: { label: 'Supabase JavaScript reference: select', url: 'https://supabase.com/docs/reference/javascript/select' },
+  jsUpdate: { label: 'Supabase JavaScript reference: update', url: 'https://supabase.com/docs/reference/javascript/update' },
+  jsDelete: { label: 'Supabase JavaScript reference: delete', url: 'https://supabase.com/docs/reference/javascript/delete' },
+  jsFilters: { label: 'Supabase JavaScript reference: Using filters', url: 'https://supabase.com/docs/reference/javascript/using-filters' },
+  quickstart: { label: 'Supabase docs: Use Supabase with React', url: 'https://supabase.com/docs/guides/getting-started/quickstarts/reactjs' },
+  authOverview: { label: 'Supabase docs: Auth overview', url: 'https://supabase.com/docs/guides/auth' },
+  authPasswords: { label: 'Supabase docs: Password-based auth', url: 'https://supabase.com/docs/guides/auth/passwords' },
+  authSessions: { label: 'Supabase docs: User sessions', url: 'https://supabase.com/docs/guides/auth/sessions' },
+  authPkce: { label: 'Supabase docs: PKCE flow', url: 'https://supabase.com/docs/guides/auth/sessions/pkce-flow' },
+  authRedirect: { label: 'Supabase docs: Redirect URLs', url: 'https://supabase.com/docs/guides/auth/redirect-urls' },
+  authJwts: { label: 'Supabase docs: JSON Web Tokens (JWT)', url: 'https://supabase.com/docs/guides/auth/jwts' },
+  authGetUser: { label: 'Supabase JavaScript reference: getUser', url: 'https://supabase.com/docs/reference/javascript/auth-getuser' },
+  authGetSession: { label: 'Supabase JavaScript reference: getSession', url: 'https://supabase.com/docs/reference/javascript/auth-getsession' },
+  authGetClaims: { label: 'Supabase JavaScript reference: getClaims', url: 'https://supabase.com/docs/reference/javascript/auth-getclaims' },
+  authSsr: { label: 'Supabase docs: Creating a Supabase client for SSR', url: 'https://supabase.com/docs/guides/auth/server-side/creating-a-client' },
+  authDeepLink: { label: 'Supabase docs: Native mobile deep linking', url: 'https://supabase.com/docs/guides/auth/native-mobile-deep-linking' },
+  authOnChange: { label: 'Supabase JavaScript reference: onAuthStateChange', url: 'https://supabase.com/docs/reference/javascript/auth-onauthstatechange' },
+  authRefresh: { label: 'Supabase JavaScript reference: startAutoRefresh', url: 'https://supabase.com/docs/reference/javascript/auth-startautorefresh' },
+  authOAuth: { label: 'Supabase JavaScript reference: signInWithOAuth', url: 'https://supabase.com/docs/reference/javascript/auth-signinwithoauth' },
+  storageBuckets: { label: 'Supabase docs: Storage buckets fundamentals', url: 'https://supabase.com/docs/guides/storage/buckets/fundamentals' },
+  storageAccess: { label: 'Supabase docs: Storage access control', url: 'https://supabase.com/docs/guides/storage/security/access-control' },
+  storageServing: { label: 'Supabase docs: Serving assets from Storage', url: 'https://supabase.com/docs/guides/storage/serving/downloads' },
+  storageUpload: { label: 'Supabase docs: Standard uploads', url: 'https://supabase.com/docs/guides/storage/uploads/standard-uploads' },
+  storageSigned: { label: 'Supabase JavaScript reference: createSignedUrl', url: 'https://supabase.com/docs/reference/javascript/storage-from-createsignedurl' },
+  storageCreateBucket: { label: 'Supabase JavaScript reference: createBucket', url: 'https://supabase.com/docs/reference/javascript/storage-createbucket' },
+  realtime: { label: 'Supabase docs: Realtime', url: 'https://supabase.com/docs/guides/realtime' },
+  rtChanges: { label: 'Supabase docs: Postgres Changes', url: 'https://supabase.com/docs/guides/realtime/postgres-changes' },
+  rtSubscribe: { label: 'Supabase docs: Subscribing to database changes', url: 'https://supabase.com/docs/guides/realtime/subscribing-to-database-changes' },
+  rtAuthz: { label: 'Supabase docs: Realtime authorization', url: 'https://supabase.com/docs/guides/realtime/authorization' },
+  rtBroadcast: { label: 'Supabase docs: Realtime Broadcast', url: 'https://supabase.com/docs/guides/realtime/broadcast' },
+  fnQuickstart: { label: 'Supabase docs: Edge Functions quickstart', url: 'https://supabase.com/docs/guides/functions/quickstart' },
+  fnAuth: { label: 'Supabase docs: Securing Edge Functions', url: 'https://supabase.com/docs/guides/functions/auth' },
+  fnSecrets: { label: 'Supabase docs: Edge Function secrets', url: 'https://supabase.com/docs/guides/functions/secrets' },
+  cli: { label: 'Supabase docs: Supabase CLI', url: 'https://supabase.com/docs/guides/local-development/cli/getting-started' },
+  migrations: { label: 'Supabase docs: Database migrations', url: 'https://supabase.com/docs/guides/deployment/database-migrations' },
+  testing: { label: 'Supabase docs: Testing your database', url: 'https://supabase.com/docs/guides/database/testing' },
+  pgtap: { label: 'Supabase docs: pgTAP extension', url: 'https://supabase.com/docs/guides/database/extensions/pgtap' },
+};
+
+const lessons: Lesson[] = [
+  {
+    id: 'supabase-01',
+    day: 1,
+    title: 'What Supabase is: Postgres plus services',
+    summary: 'See how a Supabase project is one Postgres database with auth, an API, storage, realtime and functions around it, and learn which keys may go in an app.',
+    intro: {
+      objectives: [
+        'Name the services in a Supabase project and say what each one does',
+        'Explain why the app can talk to the database directly, and what makes that safe',
+        'Tell a publishable key from a secret key and say where each may live',
+      ],
+      why: 'A backend is the part of an app that most beginners cannot build alone, and Supabase gives you a real one in an afternoon. Knowing how it is put together, and which key is which, is what keeps your users\' data from leaking.',
+    },
+    minutes: 20,
+    skills: ['supabase-architecture', 'api-key-safety'],
+    body: [
+      { type: 'paragraph', text: "Almost every app needs the same five things behind it: a database to keep records, a way for people to sign in, somewhere to put photos and files, a way to push live changes to the screen, and a little server code for jobs the phone must not do itself. You could build and host each one yourself. Supabase gives you all five as a ready-made backend, so you can spend your time on the app. A product like this is called a **backend as a service**." },
+      { type: 'heading', text: 'One Postgres database, with services around it' },
+      { type: 'paragraph', text: "The important thing is how it is put together. At the centre is an ordinary **PostgreSQL** database, the same database you met in the PostgreSQL course. Every other part of Supabase is a service that reads and writes that one database. Your app does not connect to the database itself. It sends each request to an API gateway, which hands it to the right service." },
+      {
+        type: 'diagram',
+        format: 'mermaid',
+        caption: 'Every service works on the same Postgres database.',
+        source: 'flowchart LR\n  A[Your app with supabase-js] --> G[API gateway]\n  G --> AU[Auth: sign-in and tokens]\n  G --> R[Data API: tables as REST]\n  G --> RT[Realtime: live changes]\n  G --> S[Storage: files]\n  G --> F[Edge Functions: your server code]\n  AU --> P[Postgres database]\n  R --> P\n  RT --> P\n  S --> P\n  F --> P',
+      },
+      {
+        type: 'table',
+        headers: ['Service', 'What it does', 'How the app reaches it'],
+        rows: [
+          ['Auth', 'Signs people up and in and gives each session a signed token (a JWT)', '`supabase.auth`'],
+          ['Data API', 'Turns your tables into a REST API (built on a tool called PostgREST)', '`supabase.from("table")`'],
+          ['Realtime', 'Pushes database changes and messages to connected clients', '`supabase.channel(...)`'],
+          ['Storage', 'Keeps files in buckets, with their records kept in Postgres', '`supabase.storage`'],
+          ['Edge Functions', 'Runs your own TypeScript code on the Deno runtime', '`supabase.functions.invoke(...)`'],
+        ],
+        caption: 'Five services, one database',
+      },
+      { type: 'paragraph', text: "Because the data lives in plain Postgres, the skills you already have (tables, constraints, joins, indexes) apply directly. The rules that protect the data are Postgres rules too, which is why this whole course keeps coming back to them. The Supabase docs describe the project as open source and say the database is not hidden from you: you can connect to it with full privileges." },
+      {
+        type: 'version',
+        text: "The architecture page lists the pieces as an API gateway in front of Auth (GoTrue), the Data API (PostgREST), Realtime, Storage, Edge Functions (Deno) and a few tools, all talking to a single Postgres instance. Checked against the docs on 14 November 2026. Menu names in the Dashboard move around more often than the architecture does, so trust the ideas here and search the docs for the current click path.",
+        checked: CHECKED,
+        sources: [DOCS.arch, DOCS.dataApi],
+      },
+      { type: 'heading', text: 'The app talks to the database. What stops anyone reading everything?' },
+      { type: 'paragraph', text: "In a traditional app, a server sits between the phone and the database and decides who may see what. A Supabase app often skips that middle server: it calls the Data API straight from the browser or the phone. That is only safe because of two things working together. A **key** tells the gateway which project the request is for. And **Row Level Security** (RLS), a Postgres feature you will learn properly in lesson 5, decides row by row what each user may read or change." },
+      { type: 'paragraph', text: "Think of a condominium. The street address and the lobby intercom are public: anyone can walk up and press the button. That is your project URL and your publishable key. What keeps a visitor out of your neighbour's flat is the lock on each unit door. That is RLS. And the master key kept in the administrator's office, which opens every door, is your secret key. You never hand the master key to a visitor." },
+      {
+        type: 'table',
+        headers: ['Key', 'Looks like', 'Where it may go'],
+        rows: [
+          ['Publishable', '`sb_publishable_...`', 'Browsers, mobile apps, source code. Low privilege: RLS still applies.'],
+          ['Secret', '`sb_secret_...`', 'Servers, Edge Functions and jobs only. It bypasses RLS.'],
+          ['`anon` (legacy)', 'a long JWT starting `eyJ`', 'The older version of the publishable key.'],
+          ['`service_role` (legacy)', 'a long JWT starting `eyJ`', 'The older version of the secret key. Server only.'],
+        ],
+        caption: 'The two kinds of key, new names and old',
+      },
+      { type: 'warning', text: "A secret key (and the old `service_role` key) skips every Row Level Security rule. If it ends up in a mobile app, a web bundle or a public repository, anyone who finds it can read and change all of your data. Put it only in server code, and treat a leaked one as an emergency." },
+      {
+        type: 'version',
+        text: "Supabase now issues publishable (`sb_publishable_...`) and secret (`sb_secret_...`) keys, which are short strings rather than JWTs. The older `anon` and `service_role` JWT keys still work, but the docs say Supabase is deprecating them by the end of 2026, and creating new keys does not revoke the old ones until you disable them in the Dashboard. Many tutorials still show the old names. Treat `anon` as a publishable key and `service_role` as a secret key.",
+        checked: CHECKED,
+        sources: [DOCS.apiKeys, DOCS.secureData],
+      },
+      { type: 'heading', text: 'Is Supabase the right tool?' },
+      {
+        type: 'table',
+        headers: ['It fits well when', 'Think twice when'],
+        rows: [
+          ['Your app is mostly users keeping their own records, and you know some SQL', 'Most of your logic is heavy server code that you want in one codebase; a server of your own may suit you better, and Supabase can still just be the database'],
+          ['You want sign-in, files and live updates without running servers', 'Your data is shaped like documents rather than tables; the Firebase course covers that alternative'],
+          ['You want your data in ordinary Postgres that you can query and move', 'Nobody on the team is willing to learn RLS, which is how the data is protected'],
+        ],
+        caption: 'Supabase is a trade-off, like any platform',
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'A Supabase project is one Postgres database with services around it: Auth, a Data API, Realtime, Storage and Edge Functions.',
+          'The app can call the Data API directly because Row Level Security, not a middle server, decides which rows each user may touch.',
+          'The publishable key (`sb_publishable_...`) is safe in an app; the secret key (`sb_secret_...`) bypasses RLS and belongs only in server code.',
+          'Old tutorials use `anon` and `service_role` keys: they map to publishable and secret, and Supabase is deprecating them by the end of 2026.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'supabase-01-match-1',
+          kind: 'match',
+          title: 'Which key for which place?',
+          story: 'You are reviewing a friend\'s project before it goes live.',
+          prompt: 'Match each situation to the right action or key.',
+          concept: 'publishable versus secret keys',
+          labels: { terms: 'Situation', meanings: 'What it needs' },
+          pairs: [
+            { term: 'A React site that every visitor loads in their browser', definition: 'The publishable key, with RLS protecting the tables', note: 'Anything shipped to a browser is public, so only the low-privilege key may go there.' },
+            { term: 'A nightly script on your own server that removes closed accounts', definition: 'The secret key, kept in a server environment variable', note: 'A trusted server may use the key that bypasses RLS, but it must stay out of the app.' },
+            { term: 'An old tutorial that shows a long `eyJ...` key called anon', definition: 'The legacy form of the publishable key', note: 'The anon key plays the same low-privilege role, which is why it may appear in client code.' },
+            { term: 'A key starting `sb_secret_` that was committed to a public repository', definition: 'Treat it as leaked and replace it', note: 'It bypasses RLS, and a public repository is readable by everyone, so deleting the commit is not enough.' },
+          ],
+          hints: [
+            'Ask who can read the place: a browser bundle is readable by every visitor, a server environment variable is not.',
+            'The key that skips RLS may only go where no stranger can read it.',
+            'The old `anon` key is the low-privilege one, the old `service_role` key is the elevated one.',
+          ],
+          explanation: 'Where a key lives decides who can read it. Publishable keys are designed to be public because RLS still checks every request. Secret keys skip RLS, so they may only live where nobody outside your team can see them, and a leaked one has to be replaced.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'supabase-01-fix-bug-1',
+          kind: 'fix-bug',
+          title: 'The key in the bundle',
+          story: 'An Expo app reads its settings from environment variables. Variables that start with EXPO_PUBLIC_ are written into the JavaScript that ships to every phone.',
+          prompt: 'One line puts the wrong key into the app. Tap it, then choose the fix.',
+          concept: 'keeping secret keys out of apps',
+          language: 'ts',
+          code: `import { createClient } from '@supabase/supabase-js'
+
+const supabase = createClient(
+  process.env.EXPO_PUBLIC_SUPABASE_URL!,
+  process.env.EXPO_PUBLIC_SUPABASE_SECRET_KEY!,
+)`,
+          bugLine: 5,
+          lineNote: 'That line is fine: a project URL is not a secret. Look at the line that holds the key.',
+          fixes: [
+            { line: '  process.env.EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY!,', correct: true, why: 'The publishable key is made to be shipped in an app. Every request it makes is still checked by Row Level Security.' },
+            { line: '  process.env.SUPABASE_SECRET_KEY!,', correct: false, why: 'Dropping the prefix only means the app cannot read the value. The secret key still has no place in client code, and the app needs a key that works.' },
+            { line: '  atob(process.env.EXPO_PUBLIC_SUPABASE_SECRET_KEY!),', correct: false, why: 'Encoding is not hiding. The app must decode the key to use it, so anyone can do the same.' },
+            { line: '  process.env.EXPO_PUBLIC_SUPABASE_SERVICE_ROLE_KEY!,', correct: false, why: 'The legacy service_role key is the old secret key. It bypasses RLS just as much, and it would still be in the bundle.' },
+          ],
+          hints: [
+            'Look at the name of the key variable on that line.',
+            'Anything with the EXPO_PUBLIC_ prefix can be read by every person who installs the app.',
+            'Use the key that is designed to be public: the publishable key.',
+          ],
+          explanation: 'An app is code you hand to strangers. Only the publishable key belongs in it, because RLS still limits what that key can do. The secret key stays on servers.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'supabase-01-q1',
+        prompt: "A friend says: 'Supabase apps call the database straight from the phone, so anyone could read every user's data.' What actually limits what a signed-in user can read?",
+        choices: [
+          'The publishable key, which is made so that it only opens the signed-in user\'s own rows',
+          'Row Level Security policies in Postgres, which decide per row what each user may see',
+          'The API gateway, which hides the database from the internet so nobody can reach it',
+          'The secret key, which the app sends with each request to prove who the user is',
+        ],
+        answer: 1,
+        explanation: 'The publishable key only identifies the project. What each user may see is decided by RLS policies in Postgres, and the secret key must never be in the app at all.',
+      },
+      {
+        id: 'supabase-01-q2',
+        prompt: 'Which of these is safe to ship inside a mobile app?',
+        choices: [
+          'A `sb_secret_` key stored in an environment variable, because the app is compiled before release',
+          'A legacy `service_role` key, because it is a signed JWT that cannot be changed',
+          'A `sb_publishable_` key, because every request it makes is still checked by RLS',
+          'None of them: the app must call your own server for every single request',
+        ],
+        answer: 2,
+        explanation: 'Compiling does not hide a value, and service_role is the legacy secret key. The publishable key is designed to ship in apps, with RLS as the safety net. Supabase apps do not need a server in front of every call.',
+      },
+      {
+        id: 'supabase-01-q3',
+        prompt: 'An older tutorial tells you to copy the `anon` key, a long string starting `eyJ`. What is it today?',
+        choices: [
+          'The legacy form of the publishable key, which Supabase is deprecating by the end of 2026',
+          'The legacy form of the secret key, which must stay on the server',
+          'A password for the Postgres database that you must keep in a password manager',
+          'A session token that Supabase Auth creates for each signed-in user',
+        ],
+        answer: 0,
+        explanation: 'anon is the old low-privilege key, now replaced by the publishable key. The old elevated key is service_role. A session token is something else: it is created when a user signs in.',
+      },
+      {
+        id: 'supabase-01-q4',
+        prompt: 'Your app needs to send an SMS through a paid provider, and the provider gives you a private API key. Which Supabase piece should hold that key and make the call?',
+        choices: [
+          'The Data API, by saving the key in a table the app can read',
+          'Realtime, by broadcasting the key to the app when it is needed',
+          'Storage, by uploading the key as a file in a private bucket',
+          'An Edge Function, which runs your code on a server where the key stays hidden',
+        ],
+        answer: 3,
+        explanation: 'Edge Functions are your own server-side code, so a private key can live there as a secret. Anything the app can read, a user can read too, which rules out the other three.',
+      },
+    ],
+    task: {
+      title: 'Meet your first project',
+      minutes: 15,
+      steps: [
+        'Create a free account at supabase.com and make a new project. Save the database password in a password manager.',
+        'Open the project\'s Connect dialog and find the Project URL and the publishable key. Then find the API Keys page in the project settings and see where the secret key is shown, without copying it anywhere.',
+        'Write three lines in your own words: which key you would put in a web app, which one only a server may hold, and why.',
+        'Open the architecture page in the docs and tick each service in the diagram against the table in this lesson.',
+      ],
+    },
+  },
+  {
+    id: 'supabase-02',
+    day: 2,
+    title: 'Projects, tables and the dashboard',
+    summary: 'Create a project, build a user-owned table in SQL, and see exactly what happens when a table is reachable without Row Level Security.',
+    intro: {
+      objectives: [
+        'Create a project and find its URL and keys',
+        'Write a table that belongs to the signed-in user, with the owner column filled in automatically',
+        'Explain why a table with no Row Level Security is public, and apply the safe starting recipe',
+      ],
+      why: 'Every Supabase app starts with a project and a table, and the first table you create is the one most likely to be left open by mistake. Doing it safely from the start costs three lines of SQL.',
+    },
+    minutes: 25,
+    skills: ['supabase-tables', 'row-level-security'],
+    body: [
+      { type: 'paragraph', text: "Before you write any app code you need somewhere to keep data. In Supabase that place is a **project**: one Postgres database plus the services around it, with its own web address and keys. One project per app is the normal arrangement, and it is a good idea to use a separate project for experiments so you never test on real users' data." },
+      { type: 'heading', text: 'Creating a project' },
+      { type: 'paragraph', text: "In the Dashboard you choose a name, a region close to your users and a **database password**. Save the password in a password manager: you need it only when you connect to Postgres directly with a tool such as `psql`, never inside an app. When the project is ready, its **Connect** dialog shows the two values your app needs: the **Project URL** (it looks like `https://<project-ref>.supabase.co`) and the **publishable key**. The same page that lists the API keys is where the secret key lives, and as lesson 1 said, it stays out of the app." },
+      { type: 'heading', text: 'Two ways to make a table' },
+      {
+        type: 'table',
+        headers: ['', 'Table Editor', 'SQL Editor'],
+        rows: [
+          ['How', 'Click to add columns and rows', 'Type SQL and run it'],
+          ['Good for', 'Exploring, adding a few test rows', 'Real tables you can repeat and review'],
+          ['Row Level Security', 'Switched on for you by default', 'Not switched on: you must do it'],
+        ],
+        caption: 'The two ways to create tables',
+      },
+      { type: 'paragraph', text: "The Supabase docs say tables created through the Dashboard have RLS enabled by default, and that you must enable it yourself for tables created in the SQL Editor or any other tool. Lesson 9 moves all of this into migration files so it is repeatable, but the SQL you write now is exactly what goes into them." },
+      { type: 'heading', text: 'A table that belongs to a user' },
+      { type: 'paragraph', text: "Here is the table the next four lessons use: a to-do list where each task belongs to one signed-in person." },
+      {
+        type: 'code',
+        language: 'sql',
+        label: 'The tasks table',
+        code: `create table public.tasks (
+  id bigint generated always as identity primary key,
+  user_id uuid not null default auth.uid() references auth.users (id) on delete cascade,
+  title text not null,
+  done boolean not null default false,
+  created_at timestamptz not null default now()
+);
+
+create index tasks_user_id_idx on public.tasks (user_id);`,
+      },
+      { type: 'paragraph', text: "Read the `user_id` line slowly, because it is the heart of per-user data. `references auth.users (id)` ties each task to a real person: users created by Supabase Auth are stored in a table called `auth.users`, which you read from but do not write to yourself. `on delete cascade` means that when a user is deleted, their tasks go with them. And `default auth.uid()` fills the column with the id of the signed-in user, taken from their token, so the app never has to send it (and cannot lie about it). The index helps Postgres find one person's tasks quickly, and the policies in lesson 5 will filter on this column." },
+      { type: 'heading', text: 'Exposed does not mean allowed' },
+      { type: 'paragraph', text: "The Data API creates an endpoint for every table in the `public` schema. Two separate checks then decide what a request may do. First, Postgres **grants**: does this role have any permission on the table at all? Second, **Row Level Security**: which rows may it touch? The two Supabase roles you care about are `anon` (a request with no signed-in user) and `authenticated` (a signed-in user)." },
+      {
+        type: 'version',
+        text: "The docs say that on existing projects, new tables in `public` get default privileges (select, insert, update, delete and more) for `anon`, `authenticated` and `service_role`, so they are reachable through the Data API even when you did not intend that. They also say Supabase is changing the platform default so that exposure becomes opt-in, but give no date, and that defaults differ by project age. Because the answer depends on when your project was made, never rely on defaults: write the grants yourself. The CLI's generated `config.toml` also has an `auto_expose_new_tables` setting for local projects.",
+        checked: CHECKED,
+        sources: [DOCS.securing, DOCS.rls],
+      },
+      { type: 'paragraph', text: "To see why this matters, I ran this table on a throwaway PostgreSQL 14 server (Docker is not available here, so I created the `anon` and `authenticated` roles and an `auth.uid()` function by hand to behave like Supabase's). With three tasks stored, two belonging to Ana and one to Ben, and RLS still off, a request made as `anon` returned everything:" },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'RLS off, role anon (no sign-in at all)',
+        code: ` id |               user_id                |       title
+----+--------------------------------------+--------------------
+  1 | 11111111-1111-1111-1111-111111111111 | Buy pandesal
+  2 | 11111111-1111-1111-1111-111111111111 | Renew registration
+  3 | 22222222-2222-2222-2222-222222222222 | Pay Meralco bill
+(3 rows)`,
+      },
+      { type: 'warning', text: "Your project URL and publishable key are inside your app, so anyone can find them. With RLS off on a reachable table, anyone can read, change and delete every row. The docs put it plainly: a table in an exposed schema without RLS is readable and writable by any role with a grant on it." },
+      { type: 'heading', text: 'The safe starting recipe' },
+      { type: 'paragraph', text: "Do these steps for every table you create, before you add a single row of real data. Enable RLS, take away every permission, then give back only what signed-in users need. With RLS on and no policies, no row is visible to anyone, which is exactly the safe starting point (lesson 5 adds the policies that open the right rows)." },
+      {
+        type: 'code',
+        language: 'sql',
+        label: 'Run right after create table',
+        code: `alter table public.tasks enable row level security;
+revoke all on table public.tasks from anon, authenticated;
+grant select, insert, update, delete on table public.tasks to authenticated;`,
+      },
+      { type: 'tip', text: "A signed-out visitor now gets \"permission denied\" because `anon` has no grant at all, and a signed-in user gets an empty list until a policy says otherwise. Both are the safe direction to fail in." },
+      {
+        type: 'takeaways',
+        items: [
+          'A project is one database plus services. Its URL and publishable key go in your app; the database password and secret key do not.',
+          'Make user-owned tables with a `user_id uuid not null default auth.uid() references auth.users (id) on delete cascade` column.',
+          'Tables made in the SQL Editor have no RLS until you enable it, and a reachable table without RLS is readable and writable by anyone.',
+          'For every new table: enable RLS, revoke all from `anon` and `authenticated`, then grant back only what is needed. Never rely on default privileges.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'supabase-02-predict-output-1',
+          kind: 'predict-output',
+          title: 'Anyone can read it',
+          story: 'The tasks table holds three rows, belonging to two different people. Row Level Security is off and the `anon` role has been granted select, as on a project with the older defaults.',
+          prompt: 'A stranger who has only your project URL and publishable key (no sign-in) runs this. What does it print?',
+          concept: 'RLS off means public',
+          language: 'sql',
+          code: `set role anon;
+select count(*) from public.tasks;`,
+          expected: '3',
+          choices: ['0', '1', '3', 'permission denied for table tasks'],
+          wrongNotes: {
+            '0': 'Zero would be the answer if RLS were on with no policy. Here it is off, so nothing hides any row.',
+            '1': 'Nothing filters by owner, so the stranger does not see only one person\'s row.',
+            'permission denied for table tasks': 'That error appears when the role has no grant. The setup says anon was granted select.',
+          },
+          hints: [
+            'Is anything restricting which rows the anon role can see?',
+            'With RLS off, the only check is the grant, and the grant says select is allowed.',
+            'Every row passes, so count them all: two belong to one person, one to another.',
+          ],
+          explanation: 'With RLS off, a grant is the only gate, and a granted select reads every row, whoever owns it. That is why a reachable table must always have RLS on.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'supabase-02-arrange-1',
+          kind: 'arrange',
+          title: 'Build the table safely',
+          prompt: 'Put these statements in a safe order: create the table, switch RLS on, remove the old permissions, grant back only what is needed, and write one policy.',
+          concept: 'the safe starting recipe',
+          language: 'sql',
+          solution: [
+            'create table public.tasks (id bigint generated always as identity primary key, user_id uuid not null default auth.uid() references auth.users (id) on delete cascade, title text not null);',
+            'alter table public.tasks enable row level security;',
+            'revoke all on table public.tasks from anon, authenticated;',
+            'grant select, insert, update, delete on table public.tasks to authenticated;',
+            'create policy "tasks: owner can read" on public.tasks for select to authenticated using ((select auth.uid()) = user_id);',
+          ],
+          alternatives: [
+            [
+              'create table public.tasks (id bigint generated always as identity primary key, user_id uuid not null default auth.uid() references auth.users (id) on delete cascade, title text not null);',
+              'alter table public.tasks enable row level security;',
+              'create policy "tasks: owner can read" on public.tasks for select to authenticated using ((select auth.uid()) = user_id);',
+              'revoke all on table public.tasks from anon, authenticated;',
+              'grant select, insert, update, delete on table public.tasks to authenticated;',
+            ],
+            [
+              'create table public.tasks (id bigint generated always as identity primary key, user_id uuid not null default auth.uid() references auth.users (id) on delete cascade, title text not null);',
+              'alter table public.tasks enable row level security;',
+              'revoke all on table public.tasks from anon, authenticated;',
+              'create policy "tasks: owner can read" on public.tasks for select to authenticated using ((select auth.uid()) = user_id);',
+              'grant select, insert, update, delete on table public.tasks to authenticated;',
+            ],
+            [
+              'create table public.tasks (id bigint generated always as identity primary key, user_id uuid not null default auth.uid() references auth.users (id) on delete cascade, title text not null);',
+              'revoke all on table public.tasks from anon, authenticated;',
+              'alter table public.tasks enable row level security;',
+              'grant select, insert, update, delete on table public.tasks to authenticated;',
+              'create policy "tasks: owner can read" on public.tasks for select to authenticated using ((select auth.uid()) = user_id);',
+            ],
+            [
+              'create table public.tasks (id bigint generated always as identity primary key, user_id uuid not null default auth.uid() references auth.users (id) on delete cascade, title text not null);',
+              'revoke all on table public.tasks from anon, authenticated;',
+              'grant select, insert, update, delete on table public.tasks to authenticated;',
+              'alter table public.tasks enable row level security;',
+              'create policy "tasks: owner can read" on public.tasks for select to authenticated using ((select auth.uid()) = user_id);',
+            ],
+            [
+              'create table public.tasks (id bigint generated always as identity primary key, user_id uuid not null default auth.uid() references auth.users (id) on delete cascade, title text not null);',
+              'revoke all on table public.tasks from anon, authenticated;',
+              'alter table public.tasks enable row level security;',
+              'create policy "tasks: owner can read" on public.tasks for select to authenticated using ((select auth.uid()) = user_id);',
+              'grant select, insert, update, delete on table public.tasks to authenticated;',
+            ],
+          ],
+          reasons: [
+            'Nothing else can run until the table exists.',
+            'Switch RLS on right away so the table is never reachable without it.',
+            'Remove every existing permission first, including any default ones.',
+            'Only after the revoke can you grant back just what signed-in users need (a grant before the revoke would be wiped out).',
+            'A policy can only be written once the table exists; it opens the rows the owner may read.',
+          ],
+          hints: [
+            'The table has to exist before anything else can refer to it.',
+            'A `revoke all` would undo a `grant` that came before it, so the grant goes after.',
+            'Policies come after the table and RLS exist; the grants may come before or after the policy.',
+          ],
+          explanation: 'Create, enable RLS, revoke, grant, policy is the clearest order. The only strict rules are that the table comes first, a revoke must come before the grant it would otherwise undo, and the policy needs the table.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'supabase-02-q1',
+        prompt: 'You create a table with the SQL Editor and add real user data. What must you do yourself?',
+        choices: [
+          'Nothing, because every table made anywhere in Supabase has RLS switched on already',
+          'Enable RLS with `alter table ... enable row level security`, set the grants and write policies',
+          'Paste the secret key into the table settings so only the server can read the table',
+          'Move the table into the `auth` schema, which Supabase always protects for you',
+        ],
+        answer: 1,
+        explanation: 'The docs say RLS is on by default only for tables created through the Dashboard. For SQL you must enable it, set grants and add policies. The secret key never belongs in table settings, and you should not put your own tables in the auth schema.',
+      },
+      {
+        id: 'supabase-02-q2',
+        prompt: 'What does `default auth.uid()` do on the `user_id` column of `tasks`?',
+        choices: [
+          'It fills user_id with the signed-in user\'s id when the app does not send a value',
+          'It stops anyone except the owner from ever reading the row',
+          'It creates a new user in `auth.users` each time a task is inserted',
+          'It makes Postgres check the user\'s password on every insert',
+        ],
+        answer: 0,
+        explanation: 'A column default only supplies a value. auth.uid() reads the user id from the request\'s token, so inserts get the right owner without the app sending it. It does not restrict reading: that is the job of RLS policies.',
+      },
+      {
+        id: 'supabase-02-q3',
+        prompt: 'Why does `user_id` use `references auth.users (id) on delete cascade`?',
+        choices: [
+          'So Supabase Auth can read the tasks table without any grants',
+          'So the user\'s email address is copied into every task row',
+          'So tasks load faster, because references always create an index',
+          'So no task can point to a user that does not exist, and a deleted user\'s tasks go too',
+        ],
+        answer: 3,
+        explanation: 'A foreign key keeps the data consistent, and cascade cleans up after a deleted user. It does not copy data or grant access, and an index is a separate statement (the lesson created one by hand).',
+      },
+      {
+        id: 'supabase-02-q4',
+        prompt: 'On a project that still has the older default privileges, you create `notes` in the SQL Editor and forget about RLS and grants. Who can read it?',
+        choices: [
+          'Only you, because the Dashboard hides tables created in the SQL Editor',
+          'Only signed-in users, because the `anon` role never has access to new tables',
+          'Any visitor who has your project URL and publishable key, because the default privileges reach the Data API',
+        ],
+        answer: 2,
+        explanation: 'On those projects the default privileges give anon and authenticated access to new public tables, and with RLS off nothing filters rows. That is why you set grants and RLS yourself every time.',
+      },
+    ],
+    task: {
+      title: 'Prove an open table is open, then close it',
+      minutes: 20,
+      steps: [
+        'In your project\'s SQL Editor, run the `tasks` table SQL from this lesson. Each task needs an owner that exists in `auth.users`, so create a test user first (the Dashboard\'s Authentication section can add one), copy its id, and `insert` three tasks with that `user_id`.',
+        'Call the API without signing in: `curl \'https://<your-ref>.supabase.co/rest/v1/tasks?select=*\' -H "apikey: <your publishable key>"`. If the rows come back, your table was open.',
+        'Run the three statements of the safe recipe, then run the same `curl` again and write down what changed.',
+        'Look at the table in the Table Editor and find the RLS indicator, so you know where to check it in future.',
+      ],
+    },
+  },
+  {
+    id: 'supabase-03',
+    day: 3,
+    title: 'Querying with supabase-js',
+    summary: 'Read, create, change and delete rows with supabase-js, handle the { data, error } result, and see how each call turns into an HTTP request and SQL.',
+    intro: {
+      objectives: [
+        'Create a client with the project URL and publishable key',
+        'Read, insert, update and delete rows, always checking the error',
+        'Explain what a query without a filter does, and why a client-side filter is not security',
+      ],
+      why: 'supabase-js is how every part of your app will talk to the backend. A few habits here, such as checking `error` and never writing an update without a filter, prevent the most common bugs.',
+    },
+    minutes: 25,
+    skills: ['supabase-js-queries', 'row-level-security'],
+    body: [
+      { type: 'paragraph', text: "You have a table and it is locked down. Now the app has to use it. **supabase-js** is the JavaScript library that talks to every Supabase service. For the database it lets you write `supabase.from('tasks').select()` instead of building HTTP requests by hand, and it runs in browsers, React, Expo, Node and Deno." },
+      { type: 'heading', text: 'Install and create the client' },
+      {
+        type: 'code',
+        language: 'bash',
+        code: `npm install @supabase/supabase-js`,
+      },
+      { type: 'paragraph', text: "Create the client once, in its own file, and import it everywhere. It needs the project URL and the **publishable** key (never the secret key). In a Vite React app the Supabase quickstart keeps them in `.env.local` as `VITE_SUPABASE_URL` and `VITE_SUPABASE_PUBLISHABLE_KEY`." },
+      {
+        type: 'code',
+        language: 'ts',
+        label: 'src/lib/supabase.ts',
+        code: `import { createClient } from '@supabase/supabase-js'
+
+export const supabase = createClient(
+  import.meta.env.VITE_SUPABASE_URL,
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY,
+)`,
+      },
+      {
+        type: 'version',
+        text: "supabase-js is on major version 2: the docs' install examples pin it as `@2`, and npm listed 2.119.0 as the latest release when this lesson was checked, with a 3.0 prerelease under the `next` tag. The client takes the project URL and a key; the docs' examples now pass a publishable key where older ones passed the anon key. Before upgrading across a major version, read the docs and release notes.",
+        checked: CHECKED,
+        sources: [DOCS.jsInstall, DOCS.jsInit, DOCS.quickstart],
+      },
+      { type: 'heading', text: 'Every call returns { data, error }' },
+      { type: 'paragraph', text: "A supabase-js call does not throw when the server says no. It returns an object with two fields: `data` (what you asked for, or `null`) and `error` (a problem, or `null`). If you forget to look at `error`, a failed request looks like an empty list, and you will chase the wrong bug. I confirmed this by running supabase-js 2.119.0 against a stand-in `fetch` that answered with a server error: the call resolved normally with `data` set to `null` and the problem in `error`." },
+      {
+        type: 'code',
+        language: 'ts',
+        label: 'The four operations',
+        code: `// Read the open tasks, newest first
+const { data, error } = await supabase
+  .from('tasks')
+  .select('id, title, done')
+  .eq('done', false)
+  .order('created_at', { ascending: false })
+  .limit(20)
+if (error) throw error
+
+// Create: user_id is filled in by the column default
+await supabase.from('tasks').insert({ title: 'Renew registration' })
+
+// Update one task
+await supabase.from('tasks').update({ done: true }).eq('id', taskId)
+
+// Delete one task
+await supabase.from('tasks').delete().eq('id', taskId)`,
+      },
+      { type: 'paragraph', text: "Filters such as `.eq('id', taskId)` go after `select`, `update` or `delete`, never before, and the docs show the same list of filters working on all of them. By default, inserted, updated and deleted rows are not sent back. To get them, chain `.select()` onto the end, for example `.insert({ title: 'x' }).select().single()` to receive the new row." },
+      {
+        type: 'version',
+        text: "The reference pages for `update` and `delete` both state that, by default, changed rows are not returned and that you chain `.select()` after the filters to get them. Every delete example in the docs ends with a filter such as `.eq('id', 1)` or `.in('id', [1, 2, 3])`.",
+        checked: CHECKED,
+        sources: [DOCS.jsUpdate, DOCS.jsDelete, DOCS.jsFilters, DOCS.jsSelect],
+      },
+      { type: 'heading', text: 'What the library really sends' },
+      { type: 'paragraph', text: "Nothing here is magic. I recorded the requests that supabase-js 2.119.0 makes, and each call is one HTTP request that the Data API turns into one SQL statement." },
+      {
+        type: 'table',
+        headers: ['supabase-js call', 'HTTP request recorded', 'SQL it becomes'],
+        rows: [
+          ["`.select('id, title').eq('done', false).order('created_at', { ascending: false }).limit(10)`", '`GET /rest/v1/tasks?select=id%2Ctitle&done=eq.false&order=created_at.desc&limit=10`', '`select id, title from tasks where done = false order by created_at desc limit 10`'],
+          ["`.insert({ title: 'x' })`", '`POST /rest/v1/tasks`', '`insert into tasks (title) values (...)`'],
+          ["`.update({ done: true }).eq('id', 1)`", '`PATCH /rest/v1/tasks?id=eq.1`', '`update tasks set done = true where id = 1`'],
+          ["`.delete().eq('id', 1)`", '`DELETE /rest/v1/tasks?id=eq.1`', '`delete from tasks where id = 1`'],
+        ],
+        caption: 'The SQL column is what Postgres runs, after Row Level Security adds its own conditions',
+      },
+      { type: 'heading', text: 'Where the owner check really happens' },
+      { type: 'paragraph', text: "Notice that none of these calls says whose tasks to return. The request carries the signed-in user's token, and Postgres adds the policy's condition by itself (lesson 5). That has a consequence that matters a great deal: a filter you write in the app, such as `.eq('user_id', myId)`, is a convenience and never security, because anyone can edit the code that runs in their own browser or phone. Only an RLS policy on the server is enforced." },
+      { type: 'warning', text: "Forgetting the filter is a classic bug. `supabase.from('tasks').delete()` with no `.eq()` is sent exactly like that: I recorded `DELETE /rest/v1/tasks` with nothing after it, and supabase-js adds no guard. Row Level Security limits the damage to the user's own rows, but that can still be every task they have. Some servers add their own guard against filterless deletes, and I could not confirm from the current docs whether yours does, so never count on one. Always filter updates and deletes." },
+      { type: 'tip', text: "An update or delete whose filter matches nothing is not an error: it simply changes zero rows and returns no error. When something \"does not save\", check whether it matched a row the user is allowed to change." },
+      {
+        type: 'takeaways',
+        items: [
+          'Create one client with the project URL and publishable key, and import it everywhere. supabase-js is on major version 2.',
+          'Every call returns `{ data, error }` instead of throwing, so check `error` each time.',
+          'Add `.select()` after an insert, update or delete to get the changed rows back, and always put a filter on updates and deletes.',
+          'A filter in your app is not security. Only Row Level Security on the server decides which rows a user can touch.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'supabase-03-sql-challenge-1',
+          kind: 'sql-challenge',
+          title: 'From supabase-js to SQL',
+          story: 'The practice table below holds only Ana\'s tasks, the rows Row Level Security would show her. In SQLite, which this sandbox uses, false is stored as 0.',
+          prompt: 'Write the SQL that the Data API runs for `supabase.from("tasks").select("title, created_at").eq("done", false).order("created_at", { ascending: false }).limit(2)`.',
+          concept: 'reading a query chain as SQL',
+          setup: `CREATE TABLE tasks (
+  id INTEGER PRIMARY KEY,
+  user_id TEXT NOT NULL,
+  title TEXT NOT NULL,
+  done INTEGER NOT NULL DEFAULT 0,
+  created_at TEXT NOT NULL
+);
+INSERT INTO tasks VALUES
+  (1, 'ana', 'Buy pandesal', 0, '2026-11-10'),
+  (2, 'ana', 'Renew registration', 0, '2026-11-12'),
+  (3, 'ana', 'Pay Meralco bill', 1, '2026-11-11'),
+  (4, 'ana', 'Wash the jeep', 0, '2026-11-09');`,
+          starter: 'SELECT *\nFROM tasks;',
+          expected: {
+            columns: ['title', 'created_at'],
+            rows: [
+              ['Renew registration', '2026-11-12'],
+              ['Buy pandesal', '2026-11-10'],
+            ],
+            ordered: true,
+          },
+          solution: 'SELECT title, created_at\nFROM tasks\nWHERE done = 0\nORDER BY created_at DESC\nLIMIT 2;',
+          hints: [
+            'Each method in the chain maps to one clause: `select` to SELECT, `eq` to WHERE, `order` to ORDER BY, `limit` to LIMIT.',
+            'Choose only the two columns, keep the tasks that are not done (done = 0), and sort newest first.',
+            'SELECT title, created_at FROM tasks WHERE done = 0 ORDER BY created_at DESC LIMIT 2;',
+          ],
+          explanation: 'The chain reads top to bottom as one statement. `.eq("done", false)` becomes the WHERE clause, `.order(..., { ascending: false })` becomes ORDER BY ... DESC, and `.limit(2)` becomes LIMIT 2.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'supabase-03-code-challenge-1',
+          kind: 'code-challenge',
+          title: 'Always look at the error',
+          story: 'Your screen shows a list of task titles. supabase-js hands you an object shaped like { data, error }.',
+          prompt: 'Finish `describe(result)`. If `result.error` is set, return `"Error: "` followed by its message. Otherwise, if `result.data` is empty return `"No tasks yet"`, and if not return the titles joined with `", "`.',
+          concept: 'the { data, error } result',
+          language: 'javascript',
+          starter: `function describe(result) {
+  // result looks like { data: [{ title: 'Buy pandesal' }], error: null }
+  // or { data: null, error: { message: 'permission denied for table tasks' } }
+}`,
+          tests: {
+            kind: 'function',
+            fn: 'describe',
+            cases: [
+              { label: 'two tasks', args: [{ data: [{ title: 'Buy pandesal' }, { title: 'Renew registration' }], error: null }], expected: 'Buy pandesal, Renew registration' },
+              { label: 'no tasks', args: [{ data: [], error: null }], expected: 'No tasks yet' },
+              { label: 'an error', args: [{ data: null, error: { message: 'permission denied for table tasks' } }], expected: 'Error: permission denied for table tasks' },
+              { label: 'one task', args: [{ data: [{ title: 'Wash the jeep' }], error: null }], expected: 'Wash the jeep', hidden: true },
+            ],
+          },
+          solution: `function describe(result) {
+  if (result.error) {
+    return 'Error: ' + result.error.message;
+  }
+  if (result.data.length === 0) {
+    return 'No tasks yet';
+  }
+  const titles = [];
+  for (const task of result.data) {
+    titles.push(task.title);
+  }
+  return titles.join(', ');
+}`,
+          hints: [
+            'Check `result.error` first. When it is set, `data` is null, so reading `data.length` would crash.',
+            'Return early for the error case, then for the empty list, then build the titles.',
+            'Collect each `task.title` in an array with a loop and finish with `.join(", ")`.',
+          ],
+          explanation: 'Looking at `error` before `data` is the habit this lesson is about: when a request fails, `data` is null, so code that skips the error check either crashes or shows an empty list that hides the real problem.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'supabase-03-fix-bug-1',
+          kind: 'fix-bug',
+          title: 'The delete with no filter',
+          story: 'A user taps the bin icon on one task, and the whole list disappears.',
+          prompt: 'The handler should remove only the task whose id is passed in. Tap the buggy line, then choose the fix.',
+          concept: 'filtering updates and deletes',
+          language: 'ts',
+          code: `async function removeTask(taskId: number) {
+  const { error } = await supabase
+    .from('tasks')
+    .delete()
+  if (error) console.error(error)
+}`,
+          bugLine: 4,
+          lineNote: 'That line is fine. Look at what the delete is missing.',
+          fixes: [
+            { line: "    .delete().eq('id', taskId)", correct: true, why: 'The `.eq` filter turns the request into `DELETE /rest/v1/tasks?id=eq.<id>`, so only that task is removed.' },
+            { line: '    .delete().select()', correct: false, why: '`.select()` only asks for the deleted rows to be sent back. Without a filter, every row the user can see is still deleted.' },
+            { line: '    .delete().limit(1)', correct: false, why: 'A limit does not say which task to remove. Only a filter on `id` picks the task the user tapped.' },
+            { line: "    .delete().eq('done', true)", correct: false, why: 'That removes every finished task, not the one the user tapped.' },
+          ],
+          hints: [
+            'Compare the request with the table in the lesson: what comes after `DELETE /rest/v1/tasks`?',
+            'A delete needs a filter that identifies the row, and the function receives the id as its argument.',
+            'Chain `.eq("id", taskId)` onto `.delete()`.',
+          ],
+          explanation: 'Without a filter the delete applies to every row the user is allowed to see. Filtering by the primary key limits it to the one task, which is what the user meant.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'supabase-03-q1',
+        prompt: 'A handler runs `await supabase.from("tasks").delete()` with no filter, signed in as Ana. What happens?',
+        choices: [
+          'supabase-js refuses to send it, because every delete must carry a filter',
+          'It deletes every user\'s tasks, because the publishable key skips RLS',
+          'Only the most recently created task is deleted, as a safety limit',
+          'supabase-js sends it exactly as written, so nothing narrows it except RLS and Ana may lose every task she owns',
+        ],
+        answer: 3,
+        explanation: 'When tested, supabase-js sent `DELETE /rest/v1/tasks` unchanged and adds no guard. The publishable key does not skip RLS, so only Ana\'s own rows go, but that can be all of them.',
+      },
+      {
+        id: 'supabase-03-q2',
+        prompt: 'A `select()` fails because of a permissions problem on the server. What does supabase-js do?',
+        choices: [
+          'It resolves normally with `data` set to null and the problem described in `error`',
+          'It throws an exception that you must catch with try and catch',
+          'It returns an empty array and hides the problem so the app keeps working',
+          'It retries three times and then signs the user out',
+        ],
+        answer: 0,
+        explanation: 'supabase-js reports server errors through the returned `error` field instead of throwing, which is why you must check it. It does not hide the problem or sign anyone out.',
+      },
+      {
+        id: 'supabase-03-q3',
+        prompt: "A teammate says: 'We add `.eq(\"user_id\", me.id)` to every query, so Row Level Security is optional.' What is wrong with that?",
+        choices: [
+          'Nothing, as long as the filter is on every query in the app',
+          'The filter slows queries down, so RLS is faster',
+          'Anyone can change the code running in their own browser or phone, so only a server-side policy is enforced',
+          'The `.eq` filter only works on update, never on select',
+        ],
+        answer: 2,
+        explanation: 'Client code is under the user\'s control. A filter there is a convenience for fetching what you want, and RLS is the rule that actually protects the data. Filters work on select as well.',
+      },
+      {
+        id: 'supabase-03-q4',
+        prompt: 'You insert a task and need its new `id` to open the detail screen. What do you add?',
+        choices: [
+          'Nothing: insert always returns the new row in `data`',
+          'A `.select()` after `.insert(...)`, because changed rows are not returned by default',
+          'A second `.from("tasks").select()` with no filter, then take the last row',
+          'The secret key, so the insert is allowed to read its own result',
+        ],
+        answer: 1,
+        explanation: 'By default the changed rows are not returned. Chaining `.select()` (and `.single()` for one row) asks for them. Taking the last row of an unfiltered read is fragile, and the secret key must never be in an app.',
+      },
+    ],
+    task: {
+      title: 'Your first queries',
+      minutes: 20,
+      steps: [
+        'Make a folder, run `npm init -y` and `npm install @supabase/supabase-js`, and write `check.mjs` that creates a client with your project URL and publishable key (read them from environment variables, not from the file).',
+        'In the file, call `supabase.from("tasks").select()` and print both `data` and `error`. Because you have RLS on and no policies yet, expect an empty array and no error. Write down why.',
+        'Change the table name to `taskz` and run it again. Read the error that comes back and note that the call still did not throw.',
+        'Write the SQL that each of your two calls corresponds to, using the table in this lesson.',
+      ],
+    },
+  },
+  {
+    id: 'supabase-04',
+    day: 4,
+    title: 'Authentication: sign-up, sign-in and sessions',
+    summary: 'Sign people up and in, understand the two tokens behind a session, and choose the right call to learn who a user is on the client and on a server.',
+    intro: {
+      objectives: [
+        'Sign a user up and in with email and password, and react to session changes',
+        'Explain what the access token and refresh token are and how the token reaches Postgres',
+        'Choose between getSession, getUser and getClaims, and explain why a server must not trust getSession',
+      ],
+      why: 'Row Level Security only works if Postgres knows who is asking, and that knowledge comes from the sign-in. Getting sessions right, especially on a server, is the difference between private data and a forged identity.',
+    },
+    minutes: 30,
+    skills: ['supabase-auth', 'api-key-safety'],
+    body: [
+      { type: 'paragraph', text: "Until now nobody has been signed in, so every request has been the `anon` role. A real app has to know who each person is, because the answer to 'whose tasks are these?' depends on it. **Supabase Auth** is the service that does this. It stores your users, checks passwords, sends confirmation emails, supports signing in with providers such as Google and GitHub, and hands each signed-in person a signed token that Postgres reads when it applies Row Level Security." },
+      { type: 'heading', text: 'Users live in auth.users' },
+      { type: 'paragraph', text: "Supabase Auth keeps its users in a table called `auth.users`, in a schema of its own. You read ids from it (that is what `user_id uuid references auth.users` in lesson 2 does), but you never insert into it yourself: you call the Auth API. If you need extra information about a person, such as a display name, make your own `profiles` table that points at `auth.users`." },
+      { type: 'heading', text: 'Sign up, sign in, sign out' },
+      {
+        type: 'code',
+        language: 'ts',
+        label: 'Email and password',
+        code: `// Create the account
+const { data, error } = await supabase.auth.signUp({ email, password })
+
+// Sign in
+const { data, error } = await supabase.auth.signInWithPassword({ email, password })
+
+// Sign out (ends this session on this device)
+await supabase.auth.signOut()`,
+      },
+      { type: 'paragraph', text: "As in lesson 3, errors come back in `error` instead of being thrown. There is one catch with `signUp`: on a hosted Supabase project, email confirmation is required by default, so the person must click the link in their email before a session is created. In local development it is off by default. So after `signUp`, do not assume the user is signed in: show 'check your email' and wait for the session." },
+      {
+        type: 'version',
+        text: "The Auth docs say email and password sign-in is enabled by default, that confirmation is required by default on hosted projects and off by default in local development, and that the built-in email service is rate limited (the docs state 2 emails per hour, best effort) so production apps should configure their own SMTP server. Checked against the Password-based auth page on 14 November 2026.",
+        checked: CHECKED,
+        sources: [DOCS.authPasswords, DOCS.authOverview],
+      },
+      { type: 'heading', text: 'A session is two tokens' },
+      { type: 'paragraph', text: "A successful sign-in gives the app a **session** made of two tokens. The **access token** is a JWT (a signed string), valid for one hour by default. Its claims include `sub` (the user's id) and `role` (the Postgres role to use, `authenticated` for a signed-in person). The **refresh token** can be exchanged exactly once for a fresh pair, which lets the app keep you signed in without asking for the password again. supabase-js stores the session and refreshes it in the background, so you rarely touch the tokens yourself." },
+      {
+        type: 'diagram',
+        format: 'mermaid',
+        caption: 'How the signed-in identity reaches the policies.',
+        source: 'sequenceDiagram\n  participant A as App\n  participant U as Auth\n  participant D as Data API\n  participant P as Postgres\n  A->>U: signInWithPassword\n  U-->>A: access token and refresh token\n  A->>D: request with Authorization Bearer token\n  D->>P: run as role authenticated with the token claims\n  P-->>D: only the rows the policies allow\n  D-->>A: JSON rows',
+      },
+      {
+        type: 'version',
+        text: "From the sessions and JWT pages: access tokens are short lived (the docs say usually 5 minutes to 1 hour, with a default of 1 hour); each refresh token can be used only once, and reusing one outside a short window ends the session; sessions last until the user signs out, changes their password or signs in elsewhere, unless you configure time limits (a paid-plan feature). The JWT payload has `iss`, `exp`, `sub` and `role`, where `role` is the Postgres role used for RLS.",
+        checked: CHECKED,
+        sources: [DOCS.authSessions, DOCS.authJwts],
+      },
+      { type: 'heading', text: 'Reacting to sign-in and sign-out' },
+      { type: 'paragraph', text: "Do not poll for the session. Subscribe once, and let supabase-js tell you when it changes. The listener receives events such as `INITIAL_SESSION`, `SIGNED_IN`, `SIGNED_OUT` and `TOKEN_REFRESHED`, and it gives you back a subscription that you must remove when the component goes away." },
+      {
+        type: 'code',
+        language: 'ts',
+        label: 'A React hook for the session',
+        code: `import { useEffect, useState } from 'react'
+import type { Session } from '@supabase/supabase-js'
+import { supabase } from './supabase'
+
+export function useSession() {
+  const [session, setSession] = useState<Session | null>(null)
+
+  useEffect(() => {
+    const { data } = supabase.auth.onAuthStateChange((_event, nextSession) => {
+      setSession(nextSession)
+    })
+    return () => data.subscription.unsubscribe()
+  }, [])
+
+  return session
+}`,
+      },
+      { type: 'heading', text: 'Who is this user? getSession, getUser or getClaims' },
+      { type: 'paragraph', text: "Three calls can tell you about the current user, and they are not equally trustworthy. In the browser you read your own session, so any of them is fine for drawing the screen. On a server, the session arrives in a cookie or a header that the user controls, so it could be forged." },
+      {
+        type: 'table',
+        headers: ['Call', 'What it does', 'Use it for'],
+        rows: [
+          ['`getSession()`', 'Reads the session from storage without checking it with the server', 'Your own client UI, or to pass the access token on. Never to authorise on a server.'],
+          ['`getClaims()`', 'Verifies the token\'s signature and returns its claims, locally when the project uses asymmetric signing keys', 'Protecting pages and data on a server: the usual choice'],
+          ['`getUser()`', 'Asks the Auth server for the user record', 'When you need the freshest user data and accept a network call'],
+        ],
+        caption: 'Verify on the server, trust on the client',
+      },
+      { type: 'warning', text: "Never trust `getSession()` in server code. The docs say the user object in it may not be authentic, and that anyone can forge a session cookie. Verify the token with `getClaims()` (read `data.claims.sub` for the user id) or fetch the user with `getUser()` before you act." },
+      {
+        type: 'version',
+        text: "The server-side guide says to use `getClaims()` to protect pages and user data: it verifies the signature on every call, locally on projects with asymmetric signing keys (the default for new projects) and through the Auth server on projects still using a symmetric secret. `getUser()` makes a network call for the latest record, and `getSession()` should not be relied on for authorisation. In supabase-js 2.119.0, `getClaims()` resolves with `data.claims`, `data.header` and `data.signature`.",
+        checked: CHECKED,
+        sources: [DOCS.authSsr, DOCS.authGetClaims, DOCS.authGetUser, DOCS.authGetSession],
+      },
+      { type: 'heading', text: 'Sign in with Google or GitHub' },
+      { type: 'paragraph', text: "With OAuth, the person signs in at the provider and comes back to your app. You call `supabase.auth.signInWithOAuth({ provider: 'github', options: { redirectTo } })`. Two details matter. First, the `redirectTo` address must be on your project's **redirect URL allow list**, or Supabase will not send people there. Second, the way the result comes back is a **flow**. With the **PKCE** flow the app makes a secret code verifier, stores it, and later swaps the one-time `code` in the returned URL for a session with `exchangeCodeForSession(code)`; the code is valid for five minutes, works once and must be exchanged on the same device that started the sign-in. In supabase-js 2.119.0 the default `flowType` is `implicit`, and I confirmed that setting `flowType: 'pkce'` adds a code challenge to the sign-in URL." },
+      {
+        type: 'details',
+        summary: 'Show more: signing in from an Expo app',
+        body: [
+          "A mobile app has no web address to come back to, so it uses a custom URL scheme (for example `scheme: \"com.supabase\"` in the app config) and adds a matching address such as `com.supabase://**` to the redirect allow list. The Supabase docs' Expo example calls `signInWithOAuth` with `skipBrowserRedirect: true`, opens the returned URL with `WebBrowser.openAuthSessionAsync`, then reads the tokens from the returned URL and calls `supabase.auth.setSession`.",
+          "For the client itself, the docs' React Native examples pass `auth: { storage: AsyncStorage, autoRefreshToken: true, persistSession: true, detectSessionInUrl: false }` (or an encrypted storage that keeps its key in Expo SecureStore, because SecureStore does not hold values over 2048 bytes), and ask you to register an `AppState` listener that calls `supabase.auth.startAutoRefresh()` when the app becomes active and `stopAutoRefresh()` otherwise, once only.",
+        ],
+      },
+      {
+        type: 'version',
+        text: "OAuth: `signInWithOAuth` supports the PKCE flow; the redirect URL must match an entry in the allow list (wildcards are available, and the docs recommend exact paths in production); mobile apps use a custom scheme. Checked on 14 November 2026. I could not run a real provider sign-in without a hosted project, so the flow above is from the docs and the library source, not from a live test.",
+        checked: CHECKED,
+        sources: [DOCS.authPkce, DOCS.authRedirect, DOCS.authDeepLink, DOCS.authOAuth, DOCS.authRefresh],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'Users live in `auth.users`, managed by Supabase Auth. Your tables point at them with `user_id` and never insert into them.',
+          'A session is a short-lived access token (a JWT with `sub` and `role`) plus a single-use refresh token that supabase-js refreshes for you.',
+          'On hosted projects `signUp` needs an email confirmation by default, so do not assume a session right after it.',
+          'On a server, verify identity with `getClaims()` (or `getUser()`); `getSession()` is not safe to trust there.',
+          'For OAuth, the redirect address must be in the allow list, and PKCE swaps a one-time code for a session.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'supabase-04-scenario-1',
+          kind: 'scenario',
+          title: 'The route that trusts the cookie',
+          prompt: 'Choose the safest way to fix the route.',
+          concept: 'verifying identity on a server',
+          situation: 'You review a server route that deletes an account. It calls `supabase.auth.getSession()` on the request\'s cookies and deletes data for `session.user.id`. The author says it is fine because Supabase set the cookie.',
+          options: [
+            { text: 'Verify the token with `getClaims()` and use the verified `sub` claim as the user id.', consequence: 'The token\'s signature is checked on every call (locally on projects with asymmetric keys), so a forged cookie is rejected and the id can be trusted.', quality: 'best' },
+            { text: 'Call `getUser()`, which asks the Auth server, and use the user it returns.', consequence: 'This is also safe, because the Auth server vouches for the user, but it costs a network request on every call.', quality: 'acceptable' },
+            { text: 'Keep `getSession()` and add a comment saying the cookie is trusted.', consequence: 'A user controls the cookie they send. Someone can craft one that names another person, and the route deletes that person\'s data.', quality: 'poor' },
+            { text: 'Decode the access token yourself and read the `sub` claim without checking the signature.', consequence: 'Anyone can write a token with any `sub`. Decoding is not verifying, so this is just as forgeable.', quality: 'poor' },
+          ],
+          hints: [
+            'Who controls the cookie that reaches your server?',
+            'You need a call that checks the token, not one that only reads it.',
+            'The docs\' usual choice for protecting data on a server is `getClaims()`.',
+          ],
+          explanation: 'A server must verify the token before believing it. `getClaims()` checks the signature (cheaply, on projects with asymmetric keys) and `getUser()` asks Auth directly. `getSession()` and hand-decoding only read what the user sent.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'supabase-04-fill-blank-1',
+          kind: 'fill-blank',
+          title: 'Wire up sign-in',
+          prompt: 'Fill the blanks: sign in with email and password, listen for session changes, and sign out.',
+          concept: 'the supabase.auth methods',
+          language: 'ts',
+          code: `const { error } = await supabase.auth.___({ email, password })
+
+const { data } = supabase.auth.___((event, session) => {
+  setSession(session)
+})
+
+await supabase.auth.___()`,
+          blanks: [
+            { answers: ['signInWithPassword'], feedback: 'To sign someone in with an email and password you call signInWithPassword. signUp creates the account instead.' },
+            { answers: ['onAuthStateChange'], feedback: 'The listener that receives (event, session) is onAuthStateChange. getUser and getClaims fetch a value once; they do not listen.' },
+            { answers: ['signOut'], feedback: 'Ending the session is signOut.' },
+          ],
+          bank: ['signInWithPassword', 'onAuthStateChange', 'signOut', 'signUp', 'getClaims', 'getUser'],
+          hints: [
+            'One method creates the session from credentials, one listens, one ends it.',
+            'Method names follow what they do: sign in with password, on auth state change, sign out.',
+            'signInWithPassword, then onAuthStateChange, then signOut.',
+          ],
+          explanation: 'signInWithPassword starts a session from credentials, onAuthStateChange tells your app whenever the session appears, refreshes or ends, and signOut ends it.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'supabase-04-q1',
+        prompt: 'On a hosted project with default settings, you call `signUp` and the call succeeds. What can you assume?',
+        choices: [
+          'The user is signed in, so you can query their tasks right away',
+          'The account exists but there is no session until they confirm their email',
+          'The password is stored in `auth.users` so you can sign them in later without asking',
+          'Nothing happened, because `signUp` only reports an error and never creates a user',
+        ],
+        answer: 1,
+        explanation: 'Hosted projects require email confirmation by default, so a session is created only after the person confirms. Show a check-your-email message. Passwords are not for you to store or read.',
+      },
+      {
+        id: 'supabase-04-q2',
+        prompt: 'A server route must know who is calling before it changes data. Which approach fits best?',
+        choices: [
+          'Read the user from `getSession()`, since Supabase created the cookie',
+          'Read the `sub` from the token with `atob` and no further check',
+          'Ask the browser to send the user id in a header and use it',
+          'Call `getClaims()` and use the verified `sub`, or call `getUser()` for a fresh record',
+        ],
+        answer: 3,
+        explanation: 'A server needs identity that has been verified. getClaims() checks the token signature and getUser() asks Auth. The other three read values the caller fully controls.',
+      },
+      {
+        id: 'supabase-04-q3',
+        prompt: 'Why does the session include a refresh token as well as an access token?',
+        choices: [
+          'It lets the app get a new short-lived access token without asking for the password again',
+          'It is the key that lets Postgres bypass Row Level Security for the user',
+          'It stores the user\'s password so Supabase can sign them in on a new phone',
+          'It lets the app keep using the same access token for ever without refreshing it',
+        ],
+        answer: 0,
+        explanation: 'Access tokens are short lived by design, and a single-use refresh token swaps for a fresh pair so people stay signed in. It has nothing to do with RLS bypass or passwords.',
+      },
+      {
+        id: 'supabase-04-q4',
+        prompt: 'Google sign-in works on localhost but the production site never returns to the app after sign-in. What do you check first?',
+        choices: [
+          'Whether the production `redirectTo` address is in the project\'s redirect URL allow list',
+          'Whether you used `signUp` where `signInWithPassword` was needed',
+          'Whether the secret key is set in the browser\'s environment variables',
+        ],
+        answer: 0,
+        explanation: 'redirectTo must match an allow-list entry, and localhost is often the only one added. The secret key must never be in a browser, and the password methods are not involved in OAuth.',
+      },
+    ],
+    task: {
+      title: 'Sign in and look at the claims',
+      minutes: 20,
+      steps: [
+        'In a small page or Node script with your client, call `signUp` for a test email you can read. If your project requires confirmation, click the link in the email.',
+        'Call `signInWithPassword` and print the result. Note that `data.session` holds an access token and a refresh token.',
+        'Print `await supabase.auth.getClaims()` and find `claims.sub` and `claims.role`. Check that `sub` matches the user\'s id in the Dashboard\'s user list.',
+        'Add an `onAuthStateChange` listener that logs each event, then sign out and watch the events it prints.',
+      ],
+    },
+  },
+  {
+    id: 'supabase-05',
+    day: 5,
+    title: 'Row Level Security',
+    summary: 'Write, read and test the policies that decide which rows each user may see and change, and learn how one careless policy leaks a whole table.',
+    intro: {
+      objectives: [
+        'Write select, insert, update and delete policies that limit each user to their own rows',
+        'Explain the difference between `using` and `with check`, and between a grant and a policy',
+        'Test policies by acting as different users, and spot a policy that leaks',
+      ],
+      why: 'Because the app talks to the database directly, Row Level Security is your access control: it is the only thing between one customer and another. Every bug in this lesson ends with someone reading data that is not theirs.',
+    },
+    minutes: 35,
+    skills: ['row-level-security', 'api-key-safety'],
+    body: [
+      { type: 'paragraph', text: "This is the lesson the whole course has been heading towards. You have learned two facts: the app talks to the database directly, and the keys inside the app are public. **Row Level Security** (RLS) is what makes that safe. It is a Postgres feature that attaches rules to a table, and Postgres applies them to every query on that table, whoever sends it and however it is written." },
+      { type: 'paragraph', text: "Picture a shelf of customers' parcels in a shop, with a guard standing beside it holding a list: each customer may take only the parcels with their own name. The guard checks every parcel, every time, and cannot be talked round. RLS is that guard, living inside the database, so a clever or hostile app cannot step around it." },
+      { type: 'heading', text: 'Two separate checks' },
+      { type: 'paragraph', text: "Postgres asks two questions before a request touches a table. A **grant** answers: may this role use this table for this operation at all? A **policy** answers: which rows may it use? With RLS switched on and no policies written, the answer to the second question is none. I confirmed it: with RLS on and no policy, a signed-in user's `select` returned zero rows and no error." },
+      { type: 'heading', text: 'Anatomy of a policy' },
+      {
+        type: 'code',
+        language: 'sql',
+        code: `create policy "tasks: owner can read"
+on public.tasks
+for select
+to authenticated
+using ((select auth.uid()) = user_id);`,
+      },
+      {
+        type: 'list',
+        items: [
+          '`on public.tasks` is the table, and the quoted text is just a name for humans.',
+          '`for select` is the one operation the policy covers. Write one policy per operation.',
+          '`to authenticated` limits it to signed-in requests, so the policy is never even evaluated for `anon`.',
+          '`using (...)` is a test applied to each existing row; the row is visible or changeable only when the test is true.',
+          '`auth.uid()` returns the id of the user in the request\'s token, or null when nobody is signed in. `null = user_id` is never true, so a signed-out request matches nothing.',
+        ],
+      },
+      { type: 'paragraph', text: "Writing it as `(select auth.uid())` instead of a bare `auth.uid()` lets Postgres work the value out once per statement instead of once per row. In the query plan I saw a one-time `InitPlan` for it, which is why the Supabase docs recommend the form. Index the column your policies filter on (`user_id`), as you did in lesson 2." },
+      {
+        type: 'table',
+        headers: ['Operation', 'Uses', 'What it controls'],
+        rows: [
+          ['select', '`using`', 'Which existing rows the user can read'],
+          ['insert', '`with check`', 'What a new row is allowed to look like'],
+          ['update', '`using` and `with check`', 'Which rows can be changed (`using`) and what they may become (`with check`)'],
+          ['delete', '`using`', 'Which rows can be removed'],
+        ],
+        caption: 'Postgres refuses `using` on an insert policy: "only WITH CHECK expression allowed for INSERT"',
+      },
+      { type: 'heading', text: 'The four policies for tasks' },
+      {
+        type: 'code',
+        language: 'sql',
+        label: 'Owner-only access',
+        code: `create policy "tasks: owner can read" on public.tasks
+  for select to authenticated using ((select auth.uid()) = user_id);
+
+create policy "tasks: owner can insert" on public.tasks
+  for insert to authenticated with check ((select auth.uid()) = user_id);
+
+create policy "tasks: owner can update" on public.tasks
+  for update to authenticated
+  using ((select auth.uid()) = user_id)
+  with check ((select auth.uid()) = user_id);
+
+create policy "tasks: owner can delete" on public.tasks
+  for delete to authenticated using ((select auth.uid()) = user_id);`,
+      },
+      { type: 'paragraph', text: "The update policy has both parts on purpose. `using` says you can only change your own rows, and `with check` says the result must still be yours, so you cannot hand a row to someone else. Here is what I observed on a throwaway PostgreSQL 14 server with Supabase-style roles and `auth.uid()` (Docker was not available, so I built the roles by hand; the policy logic is ordinary Postgres). Ana owns tasks 1 and 2, Ben owns task 3." },
+      {
+        type: 'table',
+        headers: ['Who does what', 'Result observed'],
+        rows: [
+          ['Ana selects', 'Her two tasks'],
+          ['Ben selects', 'His one task'],
+          ['Signed out selects (after the revoke from lesson 2)', 'permission denied for table tasks (the grant stops it before any policy)'],
+          ['Ana inserts a task with only a title', 'Saved, and `user_id` is Ana\'s from the column default'],
+          ['Ana inserts a task with Ben\'s `user_id`', 'ERROR: new row violates row-level security policy for table "tasks"'],
+          ['Ana updates or deletes Ben\'s task 3', 'No error, 0 rows changed'],
+          ['Ana tries to change her own task\'s `user_id` to Ben\'s', 'ERROR: new row violates row-level security policy (`with check`)'],
+          ['The secret key (role service_role) selects', 'All three tasks: it bypasses RLS'],
+        ],
+        caption: 'Run on a throwaway Postgres 14 with roles and auth.uid() built by hand',
+      },
+      { type: 'heading', text: 'Test by acting as each user' },
+      { type: 'paragraph', text: "A policy you have not tested is a guess. The Data API runs each request by switching to the role in the token and exposing its claims to Postgres, and you can do the same by hand. This is the pattern I used, and the Supabase docs' pgTAP examples use the same two moves (`set local role` and `set local request.jwt.claim.sub`)." },
+      {
+        type: 'code',
+        language: 'sql',
+        label: 'Pretend to be Ana',
+        code: `begin;
+set local role authenticated;
+select set_config(
+  'request.jwt.claims',
+  '{"sub":"11111111-1111-1111-1111-111111111111","role":"authenticated"}',
+  true
+);
+
+select id, title from public.tasks order by id;
+rollback;`,
+      },
+      {
+        type: 'version',
+        text: "The docs' guide to securing a table is: enable RLS, revoke existing grants from `anon` and `authenticated`, grant back only what the app needs, write one policy per operation, then write a test file that checks allow and deny for each operation and role, and run it with `supabase test db` (pgTAP). I could not run `supabase test db` because it needs Docker, so my tests above used plain psql. The docs also note that `auth.uid()` is null for signed-out requests and recommend `(select auth.uid())` plus an index on the column.",
+        checked: CHECKED,
+        sources: [DOCS.rls, DOCS.testing, DOCS.pgtap],
+      },
+      { type: 'heading', text: 'How one careless policy leaks everything' },
+      { type: 'paragraph', text: "When a table has several policies for the same operation, Postgres combines them with OR: a row is allowed if any one policy allows it. So a single wrong policy undoes all the good ones. I added each of these on top of the owner policies and ran it as Ben, who owns one task:" },
+      {
+        type: 'table',
+        headers: ['Careless policy', 'What I observed'],
+        rows: [
+          ['`for select to authenticated using (true)`', 'Ben read all three tasks, Ana\'s included'],
+          ['`for select to authenticated using (auth.uid() is not null)`', 'Ben read all three tasks: "is someone signed in" is not "is this their row"'],
+          ['`for select to anon using (true)`', 'A signed-out visitor read all three tasks'],
+          ['`for insert to authenticated with check (true)`', 'Ana saved a task owned by Ben, and Ben then saw it in his list'],
+        ],
+        caption: 'Permissive policies are OR-ed together',
+      },
+      { type: 'warning', text: "`to anon using (true)` is correct only for data that is meant to be public, such as a product catalogue. For anything a person owns, every policy must mention the owner." },
+      { type: 'heading', text: 'Gotchas that cost people hours' },
+      {
+        type: 'list',
+        items: [
+          '**Silent emptiness.** RLS on with no matching select policy gives an empty list, not an error. An update or delete that matches no allowed row changes zero rows, also with no error.',
+          '**Returning needs select.** An insert that asks for the row back (`.insert(...).select()`) also needs a select policy that allows the new row. Without one I got "new row violates row-level security policy", though a plain insert worked. An update needs a matching select policy too: without one it changed nothing.',
+          '**Do not use `user_metadata` in a policy.** The docs warn that a signed-in user can edit it. Put authorisation data in `app_metadata`, which users cannot change.',
+          '**Views skip RLS by default.** The docs say a view over a protected table hands out every row, because views run as their creator. On Postgres 15 and later, create it `with (security_invoker = true)`. I could not test this on Postgres 14.',
+          '**The secret key ignores policies.** That is why it never goes in an app.',
+        ],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'Grants decide whether a role may use a table at all; policies decide which rows. RLS on with no policy means no rows.',
+          'Write one policy per operation: `using` for select and delete, `with check` for insert, both for update, and always tie rows to `(select auth.uid())`.',
+          'Policies are OR-ed, so one loose policy such as `using (true)` or `auth.uid() is not null` leaks the table.',
+          'Test by switching role and claims, and check both what is allowed and what is denied. Failures are often silent: an empty list or zero rows changed.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'supabase-05-predict-output-1',
+          kind: 'predict-output',
+          title: 'Who can Ben read?',
+          story: 'Two policies exist on `tasks`: the owner-only read policy and a second one added "to make the demo work".',
+          prompt: 'Ben is signed in and owns one task. The table holds three rows: two owned by Ana, one by Ben. What does his query print?',
+          concept: 'permissive policies are OR-ed',
+          language: 'sql',
+          code: `-- policy 1 (select): using ((select auth.uid()) = user_id)
+-- policy 2 (select): using (auth.uid() is not null)
+select count(*) from public.tasks;`,
+          expected: '3',
+          choices: ['0', '1', '2', '3'],
+          wrongNotes: {
+            '0': 'Ben is signed in and owns a row, so at least his own row matches.',
+            '1': 'That is what policy 1 alone would give. Policy 2 also allows rows, and allowed rows are combined with OR.',
+            '2': 'Two is the count of Ana\'s rows, but Ben matches every row through policy 2, including his own.',
+          },
+          hints: [
+            'More than one select policy applies: a row is visible if any one of them allows it.',
+            'Policy 2 only asks whether someone is signed in. Is Ben signed in?',
+            'Policy 2 allows every row for Ben, so he can count all of them.',
+          ],
+          explanation: 'Permissive policies are combined with OR. Policy 2 is true for any signed-in user, so Ben passes it for all three rows. One loose policy defeats the careful one.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'supabase-05-fix-bug-1',
+          kind: 'fix-bug',
+          title: 'The demo policy that shipped',
+          story: 'A teammate wrote this policy so the list would load while building the screen, and it went to production.',
+          prompt: 'Tap the line that leaks every task to every user, then choose the fix.',
+          concept: 'an owner-only select policy',
+          language: 'sql',
+          code: `create policy "tasks: read"
+on public.tasks
+for select
+to authenticated
+using (true);`,
+          bugLine: 5,
+          lineNote: 'The role and operation are right. Look at the condition that picks the rows.',
+          fixes: [
+            { line: 'using ((select auth.uid()) = user_id);', correct: true, why: 'Each row is visible only when its `user_id` equals the id in the signed-in user\'s token.' },
+            { line: 'using (auth.uid() is not null);', correct: false, why: 'That only asks whether someone is signed in, so every signed-in user still reads every row.' },
+            { line: 'using (user_id is not null);', correct: false, why: 'Every task has a `user_id`, so this is true for every row. It never looks at who is asking.' },
+            { line: 'using (done = false);', correct: false, why: 'That hides finished tasks but still shows every open task of every user.' },
+          ],
+          hints: [
+            'The condition has to compare something on the row with something about the person asking.',
+            'The row\'s owner column is `user_id`, and the person asking is `auth.uid()`.',
+            'Use `(select auth.uid()) = user_id`.',
+          ],
+          explanation: 'A policy for per-user data must compare the row\'s owner column with the id from the token. Conditions that do not mention the requester let everyone in.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'supabase-05-fill-blank-1',
+          kind: 'fill-blank',
+          title: 'Let people add only their own tasks',
+          prompt: 'Complete the policy so a signed-in user can insert tasks only when `user_id` is their own id.',
+          concept: 'insert policies use with check',
+          language: 'sql',
+          code: `create policy "tasks: owner can insert"
+on public.tasks
+for ___
+to ___
+with check ((select auth.uid()) = ___);`,
+          blanks: [
+            { answers: ['insert'], feedback: 'This policy covers adding rows, so the operation is insert. A select policy would not control writes.' },
+            { answers: ['authenticated'], feedback: 'Only signed-in requests should be allowed to add tasks. anon is the signed-out role.' },
+            { answers: ['user_id'], feedback: 'The check compares the token\'s id with the row\'s owner column, which is user_id.' },
+          ],
+          bank: ['insert', 'select', 'authenticated', 'anon', 'user_id', 'id'],
+          hints: [
+            'The policy decides what a new row may look like, so which operation is that?',
+            'Who should be allowed to add tasks: signed-in people or signed-out visitors?',
+            'The owner column of the tasks table is called user_id.',
+          ],
+          explanation: 'An insert policy has no existing row to test, so it uses `with check` on the new row. Comparing `user_id` with `auth.uid()` stops anyone creating rows in someone else\'s name.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'supabase-05-match-1',
+          kind: 'match',
+          title: 'Read the symptom',
+          story: 'Your support inbox has four messages. Each describes what a user (or you) saw.',
+          prompt: 'Match each symptom to its most likely cause.',
+          concept: 'diagnosing RLS problems',
+          labels: { terms: 'What you see', meanings: 'Most likely cause' },
+          pairs: [
+            { term: 'The task list is empty, there is no error, and rows exist in the table', definition: 'RLS is on but no select policy allows this role to see them', note: 'Silence with no rows is how RLS says no on a read.' },
+            { term: 'An insert fails with "new row violates row-level security policy"', definition: 'A with check condition rejected the row being written', note: 'That wording means the row was written but not allowed.' },
+            { term: 'An error says "permission denied for table tasks"', definition: 'The role has no grant on the table, so no policy was reached', note: 'Permission denied comes from grants, before any policy runs.' },
+            { term: 'A signed-in user can see every other user\'s tasks', definition: 'A permissive policy such as using (true) is OR-ed in', note: 'The owner policy is fine; an extra loose policy is the usual culprit.' },
+          ],
+          hints: [
+            'Errors with a table name usually come from grants, the other error names a row-level policy.',
+            'Ask whether the symptom is too little (a missing allowance) or too much (an extra allowance).',
+            'A silent empty list on a read means no policy allowed any row.',
+          ],
+          explanation: 'RLS failures have recognisable shapes: a silent empty result means no policy allowed a row, a "violates row-level security" error means a write failed its check, "permission denied" is a missing grant, and seeing too much means a policy is too loose.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'supabase-05-q1',
+        prompt: 'A table has two select policies: one limits rows to their owner, the other uses `auth.uid() is not null`. Who can read which rows?',
+        choices: [
+          'Every signed-in user can read every row, because permissive policies are combined with OR',
+          'Only each owner can read their rows, because the stricter policy wins over the looser one',
+          'Nobody can read anything, because two policies on one operation conflict and cancel out',
+          'Signed-out visitors can read every row, because the second policy has no `to` clause',
+        ],
+        answer: 0,
+        explanation: 'Postgres allows a row if any permissive policy allows it, so the loose policy opens everything to signed-in users. Policies do not cancel, and a policy with no `to` clause applies to all roles, but the grants still decide whether anon reaches it at all.',
+      },
+      {
+        id: 'supabase-05-q2',
+        prompt: 'Ana\'s app runs `update tasks set done = true where id = 3`, but task 3 belongs to Ben. What does Ana\'s app see?',
+        choices: [
+          'A "permission denied" error, because the policy refuses the change',
+          'The row is changed, because the where clause matched it',
+          'No error and zero rows changed, because the row is invisible to Ana',
+          'An error saying the row violates row-level security, because of the `with check` clause',
+        ],
+        answer: 2,
+        explanation: 'The `using` condition hides Ben\'s row from Ana, so the update matches nothing and quietly changes zero rows. The with check error appears only when the row being written would fail it, such as a changed user_id.',
+      },
+      {
+        id: 'supabase-05-q3',
+        prompt: 'Which policy lets signed-in users insert tasks only for themselves?',
+        choices: [
+          'for insert to authenticated using ((select auth.uid()) = user_id)',
+          'for insert to anon with check ((select auth.uid()) = user_id)',
+          'for select to authenticated with check ((select auth.uid()) = user_id)',
+          'for insert to authenticated with check ((select auth.uid()) = user_id)',
+        ],
+        answer: 3,
+        explanation: 'Inserts are tested with `with check`, and Postgres rejects `using` on an insert policy. The anon role is signed out, so it has no id to compare, and select policies do not control writes.',
+      },
+      {
+        id: 'supabase-05-q4',
+        prompt: 'You want admins to see every task. Where is it safe to keep the "is admin" flag that a policy checks?',
+        choices: [
+          'In the user\'s `user_metadata`, because the signed-in user can see it in their token',
+          'In the app\'s code, checked before each query, because the check happens before the request',
+          'In the user\'s `app_metadata`, which users cannot edit, or in a table only the server writes',
+          'In a field the user sets when they sign up, so nobody has to maintain it',
+        ],
+        answer: 2,
+        explanation: 'The docs warn that `user_metadata` can be edited by the signed-in user, so a policy that trusts it can be talked into anything. `app_metadata` and server-written tables cannot be edited by the user. A check in app code is not enforced.',
+      },
+      {
+        id: 'supabase-05-q5',
+        prompt: 'You enable RLS on `tasks` but create no policies yet. A signed-in user, who has the table grants, loads their list. What happens?',
+        choices: [
+          'All of their own tasks come back, because RLS only blocks other people',
+          'An empty list with no error, because without a policy no row is allowed',
+          'A server error that tells them to create a policy first',
+          'Every task in the table comes back until a policy is added',
+        ],
+        answer: 1,
+        explanation: 'With RLS on, rows are denied by default, so the list is empty and nothing reports an error. That silence is why "my data vanished" often means a missing policy.',
+      },
+    ],
+    task: {
+      title: 'Policies for tasks, tested by hand',
+      minutes: 20,
+      steps: [
+        'In a scratch Postgres (a local database or a hosted Supabase project), create the `tasks` table from lesson 2 and the four owner policies from this lesson. If you use plain Postgres, create `anon` and `authenticated` roles and an `auth.uid()` function that reads `request.jwt.claims`.',
+        'Insert one task for each of two made-up user ids. Using the `set local role` pattern, check that each user reads only their own task.',
+        'Add the careless policy `for select to authenticated using (true)` inside a transaction, re-run the read as the second user, see the leak, then roll the transaction back.',
+        'Write the three results you observed (own rows only, the leak, and a denied insert for someone else\'s `user_id`) as comments at the top of your test file.',
+      ],
+    },
+  },
+  {
+    id: 'supabase-06',
+    day: 6,
+    title: 'Storage for files',
+    summary: 'Keep photos and documents in buckets, protect them with the same Row Level Security ideas, and share a private file with a short-lived signed URL.',
+    intro: {
+      objectives: [
+        'Choose between a public and a private bucket for a given kind of file',
+        'Write storage policies that limit each user to their own folder',
+        'Upload a file and show a private file with a signed URL',
+      ],
+      why: 'Receipts, profile photos and ID scans are some of the most sensitive data an app holds, and a wrongly public bucket is one of the easiest ways to leak it. The good news is that you already know the tool that protects them.',
+    },
+    minutes: 25,
+    skills: ['supabase-storage', 'row-level-security'],
+    body: [
+      { type: 'paragraph', text: "Databases are good at small, structured records and poor at big files. A receipt photo or a PDF belongs in file storage, and your table should only remember where it is. **Supabase Storage** keeps files in **buckets**, which are like top-level folders with their own rules. The files themselves live in object storage, but the information about each one (its bucket, its name, its owner) is stored as a row in a Postgres table called `storage.objects`. That detail is the key to this lesson: because the records are rows, the Row Level Security you learned in lesson 5 protects your files too." },
+      { type: 'heading', text: 'Public and private buckets' },
+      {
+        type: 'table',
+        headers: ['', 'Public bucket', 'Private bucket (the default)'],
+        rows: [
+          ['Who can download', 'Anyone who has the file\'s URL', 'Only requests that pass your storage policies, or people holding a signed URL'],
+          ['Uploading, deleting, moving', 'Still checked by your policies', 'Checked by your policies'],
+          ['Good for', 'Profile pictures, blog images, anything meant to be seen by everyone', 'Receipts, ID scans, medical or financial documents'],
+        ],
+        caption: 'The access model of a bucket',
+      },
+      { type: 'paragraph', text: "Pick public only for files you would be happy to see on a billboard. A public bucket skips access control for reading, so a leaked or guessed link shows the file to anyone, for as long as the file exists. When in doubt, make the bucket private. You can also set limits on the bucket itself, such as the allowed file types and a maximum size, when you create it:" },
+      {
+        type: 'code',
+        language: 'ts',
+        label: 'Create a private bucket with limits',
+        code: `const { error } = await supabase.storage.createBucket('receipts', {
+  public: false,
+  allowedMimeTypes: ['image/jpeg', 'image/png'],
+  fileSizeLimit: 5 * 1024 * 1024,
+})`,
+      },
+      { type: 'paragraph', text: "Create the bucket once, in the Dashboard, in a migration or from trusted server code, rather than from the app that your users hold." },
+      { type: 'heading', text: 'Nothing uploads until a policy allows it' },
+      { type: 'paragraph', text: "By default Storage refuses uploads to a bucket that has no policies. You grant access by writing policies on `storage.objects`, using the same `using` and `with check` ideas as before. The standard pattern is **a folder per user**: every file is saved under a path that starts with the owner's id, such as `<user-id>/photo.jpg`, and the policy compares the first folder of the path with the signed-in user's id. Supabase provides a helper, `storage.foldername(name)`, that returns the folders of a path as an array." },
+      {
+        type: 'code',
+        language: 'sql',
+        label: 'Each user owns the folder named after their id',
+        code: `insert into storage.buckets (id, name) values ('receipts', 'receipts');
+
+create policy "receipts: owner can upload" on storage.objects
+  for insert to authenticated
+  with check (
+    bucket_id = 'receipts'
+    and (storage.foldername(name))[1] = (select auth.uid())::text
+  );
+
+create policy "receipts: owner can read" on storage.objects
+  for select to authenticated
+  using (
+    bucket_id = 'receipts'
+    and (storage.foldername(name))[1] = (select auth.uid())::text
+  );
+
+create policy "receipts: owner can delete" on storage.objects
+  for delete to authenticated
+  using (
+    bucket_id = 'receipts'
+    and (storage.foldername(name))[1] = (select auth.uid())::text
+  );`,
+      },
+      { type: 'paragraph', text: "I tested these policies on a throwaway Postgres 14, with a stand-in `storage.objects` table and `storage.foldername` function that I wrote to behave like Supabase's (the real Storage service was not available). Ana uploaded `11111111-.../2026-11-13-grocery.jpg`, and then: Ben saw no objects at all; Ben trying to insert a file into Ana's folder failed with \"new row violates row-level security policy for table objects\"; and Ben inserting into his own folder worked. That is the folder-per-user rule doing its job." },
+      {
+        type: 'version',
+        text: "From the Storage access-control docs: by default Storage allows no uploads to buckets without RLS policies; the only policy needed to upload is `insert` on `storage.objects`, and overwriting with `upsert` also needs `select` and `update`; the example policies compare `storage.foldername(name)` with the user's id; service keys bypass storage policies entirely, so never share one. Buckets are private by default, and a public bucket bypasses access control for reading and serving only.",
+        checked: CHECKED,
+        sources: [DOCS.storageAccess, DOCS.storageBuckets],
+      },
+      { type: 'heading', text: 'Upload and show a file' },
+      {
+        type: 'code',
+        language: 'ts',
+        code: `// Upload: the first folder is the user's id, which the policy checks
+const path = user.id + '/' + crypto.randomUUID() + '.jpg'
+const { error } = await supabase.storage
+  .from('receipts')
+  .upload(path, file, { contentType: 'image/jpeg' })
+
+// Show it later: a private file needs a signed URL that expires
+const { data, error: urlError } = await supabase.storage
+  .from('receipts')
+  .createSignedUrl(path, 60)
+// data.signedUrl works for 60 seconds`,
+      },
+      { type: 'paragraph', text: "Saving the same path twice fails with an \"asset already exists\" error unless you pass `upsert: true`, so give each file its own name. The standard upload is meant for files up to about 6 MB; for bigger ones the docs recommend resumable uploads. A **signed URL** is a link that carries its own permission and works for the number of seconds you choose, which is how you show a private file in an `<img>` tag. The docs say you cannot revoke one signed URL, only delete or rename the file (or rotate the signing key to cancel them all), so keep expiries short." },
+      { type: 'tip', text: "Store the file's path in your table (a `receipt_path` column), not a URL. A signed URL expires, and a public URL is easy to rebuild from the path. The database row and the file are separate things, so your code must delete both when a record is removed." },
+      {
+        type: 'version',
+        text: "Uploads use `supabase.storage.from(bucket).upload(path, file, options)`; the standard method suits files up to 6 MB and the docs recommend resumable (TUS) uploads above that; an existing path returns an error unless `upsert` is true. `createSignedUrl(path, expiresInSeconds)` returns a `signedUrl`; `getPublicUrl(path)` builds the URL of a public file. `createBucket` accepts `public`, `allowedMimeTypes` and `fileSizeLimit`.",
+        checked: CHECKED,
+        sources: [DOCS.storageUpload, DOCS.storageSigned, DOCS.storageServing, DOCS.storageCreateBucket],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'Files live in buckets; their records are rows in `storage.objects`, so Row Level Security protects them.',
+          'Public buckets skip access control for reading. Use them only for files meant for everyone, and make personal documents private.',
+          'Nothing uploads until a policy on `storage.objects` allows it. Use a folder per user and compare `(storage.foldername(name))[1]` with `(select auth.uid())::text`.',
+          'Show private files with a short-lived signed URL, and keep the file\'s path, not its URL, in your table.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'supabase-06-scenario-1',
+          kind: 'scenario',
+          title: 'Lab results in a bucket',
+          prompt: 'Choose the best design.',
+          concept: 'public versus private buckets',
+          situation: 'A clinic app lets patients upload photos of their lab results and see them later. A teammate suggests a public bucket with long random file names, because "nobody can guess the link".',
+          options: [
+            { text: 'A private bucket, a folder per patient with policies on `storage.objects`, and short-lived signed URLs to display files.', consequence: 'Only the patient can list, upload or read their own folder, and a shared link stops working after a minute.', quality: 'best' },
+            { text: 'A private bucket where every signed-in user may read every file, to keep the policy simple.', consequence: 'Any patient who signs in can read any other patient\'s results. A private bucket does not help if the policy lets everyone in.', quality: 'poor' },
+            { text: 'A public bucket with long random names, as suggested.', consequence: 'Anyone who ever sees a link (in a log, a screenshot or a forwarded message) can open the file, and it stays open for as long as the file exists.', quality: 'poor' },
+            { text: 'A private bucket with no client policies, and a server that uses the secret key to hand out signed URLs after checking the user.', consequence: 'This can be secure, but it means writing and running a server for something that policies handle directly.', quality: 'acceptable' },
+          ],
+          hints: [
+            'Would you be comfortable with these files on a billboard?',
+            'A link that works for everyone, for ever, is the opposite of private.',
+            'Combine a private bucket, a per-user folder policy and signed URLs.',
+          ],
+          explanation: 'Sensitive files belong in a private bucket, with a policy that ties each folder to its owner and signed URLs that expire. Obscure names are not access control, and a policy that lets every signed-in user read everything defeats the bucket\'s privacy.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'supabase-06-fix-bug-1',
+          kind: 'fix-bug',
+          title: 'Upload into anyone\'s folder',
+          story: 'A tester signs in as Ben and uploads a file into Ana\'s folder, and it works.',
+          prompt: 'Tap the line of the policy that is too loose, then choose the fix.',
+          concept: 'folder-per-user storage policies',
+          language: 'sql',
+          code: `create policy "receipts: owner can upload" on storage.objects
+  for insert to authenticated
+  with check (bucket_id = 'receipts');`,
+          bugLine: 3,
+          lineNote: 'The operation and role are right. Look at the condition that checks the path.',
+          fixes: [
+            { line: "  with check (bucket_id = 'receipts' and (storage.foldername(name))[1] = (select auth.uid())::text);", correct: true, why: 'The file\'s first folder must equal the signed-in user\'s id, so users can write only into their own folder.' },
+            { line: "  with check (bucket_id = 'receipts' and auth.uid() is not null);", correct: false, why: 'Every signed-in user passes this, so Ben can still write into Ana\'s folder.' },
+            { line: "  with check (bucket_id = 'receipts' and name like '%.jpg');", correct: false, why: 'This checks the file type in the name, not whose folder it is in.' },
+            { line: '  with check (true);', correct: false, why: 'This allows any upload into any bucket by any signed-in user.' },
+          ],
+          hints: [
+            'The policy only checks the bucket. What decides whose file a path is?',
+            'The user id is the first folder of the path: `<user-id>/file.jpg`.',
+            'Add `(storage.foldername(name))[1] = (select auth.uid())::text`.',
+          ],
+          explanation: 'Without a condition on the path, the policy accepts any file in the bucket. Comparing the first folder with the user\'s id keeps each person inside their own folder.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'supabase-06-q1',
+        prompt: 'You create a private bucket and, with no policies on `storage.objects`, try to upload as a signed-in user. What happens?',
+        choices: [
+          'The upload works, because a private bucket allows its owner to upload',
+          'The upload is refused, because Storage allows no uploads until a policy allows them',
+          'The file uploads but nobody can ever read it, including the uploader',
+          'The upload works only if you pass the secret key from the app',
+        ],
+        answer: 1,
+        explanation: 'By default Storage denies uploads without a policy. The fix is an insert policy on storage.objects. Passing the secret key from an app would bypass every policy and expose it, so never do that.',
+      },
+      {
+        id: 'supabase-06-q2',
+        prompt: 'Your app shows a receipt from a private bucket in an image tag for one minute. Which call gives it a URL?',
+        choices: [
+          '`getPublicUrl(path)`, because every file has a public address',
+          '`upload(path, file)`, which returns the address of the saved file',
+          '`createSignedUrl(path, 60)`, which returns a link that works for 60 seconds',
+          '`createBucket("receipts")`, which returns a URL to its files',
+        ],
+        answer: 2,
+        explanation: 'A signed URL grants temporary access to a private file. getPublicUrl builds a link that only works for public buckets, and the other two calls do not create access links.',
+      },
+      {
+        id: 'supabase-06-q3',
+        prompt: 'Why should the table store `receipt_path` and not the signed URL?',
+        choices: [
+          'Paths are shorter, which makes the table smaller and faster to search',
+          'Postgres cannot store text that starts with https',
+          'A signed URL expires, so the saved link would stop working while the path stays valid',
+          'Signed URLs can be used only once, so they cannot be saved at all',
+        ],
+        answer: 2,
+        explanation: 'The path stays valid, and you create a fresh signed URL whenever you need to display the file. The URL is plain text that Postgres stores happily, and a signed URL works until its time runs out, not once.',
+      },
+      {
+        id: 'supabase-06-q4',
+        prompt: 'In the folder-per-user policy, why compare `(storage.foldername(name))[1]` with `(select auth.uid())::text`?',
+        choices: [
+          'The first folder of the path is the owner\'s id, so users can reach only their own folder',
+          'It makes the bucket public so the signed-in user can open it from any device',
+          'It checks the file type by reading the first part of the name',
+          'It lets the secret key identify which user uploaded the file',
+        ],
+        answer: 0,
+        explanation: 'foldername returns the folders of the path, and the first one is where the app puts the user\'s id. Matching it with the token\'s id restricts each user to their own folder. It does not change a bucket\'s public or private setting or look at file types.',
+      },
+    ],
+    task: {
+      title: 'A private receipts bucket',
+      minutes: 20,
+      steps: [
+        'In your project, create a private bucket called `receipts` (Dashboard or SQL) and add the three folder-per-user policies from this lesson.',
+        'Write a small script that signs in as a test user, uploads a small image to `<user id>/test.jpg`, and prints the result of `createSignedUrl(path, 60)`. Open the URL in a browser.',
+        'Try to upload to a path that starts with a different folder name and read the error. Then try the same upload with the first folder set to your own id.',
+        'Wait for the URL to expire and open it again. Write what you see, and why the table should store the path.',
+      ],
+    },
+  },
+  {
+    id: 'supabase-07',
+    day: 7,
+    title: 'Realtime updates',
+    summary: 'Push database changes to every open screen with Postgres Changes, know when to switch to Broadcast, and keep live data protected by the same policies.',
+    intro: {
+      objectives: [
+        'Turn on Postgres Changes for a table and subscribe to it with supabase-js',
+        'Explain how Row Level Security applies to realtime events, and the one exception',
+        'Choose between Postgres Changes and Broadcast, and clean up a subscription properly',
+      ],
+      why: 'Live updates make an app feel alive: a task added on your phone appears on your laptop without a refresh. They also open a second door to your data, so you need to know how the rules you wrote follow it through.',
+    },
+    minutes: 25,
+    skills: ['supabase-realtime', 'row-level-security'],
+    body: [
+      { type: 'paragraph', text: "So far the app has always asked for data: you press refresh, or the screen loads, and a request goes out. **Realtime** turns that round the other way. The app keeps a connection open, and the server tells it the moment something changes, so a task added on your phone shows up on your laptop with no refresh. Supabase Realtime is one service with three features, and it helps to know which is which before you start." },
+      {
+        type: 'table',
+        headers: ['Feature', 'What it does', 'Typical use'],
+        rows: [
+          ['Postgres Changes', 'Sends an event when a row in a table is inserted, updated or deleted', 'A live task list, a dashboard that follows a table'],
+          ['Broadcast', 'Sends small messages between connected clients, or from the database, over named channels', 'Chat, cursors, notifications, large live audiences'],
+          ['Presence', 'Tracks and shares who is currently connected and their state', '"Who is online" avatars, typing indicators'],
+        ],
+        caption: 'The three parts of Supabase Realtime',
+      },
+      { type: 'heading', text: 'Postgres Changes in three steps' },
+      { type: 'paragraph', text: "Postgres Changes works by listening to the database's change stream. First, you tell Postgres which tables to publish by adding them to a publication named `supabase_realtime`. A table that is not in the publication sends nothing, which is the first thing to check when events do not arrive." },
+      {
+        type: 'code',
+        language: 'sql',
+        label: 'Step 1: publish the table',
+        code: `alter publication supabase_realtime add table public.tasks;`,
+      },
+      { type: 'paragraph', text: "Second, subscribe from the app. You create a named channel, say which events you want, and call `subscribe()`. Third, and this is the step people forget, remove the channel when the screen goes away. A channel you never remove stays connected, and the next time the screen opens you get every event twice." },
+      {
+        type: 'code',
+        language: 'ts',
+        label: 'Steps 2 and 3: subscribe, and clean up',
+        code: `import { useEffect } from 'react'
+import { supabase } from './supabase'
+
+export function useLiveTasks(userId: string, refetch: () => void) {
+  useEffect(() => {
+    const channel = supabase
+      .channel('tasks-changes')
+      .on(
+        'postgres_changes',
+        { event: '*', schema: 'public', table: 'tasks', filter: 'user_id=eq.' + userId },
+        () => refetch(),
+      )
+      .subscribe()
+
+    return () => {
+      supabase.removeChannel(channel)
+    }
+  }, [userId, refetch])
+}`,
+      },
+      { type: 'paragraph', text: "This hook asks for every event type (`'*'` means insert, update and delete) and narrows them with a `filter` so each client receives only its own user's rows. Realtime sends changes that happen after you subscribe, so load the list first with a normal query and use the events as a signal to load it again. Re-fetching on every event is the simplest approach that cannot get out of step." },
+      {
+        type: 'version',
+        text: "Postgres Changes needs the table in the `supabase_realtime` publication (SQL `alter publication supabase_realtime add table ...` or the Dashboard's Publications settings). The docs' subscribe example uses `supabase.channel(name).on('postgres_changes', { event, schema, table, filter }, callback).subscribe()`, event can be INSERT, UPDATE, DELETE or `*`, filters use the `column=eq.value` form, and the docs remove channels with `supabase.removeChannel(channel)`. I ran the publication SQL on Postgres, but I could not run a live Realtime connection without a hosted project, so the client code follows the docs and was not executed.",
+        checked: CHECKED,
+        sources: [DOCS.rtChanges, DOCS.realtime],
+      },
+      { type: 'heading', text: 'Live data is still protected data' },
+      { type: 'paragraph', text: "Realtime does not get a free pass around Row Level Security. For Postgres Changes, the docs say each event is authorised against every subscriber: when you change one row and 100 people are subscribed, Realtime performs 100 checks, one per person. So with your owner-only policies from lesson 5, Ben's channel does not receive events about Ana's tasks, and the filter above only saves traffic. It is not what protects the data." },
+      { type: 'warning', text: "There is one exception. The docs say RLS policies are not applied to DELETE events, because Postgres cannot check access to a row that no longer exists. A delete event can therefore reach listeners who could never have read the row. Do not let a primary key or any other identifying value carry anything sensitive." },
+      { type: 'tip', text: "By default an update or delete event carries only the new record. To receive the old values too, run `alter table public.tasks replica identity full;`. The docs also say you can filter delete events only on tables with that setting." },
+      { type: 'heading', text: 'When to use Broadcast instead' },
+      { type: 'paragraph', text: "That per-subscriber check has a cost. The docs explain that throughput with Postgres Changes grows with the number of subscribers, and that changes are processed on a single thread, so a bigger database does not make it much faster. They suggest Broadcast if you expect more than about 3,000 concurrent subscribers on the same changes. With Broadcast, a database trigger calls `realtime.broadcast_changes(...)` once, and Realtime fans the message out to everyone on that topic. The docs call Broadcast the recommended method for scalability and security." },
+      { type: 'paragraph', text: "Broadcast channels can be made **private**. You create policies on a table called `realtime.messages` (the docs say Row Level Security is already switched on for it) and open the channel from the client with `config: { private: true }`. The policy decides who may join and receive. This policy, written from the docs' pattern, lets a user receive only the topic named after their own id:" },
+      {
+        type: 'code',
+        language: 'sql',
+        label: 'From the docs\' pattern; not run here',
+        code: `create policy "users receive their own topic"
+on realtime.messages
+for select
+to authenticated
+using (
+  (select realtime.topic()) = 'tasks:' || (select auth.uid())::text
+);`,
+      },
+      {
+        type: 'version',
+        text: "Per the docs: Broadcast is recommended for scalability and security; database changes are sent with a trigger that calls `realtime.broadcast_changes`; private channels need the setting `private: true` on the client and policies on `realtime.messages`, and the project must turn off public access for channels in its Realtime settings to enforce them. Do not run `alter table realtime.messages enable row level security`: it is already on and the statement fails. The `realtime` schema is locked, so do not try to create your own tables there. I could not test Broadcast or the `realtime` schema here.",
+        checked: CHECKED,
+        sources: [DOCS.rtSubscribe, DOCS.rtAuthz, DOCS.rtBroadcast],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'Realtime has three features: Postgres Changes (row events), Broadcast (messages) and Presence (who is connected).',
+          'For Postgres Changes, add the table to the `supabase_realtime` publication, subscribe with a channel, and always remove the channel when the screen unmounts.',
+          'Events are authorised per subscriber with your RLS policies, except DELETE events, which RLS cannot check.',
+          'Past a few thousand subscribers on the same changes, use Broadcast with a trigger, and protect private channels with policies on `realtime.messages`.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'supabase-07-arrange-1',
+          kind: 'arrange',
+          title: 'Switch on live updates',
+          prompt: 'Put the steps in the order that gives a working live list with no leaked channels.',
+          concept: 'setting up Postgres Changes',
+          language: 'ts',
+          solution: [
+            'alter publication supabase_realtime add table public.tasks;',
+            "const channel = supabase.channel('tasks-changes')",
+            "  .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, refetch)",
+            '  .subscribe()',
+            'supabase.removeChannel(channel)',
+          ],
+          reasons: [
+            'First tell Postgres to publish the table, or no events are ever sent.',
+            'Create the named channel.',
+            'Say which events to listen for and what to do with them.',
+            'Call subscribe to start listening: nothing arrives before this.',
+            'On cleanup, remove the channel so it does not stay connected and double up later.',
+          ],
+          hints: [
+            'Something has to be switched on in the database before any event can exist.',
+            'A channel is created, then configured with `.on(...)`, then started with `.subscribe()`.',
+            'The cleanup runs last, when the screen goes away.',
+          ],
+          explanation: 'Publish the table, then build the channel, configure its listener, subscribe, and finally remove the channel when you are done with it. Skipping the publication or the cleanup are the two most common reasons live updates fail or repeat.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'supabase-07-scenario-1',
+          kind: 'scenario',
+          title: 'Ben should not hear about Ana',
+          prompt: 'Choose the setup that fits.',
+          concept: 'realtime and Row Level Security',
+          situation: 'Your tasks screen should update live. The `tasks` table already has the owner-only policies from lesson 5. A small team of a few hundred users will use it. Ben\'s screen must never receive events about Ana\'s tasks.',
+          options: [
+            { text: 'Add `tasks` to the `supabase_realtime` publication and subscribe to Postgres Changes, relying on the existing owner policies (and a `user_id` filter to save traffic).', consequence: 'Each event is checked against the subscriber\'s policies, so Ben receives only events for rows he may read. It is simple and suits this audience.', quality: 'best' },
+            { text: 'Use a public Broadcast channel named `tasks` and have every client send its changes to it.', consequence: 'Anyone who joins the channel hears every message, including other people\'s tasks. No policy stands between them.', quality: 'poor' },
+            { text: 'Use a private Broadcast channel with a trigger and policies on `realtime.messages`.', consequence: 'This can be made secure and scales further, but it is more setup than a few hundred users need.', quality: 'acceptable' },
+            { text: 'Turn RLS off on `tasks` so that Realtime can read every change, and filter in the app.', consequence: 'Filtering in the app is not security. With RLS off, anyone can read the whole table directly.', quality: 'poor' },
+          ],
+          hints: [
+            'Realtime can reuse the policies you already wrote.',
+            'The audience is small, so you do not need the scaling route.',
+            'Postgres Changes checks each event against each subscriber with your RLS policies.',
+          ],
+          explanation: 'Postgres Changes authorises events per subscriber with your existing policies, which is exactly what is needed here. Broadcast is the answer for very large audiences, and anything that turns RLS off or relies on a client-side filter gives the data away.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'supabase-07-q1',
+        prompt: 'You subscribed to `postgres_changes` on `tasks`, but no events ever arrive. What do you check first?',
+        choices: [
+          'Whether the secret key is set in the client, since events need elevated rights',
+          'Whether the channel name is `realtime`, which Supabase requires for database events',
+          'Whether the app is using the old anon key, which cannot subscribe to channels',
+          'Whether `tasks` is in the `supabase_realtime` publication and a policy lets the user select the rows',
+        ],
+        answer: 3,
+        explanation: 'A table that is not published sends no events, and RLS still applies to what each subscriber may receive. The secret key must never be in a client, and the docs say a channel name can be anything except `realtime`.',
+      },
+      {
+        id: 'supabase-07-q2',
+        prompt: 'Ben is subscribed to changes on `tasks`, and Ana inserts a task. With the owner-only policies, does Ben get the event?',
+        choices: [
+          'Yes, because everyone subscribed to a table receives every insert',
+          'No, because Realtime checks each event against the subscriber\'s policies and Ben may not read that row',
+          'Yes, but the row contents are blanked out and only the id is sent',
+          'No, because Realtime sends events only for updates, never for inserts',
+        ],
+        answer: 1,
+        explanation: 'Postgres Changes authorises each event for each subscriber using your RLS policies, so an insert Ben could not read never reaches him. It sends insert, update and delete events.',
+      },
+      {
+        id: 'supabase-07-q3',
+        prompt: 'What does the cleanup function of your effect need to do?',
+        choices: [
+          'Call `supabase.auth.signOut()` so the old session cannot receive events',
+          'Call `supabase.removeChannel(channel)` so the channel does not stay connected and double up',
+          'Call `alter publication` again so the table is published exactly once',
+          'Nothing, because React closes channels automatically when a component unmounts',
+        ],
+        answer: 1,
+        explanation: 'Channels are not tied to React. If you do not remove one, it keeps listening and the next mount adds a second listener, so events arrive twice.',
+      },
+      {
+        id: 'supabase-07-q4',
+        prompt: 'Your live dashboard grows to roughly 10,000 people watching the same changes. What do the docs recommend?',
+        choices: [
+          'Buy a larger database, because Postgres Changes speeds up with more compute',
+          'Turn off RLS on the table so that Realtime has less to check',
+          'Switch to Broadcast, with a trigger that sends each change once and Realtime fanning it out',
+          'Ask each client to poll the table every second instead',
+        ],
+        answer: 2,
+        explanation: 'The docs say Postgres Changes checks every event for every subscriber on a single thread, so a bigger instance does not help much, and recommend Broadcast above about 3,000 concurrent subscribers. Turning RLS off would expose the data, and polling makes the load worse.',
+      },
+    ],
+    task: {
+      title: 'Watch a table change live',
+      minutes: 15,
+      steps: [
+        'Add `tasks` to the `supabase_realtime` publication with `alter publication supabase_realtime add table public.tasks;` and make sure your owner policies exist.',
+        'Write a small page or script that signs in, loads the tasks, and subscribes to `postgres_changes` on `tasks` with a `user_id` filter, logging each event\'s `eventType`.',
+        'Change a row for that user (from the Dashboard or from a second tab) and watch the log. Remove the `removeChannel` call, reopen the screen twice, and see the events repeat.',
+        'Sign in as a second user in another browser and confirm that their screen does not log the first user\'s changes.',
+      ],
+    },
+  },
+  // @@MORE_LESSONS@@
+];
+
+const projects: Project[] = [];
+
+export const supabaseCourse: Course = {
+  id: 'supabase',
+  kind: 'standard',
+  title: 'Supabase Application Development',
+  level: 'intermediate',
+  tagline: 'Build a real backend with Postgres, sign-in, Row Level Security, storage, realtime and Edge Functions.',
+  description: 'Use Supabase as a complete backend for a web or mobile app. You learn Postgres tables, supabase-js queries, authentication and sessions, and above all Row Level Security, the layer that keeps each user\'s data private. Then you add file storage, live updates and Edge Functions, and finish with a full app with sign-in.',
+  finishLine: [
+    'A working app where people sign in and see only their own data',
+    'Row Level Security policies you can explain, and tests that prove they allow and deny the right rows',
+    'A project you can run locally, change with migrations and deploy with the CLI',
+  ],
+  objectives: [
+    'Explain how a Supabase project is built from Postgres and its services',
+    'Query and change data with supabase-js and handle errors correctly',
+    'Add sign-up, sign-in and sessions, and verify identity safely on a server',
+    'Write and test Row Level Security policies that keep users\' data private',
+    'Store files with private buckets and storage policies, and add live updates with Realtime',
+    'Write Edge Functions and manage a project with the CLI and migrations',
+  ],
+  audiences: ['fresh-grad', 'experienced-dev', 'career-changer', 'builder'],
+  skills: [
+    { id: 'supabase-architecture', label: 'Supabase architecture' },
+    { id: 'api-key-safety', label: 'API key safety' },
+    { id: 'supabase-tables', label: 'Tables and the dashboard' },
+    { id: 'supabase-js-queries', label: 'Queries with supabase-js' },
+    { id: 'supabase-auth', label: 'Authentication and sessions' },
+    { id: 'row-level-security', label: 'Row Level Security' },
+    { id: 'supabase-storage', label: 'Storage and file policies' },
+    { id: 'supabase-realtime', label: 'Realtime updates' },
+    { id: 'edge-functions', label: 'Edge Functions' },
+    { id: 'supabase-cli-migrations', label: 'CLI and migrations' },
+  ],
+  lessons,
+  projects,
+  icon: 'database',
+  updated: '2026-11-14',
+};

@@ -1,0 +1,377 @@
+import { defineActivity } from './lib/validate';
+import type { Activity } from './types';
+
+/**
+ * Two small activities of every kind. They are real, correct and beginner friendly, they double as a
+ * living demo for the (future) dev screen, and `activities.test.ts` runs every one through
+ * `validateActivity`, so a change to the engine that breaks an authoring rule shows up here first.
+ */
+
+const STUDENTS_SQL = `CREATE TABLE students (id INTEGER PRIMARY KEY, name TEXT, course TEXT, score INTEGER);
+INSERT INTO students VALUES (1, 'Ana', 'Web', 88), (2, 'Ben', 'Data', 72), (3, 'Cy', 'Web', 95), (4, 'Dee', 'Data', 64), (5, 'Eli', 'Web', 70);`;
+
+export const SAMPLE_ACTIVITIES: readonly Activity[] = [
+  // Tap to reveal
+  defineActivity({
+    id: 'sample-tap-variables',
+    kind: 'tap-reveal',
+    title: 'Three lines about variables',
+    story: 'Tali is reading a first program over your shoulder.',
+    prompt: 'Tap each line of code to see what it does.',
+    concept: 'variables',
+    cards: [
+      { front: '`let score = 10;`', back: 'Makes a variable named `score` and stores 10 in it. `let` means you may change it later.' },
+      { front: '`const name = "Mia";`', back: 'Makes a constant. `name` always holds "Mia"; trying to give it another value is an error.' },
+      { front: '`score = score + 5;`', back: 'Reads the current value of `score`, adds 5, and stores the result back. `score` is now 15.' },
+    ],
+    hints: ['Open the cards in any order.', 'You are done when all three are open.'],
+    explanation: 'A variable is a name for a value. `let` is for values that change, `const` for values that should not.',
+  }),
+  defineActivity({
+    id: 'sample-tap-status-codes',
+    kind: 'tap-reveal',
+    title: 'Reading status codes',
+    prompt: 'A server answers every request with a number. Tap each number to see what it tells you.',
+    concept: 'http status codes',
+    cards: [
+      { front: '200', back: '"OK". The request worked and the answer is in the response.' },
+      { front: '404', back: '"Not Found". The server is fine, but nothing exists at that address.' },
+      { front: '500', back: '"Internal Server Error". Something broke on the server while it handled a valid request.' },
+    ],
+    hints: ['Numbers starting with 2 usually mean success.'],
+    explanation: 'The first digit groups the answer: 2xx worked, 4xx means the request was the problem, 5xx means the server was.',
+  }),
+
+  // Predict the output
+  defineActivity({
+    id: 'sample-predict-loop-sum',
+    kind: 'predict-output',
+    title: 'What does the loop print?',
+    prompt: 'Read the program. What does it print?',
+    concept: 'loops',
+    language: 'javascript',
+    code: 'let total = 0;\nfor (let i = 1; i <= 4; i++) {\n  total = total + i;\n}\nconsole.log(total);',
+    choices: ['4', '10', '24', '1234'],
+    wrongNotes: { '4': '4 is only the last value of `i`. `total` keeps adding every value the loop visits.' },
+    hints: ['Write down `total` after each turn of the loop.', 'The loop runs for i = 1, 2, 3 and 4.', 'total goes 1, 3, 6 and then one more step.'],
+    explanation: '`total` starts at 0 and the loop adds 1, 2, 3 and 4 to it: 1, 3, 6, 10. It prints only once, after the loop.',
+  }),
+  defineActivity({
+    id: 'sample-predict-array',
+    kind: 'predict-output',
+    title: 'Arrays count from zero',
+    prompt: 'What does this print? Type each line of output on its own line.',
+    concept: 'arrays',
+    language: 'javascript',
+    code: 'const names = ["Ana", "Ben", "Cy"];\nnames.push("Dee");\nconsole.log(names.length);\nconsole.log(names[1]);',
+    hints: ['`push` adds an item to the end.', 'The first console.log prints how many names there are now.', 'Index 0 is "Ana". Which name is at index 1?'],
+    explanation: 'After `push` there are four names, so `length` is 4. Indexes start at 0, so `names[1]` is the second name, "Ben".',
+  }),
+
+  // Fix the bug
+  defineActivity({
+    id: 'sample-fix-off-by-one',
+    kind: 'fix-bug',
+    title: 'The total is always short',
+    story: 'The shop till adds up 1 to n, but it never counts the last number.',
+    prompt: '`sumTo(4)` should give 10 but gives 6. Find the line with the bug, then fix it.',
+    concept: 'loop conditions',
+    language: 'javascript',
+    code: 'function sumTo(n) {\n  let total = 0;\n  for (let i = 1; i < n; i++) {\n    total = total + i;\n  }\n  return total;\n}',
+    bugLine: 3,
+    fixes: [
+      { line: 'for (let i = 1; i <= n; i++) {', correct: true, why: 'Yes. `<=` lets the loop run when `i` equals `n`, so the last number is added too.' },
+      { line: 'for (let i = 2; i <= n; i++) {', correct: false, why: 'Starting at 2 skips the number 1, so the total is short in a different way.' },
+      { line: 'for (let i = 1; i < n + 2; i++) {', correct: false, why: 'This runs one step too far: it would also add n + 1.' },
+    ],
+    tests: {
+      kind: 'function',
+      fn: 'sumTo',
+      cases: [
+        { label: 'sumTo(4)', args: [4], expected: 10 },
+        { label: 'sumTo(1)', args: [1], expected: 1 },
+        { label: 'sumTo(0)', args: [0], expected: 0 },
+      ],
+    },
+    hints: ['Which line decides how many times the loop runs?', 'Work out which values of `i` the loop uses when n is 4.', 'The loop stops before `i` reaches `n`. It should include `n`.'],
+    explanation: 'With `i < n` the loop stops as soon as `i` equals `n`, so `n` is never added. `i <= n` includes it.',
+  }),
+  defineActivity({
+    id: 'sample-fix-comparison',
+    kind: 'fix-bug',
+    title: 'Is 18 old enough?',
+    prompt: '`isAdult(18)` returns false, but an 18-year-old counts as an adult. Find the bug, then type the corrected line.',
+    concept: 'comparisons',
+    language: 'javascript',
+    code: 'function isAdult(age) {\n  if (age > 18) {\n    return true;\n  }\n  return false;\n}',
+    bugLine: 2,
+    typed: true,
+    fixes: [
+      { line: 'if (age >= 18) {', correct: true, why: 'Yes. `>=` means "greater than or equal to", so exactly 18 counts.' },
+      { line: 'if (age < 18) {', correct: false, why: 'That flips the whole rule: now children would be adults and adults would not.' },
+    ],
+    lineNote: 'That line does what it says. The problem is in the line that decides who is an adult.',
+    tests: {
+      kind: 'function',
+      fn: 'isAdult',
+      cases: [
+        { label: 'isAdult(18)', args: [18], expected: true },
+        { label: 'isAdult(17)', args: [17], expected: false },
+        { label: 'isAdult(30)', args: [30], expected: true },
+        { label: 'isAdult(0)', args: [0], expected: false },
+      ],
+    },
+    hints: ['Try the exact age 18 by hand. What does the `if` decide?', '`>` is "greater than". Is 18 greater than 18?', 'You need a comparison that is also true when the two numbers are equal.'],
+    explanation: '`age > 18` is false when age is exactly 18. `age >= 18` is true for 18 and above, which is what "adult" means here.',
+  }),
+
+  // Arrange
+  defineActivity({
+    id: 'sample-arrange-greeting',
+    kind: 'arrange',
+    title: 'Build the greeting function',
+    prompt: 'Put the lines in order so the program prints `Hello, Tali!`.',
+    concept: 'functions',
+    language: 'javascript',
+    solution: ['function greet(name) {', '  const message = "Hello, " + name + "!";', '  return message;', '}', 'console.log(greet("Tali"));'],
+    reasons: ['A function starts with its name and its inputs.', 'First build the message from the input.', 'Then hand the message back with `return`.', 'The closing brace ends the function.', 'Call the function only after it has been defined.'],
+    tests: { kind: 'output', expected: ['Hello, Tali!'] },
+    hints: ['A function has to be defined before it is called.', 'The call that prints the result comes last.', 'Inside the function: build the message first, then return it.'],
+    explanation: 'Define the function, build the message, return it, close the function, and only then call it and print the result.',
+  }),
+  defineActivity({
+    id: 'sample-arrange-count-evens',
+    kind: 'arrange',
+    title: 'Count the even numbers',
+    prompt: 'Arrange the lines so the program counts the even numbers in the list and prints `2`.',
+    concept: 'loops and conditions',
+    language: 'javascript',
+    solution: [
+      'const numbers = [3, 8, 5, 10];',
+      'let evens = 0;',
+      'for (let i = 0; i < numbers.length; i++) {',
+      '  if (numbers[i] % 2 === 0) {',
+      '    evens = evens + 1;',
+      '  }',
+      '}',
+      'console.log(evens);',
+    ],
+    alternatives: [
+      [
+        'let evens = 0;',
+        'const numbers = [3, 8, 5, 10];',
+        'for (let i = 0; i < numbers.length; i++) {',
+        '  if (numbers[i] % 2 === 0) {',
+        '    evens = evens + 1;',
+        '  }',
+        '}',
+        'console.log(evens);',
+      ],
+    ],
+    reasons: [
+      'The data and the counter are set up before the loop; either one may come first.',
+      'The counter starts at zero; either set-up line may come first.',
+      'The loop visits every item.',
+      'Inside the loop, check whether the current number is even.',
+      'Only when it is even, add one to the counter.',
+      'This brace closes the `if`.',
+      'This brace closes the loop.',
+      'Print the count only after the loop has finished.',
+    ],
+    tests: { kind: 'output', expected: ['2'] },
+    hints: ['Set things up first, then loop, then print.', 'The `if` goes inside the `for`, and the counting goes inside the `if`.', 'Each closing brace goes right after the lines it closes: the inner one first.'],
+    explanation: 'Set up the list and the counter, loop over the list, test each number with `% 2`, count the even ones, and print after the loop. The two set-up lines are independent, so either order works.',
+  }),
+
+  // Fill in the blanks
+  defineActivity({
+    id: 'sample-fill-function',
+    kind: 'fill-blank',
+    title: 'Complete the function',
+    prompt: 'Fill the two blanks so the program prints 8.',
+    concept: 'functions',
+    language: 'javascript',
+    code: '___ double(x) {\n  ___ x * 2;\n}\nconsole.log(double(4));',
+    blanks: [
+      { answers: ['function'], feedback: 'This keyword starts a function definition.' },
+      { answers: ['return'], feedback: 'This keyword hands a value back to whoever called the function.' },
+    ],
+    bank: ['function', 'return', 'const', 'print'],
+    tests: { kind: 'output', expected: ['8'] },
+    hints: ['The first blank begins the function; the second sends the answer back.', 'One of the words in the bank is not JavaScript at all.', 'The blanks are `function` and `return`.'],
+    explanation: '`function` defines `double`, and `return x * 2` gives the result back to `console.log`.',
+  }),
+  defineActivity({
+    id: 'sample-fill-loop',
+    kind: 'fill-blank',
+    title: 'Add up 1, 2 and 3',
+    prompt: 'Type the missing symbols so the program prints 6.',
+    concept: 'loops',
+    language: 'javascript',
+    code: 'let total = 0;\nfor (let i = 1; i ___ 3; i++) {\n  total = total ___ i;\n}\nconsole.log(total);',
+    blanks: [
+      { answers: ['<='], feedback: 'The loop must still run when `i` is 3. Which comparison includes the number it is compared with?' },
+      { answers: ['+'], feedback: 'The total should grow by `i` each turn. Which operator adds?' },
+    ],
+    tests: { kind: 'output', expected: ['6'] },
+    hints: ['The first blank is a comparison, the second an operator.', 'You want the loop to run for 1, 2 and 3.', '"less than or equal to", then "plus".'],
+    explanation: '`i <= 3` keeps the loop going through 3, and `total + i` adds each value: 1 + 2 + 3 = 6.',
+  }),
+
+  // Match
+  defineActivity({
+    id: 'sample-match-types',
+    kind: 'match',
+    title: 'Match the value to its type',
+    prompt: 'Match each JavaScript value with what kind of value it is.',
+    concept: 'data types',
+    pairs: [
+      { term: '`"hello"`', definition: 'A string: text written between quotes', note: 'Anything between quotes is a string, even `"42"`.' },
+      { term: '`42`', definition: 'A number you can do maths with', note: 'Numbers are written without quotes.' },
+      { term: '`true`', definition: 'A boolean: either true or false', note: 'A boolean has only two possible values.' },
+      { term: '`[1, 2, 3]`', definition: 'An array: an ordered list of values', note: 'Square brackets make a list.' },
+      { term: '`{ name: "Mia" }`', definition: 'An object: named values bundled together', note: 'Curly braces with `name: value` pairs make an object.' },
+    ],
+    hints: ['Start with the one that is easiest to recognise.', 'Quotes mean text. Square brackets mean a list.', 'Curly braces with `name: value` inside make an object.'],
+    explanation: 'Each kind of value looks different: quotes make a string, digits a number, `true`/`false` a boolean, `[ ]` an array and `{ }` an object.',
+  }),
+  defineActivity({
+    id: 'sample-match-git',
+    kind: 'match',
+    title: 'Git commands',
+    prompt: 'Match each Git command with what it does.',
+    concept: 'version control',
+    pairs: [
+      { term: '`git status`', definition: 'Show which files changed and what is staged', note: 'This only looks; it changes nothing.' },
+      { term: '`git add`', definition: 'Stage changes so they go into the next commit', note: 'Staging picks which changes the next snapshot will include.' },
+      { term: '`git commit`', definition: 'Save a snapshot of the staged changes', note: 'A commit is a saved snapshot with a message.' },
+      { term: '`git push`', definition: 'Send your commits to the remote repository', note: 'Push sends your work up to, for example, GitHub.' },
+      { term: '`git pull`', definition: 'Fetch new commits from the remote and merge them in', note: 'Pull brings other people\'s work down to you.' },
+    ],
+    hints: ['Think of the order you use them in: look, stage, save, share.', '`push` goes up, `pull` comes down.', '`add` comes before `commit`, because you stage before you save.'],
+    explanation: 'A normal round: `git status` to look, `git add` to stage, `git commit` to save, `git push` to share, and `git pull` to get what others shared.',
+  }),
+
+  // Scenario
+  defineActivity({
+    id: 'sample-scenario-deadline',
+    kind: 'scenario',
+    title: 'The deadline you will miss',
+    story: 'It is Thursday afternoon.',
+    prompt: 'What do you do?',
+    concept: 'client communication',
+    situation: 'You are building a small website for a client. It is due on Friday, and you now realise you cannot finish it in time.',
+    options: [
+      { text: 'Tell the client today what is done, and offer a new date or a smaller first version.', consequence: 'The client is a little disappointed but can plan around it, and they trust you because you told them early.', quality: 'best' },
+      { text: 'Send a short message on Friday morning saying it will be late.', consequence: 'The client appreciates the honesty, but had less time to adjust and is more annoyed than they needed to be.', quality: 'acceptable' },
+      { text: 'Say nothing and deliver whatever is finished on Friday.', consequence: 'The client finds a half-built site with no warning. They lose trust and may not hire you again.', quality: 'poor' },
+    ],
+    hints: ['Who is affected if you stay quiet?', 'The earlier the client knows, the more choices they have.', 'Look for the option that says what is done and offers a way forward.'],
+    explanation: 'Early, honest updates with a proposal are what clients remember. Bad news gets worse the longer it waits.',
+  }),
+  defineActivity({
+    id: 'sample-scenario-ai-code',
+    kind: 'scenario',
+    title: 'AI wrote it. Now what?',
+    prompt: 'What is the best next step?',
+    concept: 'working with AI code',
+    situation: 'An AI assistant wrote a function for you. It looks reasonable, and the one example test you have passes.',
+    options: [
+      { text: 'Read it, try a few unusual inputs (empty, zero, very large), and add tests for them before you use it.', consequence: 'You find one case it handled badly and fix it. The function is now something you understand and can trust.', quality: 'best' },
+      { text: 'Skim it, and use it if it looks about right.', consequence: 'It works today. But you do not know what it does with unusual input, so a bug may show up later at a bad moment.', quality: 'acceptable' },
+      { text: 'Paste it straight into the live app because the test passed.', consequence: 'One passing test only proves one case. The first unusual input breaks the app for real users.', quality: 'poor' },
+    ],
+    hints: ['One passing example does not prove every case works.', 'What inputs might the AI not have thought of?', 'Choose the option where you understand the code and test the edges.'],
+    explanation: 'AI code is a draft. You are still responsible for it, so read it and test the awkward cases before it goes anywhere that matters.',
+  }),
+
+  // Code challenge
+  defineActivity({
+    id: 'sample-code-average',
+    kind: 'code-challenge',
+    title: 'Write average(a, b)',
+    prompt: 'Finish the function so it returns the average of its two inputs. Press Run to experiment, Check to test it.',
+    concept: 'functions',
+    language: 'javascript',
+    starter: 'function average(a, b) {\n  // return the average of a and b\n}\n',
+    solution: 'function average(a, b) {\n  return (a + b) / 2;\n}\n',
+    tests: {
+      kind: 'function',
+      fn: 'average',
+      cases: [
+        { label: 'average(2, 4)', args: [2, 4], expected: 3 },
+        { label: 'average(10, 20)', args: [10, 20], expected: 15 },
+        { label: 'average(1, 2)', args: [1, 2], expected: 1.5 },
+        { label: 'a hidden case', args: [-2, 2], expected: 0, hidden: true },
+      ],
+    },
+    hints: ['The average is the sum divided by how many numbers there are.', 'Use `return` to give the answer back.', 'Add first, then divide: put the sum in brackets, `(a + b) / 2`.'],
+    explanation: 'Add the two numbers and divide by 2. The brackets matter: without them only `b` would be divided.',
+  }),
+  defineActivity({
+    id: 'sample-robot-star',
+    kind: 'code-challenge',
+    title: 'Fetch the star',
+    story: 'A tiny robot needs your help.',
+    prompt: 'Program the robot to walk to the star, pick it up, and end on the flag. It cannot walk through walls or off the grid.',
+    concept: 'sequences and loops',
+    language: 'javascript',
+    starter: '// Move the robot to the star, pick it up, then reach the flag.\nmoveRight();\n',
+    solution: 'moveRight();\nmoveRight();\npickUp();\nmoveDown();\nmoveDown();\nmoveRight();\nmoveRight();\n',
+    tests: {
+      kind: 'robot',
+      world: {
+        width: 5,
+        height: 3,
+        start: { x: 0, y: 0 },
+        goal: { x: 4, y: 2 },
+        walls: [{ x: 3, y: 1 }],
+        items: [{ x: 2, y: 0 }],
+        commands: ['moveRight', 'moveLeft', 'moveUp', 'moveDown', 'pickUp'],
+      },
+    },
+    hints: ['Columns count from the left, rows from the top. The star is two steps to the right.', 'Call `pickUp()` while standing on the star.', 'After the star: down twice, then right twice. A `for` loop can repeat a command.'],
+    explanation: 'Two steps right to the star, `pickUp()`, two steps down, two steps right to the flag. Repeated steps can be written with a `for` loop.',
+  }),
+
+  // SQL challenge
+  defineActivity({
+    id: 'sample-sql-top-scores',
+    kind: 'sql-challenge',
+    title: 'Top scorers',
+    prompt: 'Show the `name` and `score` of every student with a score of 80 or more, highest score first.',
+    concept: 'filtering and sorting',
+    setup: STUDENTS_SQL,
+    starter: 'SELECT ',
+    expected: {
+      columns: ['name', 'score'],
+      rows: [
+        ['Cy', 95],
+        ['Ana', 88],
+      ],
+      ordered: true,
+    },
+    solution: 'SELECT name, score FROM students WHERE score >= 80 ORDER BY score DESC;',
+    hints: ['Start with `SELECT name, score FROM students`.', '`WHERE` keeps only the rows that match a condition.', 'Add `WHERE score >= 80` and then `ORDER BY score DESC` for highest first.'],
+    explanation: '`WHERE score >= 80` keeps the rows that qualify, and `ORDER BY score DESC` sorts them with the highest score on top.',
+  }),
+  defineActivity({
+    id: 'sample-sql-count-by-course',
+    kind: 'sql-challenge',
+    title: 'Students per course',
+    prompt: 'For each course, show the `course` and how many students are in it as `students`. Sort by course name.',
+    concept: 'grouping',
+    setup: STUDENTS_SQL,
+    expected: {
+      columns: ['course', 'students'],
+      rows: [
+        ['Data', 2],
+        ['Web', 3],
+      ],
+      ordered: true,
+    },
+    solution: 'SELECT course, COUNT(*) AS students FROM students GROUP BY course ORDER BY course;',
+    hints: ['You want one row per course, not one per student.', '`GROUP BY course` makes one group per course, and `COUNT(*)` counts the rows in each group.', 'Name the count with `AS students` and finish with `ORDER BY course`.'],
+    explanation: '`GROUP BY course` makes one row per course, `COUNT(*) AS students` counts the students in each group, and `ORDER BY course` sorts the result.',
+  }),
+];

@@ -1,18 +1,42 @@
 {
   "expo": {
-    "name": "talino",
+    "name": "Talino",
     "slug": "talino",
-    "version": "1.0.0",
+    "version": "1.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "talino",
     "userInterfaceStyle": "automatic",
     "ios": {
-      "icon": "./assets/expo.icon"
+      "bundleIdentifier": "com.fordytechsolutions.talino",
+      "buildNumber": "8",
+      "appleTeamId": "M225MU29H3",
+      "config": {
+        "usesNonExemptEncryption": false
+      },
+      "supportsTablet": true,
+      "requireFullScreen": false,
+      "usesIcloudStorage": true,
+      "infoPlist": {
+        "UISupportedInterfaceOrientations~ipad": [
+          "UIInterfaceOrientationPortrait",
+          "UIInterfaceOrientationPortraitUpsideDown",
+          "UIInterfaceOrientationLandscapeLeft",
+          "UIInterfaceOrientationLandscapeRight"
+        ],
+        "NSUbiquitousContainers": {
+          "iCloud.com.fordytechsolutions.talino": {
+            "NSUbiquitousContainerIsDocumentScopePublic": false,
+            "NSUbiquitousContainerName": "Talino",
+            "NSUbiquitousContainerSupportedFolderLevels": "None"
+          }
+        }
+      }
     },
     "android": {
+      "package": "com.fordytechsolutions.talino",
       "adaptiveIcon": {
-        "backgroundColor": "#E6F4FE",
+        "backgroundColor": "#4F46E5",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
         "backgroundImage": "./assets/images/android-icon-background.png",
         "monochromeImage": "./assets/images/android-icon-monochrome.png"
@@ -24,19 +48,147 @@
       "favicon": "./assets/images/favicon.png"
     },
     "plugins": [
+      "./plugins/with-release-signing.js",
+      "./plugins/with-gradle-memory.js",
+      "./plugins/with-android-backup.js",
+      "./plugins/with-sentry-upload-switch.js",
       "expo-router",
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Talino uses your photos so you can add screenshots of your projects to your portfolio.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ],
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://sentry.io/",
+          "organization": "fordytech-solutions",
+          "project": "talino"
+        }
+      ],
+      [
+        "expo-font",
+        {
+          "ios": {
+            "fonts": [
+              "./assets/fonts/PlusJakartaSans_400Regular.ttf",
+              "./assets/fonts/PlusJakartaSans_500Medium.ttf",
+              "./assets/fonts/PlusJakartaSans_600SemiBold.ttf",
+              "./assets/fonts/PlusJakartaSans_700Bold.ttf",
+              "./assets/fonts/PlusJakartaSans_800ExtraBold.ttf",
+              "./assets/fonts/JetBrainsMono_400Regular.ttf",
+              "./assets/fonts/JetBrainsMono_500Medium.ttf",
+              "./assets/fonts/JetBrainsMono_600SemiBold.ttf",
+              "./assets/fonts/JetBrainsMono_700Bold.ttf"
+            ]
+          },
+          "android": {
+            "fonts": [
+              {
+                "fontFamily": "Plus Jakarta Sans",
+                "fontDefinitions": [
+                  {
+                    "path": "./assets/fonts/PlusJakartaSans_400Regular.ttf",
+                    "weight": 400
+                  },
+                  {
+                    "path": "./assets/fonts/PlusJakartaSans_500Medium.ttf",
+                    "weight": 500
+                  },
+                  {
+                    "path": "./assets/fonts/PlusJakartaSans_600SemiBold.ttf",
+                    "weight": 600
+                  },
+                  {
+                    "path": "./assets/fonts/PlusJakartaSans_700Bold.ttf",
+                    "weight": 700
+                  },
+                  {
+                    "path": "./assets/fonts/PlusJakartaSans_800ExtraBold.ttf",
+                    "weight": 800
+                  }
+                ]
+              },
+              {
+                "fontFamily": "JetBrains Mono",
+                "fontDefinitions": [
+                  {
+                    "path": "./assets/fonts/JetBrainsMono_400Regular.ttf",
+                    "weight": 400
+                  },
+                  {
+                    "path": "./assets/fonts/JetBrainsMono_500Medium.ttf",
+                    "weight": 500
+                  },
+                  {
+                    "path": "./assets/fonts/JetBrainsMono_600SemiBold.ttf",
+                    "weight": 600
+                  },
+                  {
+                    "path": "./assets/fonts/JetBrainsMono_700Bold.ttf",
+                    "weight": 700
+                  }
+                ]
+              }
+            ]
+          }
+        }
+      ],
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#208AEF",
+          "backgroundColor": "#F7F7FB",
           "image": "./assets/images/splash-icon.png",
-          "imageWidth": 76
+          "imageWidth": 180,
+          "dark": {
+            "backgroundColor": "#000000",
+            "image": "./assets/images/splash-icon.png"
+          }
+        }
+      ],
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "enableMinifyInReleaseBuilds": true,
+            "enableShrinkResourcesInReleaseBuilds": true
+          }
+        }
+      ],
+      "expo-sqlite",
+      "expo-localization",
+      "expo-sharing",
+      "expo-secure-store",
+      [
+        "expo-notifications",
+        {
+          "enableRemoteNotifications": false
+        }
+      ],
+      [
+        "expo-audio",
+        {
+          "microphonePermission": false
         }
       ]
     ],
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
-    }
+    },
+    "extra": {
+      "router": {
+        "asyncRoutes": {
+          "web": true
+        }
+      },
+      "eas": {
+        "projectId": "71b95576-0ebf-4ad1-a4d6-1b5b86a496cd"
+      }
+    },
+    "owner": "itsmefordyfy"
   }
 }

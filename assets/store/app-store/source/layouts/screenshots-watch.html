@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<!-- Apple Watch app artwork: the Talino Watch app's own screens (captures/watch/<id>.png, Series 12 46mm
+     simulator, 416 × 496) inside a drawn Apple Watch, under the same brand row, headline and support
+     line as the iPhone screenshots. Open as
+       screenshots-watch.html?id=01-streak   in a window of the export size
+     (render.py does it at 1206 × 2622, 1179 × 2556 and 1320 × 2868). These are marketing images for the
+     iPhone-size slots, the site and ads: the Apple Watch slot in App Store Connect takes only the raw
+     416 × 496 captures (screenshots/apple-watch-series12-416x496). The watch is drawn here, not Apple's
+     product bezel. `cap` overrides the captures folder (render.py --captures). -->
+<link rel="stylesheet" href="kit.css">
+<style>
+  /* Apple Watch: --w is the case's width. The screen sits in a thin bezel (--pad of the width) and takes the
+     capture's own aspect ratio, so the capture is never stretched; the case height follows from it. */
+  .watch {
+    --pad: 0.05;
+    --aluminium-hi: #e4e1ec;
+    --aluminium: #b6b2c3;
+    --aluminium-lo: #7e7a8c;
+    --bezel: #08070c;
+    --band: #1d1c25;
+    --band-edge: #2c2b36;
+    position: absolute;
+    width: var(--w);
+    height: var(--h);
+  }
+  /* The band stubs run off the case top and bottom and fade out, in a dark neutral with fine stitch lines. */
+  .watch .band {
+    position: absolute; left: 50%; width: calc(var(--w) * 0.66); transform: translateX(-50%);
+    background:
+      repeating-linear-gradient(180deg, rgba(255, 255, 255, 0) 0 calc(var(--w) * 0.05), rgba(255, 255, 255, 0.05) calc(var(--w) * 0.05) calc(var(--w) * 0.056)),
+      linear-gradient(90deg, #121118 0%, var(--band-edge) 14%, var(--band) 50%, var(--band-edge) 86%, #121118 100%);
+    box-shadow: inset 0 0 calc(var(--w) * 0.03) rgba(0, 0, 0, 0.6);
+  }
+  .watch .band-top { bottom: 90%; height: var(--band-top); border-radius: calc(var(--w) * 0.05) calc(var(--w) * 0.05) 0 0; -webkit-mask-image: linear-gradient(0deg, #000 35%, transparent 100%); mask-image: linear-gradient(0deg, #000 35%, transparent 100%); }
+  .watch .band-bottom { top: 90%; height: var(--band-bottom); border-radius: 0 0 calc(var(--w) * 0.05) calc(var(--w) * 0.05); -webkit-mask-image: linear-gradient(180deg, #000 35%, transparent 100%); mask-image: linear-gradient(180deg, #000 35%, transparent 100%); }
+  .watch .case {
+    position: absolute; inset: 0; z-index: 2; padding: calc(var(--w) * var(--pad));
+    border-radius: calc(var(--w) * 0.26);
+    background: var(--bezel);
+    box-shadow:
+      0 0 0 calc(var(--w) * 0.012) var(--aluminium-hi),
+      0 0 0 calc(var(--w) * 0.024) var(--aluminium),
+      0 0 0 calc(var(--w) * 0.03) var(--aluminium-lo),
+      0 calc(var(--w) * 0.06) calc(var(--w) * 0.16) rgba(var(--shadow), 0.5),
+      0 calc(var(--w) * 0.015) calc(var(--w) * 0.04) rgba(var(--shadow), 0.35);
+  }
+  .watch .screen { width: 100%; height: 100%; overflow: hidden; background: #000; border-radius: calc(var(--w) * 0.2); }
+  .watch .screen img { display: block; width: 100%; height: 100%; }
+  /* A faint reflection across the glass, so the screen reads as a screen. */
+  .watch .glass { position: absolute; inset: calc(var(--w) * var(--pad)); border-radius: calc(var(--w) * 0.2); pointer-events: none; z-index: 3; background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0) 32%); }
+  .watch .crown {
+    position: absolute; z-index: 1; right: calc(var(--w) * -0.052); top: 24%; width: calc(var(--w) * 0.07); height: calc(var(--w) * 0.2);
+    border-radius: calc(var(--w) * 0.025);
+    background: repeating-linear-gradient(180deg, var(--aluminium-lo) 0 calc(var(--w) * 0.011), var(--aluminium-hi) calc(var(--w) * 0.011) calc(var(--w) * 0.022));
+    box-shadow: 0 0 0 calc(var(--w) * 0.006) var(--aluminium-lo);
+  }
+  .watch .side { position: absolute; z-index: 1; right: calc(var(--w) * -0.036); top: 54%; width: calc(var(--w) * 0.045); height: calc(var(--w) * 0.13); border-radius: calc(var(--w) * 0.02); background: linear-gradient(90deg, var(--aluminium), var(--aluminium-hi)); box-shadow: 0 0 0 calc(var(--w) * 0.005) var(--aluminium-lo); }
+</style>
+<script src="kit.js"></script>
+</head>
+<body>
+<script>
+const SHOTS = {
+  '01-streak': ['Your Streak at a Glance', 'Keep your learning streak and your week in view.'],
+  '02-weekly-goal': ['Hit Your Weekly Goal', 'See how many lessons you have done this week.'],
+  '03-next-lesson': ['Know What&#8217;s Next', 'Your next lesson, one glance away.'],
+  '04-listen-playing': ['Control Your Lesson Audio', 'Play, pause and skip a lesson read aloud, from your wrist.'],
+  '05-listen-paused': ['Pause From Your Wrist', '<span style="white-space:nowrap">Hands-free</span> listening, wherever you are.'],
+};
+// Same numbers as the iPhone set (screenshots.html), all in rem (1% of the canvas width).
+const L = { brandY: 6.5, brandSize: 6, wordSize: 4.6, headY: 16, headSize: 7.8, supportSize: 3.8, textW: 88, bottom: 6 };
+const WATCH_WIDTH = 78; // the case, rem: 78% of the canvas width, the capture shown at about 1.7x its pixels
+const PAD = 0.05;       // bezel, as a fraction of the case width (also the CSS --pad)
+
+/** An Apple Watch showing a capture, `width` rem wide (the case), horizontally centered; its height follows the capture's aspect ratio. */
+async function watchDevice(url, { width, y }) {
+  const size = await imageSize(url);
+  if (!size) return null;
+  const caseH = width * ((1 - 2 * PAD) * (size.h / size.w) + 2 * PAD);
+  const node = el('div', 'watch', { left: `${50 - width / 2}rem`, top: `${y}rem`, zIndex: 3 });
+  node.style.setProperty('--w', `${width}rem`);
+  node.style.setProperty('--h', `${caseH}rem`);
+  node.style.setProperty('--pad', PAD);
+  node.style.setProperty('--band-top', `${width * 0.34}rem`);
+  node.style.setProperty('--band-bottom', `${width * 0.34}rem`);
+  node.innerHTML = `<div class="band band-top"></div><div class="band band-bottom"></div><div class="crown"></div><div class="side"></div><div class="case"><div class="screen"><img src="${url}" alt=""></div></div><div class="glass"></div>`;
+  return { node, h: caseH };
+}
+
+(async () => {
+  await loadFonts();
+  const id = PARAMS.get('id');
+  const [headline, support] = SHOTS[id];
+  const H = canvasHeight();
+  glow(50, 26, 130);
+  glow(80, H - 16, 70, true);
+  sparks([[6, 10, 2.8, 0], [92, 12, 2.2, 10], [3, 44, 1.5, 0], [96, 52, 1.7, 0], [4, H - 30, 2.2, 10], [94, H - 38, 1.5, 0], [96, H - 10, 2, 0]]);
+  brand({ x: 0, y: L.brandY, width: 100, size: L.brandSize, wordSize: L.wordSize });
+  const block = text({ x: (100 - L.textW) / 2, y: L.headY, width: L.textW, headline, headlineSize: L.headSize, support, supportSize: L.supportSize, gap: L.headSize * 0.26 });
+  // Large and centred in the room under the text (the lower two thirds); the band stubs fade out above and below.
+  const top = bottomOf(block) + L.supportSize * 1.1;
+  const free = H - L.bottom - top;
+  const shown = await watchDevice(capUrl('watch', id), { width: WATCH_WIDTH, y: 0 });
+  if (shown) shown.node.style.top = `${top + (free - shown.h) / 2}rem`;
+  await ready();
+})();
+</script>
+</body>
+</html>

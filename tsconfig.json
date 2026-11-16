@@ -3,13 +3,19 @@
   "compilerOptions": {
     "strict": true,
     "paths": {
+      "@/modules/*": [
+        "./modules/*"
+      ],
       "@/*": [
         "./src/*"
       ],
       "@/assets/*": [
         "./assets/*"
       ]
-    }
+    },
+    "types": [
+      "node"
+    ]
   },
   "include": [
     "**/*.ts",

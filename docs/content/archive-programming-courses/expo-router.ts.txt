@@ -1,0 +1,1759 @@
+import type { Course, Lesson, Project } from '../../types';
+
+const CHECKED = '2026-11-14';
+
+// Official pages these notes were checked against on CHECKED (Expo SDK 58, expo-router 58, EAS CLI 27).
+const DOCS = {
+  setup: { label: 'Expo docs: Set up your environment', url: 'https://docs.expo.dev/get-started/set-up-your-environment/' },
+  create: { label: 'Expo docs: Create a project', url: 'https://docs.expo.dev/get-started/create-a-project/' },
+  sdk58: { label: 'Expo changelog: Expo SDK 58', url: 'https://expo.dev/changelog/sdk-58' },
+  devBuilds: { label: 'Expo docs: Introduction to development builds', url: 'https://docs.expo.dev/develop/development-builds/introduction/' },
+  faq: { label: 'Expo docs: FAQ (what can I do with Expo Go?)', url: 'https://docs.expo.dev/faq/' },
+  workflow: { label: 'Expo docs: Develop an app with Expo', url: 'https://docs.expo.dev/workflow/overview/' },
+  cli: { label: 'Expo docs: Expo CLI', url: 'https://docs.expo.dev/more/expo-cli/' },
+  cng: { label: 'Expo docs: Continuous Native Generation (CNG)', url: 'https://docs.expo.dev/workflow/continuous-native-generation/' },
+  router: { label: 'Expo Router docs: Introduction', url: 'https://docs.expo.dev/router/introduction/' },
+  concepts: { label: 'Expo Router docs: Core concepts', url: 'https://docs.expo.dev/router/basics/core-concepts/' },
+  notation: { label: 'Expo Router docs: Notation', url: 'https://docs.expo.dev/router/basics/notation/' },
+  stack: { label: 'Expo Router docs: Stack', url: 'https://docs.expo.dev/router/advanced/stack/' },
+  patterns: { label: 'Expo Router docs: Common navigation patterns', url: 'https://docs.expo.dev/router/basics/common-navigation-patterns/' },
+  navigation: { label: 'Expo Router docs: Navigation', url: 'https://docs.expo.dev/router/basics/navigation/' },
+  nativeTabs: { label: 'Expo Router docs: Native tabs', url: 'https://docs.expo.dev/router/advanced/native-tabs/' },
+  params: { label: 'Expo Router docs: URL parameters and dynamic routes', url: 'https://docs.expo.dev/router/reference/url-parameters/' },
+  typed: { label: 'Expo Router docs: Typed routes', url: 'https://docs.expo.dev/router/reference/typed-routes/' },
+  modals: { label: 'Expo Router docs: Modals', url: 'https://docs.expo.dev/router/advanced/modals/' },
+  protectedDocs: { label: 'Expo Router docs: Protected routes', url: 'https://docs.expo.dev/router/advanced/protected/' },
+  authRouter: { label: 'Expo Router docs: Authentication', url: 'https://docs.expo.dev/router/advanced/authentication/' },
+  authGuide: { label: 'Expo docs: Authentication in Expo apps', url: 'https://docs.expo.dev/develop/authentication/' },
+  secureStore: { label: 'Expo docs: SecureStore', url: 'https://docs.expo.dev/versions/latest/sdk/securestore/' },
+  notFound: { label: 'Expo Router docs: Error handling and not-found routes', url: 'https://docs.expo.dev/router/error-handling/' },
+  nativeIntent: { label: 'Expo Router docs: Native intent', url: 'https://docs.expo.dev/router/advanced/native-intent/' },
+  linking: { label: 'Expo docs: Linking overview', url: 'https://docs.expo.dev/linking/overview/' },
+  intoApp: { label: 'Expo docs: Linking into your app', url: 'https://docs.expo.dev/linking/into-your-app/' },
+  iosLinks: { label: 'Expo docs: iOS Universal Links', url: 'https://docs.expo.dev/linking/ios-universal-links/' },
+  androidLinks: { label: 'Expo docs: Android App Links', url: 'https://docs.expo.dev/linking/android-app-links/' },
+  config: { label: 'Expo docs: Configuration with app.json / app.config.js', url: 'https://docs.expo.dev/workflow/configuration/' },
+  plugins: { label: 'Expo docs: Config plugins introduction', url: 'https://docs.expo.dev/config-plugins/introduction/' },
+  writePlugin: { label: 'Expo docs: Create and use config plugins', url: 'https://docs.expo.dev/config-plugins/plugins/' },
+  env: { label: 'Expo docs: Environment variables in Expo', url: 'https://docs.expo.dev/guides/environment-variables/' },
+  easEnv: { label: 'Expo docs: EAS environment variables', url: 'https://docs.expo.dev/eas/environment-variables/' },
+  easEnvUsage: { label: 'Expo docs: Use environment variables with Expo services', url: 'https://docs.expo.dev/eas/environment-variables/usage/' },
+  easEnvManage: { label: 'Expo docs: Create and manage environment variables', url: 'https://docs.expo.dev/eas/environment-variables/manage/' },
+  build: { label: 'Expo docs: Expo Build (EAS Build) introduction', url: 'https://docs.expo.dev/build/introduction/' },
+  easJson: { label: 'Expo docs: Configure with eas.json', url: 'https://docs.expo.dev/build/eas-json/' },
+  easJsonRef: { label: 'Expo docs: eas.json reference', url: 'https://docs.expo.dev/eas/json/' },
+  update: { label: 'Expo docs: Expo Update (EAS Update) introduction', url: 'https://docs.expo.dev/eas-update/introduction/' },
+  updateStart: { label: 'Expo docs: Get started with EAS Update', url: 'https://docs.expo.dev/eas-update/getting-started/' },
+  runtime: { label: 'Expo docs: Runtime versions and updates', url: 'https://docs.expo.dev/eas-update/runtime-versions/' },
+};
+
+const lessons: Lesson[] = [
+  {
+    id: 'expo-router-01',
+    day: 1,
+    title: 'The Expo workflow: Expo Go, development builds and the CLI',
+    summary: 'Know what Expo adds on top of React Native, choose between Expo Go and a development build, and use the Expo CLI commands you will type every day.',
+    intro: {
+      objectives: [
+        'Explain what Expo is and which problems it takes off your plate compared with plain React Native',
+        'Choose between Expo Go and a development build for a given situation',
+        'Use the Expo CLI to create, start, extend and rebuild a project',
+        'Read the file layout of a new Expo project and say why there is no ios or android folder',
+      ],
+      why: 'Every Expo job and tutorial starts with these commands and this choice, and picking the wrong runner is the most common reason a new learner loses an afternoon to a red error screen. Know the workflow and the rest of the course is just building screens.',
+    },
+    minutes: 25,
+    skills: ['expo-workflow'],
+    body: [
+      { type: 'paragraph', text: "In the React Native course you learned to build screens from components such as `View`, `Text` and `FlatList`. But a screen on its own is not an app. Someone has to compile it for iPhone and Android, install it on a device, give you a dev server that updates the phone when you save a file, and supply ready-made libraries for the camera, notifications and storage. Plain React Native leaves most of that to you, and it means setting up Xcode and Android Studio before you see anything." },
+      { type: 'paragraph', text: "**Expo** is the framework and toolchain that does that work for you. Think of React Native as a stove and a set of pans: you can cook, but you must still build the kitchen. Expo is the kitchen already built, with the wiring done, a pantry of ingredients (libraries) and a delivery service (cloud builds) when you are ready to serve the public." },
+      { type: 'heading', text: 'The pieces of Expo' },
+      {
+        type: 'table',
+        headers: ['Piece', 'What it does', 'You meet it as'],
+        rows: [
+          ['Expo CLI', 'Starts the dev server, installs libraries, builds the native project', '`npx expo start`, `npx expo install`'],
+          ['Expo SDK', 'Versioned libraries for device features: camera, secure storage, linking', 'Packages named `expo-*`, one release per SDK version'],
+          ['Expo Router', 'File-based navigation for your screens (the rest of this course)', '`expo-router`, the `src/app` folder'],
+          ['Expo services (EAS)', 'Cloud builds, store submission and over-the-air updates', '`eas build`, `eas update`'],
+        ],
+        caption: 'Four layers, each usable on its own',
+      },
+      { type: 'heading', text: 'Creating and starting a project' },
+      { type: 'paragraph', text: 'One command makes a working app, and a second starts the dev server. The `--template` flag picks the SDK version; we will explain why it matters in the version note below.' },
+      {
+        type: 'code',
+        language: 'bash',
+        label: 'Create and start an app',
+        code: `npx create-expo-app@latest tindahan --template default@sdk-58
+cd tindahan
+npx expo start`,
+      },
+      { type: 'paragraph', text: 'The dev server is a program called **Metro** that bundles your JavaScript and sends it to the phone. When you save a file, **Fast Refresh** updates the running app in a second or two, without losing where you were. The terminal shows a QR code and shortcut keys: press `a` for the Android emulator, `i` for the iOS Simulator, `w` for a web browser.' },
+      {
+        type: 'version',
+        text: 'Expo SDK 58 ships React Native 0.88 and needs Node.js 22.13 or newer (or 24.3+, or 26+; odd-numbered Node releases are unsupported). The docs also noted a transition period: `create-expo-app@latest` without `--template` still made an SDK 57 project, and "if you plan to use Expo Go on a physical device, use an SDK 57 project". The SDK 58 changelog said the new Expo Go supports only SDK 58 and would reach the app stores a few weeks after the announcement. Check the current Create a project page before you pick.',
+        checked: CHECKED,
+        sources: [DOCS.create, DOCS.sdk58],
+      },
+      { type: 'heading', text: 'What is inside a new project' },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'The default template (SDK 58), abbreviated',
+        code: `tindahan/
+  app.json          app name, icon, scheme, plugins
+  package.json
+  tsconfig.json
+  assets/           images and icons
+  src/
+    app/            every file here is a route (lesson 2)
+      _layout.tsx
+      index.tsx
+      explore.tsx
+    components/     reusable UI, not routes
+    constants/
+    hooks/`,
+      },
+      { type: 'paragraph', text: 'Notice what is missing: there is no `ios` folder and no `android` folder. Those hold the native Xcode and Gradle projects, and Expo does not make them until you ask. This idea is **Continuous Native Generation**, or CNG: the native projects are generated from `app.json` and `package.json` when needed and are listed in `.gitignore`. You keep the recipe (your config), not the cooked meal. The command that generates them is `npx expo prebuild`.' },
+      { type: 'heading', text: 'Expo Go or a development build?' },
+      { type: 'paragraph', text: 'To see your app on a phone you need an app to run it in. There are two choices, and they differ in one way that matters: **native code**. Native code is the Swift, Kotlin or C++ that is compiled into the app file you install from a store. JavaScript can change every second, but native code is fixed once the app is built.' },
+      { type: 'paragraph', text: '**Expo Go** is a ready-made app from the App Store and Google Play. It contains the native code for the libraries in the Expo SDK, and it loads your JavaScript from your computer. You install nothing of your own, so you can start in a minute. The cost is that its native code is fixed: it cannot run a library that brings its own native code, and you cannot change native configuration. Expo describes it as a playground for students and learners, and not useful for production-grade projects.' },
+      { type: 'paragraph', text: 'A **development build** is your own app, compiled with a small extra library called `expo-dev-client`. Think of Expo Go as a furnished hotel room and a development build as your own house: you choose the plumbing. It can include any native library and any native setting you change in `app.json`. It takes longer to start (a build) but behaves like the app you will ship.' },
+      {
+        type: 'table',
+        headers: ['', 'Expo Go', 'Development build'],
+        rows: [
+          ['Where it comes from', 'The app stores', 'Built from your project'],
+          ['Native libraries', 'Only what is inside Expo Go (the Expo SDK and JavaScript-only libraries)', 'Anything you install'],
+          ['Native config in app.json', 'Cannot change', 'Applied when you rebuild'],
+          ['Best for', 'Learning and quick experiments', 'Real projects and anything you will publish'],
+        ],
+        caption: 'The same JavaScript, two different containers',
+      },
+      {
+        type: 'diagram',
+        format: 'mermaid',
+        caption: 'Choosing where to run your app',
+        source: 'flowchart TD\n  A[You want to run the app on a phone] --> B{Needs a native library or a native setting?}\n  B -->|No, only Expo SDK libraries and JavaScript| C[Expo Go is enough for experiments]\n  B -->|Yes| D[Make a development build]\n  C --> E{Is this a real project you will publish?}\n  E -->|Yes| D\n  E -->|No| F[Stay in Expo Go]',
+      },
+      { type: 'paragraph', text: 'You make a development build locally with `npx expo run:ios` or `npx expo run:android` (needs Xcode or Android Studio), or in the cloud with `eas build --profile development` (lesson 9). With `expo-dev-client` installed, `npx expo start` talks to your build instead of Expo Go.' },
+      {
+        type: 'version',
+        text: 'Per the Expo docs, Expo Go lets you use libraries in the Expo SDK and libraries that do not need custom native code, but it cannot use third-party libraries that need custom native code. A development build is your own app with `expo-dev-client`; you only need to rebuild it when you add a library with native code, change `app.json`, or upgrade the SDK. A local iPhone build works without a paid Apple Developer account; cloud builds for iPhones need one.',
+        checked: CHECKED,
+        sources: [DOCS.faq, DOCS.devBuilds],
+      },
+      { type: 'heading', text: 'The CLI commands you will type every day' },
+      {
+        type: 'table',
+        headers: ['Command', 'What it does'],
+        rows: [
+          ['`npx expo start`', 'Starts Metro; opens Expo Go, or your development build when `expo-dev-client` is installed'],
+          ['`npx expo install <package>`', 'Installs a library at the version that matches your SDK. `--check` reports wrong versions and `--fix` repairs them'],
+          ['`npx expo run:ios` / `run:android`', 'Builds the native app on your machine and starts it (a development build)'],
+          ['`npx expo prebuild`', 'Generates the `ios` and `android` folders from your config; `--clean` regenerates them from scratch'],
+          ['`npx expo config --type public`', 'Prints the final app config that gets embedded in your app'],
+          ['`npx expo lint`', 'Runs ESLint with Expo settings'],
+        ],
+      },
+      { type: 'warning', text: 'Add Expo libraries with `npx expo install`, not `npm install`. Each SDK expects particular versions of its libraries, and `npx expo install` chooses the ones that match. Installing the newest version by hand is a common cause of an app that suddenly crashes on start.' },
+      {
+        type: 'version',
+        text: 'The Expo CLI page lists `start`, `install` (with `--check` and `--fix`), `run:ios`, `run:android`, `prebuild`, `export`, `lint` and `config`. Prebuild is how CNG is implemented: it creates the `android` and `ios` directories from an SDK-matched template, then applies your app config and config plugins, and `--clean` is the safest option because some config plugins are not idempotent.',
+        checked: CHECKED,
+        sources: [DOCS.cli, DOCS.cng],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'Expo is the toolchain around React Native: the CLI, the SDK libraries, Expo Router and the EAS cloud services.',
+          'Expo Go is a fixed playground app for quick experiments; a development build is your own app and can use any native library.',
+          'Native code and native config only change when you rebuild; JavaScript changes appear with Fast Refresh.',
+          'There is no `ios` or `android` folder in a new project: `npx expo prebuild` generates them from your config (CNG).',
+          'Install Expo libraries with `npx expo install` so the versions match your SDK.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'expo-router-01-scenario-1',
+          kind: 'scenario',
+          title: 'Expo Go or a development build?',
+          prompt: 'Pick the best way to run the app.',
+          concept: 'Expo Go versus development builds',
+          situation: 'You are building a small delivery app. A client asks for card payments, and the payment company supplies a library that ships its own native iOS and Android code. You have been running the app in Expo Go all week.',
+          options: [
+            { text: 'Install the library, create a development build with `expo-dev-client`, and run the app in that build from now on.', consequence: 'The library\'s native code is compiled into your own app, so the payment screen works. Your daily loop stays the same: `npx expo start` and Fast Refresh.', quality: 'best' },
+            { text: 'Keep using Expo Go and wrap the payment calls in try/catch so the app does not crash.', consequence: 'Expo Go does not contain that native code, so the call fails every time. The try/catch hides the error but the payment can never work in this container.', quality: 'poor' },
+            { text: 'Abandon Expo and rebuild the whole project as plain React Native.', consequence: 'The payment library would work, but you give up the Expo CLI, the SDK libraries and the cloud services for no gain. A development build gives you the same native freedom without starting over.', quality: 'acceptable' },
+          ],
+          hints: [
+            'Ask where the library\'s native code would live.',
+            'Expo Go\'s native code was compiled before your library existed, so it cannot contain it.',
+            'You need an app that contains your library: that is a development build.',
+          ],
+          explanation: 'Native code is compiled into the app binary. Expo Go\'s binary is fixed and was built without your payment library, so only your own build can include it. A development build keeps Expo\'s tooling and adds that one capability.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'expo-router-01-match-1',
+          kind: 'match',
+          title: 'What does this change require?',
+          prompt: 'Match each change you make to what you must do next.',
+          concept: 'when to rebuild',
+          labels: { terms: 'What you changed', meanings: 'What to do next' },
+          pairs: [
+            { term: 'You change the colour of a button inside a component', definition: 'Save the file; Fast Refresh updates the running app', note: 'Colours are JavaScript. Nothing native changed.' },
+            { term: 'You install a library that includes native code', definition: 'Make a new development build that contains it', note: 'The installed app does not have that native code yet.' },
+            { term: 'You change the app name or add a config plugin in app.json', definition: 'Regenerate the native project and rebuild the app', note: 'app.json settings become native files at prebuild time.' },
+            { term: 'You want to try a screen on your phone in five minutes using only Expo SDK libraries', definition: 'Run `npx expo start` and open it in Expo Go', note: 'No native change is needed, so the playground is enough.' },
+          ],
+          hints: [
+            'Ask whether the change is JavaScript or native.',
+            'JavaScript changes reload by themselves. Native code and app.json settings need a new build.',
+            'Only the first and last rows can avoid a rebuild.',
+          ],
+          explanation: 'Fast Refresh only carries JavaScript. Anything that ends up in the native project, such as a native library or an app.json setting, needs a rebuild of the app.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'expo-router-01-fix-bug-1',
+          kind: 'fix-bug',
+          title: 'Install the right camera version',
+          prompt: 'One line may install a version of the camera library that does not match your SDK. Find it and fix it.',
+          concept: 'npx expo install',
+          language: 'bash',
+          code: 'cd tindahan\nnpm install expo-camera@latest\nnpx expo start',
+          bugLine: 2,
+          fixes: [
+            { line: 'npx expo install expo-camera', correct: true, why: '`npx expo install` picks the version that matches your SDK, which is what keeps the app stable.' },
+            { line: 'npm install expo-camera --force', correct: false, why: '`--force` only bypasses npm\'s checks. It does not choose the version your SDK expects.' },
+            { line: 'npx expo prebuild expo-camera', correct: false, why: '`prebuild` generates the native folders. It does not install libraries.' },
+          ],
+          hints: [
+            'Which Expo command picks a compatible version for you?',
+            'It starts with `npx expo` and has the word install in it.',
+            'The answer is `npx expo install expo-camera`.',
+          ],
+          explanation: 'Each Expo SDK expects particular library versions. `npx expo install` reads your SDK and installs the matching one, so you do not guess.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'expo-router-01-q1',
+        prompt: 'Your app works in Expo Go. You then install a library that contains its own native iOS code and the app crashes when the screen opens. What is the most likely reason?',
+        choices: [
+          'The dev server is too slow to send that much JavaScript to the phone in one go',
+          'Fast Refresh only works for the first library you install in a project, not later ones',
+          'Expo Go has fixed native code without that library, so you need a development build',
+          'The library must first be installed with plain npm, because the Expo tools only handle JavaScript packages',
+        ],
+        answer: 2,
+        explanation: 'Native code is compiled into the app. Expo Go was built before your library existed, so the JavaScript calls something that is not there. A development build compiles it in.',
+      },
+      {
+        id: 'expo-router-01-q2',
+        prompt: 'A new project has no `ios` or `android` folder. Which command creates them from your app config?',
+        choices: [
+          'npx expo prebuild',
+          'npx expo start --native',
+          'npx expo install ios android',
+          'npx expo config --type public',
+        ],
+        answer: 0,
+        explanation: '`npx expo prebuild` generates the native projects from `app.json` and `package.json`. The other commands start the server, install libraries or print the config.',
+      },
+      {
+        id: 'expo-router-01-q3',
+        prompt: 'Why does the course tell you to add Expo libraries with `npx expo install` and not a plain `npm install`?',
+        choices: [
+          'It downloads the library faster because the Expo servers act as a cache for npm packages',
+          'It makes the library work in Expo Go even when the library contains its own native code',
+          'It copies the library source into your project folder so that you are able to edit it',
+          'It installs the version that matches your SDK instead of the newest one',
+        ],
+        answer: 3,
+        explanation: 'Each SDK expects specific library versions. `npx expo install` looks at your SDK and picks the matching one, which prevents version-mismatch crashes.',
+      },
+      {
+        id: 'expo-router-01-q4',
+        prompt: 'You are running a development build and you change the text of a heading in one of your components. What do you have to do to see it?',
+        choices: [
+          'Run `npx expo prebuild --clean` and install the app again on the phone',
+          'Nothing: save the file and Fast Refresh updates the running app',
+          'Publish an update with `eas update` and restart the app twice',
+          'Delete the app from the phone and create a new development build',
+        ],
+        answer: 1,
+        explanation: 'The heading text is JavaScript. A development build loads JavaScript from the dev server, so Fast Refresh shows the change. A rebuild is only for native changes.',
+      },
+    ],
+    task: {
+      title: 'Make an app and read its layout',
+      steps: [
+        'In a terminal, run `npx create-expo-app@latest tindahan --template default@sdk-58`, then `cd tindahan`.',
+        'List the files with `ls -a`. Check that there is no `ios` or `android` folder, and that `.gitignore` lists them.',
+        'Run `npx expo start` and press `i` or `a` (or scan the QR code with a phone whose Expo Go matches your SDK). Edit the text in `src/app/index.tsx` and watch it update.',
+        'Run `npx expo config --type public` and find `name`, `slug` and `scheme` in the output.',
+      ],
+      minutes: 15,
+    },
+  },
+  {
+    id: 'expo-router-02',
+    day: 2,
+    title: 'File-based routing: the app directory',
+    summary: 'Turn files into screens and URLs: index files, nested folders, route groups, and moving between screens with Link and the router.',
+    intro: {
+      objectives: [
+        'Predict the URL of any file inside the app directory, including index files and route groups',
+        'Write a screen file with the default export Expo Router requires',
+        'Move between screens with `Link`, `router.push`, `router.replace` and `Redirect`',
+        'Keep non-screen code out of the app directory so it does not become a route by accident',
+      ],
+      why: 'In an Expo app the folder you save a file in is the navigation. Once you can read a file tree as a map of screens, you can plan an app on paper before you write any code, and you can find any screen in seconds.',
+    },
+    minutes: 25,
+    skills: ['file-routing'],
+    body: [
+      { type: 'paragraph', text: "Many navigation libraries ask you to write a list in code: here are my screens, here is their order. Expo Router works the other way round. You create a file, and a screen exists. The folder tree inside your app directory is the map of your whole app, and every screen automatically gets a URL, the same way every page of a website has an address." },
+      { type: 'paragraph', text: "Think of a building directory in a mall. You do not keep a separate list of shops; the directory is the floors and doors themselves. Add a door with a label and a new shop exists. That is why this is called **file-based routing**." },
+      { type: 'heading', text: 'One file, one screen, one URL' },
+      { type: 'paragraph', text: 'In the SDK 58 template, every file in `src/app` is a **route**: a screen with its own URL. The file path decides the URL, and the file must `export default` the component to show. Here is the whole idea in a table:' },
+      {
+        type: 'table',
+        headers: ['File', 'URL', 'Why'],
+        rows: [
+          ['`src/app/index.tsx`', '`/`', '`index` is the default screen of its folder, here the root'],
+          ['`src/app/about.tsx`', '`/about`', 'The file name is the last part of the URL'],
+          ['`src/app/profile/index.tsx`', '`/profile`', '`index` again: the folder name alone opens it'],
+          ['`src/app/profile/friends.tsx`', '`/profile/friends`', 'Folders become URL segments'],
+          ['`src/app/(shop)/cart.tsx`', '`/cart`', 'Parentheses make a **group**, which is left out of the URL'],
+          ['`src/components/text-field.tsx`', 'no URL', 'It is outside `src/app`, so it is just a component'],
+        ],
+        caption: 'Reading a file tree as a list of URLs',
+      },
+      { type: 'paragraph', text: 'A screen file is a normal React component with one extra rule. Here is the smallest useful one:' },
+      {
+        type: 'code',
+        language: 'tsx',
+        label: 'src/app/about.tsx',
+        code: `import { Text, View } from 'react-native';
+
+export default function About() {
+  return (
+    <View style={{ flex: 1, padding: 16 }}>
+      <Text>About Tindahan</Text>
+    </View>
+  );
+}`,
+      },
+      { type: 'paragraph', text: 'Read it line by line. The first line imports two building blocks you know from React Native. `export default function About()` is the part Expo Router cares about: the **default export** is the screen. The function returns what to draw. The name `About` does not matter to the router. If a route file has no default export, the router warns that the route is missing its required default export.' },
+      { type: 'heading', text: 'Groups: folders that do not appear in the URL' },
+      { type: 'paragraph', text: 'A folder whose name is wrapped in parentheses, like `(shop)`, is a **route group**. It organises files, and in the next lessons it also lets files share a layout, but it adds nothing to the URL. So `(shop)/cart.tsx` is `/cart`, and `(shop)/checkout/index.tsx` is `/checkout`. We confirmed this by loading these file trees into Expo Router\'s own route matcher.' },
+      { type: 'warning', text: 'Everything inside `src/app` becomes a route. A helper file at `src/app/helpers/format-price.ts` would become the URL `/helpers/format-price`. Put components, hooks and utilities outside the app directory, for example in `src/components`, `src/hooks` and `src/lib`.' },
+      { type: 'paragraph', text: 'Two names are worth knowing already. `_layout.tsx` is not a screen: it wraps the screens beside it, and lesson 3 is about it. `+not-found.tsx` is the screen shown when a URL matches nothing:' },
+      {
+        type: 'code',
+        language: 'tsx',
+        label: 'src/app/+not-found.tsx',
+        code: `import { Unmatched } from 'expo-router';
+
+export default Unmatched;`,
+      },
+      { type: 'paragraph', text: '`Unmatched` is the built-in not-found screen. You can export your own component instead, and the docs suggest it link back to `/` so people can get home. Native apps have no server, so there is no real "404", but a link from outside can still ask for a screen that does not exist.' },
+      {
+        type: 'version',
+        text: 'In the Expo Router docs for SDK 58, routes come from `src/app`; a file defines a page through its default export; a folder in parentheses is a group and is not part of the URL; and components, hooks and utilities belong outside the app directory because "anything placed inside it is treated as a route". `+not-found.tsx` handles unmatched routes, and exporting `Unmatched` renders the default not-found screen.',
+        checked: CHECKED,
+        sources: [DOCS.concepts, DOCS.notation, DOCS.notFound],
+      },
+      { type: 'heading', text: 'Moving between screens' },
+      { type: 'paragraph', text: 'The path is the address, so you move by naming it. There are two tools: the `Link` component, which you draw on screen, and the `router` object, which you call from code (after a button press or a saved form).' },
+      {
+        type: 'code',
+        language: 'tsx',
+        label: 'src/app/index.tsx',
+        code: `import { Link, useRouter } from 'expo-router';
+import { Pressable, Text, View } from 'react-native';
+
+export default function Home() {
+  const router = useRouter();
+
+  return (
+    <View style={{ flex: 1, padding: 16, gap: 12 }}>
+      <Link href="/about">About us</Link>
+
+      <Link href="/profile/friends" asChild>
+        <Pressable accessibilityRole="button">
+          <Text>Friends</Text>
+        </Pressable>
+      </Link>
+
+      <Pressable accessibilityRole="button" onPress={() => router.push('/profile')}>
+        <Text>Open profile</Text>
+      </Pressable>
+    </View>
+  );
+}`,
+      },
+      { type: 'paragraph', text: 'The first `Link` draws plain text that is tappable. By default a `Link` wraps its children in a `Text`. The second uses `asChild`, which tells it to hand its tap behaviour to the one child you give it, so you control the look with your own `Pressable`. The third button does the same job from code with `router.push`. Notice the strings are the **URLs** from the table, not file names.' },
+      {
+        type: 'table',
+        headers: ['Call', 'What happens'],
+        rows: [
+          ['`router.navigate(href)`', 'Pushes the screen, or goes back to it if it is already on the stack. The docs say this is usually the one you want'],
+          ['`router.push(href)`', 'Always pushes a new copy of the screen on top'],
+          ['`router.replace(href)`', 'Swaps the current screen for the new one, so Back does not return here'],
+          ['`router.back()`', 'Goes to the previous screen'],
+          ['`<Redirect href="/about" />`', 'Like `replace`, but declared in JSX: the current screen is never shown'],
+        ],
+        caption: 'Navigation calls, from `useRouter()` or imported as `router`',
+      },
+      { type: 'tip', text: 'Use `replace` (or `Redirect`) when going back would make no sense, such as after signing in. A user pressing Back should not land on the sign-in form again.' },
+      {
+        type: 'version',
+        text: 'The Expo Router navigation docs describe `router.navigate` as the usual choice (it pushes a page or unwinds to an existing route on the stack), `router.push` as always pushing, `router.replace` as replacing the current page, and `Redirect` as working like `router.replace` without rendering the current page. `Link` renders its children in a `Text` unless you use `asChild`.',
+        checked: CHECKED,
+        sources: [DOCS.navigation],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'Every file in `src/app` is a screen with a URL; the file must `export default` its component.',
+          '`index` is the default screen of a folder, and a folder in parentheses is a group that is left out of the URL.',
+          'Anything inside `src/app` becomes a route, so keep components, hooks and helpers outside it.',
+          '`Link` draws a tappable link, `router.push`, `navigate` and `replace` move from code, and `Redirect` moves without showing the current screen.',
+          '`+not-found.tsx` is the screen for a URL that matches no file.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'expo-router-02-match-1',
+          kind: 'match',
+          title: 'Which URL does this file make?',
+          prompt: 'Match each file to the URL it creates in your app.',
+          concept: 'file path to URL',
+          labels: { terms: 'File', meanings: 'URL' },
+          pairs: [
+            { term: 'src/app/(auth)/login.tsx', definition: '/login', note: 'A group in parentheses is dropped from the URL.' },
+            { term: 'src/app/settings/index.tsx', definition: '/settings', note: '`index` means the folder name alone opens it.' },
+            { term: 'src/app/shop/(deals)/sale.tsx', definition: '/shop/sale', note: 'Only the group part is dropped; the `shop` folder stays.' },
+            { term: 'src/app/helpers/price-card.tsx', definition: '/helpers/price-card', note: 'Files inside the app directory are routes even when you meant a helper.' },
+          ],
+          hints: [
+            'Which folder names disappear from a URL?',
+            'Folders in parentheses disappear. Normal folders stay, and `index` adds nothing.',
+            'The last pair is the trap: a helper placed inside `src/app` still becomes a screen.',
+          ],
+          explanation: 'Groups and `index` add nothing to the URL; every other folder and the file name do. That last file shows why helpers belong outside `src/app`.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'expo-router-02-predict-output-1',
+          kind: 'predict-output',
+          title: 'Which file answers this URL?',
+          prompt: 'These files exist in the app. When the app opens the URL `/checkout`, which file renders?',
+          concept: 'route resolution',
+          language: 'text',
+          code: 'src/app/_layout.tsx\nsrc/app/index.tsx\nsrc/app/(shop)/cart.tsx\nsrc/app/(shop)/checkout/index.tsx\nsrc/app/profile/index.tsx',
+          expected: 'src/app/(shop)/checkout/index.tsx',
+          choices: [
+            'src/app/(shop)/checkout/index.tsx',
+            'src/app/(shop)/cart.tsx',
+            'src/app/checkout.tsx',
+            'None: the not-found screen shows',
+          ],
+          wrongNotes: {
+            'src/app/(shop)/cart.tsx': 'That file answers `/cart`, not `/checkout`.',
+            'src/app/checkout.tsx': 'That file does not exist in the list. The folder `checkout` with an `index` inside, under the `(shop)` group, answers the URL.',
+            'None: the not-found screen shows': 'The group `(shop)` is invisible in the URL, so `/checkout` does match a file.',
+          },
+          hints: [
+            'Which folders in the list are groups, and are they part of the URL?',
+            'Remove `(shop)` from the path, then remember `index` adds no segment.',
+            'The path `(shop)/checkout/index.tsx` becomes `/checkout`.',
+          ],
+          explanation: '`(shop)` is dropped and `index` adds no segment, so `src/app/(shop)/checkout/index.tsx` is `/checkout`. We confirmed the match by running Expo Router\'s route matcher on this exact file list.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'expo-router-02-fix-bug-1',
+          kind: 'fix-bug',
+          title: 'The screen that will not show',
+          prompt: 'The router warns that this route is missing its required default export. Find the line to change.',
+          concept: 'the default export',
+          language: 'tsx',
+          code: "import { Text, View } from 'react-native';\n\nexport function Profile() {\n  return (\n    <View>\n      <Text>Maria's profile</Text>\n    </View>\n  );\n}",
+          bugLine: 3,
+          fixes: [
+            { line: 'export default function Profile() {', correct: true, why: 'The router reads the default export of the file as the screen.' },
+            { line: 'export function Profile(): JSX.Element {', correct: false, why: 'Adding a return type changes nothing: it is still a named export, and the router needs the default export.' },
+            { line: 'function Profile() {', correct: false, why: 'Removing `export` makes it private to the file, so the router finds nothing at all.' },
+          ],
+          hints: [
+            'Look at how the component is exported.',
+            'A route file needs one particular kind of export.',
+            'Change the line to `export default function Profile() {`.',
+          ],
+          explanation: 'Expo Router shows whatever the file exports as its default. A named export is invisible to it, so it warns that the default export is missing.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'expo-router-02-q1',
+        prompt: 'A file lives at `src/app/(tabs)/orders/index.tsx`. What URL opens it?',
+        choices: [
+          '/(tabs)/orders/index',
+          '/orders',
+          '/tabs/orders',
+          '/orders/index',
+        ],
+        answer: 1,
+        explanation: 'The `(tabs)` group is left out of the URL and `index` adds no segment, so the screen is `/orders`.',
+      },
+      {
+        id: 'expo-router-02-q2',
+        prompt: 'You save a helper that formats prices as `src/app/utils/format-price.ts` and your app starts logging route warnings. What is going on and what is the fix?',
+        choices: [
+          'The router only reads `.tsx` files, so you should rename the helper to end in `.tsx`',
+          'Helpers must be listed in `app.json` before they are allowed to live inside the app folder',
+          'The helper needs a `_layout.tsx` beside it so that the router knows how to group it',
+          'Everything in the app directory is a route, so move the helper outside it',
+        ],
+        answer: 3,
+        explanation: 'Anything inside `src/app` is a route and a route needs a default export. Move helpers to `src/lib` or `src/components`.',
+      },
+      {
+        id: 'expo-router-02-q3',
+        prompt: 'After a user submits a sign-in form you want them on the home screen, and pressing Back must not return to the form. Which call fits?',
+        choices: [
+          '`router.push(\'/\')`, because push adds the home screen and keeps the form underneath it',
+          '`router.back()`, because it removes the form and shows whatever came before it',
+          '`router.replace(\'/\')`, because it swaps the form for the home screen',
+        ],
+        answer: 2,
+        explanation: '`replace` swaps the current screen for the new one, so there is no sign-in form left to go back to. `push` would keep the form underneath.',
+      },
+      {
+        id: 'expo-router-02-q4',
+        prompt: 'You write `<Link href="/about" asChild><Pressable>...</Pressable></Link>`. What does `asChild` do?',
+        choices: [
+          'It gives the tap behaviour to your `Pressable` and skips the wrapping `Text`',
+          'It makes the link open the screen as a child of the current screen in the file tree hierarchy',
+          'It tells the router to load the `about` file before it loads any of the other screens',
+          'It turns the link into a button that only works while the user is signed in',
+        ],
+        answer: 0,
+        explanation: 'By default `Link` wraps its children in a `Text`. With `asChild` it passes its `onPress` to the single child you provide, so you control the look.',
+      },
+    ],
+    task: {
+      title: 'Map your app on paper, then in files',
+      steps: [
+        'Sketch a shop app with five screens: Home, Menu, Cart, Checkout and Profile. Write the URL you want for each.',
+        'In your `tindahan` project, create a file for each in `src/app`. Put Cart and Checkout in a `(shop)` group and give Profile its own folder with an `index.tsx`.',
+        'Add a `Link` on Home to each screen. Run `npx expo start` and visit them all.',
+        'Add `src/app/+not-found.tsx` that exports your own screen with a link back to `/`. Try a `router.push` to an address that does not exist.',
+      ],
+      minutes: 15,
+    },
+  },
+  {
+    id: 'expo-router-03',
+    day: 3,
+    title: 'Layouts and stacks',
+    summary: 'Wrap screens in a layout, build a Stack with headers and options, nest layouts with groups, and keep Back sensible with an anchor.',
+    intro: {
+      objectives: [
+        'Explain what a `_layout.tsx` file does and how nested layouts wrap each other',
+        'Build a `Stack` and configure headers for all screens, one screen, or from inside a screen',
+        'Use a route group with its own layout and avoid the double-header mistake',
+        'Set an `anchor` so a screen opened from a link still has somewhere to go back to',
+      ],
+      why: 'Almost every screen you ship lives inside a stack, and the layout is where you put the things every screen shares: the header style, the providers, the splash handling. Getting layouts right once saves you repeating yourself on every screen.',
+    },
+    minutes: 25,
+    skills: ['layouts-navigators'],
+    body: [
+      { type: 'paragraph', text: "A screen file only draws what is inside: a list, a form, some text. Something else has to supply the frame around it: the header, the back button, the slide-in animation when you open it. In Expo Router that something is a **layout**, a file named `_layout.tsx`. Like a picture frame in a gallery, it stays in place while the pictures (the screens) change inside it." },
+      { type: 'paragraph', text: "A layout is not a screen and has no URL. It wraps the screens that sit in the same folder. The one at `src/app/_layout.tsx` is the **root layout**, and the docs say it renders before any other route. That makes it the right home for things the whole app needs once: a theme, a data provider, loading fonts, hiding the splash screen." },
+      { type: 'heading', text: 'The Stack: a pile of cards' },
+      { type: 'paragraph', text: 'The most common thing a layout returns is a `Stack`. Picture a pile of cards on a table. Opening a screen puts a new card on top, and going back removes it, revealing the card underneath. On a phone this gives the native slide transition and a header with a back button, because the Stack is built on the platform\'s own navigation components.' },
+      {
+        type: 'code',
+        language: 'tsx',
+        label: 'src/app/_layout.tsx',
+        code: `import { Stack } from 'expo-router';
+
+export default function RootLayout() {
+  return (
+    <Stack screenOptions={{ headerTintColor: '#1b5e20', headerBackTitle: 'Back' }}>
+      <Stack.Screen name="index" options={{ title: 'Tindahan' }} />
+      <Stack.Screen name="about" options={{ title: 'About us' }} />
+      <Stack.Screen name="(shop)" options={{ headerShown: false }} />
+    </Stack>
+  );
+}`,
+      },
+      { type: 'paragraph', text: 'Read it top to bottom. Every file next to this layout becomes a screen of this Stack automatically; you do not need to list them. You only add `Stack.Screen` when a screen needs its own options. The `name` must match the file or folder name, with no extension: `index`, `about`, and `(shop)` for the group folder. `screenOptions` applies to every screen, and `options` on a `Stack.Screen` applies to that one. A screen\'s own options win over the shared ones.' },
+      {
+        type: 'table',
+        headers: ['Header option', 'What it does'],
+        rows: [
+          ['`title`', 'The text in the header (falls back to the screen name)'],
+          ['`headerShown`', 'Set to `false` to hide the header on that screen'],
+          ['`headerStyle`, `headerTintColor`, `headerTitleStyle`', 'Background colour, button and title colour, text style'],
+          ['`headerBackTitle`', 'The text next to the back arrow; mostly iOS'],
+          ['`headerRight`, `headerLeft`', 'Functions that return a button or other element for a header side'],
+        ],
+        caption: 'The header options you will use most',
+      },
+      { type: 'warning', text: 'If a `Stack.Screen` has a `name` that matches no file, Expo Router logs "[Layout children]: No route named ... exists in nested children". It is nearly always a typo or a renamed file. Check the name against the file tree first.' },
+      { type: 'heading', text: 'Options that depend on the screen' },
+      { type: 'paragraph', text: 'Sometimes the title is only known once the screen has its data, such as "Cart (3)". For that you place a `Stack.Screen` inside the screen itself. It draws nothing; it just sets the options for the screen it sits in.' },
+      {
+        type: 'code',
+        language: 'tsx',
+        label: 'src/app/(shop)/cart.tsx',
+        code: `import { Stack } from 'expo-router';
+import { Text, View } from 'react-native';
+
+export default function Cart() {
+  const items = 3;
+
+  return (
+    <View style={{ flex: 1, padding: 16 }}>
+      <Stack.Screen options={{ title: \`Cart (\${items})\` }} />
+      <Text>{items} items in your cart</Text>
+    </View>
+  );
+}`,
+      },
+      {
+        type: 'version',
+        text: 'The Expo Router Stack docs show `screenOptions` on the Stack, `<Stack.Screen name="..." options={...} />` in a layout, and `<Stack.Screen options={...} />` inside a screen for dynamic options. Headers are on by default (`headerShown` hides them). SDK 55 added an alpha composition API (`Stack.Title`, `Stack.Header`, `Stack.Toolbar`) that can sit beside the options API. On iOS 26 and later, headers use Liquid Glass by default and you cannot opt out per screen. SDK 58 adds the iOS option `headerUserInterfaceStyle`.',
+        checked: CHECKED,
+        sources: [DOCS.stack],
+      },
+      { type: 'heading', text: 'Nested layouts and groups' },
+      { type: 'paragraph', text: 'Layouts nest. A folder, or a route group, can have its own `_layout.tsx`, and then everything inside it is wrapped by that layout, which in turn is wrapped by the one above. To the parent Stack, the whole group looks like a single screen.' },
+      {
+        type: 'diagram',
+        format: 'mermaid',
+        caption: 'Layouts wrap the files beside them, and a group can add its own layer',
+        source: 'flowchart TD\n  A["src/app/_layout.tsx (root Stack)"] --> B[index.tsx]\n  A --> C[about.tsx]\n  A --> D["(shop)/_layout.tsx (Stack)"]\n  D --> E[cart.tsx]\n  D --> F[checkout.tsx]',
+      },
+      { type: 'paragraph', text: 'Here is the layout for the `(shop)` group. Because it returns its own `Stack`, the cart and checkout screens get their own header and back button inside the group:' },
+      {
+        type: 'code',
+        language: 'tsx',
+        label: 'src/app/(shop)/_layout.tsx',
+        code: `import { Stack } from 'expo-router';
+
+export const unstable_settings = { anchor: 'cart' };
+
+export default function ShopLayout() {
+  return (
+    <Stack>
+      <Stack.Screen name="cart" options={{ title: 'Your cart' }} />
+      <Stack.Screen name="checkout" options={{ title: 'Checkout' }} />
+    </Stack>
+  );
+}`,
+      },
+      { type: 'paragraph', text: 'Two details are worth slowing down for. First, the root layout set `headerShown: false` for `(shop)`. Without it the root Stack would draw a header for the group **and** the group\'s own Stack would draw another one: the classic double header. The outer navigator hides its header and lets the inner one own it.' },
+      { type: 'paragraph', text: 'Second, `unstable_settings = { anchor: \'cart\' }` names the screen that should always sit at the bottom of this stack. It matters when someone opens the app from a link straight to `/checkout`. With an anchor, the stack is `cart` then `checkout`, so Back goes to the cart. Without one, `checkout` would be alone and Back would have nowhere to go. The docs show this setting for deep-linked modals, and lesson 7 returns to it.' },
+      { type: 'tip', text: 'Plan layouts from the outside in. Ask what frame each part of the app needs: one Stack for the whole app, tabs inside it (next lesson), a Stack inside each tab. Then draw the file tree that gives you exactly those frames.' },
+      {
+        type: 'version',
+        text: 'The Common navigation patterns page shows a root Stack that hosts `(tabs)` with `headerShown: false` and a detail route beside it, and a `Stack` in a nested folder with `unstable_settings = { anchor: \'index\' }`. The Modals page explains that setting an anchor in the layout keeps the screen behind a deep-linked modal.',
+        checked: CHECKED,
+        sources: [DOCS.patterns, DOCS.modals],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'A `_layout.tsx` wraps the screens beside it and has no URL; the root layout renders before every other route.',
+          'A `Stack` is a pile of screens with native transitions and a header. Files next to the layout become its screens automatically.',
+          'Set options three ways: `screenOptions` for all, `Stack.Screen options` in the layout for one, and a `Stack.Screen` inside the screen for data-driven values.',
+          'A group with its own layout is one screen to the parent. Hide the parent\'s header with `headerShown: false` to avoid two headers.',
+          'An `anchor` keeps a base screen under one opened by a link, so Back has somewhere to go.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'expo-router-03-arrange-1',
+          kind: 'arrange',
+          title: 'Build a root layout',
+          prompt: 'Put the lines in order to make a root layout with a Stack and two titled screens.',
+          concept: 'Stack layout',
+          language: 'tsx',
+          solution: [
+            "import { Stack } from 'expo-router';",
+            'export default function RootLayout() {',
+            '  return (',
+            "    <Stack screenOptions={{ headerTintColor: '#1b5e20' }}>",
+            "      <Stack.Screen name=\"index\" options={{ title: 'Tindahan' }} />",
+            "      <Stack.Screen name=\"about\" options={{ title: 'About' }} />",
+            '    </Stack>',
+            '  );',
+            '}',
+          ],
+          alternatives: [
+            [
+              "import { Stack } from 'expo-router';",
+              'export default function RootLayout() {',
+              '  return (',
+              "    <Stack screenOptions={{ headerTintColor: '#1b5e20' }}>",
+              "      <Stack.Screen name=\"about\" options={{ title: 'About' }} />",
+              "      <Stack.Screen name=\"index\" options={{ title: 'Tindahan' }} />",
+              '    </Stack>',
+              '  );',
+              '}',
+            ],
+          ],
+          reasons: [
+            'The import comes first so `Stack` exists before it is used.',
+            'The layout is a component with a default export.',
+            'A component returns JSX, so `return (` opens it.',
+            'The Stack opens first, with options shared by every screen.',
+            'Screens go inside the Stack. The order of `Stack.Screen` lines does not change the first screen, so these two may swap.',
+            'The second screen goes inside the Stack, too.',
+            'Close the Stack after its screens.',
+            'Close the return parenthesis.',
+            'Close the function last.',
+          ],
+          hints: [
+            'Start with the import, and think about what has to be open before what is inside it.',
+            'The function and `return (` come before the `<Stack>` lines, and the closing lines run in the opposite order to the opening ones.',
+            'Order: import, function, return, `<Stack ...>`, the two `Stack.Screen` lines, `</Stack>`, `);`, `}`.',
+          ],
+          explanation: 'A layout is an ordinary component: import what you use, export it as default, return a `Stack` and put `Stack.Screen` entries inside. The closing lines mirror the opening lines in reverse.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'expo-router-03-fix-bug-1',
+          kind: 'fix-bug',
+          title: 'Two headers on the shop screens',
+          prompt: 'The shop screens show a header from the root Stack and a second header from the `(shop)` group\'s own Stack. Change the one line that fixes it.',
+          concept: 'nested layouts and headers',
+          language: 'tsx',
+          code: "import { Stack } from 'expo-router';\n\nexport default function RootLayout() {\n  return (\n    <Stack>\n      <Stack.Screen name=\"index\" options={{ title: 'Home' }} />\n      <Stack.Screen name=\"(shop)\" options={{ title: 'Shop' }} />\n    </Stack>\n  );\n}",
+          bugLine: 7,
+          fixes: [
+            { line: '      <Stack.Screen name="(shop)" options={{ headerShown: false }} />', correct: true, why: 'The root Stack hides its header for the group, so only the group\'s own Stack draws one.' },
+            { line: '      <Stack.Screen name="(shop)" options={{ headerTitle: \'\' }} />', correct: false, why: 'An empty title still leaves a header bar on screen, so you would still see two bars.' },
+            { line: '      <Stack.Screen name="(shop)" options={{ presentation: \'modal\' }} />', correct: false, why: 'That changes how the group opens, not how many headers it draws.' },
+          ],
+          hints: [
+            'Which navigator draws the extra header: the outer Stack or the inner one?',
+            'The outer Stack treats the group as one screen and draws a header for it.',
+            'Use the `headerShown` option set to `false` on the `(shop)` screen.',
+          ],
+          explanation: 'The group is one screen to the root Stack, so the root draws a header for it. Hiding that header with `headerShown: false` leaves the inner Stack in charge of the headers.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'expo-router-03-predict-output-1',
+          kind: 'predict-output',
+          title: 'Which screen is on top?',
+          prompt: 'The stack starts with only `/` on it. These calls run in order. Which screen is on top at the end?',
+          concept: 'stack navigation calls',
+          language: 'text',
+          code: "router.push('/about')\nrouter.push('/profile')\nrouter.replace('/cart')\nrouter.back()",
+          expected: 'about',
+          choices: ['about', 'profile', 'cart', 'index'],
+          wrongNotes: {
+            profile: '`replace` swapped `profile` for `cart` before `back()` ran, so `profile` is gone.',
+            cart: '`back()` removed `cart`, which was on top.',
+            index: 'Back only removed one card. `about` is still above `index`.',
+          },
+          hints: [
+            'Write the stack after each call, bottom card first.',
+            'push adds a card, replace swaps the top card, back removes the top card.',
+            'After the calls the stack goes: index; index, about; index, about, profile; index, about, cart; index, about.',
+          ],
+          explanation: 'Start: index. `push` about: index, about. `push` profile: index, about, profile. `replace` cart swaps the top card: index, about, cart. `back()` removes the top card: index, about. The top card is about.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'expo-router-03-q1',
+        prompt: 'What is the job of `src/app/(shop)/_layout.tsx`?',
+        choices: [
+          'It wraps the screens in the `(shop)` group, for example in a Stack, and has no URL',
+          'It is the screen that opens at the URL `/shop` and shows a list of every file in the group',
+          'It registers the group in `app.json` so the app is allowed to open the screens inside it',
+          'It runs once when the app is installed, and it creates the folders that the group needs',
+        ],
+        answer: 0,
+        explanation: 'A layout is not a screen. It wraps the screens beside it and decides how they relate, such as a Stack with a header and back button.',
+      },
+      {
+        id: 'expo-router-03-q2',
+        prompt: 'The root layout has `<Stack.Screen name="detials" />` but the file is `details.tsx`. What happens?',
+        choices: [
+          'The router quietly renames the screen to match the closest file it can find',
+          'The screen opens as normal but it has no header, because the title is missing',
+          'It warns that no route has that name, because `name` must match the file',
+          'The app crashes before the first screen has a chance to open on the phone',
+        ],
+        answer: 2,
+        explanation: '`name` must match the file or folder name. A typo gives the warning "No route named ... exists in nested children" and the options are never applied to the real screen.',
+      },
+      {
+        id: 'expo-router-03-q3',
+        prompt: 'A user opens a link straight to `/checkout` while the app is closed. The `(shop)` layout sets `anchor: \'cart\'`. What does the anchor change?',
+        choices: [
+          'The link is rejected, because a screen cannot open before the cart was visited',
+          'The stack holds `cart` under `checkout`, so Back goes to the cart',
+          'The app opens `cart` instead and drops `checkout` from the stack entirely',
+          'The checkout screen opens as a modal that floats over the home screen',
+        ],
+        answer: 1,
+        explanation: 'The anchor names the screen that sits at the bottom of that stack. A screen reached by a link then has a base to go back to, instead of being the only card.',
+      },
+      {
+        id: 'expo-router-03-q4',
+        prompt: 'The header should read "Cart (3)" where 3 is computed inside the cart screen. Where do you set the title?',
+        choices: [
+          'In `screenOptions` of the root layout, because it applies to every screen',
+          'In `app.json`, because titles are part of the app config',
+          'In a `Stack.Screen` placed in a different screen file that links to the cart',
+          'In a `Stack.Screen` with `options` placed inside the cart screen itself',
+        ],
+        answer: 3,
+        explanation: 'A `Stack.Screen` rendered inside a screen sets that screen\'s options, so it can use values the screen computes. Layout-level options cannot see the screen\'s data.',
+      },
+    ],
+    task: {
+      title: 'Add a layout and a grouped stack',
+      steps: [
+        'In your `tindahan` project, add `src/app/_layout.tsx` with a `Stack` and titles for `index` and `about`.',
+        'Create `src/app/(shop)/_layout.tsx` with its own `Stack` and move `cart.tsx` and `checkout.tsx` into the group.',
+        'Run the app and open the cart. Look for two headers. Add `headerShown: false` for `(shop)` in the root layout until there is only one.',
+        'Use `<Stack.Screen options={{ title: ... }} />` inside the cart screen to show a title that includes a number.',
+      ],
+      minutes: 15,
+    },
+  },
+  {
+    id: 'expo-router-04',
+    day: 4,
+    title: 'Tabs and nested navigation',
+    summary: 'Add a tab bar, choose between JavaScript tabs and native tabs, and nest a Stack inside a tab so details keep the tab bar.',
+    intro: {
+      objectives: [
+        'Build a tab bar from a `(tabs)` group with a `Tabs` layout',
+        'Choose between JavaScript tabs and native tabs for a given app',
+        'Place a Stack inside a tab, or above the tabs, depending on whether the tab bar should stay visible',
+        'Read a file tree and say which layouts wrap a given screen, from the outside in',
+      ],
+      why: 'Nearly every consumer app has a tab bar with a few top-level areas, each with its own screens. Nesting navigators correctly is the part new Expo developers find hardest, and it becomes easy once you can see it as folders inside folders.',
+    },
+    minutes: 25,
+    skills: ['layouts-navigators'],
+    body: [
+      { type: 'paragraph', text: "A tab bar lets people jump between the main areas of an app: Home, Orders, Settings. Think of the signs hanging over the sections of a sari-sari store or a supermarket. Each sign takes you to a different area, and inside each area you can walk further down the aisle. In navigation terms, the tab bar is one navigator, and each tab can hold its own Stack, which is a navigator inside a navigator." },
+      { type: 'paragraph', text: "In Expo Router this is just folders. A layout that returns `Tabs` turns the screens beside it into tabs. A layout that returns `Stack` inside a tab's folder gives that tab its own pile of screens. Nothing is registered anywhere else." },
+      { type: 'heading', text: 'Your first tab bar' },
+      { type: 'paragraph', text: 'Put the tab screens in a route group, usually called `(tabs)`, so the group name stays out of the URL. Then give the group a layout that returns `Tabs`:' },
+      {
+        type: 'code',
+        language: 'tsx',
+        label: 'src/app/(tabs)/_layout.tsx',
+        code: `import { Tabs } from 'expo-router/js-tabs';
+
+export default function TabsLayout() {
+  return (
+    <Tabs screenOptions={{ headerShown: false }}>
+      <Tabs.Screen name="index" options={{ title: 'Home' }} />
+      <Tabs.Screen name="orders" options={{ title: 'Orders' }} />
+      <Tabs.Screen name="settings" options={{ title: 'Settings' }} />
+    </Tabs>
+  );
+}`,
+      },
+      { type: 'paragraph', text: 'Each `Tabs.Screen` names a file or folder in the group (`index.tsx`, the `orders` folder, `settings.tsx`) and sets its label with `title`. We hide the tab navigator\'s own header with `headerShown: false` because each tab will draw its header through a Stack, and two headers would stack up, as you saw in lesson 3. The root layout then shows the whole group as one screen with `<Stack.Screen name="(tabs)" options={{ headerShown: false }} />`.' },
+      {
+        type: 'version',
+        text: 'In expo-router 58, importing `Tabs` from `expo-router` is marked deprecated in the type definitions, with a note to use `import { Tabs } from \'expo-router/js-tabs\'` instead. The Protected routes docs use that same import. The Common navigation patterns page shows `Tabs` with `screenOptions={{ headerShown: false }}` and one `Tabs.Screen` per tab.',
+        checked: CHECKED,
+        sources: [DOCS.patterns, DOCS.protectedDocs],
+      },
+      { type: 'heading', text: 'JavaScript tabs or native tabs?' },
+      { type: 'paragraph', text: 'There are two kinds of tab bar. The one above is drawn by JavaScript, so you can style almost every part of it. The other, `NativeTabs`, asks the phone to draw its own system tab bar, which on iOS 26 and later has the Liquid Glass look and behaves exactly like the built-in apps.' },
+      {
+        type: 'code',
+        language: 'tsx',
+        label: 'src/app/(tabs)/_layout.tsx with native tabs',
+        code: `import { NativeTabs } from 'expo-router/native-tabs';
+
+export default function TabsLayout() {
+  return (
+    <NativeTabs>
+      <NativeTabs.Trigger name="index">
+        <NativeTabs.Trigger.Label>Home</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="house.fill" md="home" />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="orders">
+        <NativeTabs.Trigger.Label>Orders</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf="list.bullet" md="list" />
+      </NativeTabs.Trigger>
+    </NativeTabs>
+  );
+}`,
+      },
+      { type: 'paragraph', text: 'Here each tab is a `NativeTabs.Trigger` whose `name` matches a file. The `Icon` takes `sf` for an iOS SF Symbol and `md` for an Android Material Symbol, so one tab can use the right icon on each platform. We compiled this exact layout against SDK 58 and it type-checks.' },
+      {
+        type: 'table',
+        headers: ['', 'JavaScript `Tabs`', '`NativeTabs`'],
+        rows: [
+          ['Import', '`expo-router/js-tabs`', '`expo-router/native-tabs`'],
+          ['Look', 'Drawn in JavaScript, easy to restyle', 'The system tab bar (Liquid Glass on iOS 26+), more constrained'],
+          ['Declared with', '`Tabs.Screen` and an `options` object', '`NativeTabs.Trigger` and child components'],
+          ['Tabs added automatically', 'Yes, from the files beside the layout', 'No: each tab needs its own Trigger'],
+          ['Header', 'Has one (hidden above)', 'None: nest a Stack in the tab'],
+          ['Limits', 'Few', 'Up to 5 tabs on Android; tabs cannot be added or removed at runtime'],
+        ],
+        caption: 'Pick native tabs for the platform look; pick JavaScript tabs when you need full control',
+      },
+      {
+        type: 'version',
+        text: 'The SDK 58 changelog says Expo Router\'s native tabs are stable, and the Native tabs docs give the SDK 58 import path as `expo-router/native-tabs` (SDK 55 to 57 used `expo-router/unstable-native-tabs`). Android uses the native Material tab bar limited to 5 tabs, and the changelog notes that `NativeTabs.Trigger.Icon` with the `md` prop needs `expo-symbols` on Android. Native tabs cannot be nested inside other native tabs.',
+        checked: CHECKED,
+        sources: [DOCS.nativeTabs, DOCS.sdk58],
+      },
+      { type: 'heading', text: 'A Stack inside a tab' },
+      { type: 'paragraph', text: 'Now the interesting part. The Orders tab should show a list, and tapping an order should open its details with the tab bar still at the bottom. Give the Orders tab its own folder with a Stack layout:' },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'The file tree',
+        code: `src/app/
+  _layout.tsx                 root Stack
+  (tabs)/
+    _layout.tsx               Tabs
+    index.tsx                 /
+    orders/
+      _layout.tsx             Stack inside the Orders tab
+      index.tsx               /orders
+      [id].tsx                /orders/101
+    settings.tsx              /settings`,
+      },
+      {
+        type: 'code',
+        language: 'tsx',
+        label: 'src/app/(tabs)/orders/_layout.tsx',
+        code: `import { Stack } from 'expo-router';
+
+export const unstable_settings = { anchor: 'index' };
+
+export default function OrdersLayout() {
+  return (
+    <Stack>
+      <Stack.Screen name="index" options={{ title: 'Orders' }} />
+      <Stack.Screen name="[id]" options={{ title: 'Order' }} />
+    </Stack>
+  );
+}`,
+      },
+      { type: 'paragraph', text: 'The anchor from lesson 3 appears again for a reason: if someone opens the link `/orders/101` directly, the stack is `index` then `[id]`, so Back shows the list. We loaded this file list into Expo Router\'s matcher and `/orders/7` resolves through three layers: the root, the `(tabs)` group, then the `orders` stack and its `[id]` screen.' },
+      {
+        type: 'diagram',
+        format: 'mermaid',
+        caption: 'The layers a detail screen sits inside',
+        source: 'flowchart TD\n  A[Root Stack] --> B[Tabs layout]\n  B --> C[Home tab]\n  B --> D[Settings tab]\n  B --> E[Orders tab: its own Stack]\n  E --> F[Orders list]\n  E --> G[Order detail]',
+      },
+      { type: 'heading', text: 'Stack inside tabs, or above them?' },
+      { type: 'paragraph', text: 'Where you put the Stack decides whether the tab bar stays. A Stack inside a tab keeps the tab bar visible, because the tab bar is the outer layer. A screen in the **root** Stack, next to `(tabs)`, is drawn on top of the whole tab navigator, so it covers the tab bar. That is the right choice for a full-screen photo viewer or a checkout, and the wrong one for an order detail the user will flip between.' },
+      {
+        type: 'table',
+        headers: ['Pattern', 'Where the screen lives', 'Tab bar'],
+        rows: [
+          ['Stack inside a tab', '`(tabs)/orders/[id].tsx` with `orders/_layout.tsx`', 'Stays visible'],
+          ['Stack above tabs', '`src/app/photo/[id].tsx` beside `(tabs)` in the root Stack', 'Covered by the new screen'],
+        ],
+      },
+      { type: 'tip', text: 'You never write the navigator\'s name when you move. `router.push(\'/orders/101\')` from the Home tab is enough: because every screen has a URL, the router works out which tab and which stack hold it.' },
+      {
+        type: 'takeaways',
+        items: [
+          'A layout that returns `Tabs` turns the files in its group into tabs; the `(tabs)` group name stays out of the URL.',
+          'JavaScript tabs (`expo-router/js-tabs`) are easy to style; `NativeTabs` (`expo-router/native-tabs`) uses the system tab bar and needs one `Trigger` per tab.',
+          'Give a tab its own folder with a `_layout.tsx` that returns a Stack to get headers and detail screens inside the tab.',
+          'A Stack inside a tab keeps the tab bar; a screen in the root Stack covers it.',
+          'Read nesting from the outside in: root layout, group layout, folder layout, screen.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'expo-router-04-scenario-1',
+          kind: 'scenario',
+          title: 'Where does the order detail go?',
+          prompt: 'Choose the structure that fits the requirement.',
+          concept: 'Stack inside a tab',
+          situation: 'Your shop app has tabs for Home, Orders and Settings. When someone taps an order in the Orders tab, its details should open with the tab bar still visible, and Back should return to the order list.',
+          options: [
+            { text: 'Make the Orders tab a folder with its own `_layout.tsx` Stack, holding `index.tsx` and `[id].tsx`.', consequence: 'The detail screen is pushed on the Orders stack. The tab bar stays, and Back returns to the list.', quality: 'best' },
+            { text: 'Put `orders/[id].tsx` in the root Stack, beside `(tabs)`.', consequence: 'The detail opens and Back works, but the new screen is drawn over the tab navigator, so the tab bar disappears. That suits a photo viewer, not this requirement.', quality: 'acceptable' },
+            { text: 'Add a new tab for every order that the shop receives.', consequence: 'The tab bar fills with dozens of tabs and breaks as orders arrive. Tabs are for a few fixed areas.', quality: 'poor' },
+          ],
+          hints: [
+            'Which navigator is the outer layer: the tab bar or the Stack?',
+            'A Stack placed inside a tab lives inside the tab bar, so the bar stays around it.',
+            'Give the Orders tab a folder with a Stack layout.',
+          ],
+          explanation: 'The outer navigator stays on screen when an inner one changes. Putting the Stack inside the tab keeps the tab bar visible, and putting the detail in the root Stack would cover it.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'expo-router-04-predict-output-1',
+          kind: 'predict-output',
+          title: 'Which layouts wrap this screen?',
+          prompt: 'Given these files, which layouts wrap `src/app/(tabs)/orders/[id].tsx`, from the outermost to the innermost?',
+          concept: 'nested layouts',
+          language: 'text',
+          code: 'src/app/_layout.tsx\nsrc/app/(tabs)/_layout.tsx\nsrc/app/(tabs)/index.tsx\nsrc/app/(tabs)/orders/_layout.tsx\nsrc/app/(tabs)/orders/index.tsx\nsrc/app/(tabs)/orders/[id].tsx\nsrc/app/(tabs)/settings.tsx',
+          expected: 'src/app/_layout.tsx > src/app/(tabs)/_layout.tsx > src/app/(tabs)/orders/_layout.tsx',
+          choices: [
+            'src/app/_layout.tsx > src/app/(tabs)/_layout.tsx > src/app/(tabs)/orders/_layout.tsx',
+            'src/app/(tabs)/orders/_layout.tsx > src/app/(tabs)/_layout.tsx > src/app/_layout.tsx',
+            'src/app/_layout.tsx > src/app/(tabs)/orders/_layout.tsx',
+            'src/app/(tabs)/_layout.tsx > src/app/(tabs)/orders/_layout.tsx',
+          ],
+          wrongNotes: {
+            'src/app/(tabs)/orders/_layout.tsx > src/app/(tabs)/_layout.tsx > src/app/_layout.tsx': 'That is the right set in the wrong order. The outermost layout is the one nearest the root.',
+            'src/app/_layout.tsx > src/app/(tabs)/orders/_layout.tsx': 'It skips the `(tabs)` layout, which also wraps everything in its folder.',
+            'src/app/(tabs)/_layout.tsx > src/app/(tabs)/orders/_layout.tsx': 'It leaves out the root layout, which wraps every screen in the app.',
+          },
+          hints: [
+            'A layout wraps every file in its own folder and the folders below it.',
+            'List the `_layout.tsx` files on the path from `src/app` down to the screen.',
+            'Root first, then `(tabs)`, then `orders`.',
+          ],
+          explanation: 'A layout wraps everything in its folder, including subfolders. Walking from `src/app` down to the screen, you pass the root layout, the `(tabs)` layout and the `orders` layout, in that order from outermost to innermost.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'expo-router-04-fill-blank-1',
+          kind: 'fill-blank',
+          title: 'Complete the tab layout',
+          prompt: 'Fill in the blanks to build a tab bar without its own header.',
+          concept: 'Tabs layout',
+          language: 'tsx',
+          code: "import { ___ } from 'expo-router/js-tabs';\n\nexport default function TabsLayout() {\n  return (\n    <Tabs screenOptions={{ ___: false }}>\n      <Tabs.Screen name=\"___\" options={{ title: 'Home' }} />\n      <Tabs.Screen name=\"orders\" options={{ title: 'Orders' }} />\n    </Tabs>\n  );\n}",
+          blanks: [
+            { answers: ['Tabs'], feedback: 'The component used below is `Tabs`, so that is what to import.' },
+            { answers: ['headerShown'], feedback: 'The option that hides a header is `headerShown`, set to `false`.' },
+            { answers: ['index'], feedback: 'The screen at `/` is the file `index.tsx`, so its name is `index`.' },
+          ],
+          bank: ['Tabs', 'headerShown', 'index', 'Stack', 'title', 'home'],
+          hints: [
+            'Look at what the layout returns to find the first blank.',
+            'The second blank is the option from lesson 3 that hides a header.',
+            'Tabs, headerShown, index.',
+          ],
+          explanation: 'The layout imports `Tabs`, hides the tab navigator\'s own header with `headerShown: false` because each tab will have a Stack header, and names the first tab `index` after its file.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'expo-router-04-q1',
+        prompt: 'You add `src/app/photo/[id].tsx` next to the `(tabs)` folder, and opening a photo hides the tab bar. Why?',
+        choices: [
+          'Photos are always drawn full screen by Expo Router, whatever the layout',
+          'The `(tabs)` group is turned off while any dynamic route is open',
+          'The screen is in the root Stack, which draws it above the whole tab navigator',
+          'Tab bars hide themselves when a screen has a parameter in its URL',
+        ],
+        answer: 2,
+        explanation: 'The root Stack is the outer layer and the tab navigator is one of its screens. A new root-Stack screen is drawn over the tabs, so the tab bar is covered.',
+      },
+      {
+        id: 'expo-router-04-q2',
+        prompt: 'In SDK 58, which import gives you the JavaScript-drawn tab bar with `Tabs.Screen`?',
+        choices: [
+          'import { Tabs } from \'expo-router/js-tabs\'',
+          'import { Tabs } from \'expo-router/native-tabs\'',
+          'import { NativeTabs } from \'expo-router/js-tabs\'',
+          'import { Tabs } from \'react-native\'',
+        ],
+        answer: 0,
+        explanation: '`expo-router/js-tabs` exports the JavaScript `Tabs`; the plain `Tabs` export from `expo-router` is marked deprecated. `NativeTabs` lives in `expo-router/native-tabs`.',
+      },
+      {
+        id: 'expo-router-04-q3',
+        prompt: 'You switch a layout from `Tabs` to `NativeTabs` but you still only see the Home tab. What did you most likely forget?',
+        choices: [
+          'To turn on the iOS 26 flag in `app.json` that enables the system tab bar',
+          'A `NativeTabs.Trigger` for each remaining tab, because native tabs are not added automatically',
+          'To rename the files in the group so they end in `.native.tsx`',
+          'To import `Stack` as well, since native tabs only work inside a Stack',
+        ],
+        answer: 1,
+        explanation: 'With `NativeTabs` you declare each tab with its own `Trigger`. Unlike a Stack or JavaScript tabs, routes are not added to the bar for you.',
+      },
+      {
+        id: 'expo-router-04-q4',
+        prompt: 'Which file tree keeps the tab bar visible when an order\'s details are open, and gives Back a list to return to?',
+        choices: [
+          '`(tabs)/orders.tsx` and `(tabs)/order-detail.tsx`, both listed as tabs',
+          '`(tabs)/orders/_layout.tsx` with a Stack, plus `orders/index.tsx` and `orders/[id].tsx`',
+          '`(tabs)/orders/index.tsx` and `orders/[id].tsx` with no layout file in the folder',
+          '`orders/[id].tsx` beside `(tabs)`, with a Stack in the root layout',
+        ],
+        answer: 1,
+        explanation: 'The folder with its own Stack layout gives the Orders tab a pile of screens inside the tab, so the tab bar stays. The root-Stack placement covers the tab bar, and a tab per screen is the wrong shape.',
+      },
+    ],
+    task: {
+      title: 'Add tabs with a Stack inside one of them',
+      steps: [
+        'In `tindahan`, create the `(tabs)` group with `index.tsx`, an `orders` folder and `settings.tsx`. Add a `Tabs` layout using `expo-router/js-tabs`.',
+        'In `orders`, add a Stack layout with `index.tsx` (a list of three fake orders with `Link`s) and `[id].tsx` (a placeholder screen).',
+        'Run the app, open an order, and check that the tab bar stays and Back returns to the list.',
+        'Move `[id].tsx` out to the `src/app` root and update the root layout. Notice what happens to the tab bar, then move it back.',
+      ],
+      minutes: 18,
+    },
+  },
+  {
+    id: 'expo-router-05',
+    day: 5,
+    title: 'Dynamic routes, parameters and typed routes',
+    summary: 'Use one file for many URLs with [id] and [...slug], read parameters safely, and let typed routes catch broken links before you run the app.',
+    intro: {
+      objectives: [
+        'Create a dynamic route with `[id]` and read its parameter with `useLocalSearchParams`',
+        'Predict which file matches a URL when static, dynamic and catch-all routes compete',
+        'Pass path and query parameters with `Link` and `router`, and handle the fact that they arrive as strings',
+        'Turn on typed routes and read the TypeScript errors that catch a mistyped link',
+      ],
+      why: 'A shop with 500 products cannot have 500 files, and a mistyped link that only fails when a tester taps it wastes everyone\'s time. Dynamic routes let one screen serve many records, and typed routes move broken-link bugs from runtime to your editor.',
+    },
+    minutes: 25,
+    skills: ['dynamic-routes'],
+    body: [
+      { type: 'paragraph', text: "So far each file has made exactly one URL. Real apps show many things with the same layout: product 12, product 13, order 101. You would never write a separate file for each. Instead you write one screen and let part of the URL be a blank to fill in, like a form letter that says \"Dear [name]\" and is printed with a different name each time." },
+      { type: 'heading', text: 'The [id] file' },
+      { type: 'paragraph', text: 'A file or folder name in square brackets is a **dynamic segment**. The file `src/app/products/[id].tsx` matches `/products/1`, `/products/2` and `/products/pandesal`. Whatever stands in the bracket becomes a **route parameter** named `id`, which you read with the `useLocalSearchParams` hook.' },
+      {
+        type: 'code',
+        language: 'tsx',
+        label: 'src/app/products/[id].tsx',
+        code: `import { Stack, useLocalSearchParams } from 'expo-router';
+import { Text, View } from 'react-native';
+
+const PRODUCTS = [
+  { id: 1, name: 'Pandesal', price: 3 },
+  { id: 2, name: 'Kapeng barako', price: 45 },
+];
+
+export default function ProductScreen() {
+  const { id } = useLocalSearchParams<{ id: string }>();
+  const productId = Number(id);
+  const product = Number.isInteger(productId) ? PRODUCTS.find((item) => item.id === productId) : undefined;
+
+  if (!product) {
+    return <Text>No product with id {id}.</Text>;
+  }
+
+  return (
+    <View style={{ flex: 1, padding: 16 }}>
+      <Stack.Screen options={{ title: product.name }} />
+      <Text>
+        {product.name}: ₱{product.price}
+      </Text>
+    </View>
+  );
+}`,
+      },
+      { type: 'paragraph', text: 'Walk through it. `useLocalSearchParams<{ id: string }>()` returns the parameters for this screen, and the type argument tells TypeScript what to expect. The important detail is `string`: **parameters always arrive as text**, even when the URL looks like `/products/2`. So we convert with `Number(id)` and check `Number.isInteger` before looking the product up. Anyone can open `/products/banana` through a link, so a screen must cope with a value that makes no sense and show a friendly message instead of crashing.' },
+      { type: 'warning', text: 'Treat route parameters as untrusted input, like anything typed into a form. Validate and convert them before using them, and never put secrets in them: a URL can be logged, shared and shown in other apps.' },
+      { type: 'heading', text: 'Reading a URL back into parameters' },
+      {
+        type: 'table',
+        headers: ['URL', 'File', 'Parameters'],
+        rows: [
+          ['`/products/12`', '`products/[id].tsx`', '`id: "12"`'],
+          ['`/products/12?from=home`', '`products/[id].tsx`', '`id: "12"`, `from: "home"`'],
+          ['`/products?category=drinks`', '`products/index.tsx`', '`category: "drinks"`'],
+          ['`/docs/a/b/c`', '`docs/[...slug].tsx`', '`slug: ["a", "b", "c"]`'],
+        ],
+        caption: 'Path parameters come from the brackets; query parameters come after the question mark',
+      },
+      { type: 'paragraph', text: 'There are two kinds. **Route parameters** come from brackets and a matched route always has them. **Search parameters**, also called query parameters, come after the `?` and are optional, so type them with a question mark: `useLocalSearchParams<{ id: string; from?: string }>()`. A **catch-all** segment written `[...slug]` matches the rest of the path and gives you an array of pieces. We checked every row above with Expo Router\'s own route matcher.' },
+      { type: 'tip', text: 'Do not name your own parameters `screen`, `params`, `initial` or `state`. Expo Router and React Navigation use those names internally.' },
+      {
+        type: 'version',
+        text: 'The Expo Router docs describe `[user].tsx` as matching one segment, `[...everything].tsx` as a catch-all that gives an array, search parameters returned as individual strings, optional search parameters typed with `?`, and a hash exposed as a parameter named `#`. `router.setParams` updates parameters without adding a history entry.',
+        checked: CHECKED,
+        sources: [DOCS.params],
+      },
+      { type: 'heading', text: 'When several files could match' },
+      { type: 'paragraph', text: 'Suppose you have both `orders/new.tsx` and `orders/[id].tsx`. Does `/orders/new` open the form or a detail screen with id `new`? Expo Router prefers the more specific file: a **static** name beats a dynamic one. In our test with exactly those files, `/orders/new` matched `orders/new` and `/orders/42` matched `orders/[id]`. In the same way a static `docs/intro.tsx` wins over `docs/[...slug].tsx` for `/docs/intro`.' },
+      { type: 'paragraph', text: 'One more surprise from the same test: with only `docs/[...slug].tsx` and no `docs/index.tsx`, the URL `/docs` matched nothing and showed the not-found screen, because a catch-all needs at least one segment. If `/docs` should work, add `docs/index.tsx`.' },
+      { type: 'heading', text: 'Passing parameters when you navigate' },
+      {
+        type: 'code',
+        language: 'tsx',
+        label: 'src/app/products/index.tsx',
+        code: `import { Link, router } from 'expo-router';
+import { Pressable, Text, View } from 'react-native';
+
+export default function Products() {
+  return (
+    <View>
+      <Link href={{ pathname: '/products/[id]', params: { id: 1 } }}>Pandesal</Link>
+      <Pressable onPress={() => router.push({ pathname: '/products/[id]', params: { id: 2, from: 'list' } })}>
+        <Text>Open kapeng barako</Text>
+      </Pressable>
+      <Link href={{ pathname: '/products', params: { category: 'drinks' } }}>Drinks only</Link>
+    </View>
+  );
+}`,
+      },
+      { type: 'paragraph', text: 'For a dynamic route you give an object with `pathname` (the file pattern, brackets included) and `params`. Expo Router puts `id` into the path and any extra keys, like `from`, into the query string. Passing numbers is fine: they are turned into text on the way.' },
+      { type: 'heading', text: 'Local or global parameters?' },
+      { type: 'paragraph', text: 'There is a second hook, `useGlobalSearchParams`. In a Stack, an earlier screen stays mounted under the new one. `useLocalSearchParams` keeps returning the values for **its own** route, while `useGlobalSearchParams` follows the URL of whatever is on top and re-renders on every change. Prefer the local one in a screen: its values do not jump when something is pushed above it, and it avoids needless re-renders.' },
+      { type: 'heading', text: 'Typed routes: mistakes found by your editor' },
+      { type: 'paragraph', text: 'With typed routes on, Expo generates a TypeScript type that lists every URL your files can produce, and `Link`, `router.push` and friends are checked against it. The default template already enables it in `app.json`:' },
+      {
+        type: 'code',
+        language: 'json',
+        label: 'app.json (fragment)',
+        code: `{
+  "expo": {
+    "experiments": {
+      "typedRoutes": true
+    }
+  }
+}`,
+      },
+      { type: 'paragraph', text: 'The types are generated when the dev server starts (in our SDK 58 project, into `.expo/types/router.d.ts`), and `npx expo customize tsconfig.json` makes sure `tsconfig.json` includes them. Now watch what TypeScript says when we deliberately break two links:' },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'TypeScript errors from a real run (shortened)',
+        code: `router.push('/ordres/55');
+  error TS2345: Argument of type '"/ordres/55"' is not assignable to parameter of type
+  '"/sign-in" | "/new-order" | ... | { pathname: "/orders/[id]"; params: ... }'
+
+<Link href={{ pathname: '/orders/[id]', params: { idd: 1 } }} />
+  error TS2322: Property 'id' is missing in type '{ idd: number; }'
+  but required in type '{ id: string | number; }'`,
+      },
+      { type: 'paragraph', text: 'The first is a typo in the path. The second has the right file but the wrong parameter name. Both are red in your editor before you run anything, which is exactly when you want to know. Two limits: relative paths such as `./about` are not supported, so use absolute ones, and the check only knows about files that exist, so a new file shows up in the types after the dev server regenerates them.' },
+      {
+        type: 'version',
+        text: 'The Typed routes docs say to set `experiments.typedRoutes` to `true`, run `npx expo customize tsconfig.json`, and start the dev server, which generates the types (on a CI server, `npx expo customize tsconfig.json` generates them without starting the server). Links to dynamic routes use an object with `pathname` and `params`, and relative paths are not supported. We ran the errors above on expo-router 58.0.31.',
+        checked: CHECKED,
+        sources: [DOCS.typed],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'A name in brackets makes a dynamic route: `[id].tsx` matches many URLs and gives you a parameter named `id`.',
+          'Parameters arrive as strings and come from user-controllable URLs, so convert and validate them before use.',
+          'A static file beats a dynamic one, and `[...slug]` catches the rest of the path as an array (it needs at least one segment).',
+          'Navigate to dynamic routes with `{ pathname: \'/products/[id]\', params: { id } }`; extra params become the query string.',
+          'Prefer `useLocalSearchParams` in a screen, and turn on typed routes so mistyped links fail in your editor.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'expo-router-05-predict-output-1',
+          kind: 'predict-output',
+          title: 'What are the parameters?',
+          prompt: 'The app has `docs/intro.tsx` and `docs/[...slug].tsx`. The user opens `/docs/shipping/fees?lang=tl`. What does `useLocalSearchParams()` return in the screen that opens?',
+          concept: 'catch-all routes and search parameters',
+          language: 'text',
+          code: "src/app/docs/intro.tsx\nsrc/app/docs/[...slug].tsx\n\nURL: /docs/shipping/fees?lang=tl",
+          expected: '{ slug: ["shipping", "fees"], lang: "tl" }',
+          choices: [
+            '{ slug: ["shipping", "fees"], lang: "tl" }',
+            '{ slug: "shipping/fees", lang: "tl" }',
+            '{ slug: ["shipping", "fees"] }',
+            '{ slug: ["docs", "shipping", "fees"], lang: "tl" }',
+          ],
+          wrongNotes: {
+            '{ slug: "shipping/fees", lang: "tl" }': 'A catch-all gives an array of path pieces, not one joined string.',
+            '{ slug: ["shipping", "fees"] }': 'Search parameters after `?` are included too, so `lang` is there.',
+            '{ slug: ["docs", "shipping", "fees"], lang: "tl" }': 'The `docs` folder is part of the file path, not of the catch-all. The array holds only the pieces after it.',
+          },
+          hints: [
+            'Which part of the URL does `[...slug]` take?',
+            'The catch-all covers the path after `docs/`, and gives it as an array. The part after `?` is a search parameter.',
+            'You get both: `slug` as an array and `lang` as a string.',
+          ],
+          explanation: '`docs/intro.tsx` only matches `/docs/intro`, so this URL goes to the catch-all. Its `slug` is the array of segments after `docs`, and the query string adds `lang` as a string. We confirmed this with Expo Router\'s route matcher.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'expo-router-05-fix-bug-1',
+          kind: 'fix-bug',
+          title: 'The product that is never found',
+          prompt: 'Opening `/products/1` always shows "Not found", although product 1 exists. Find the buggy line and fix it.',
+          concept: 'route parameters are strings',
+          language: 'tsx',
+          code: "import { useLocalSearchParams } from 'expo-router';\nimport { Text } from 'react-native';\n\nconst PRODUCTS = [{ id: 1, name: 'Pandesal' }, { id: 2, name: 'Kape' }];\n\nexport default function Product() {\n  const { id } = useLocalSearchParams<{ id: string }>();\n  const product = PRODUCTS.find((item) => item.id === id);\n  return <Text>{product ? product.name : 'Not found'}</Text>;\n}",
+          bugLine: 8,
+          fixes: [
+            { line: '  const product = PRODUCTS.find((item) => item.id === Number(id));', correct: true, why: 'The parameter is the text "1". Converting it to a number lets it match the numeric `id` in the list.' },
+            { line: '  const product = PRODUCTS.find((item) => item.id === id.toString());', correct: false, why: '`id` is already a string, and `item.id` is a number, so the strict comparison is still false.' },
+            { line: '  const product = PRODUCTS.find((item) => item.name === id);', correct: false, why: 'That compares the product name with the id text, so it almost never matches.' },
+          ],
+          hints: [
+            'Compare the type of `item.id` with the type of `id`.',
+            'Route parameters always arrive as strings, but the ids in the list are numbers.',
+            'Convert the parameter with `Number(id)` before the comparison.',
+          ],
+          explanation: 'A strict comparison between the number 1 and the string "1" is false. Converting the parameter to a number, and checking it is valid, is the standard fix for numeric ids.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'expo-router-05-fill-blank-1',
+          kind: 'fill-blank',
+          title: 'Link to a product',
+          prompt: 'Complete the typed link to the product screen so it carries the product\'s id.',
+          concept: 'typed dynamic hrefs',
+          language: 'tsx',
+          code: "<Link href={{ pathname: '/products/___', params: { ___: product.id } }}>\n  {product.name}\n</Link>",
+          blanks: [
+            { answers: ['[id]'], feedback: 'The pathname is the file pattern, including the brackets, so a typed route can check it.' },
+            { answers: ['id'], feedback: 'The parameter name must match the name in the brackets, here `id`.' },
+          ],
+          bank: ['[id]', 'id', 'product', '[product]'],
+          hints: [
+            'The `pathname` is the file pattern, not a real number.',
+            'The name inside the brackets and the key in `params` must be the same.',
+            'The brackets hold `id`, so write `[id]` and `id`.',
+          ],
+          explanation: 'For a dynamic route the pathname is the pattern `/products/[id]`, and `params` supplies a value for each bracketed name. A key with the wrong name would be a type error.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'expo-router-05-q1',
+        prompt: 'The app has `orders/new.tsx` and `orders/[id].tsx`. Which screen opens for the URL `/orders/new`?',
+        choices: [
+          'The `[id]` screen, with the parameter `id` set to "new"',
+          'Neither: two matching files make the router show the not-found screen',
+          'Whichever of the two files was saved most recently',
+          '`orders/new.tsx`, because a static name beats a dynamic one',
+        ],
+        answer: 3,
+        explanation: 'Expo Router prefers the more specific file, so the static `new` screen handles `/orders/new` and `[id]` handles the rest, such as `/orders/42`.',
+      },
+      {
+        id: 'expo-router-05-q2',
+        prompt: 'A user opens `/products/7`. What is the value and type of `id` from `useLocalSearchParams<{ id: string }>()`?',
+        choices: [
+          'The number 7, converted because the URL segment looks numeric',
+          'The string "7", because parameters always arrive as text',
+          'The array ["7"], because dynamic segments are always lists',
+          'The value undefined until the screen has finished its first render',
+        ],
+        answer: 1,
+        explanation: 'Route and search parameters are strings. Convert them yourself (for example `Number(id)`) and check the result is valid.',
+      },
+      {
+        id: 'expo-router-05-q3',
+        prompt: 'Typed routes are on and you write `<Link href="/ordres/42" />`, where the file is `orders/[id].tsx`. When do you find out?',
+        choices: [
+          'Only when a tester taps the link on a phone and sees a blank screen',
+          'In your editor and in `tsc`, as a type error on the link',
+          'Never: typed routes only check links to static files, not dynamic ones',
+          'When you publish an update, because the cloud service validates every link',
+        ],
+        answer: 1,
+        explanation: 'Typed routes generate a type listing every valid URL, so a mistyped path is a compile-time error that your editor shows immediately.',
+      },
+      {
+        id: 'expo-router-05-q4',
+        prompt: 'Why should a screen normally read its parameters with `useLocalSearchParams` and not `useGlobalSearchParams`?',
+        choices: [
+          'The global hook is deprecated and was removed in SDK 58',
+          'The local hook returns numbers while the global hook only returns strings',
+          'The local hook keeps this screen\'s own values when another screen is pushed on top',
+          'The local hook is the only one that works with typed routes turned on',
+        ],
+        answer: 2,
+        explanation: 'The global hook follows the URL of whatever is on top and re-renders on every change. The local one stays tied to its own route, which is steadier and cheaper.',
+      },
+    ],
+    task: {
+      title: 'Build a product detail screen',
+      steps: [
+        'In `tindahan`, create `src/app/products/index.tsx` listing three products, each with a `Link` using `{ pathname: \'/products/[id]\', params: { id } }`.',
+        'Create `src/app/products/[id].tsx` that reads `id`, converts it with `Number`, finds the product and sets the header title with `Stack.Screen`.',
+        'Add a temporary `Link` to `/products/banana` and make sure the screen shows a friendly message, not a crash.',
+        'Deliberately mistype a path in a `Link`, such as `/prodcuts`, and read the TypeScript error in your editor.',
+      ],
+      minutes: 18,
+    },
+  },
+  {
+    id: 'expo-router-06',
+    day: 6,
+    title: 'Modals, sheets and headers',
+    summary: 'Present screens as modals and bottom sheets, dismiss them correctly, and add buttons and large titles to your headers.',
+    intro: {
+      objectives: [
+        'Choose between React Native\'s `Modal` component and a modal route',
+        'Present a screen as a modal or as a form sheet with detents, and dismiss it safely',
+        'Add header buttons and platform-specific header features with `Stack.Screen` options',
+        'Pick the right `presentation` value for a described situation',
+      ],
+      why: 'Forms, pickers and quick actions feel natural as modals and sheets, and the header is where users look for the next action. Doing both with real routes means they can be opened from a link or a notification, not just from one button.',
+    },
+    minutes: 25,
+    skills: ['modals-headers'],
+    body: [
+      { type: 'paragraph', text: "A **modal** is a screen that temporarily takes over to do one focused job, then gets out of the way: a new-order form, a date picker, a share panel. Think of a cashier sliding a clipboard across the counter. You fill it in, hand it back, and the shop is exactly as you left it. A **sheet** is a modal that slides up from the bottom and covers only part of the screen." },
+      { type: 'heading', text: 'Two ways to make a modal' },
+      { type: 'paragraph', text: 'React Native already has a `Modal` component, and Expo Router also lets you make a modal out of a **route**. They solve different problems:' },
+      {
+        type: 'table',
+        headers: ['', 'React Native `Modal`', 'A modal route'],
+        rows: [
+          ['What it is', 'A component you show with `visible`', 'A file in `src/app` with `presentation: \'modal\'`'],
+          ['Has a URL', 'No', 'Yes, so a link or notification can open it'],
+          ['Part of navigation', 'No: no Back stack, no router calls', 'Yes: `router.push`, `router.dismiss`'],
+          ['Best for', 'A quick alert or confirmation inside one screen', 'A flow that belongs to the app: forms, pickers, multi-step flows'],
+        ],
+        caption: 'The deciding question: should this thing have an address?',
+      },
+      { type: 'heading', text: 'A modal route' },
+      { type: 'paragraph', text: 'Make the screen as usual (`src/app/new-order.tsx`), then ask the Stack to present it differently:' },
+      {
+        type: 'code',
+        language: 'tsx',
+        label: 'src/app/_layout.tsx',
+        code: `import { Stack } from 'expo-router';
+
+export default function RootLayout() {
+  return (
+    <Stack>
+      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+      <Stack.Screen name="new-order" options={{ presentation: 'modal', title: 'New order' }} />
+    </Stack>
+  );
+}`,
+      },
+      { type: 'paragraph', text: 'Open it with `<Link href="/new-order">` as usual. On iOS the modal slides up from the bottom and can be swiped down. On Android it slides over the current screen and the Back button dismisses it. On web it is just another route, so you provide your own dismiss control.' },
+      { type: 'heading', text: 'Dismissing it' },
+      { type: 'paragraph', text: 'When the form is saved, close the modal with `router.dismiss()`. It is different from `back`: **dismiss targets the closest Stack**, and closes the top screen of that Stack. There is a subtlety for modals reached by a link. If the app was opened straight into the modal, there may be nothing underneath to return to, so ask first:' },
+      {
+        type: 'code',
+        language: 'tsx',
+        label: 'src/app/new-order.tsx',
+        code: `import { router } from 'expo-router';
+import { useState } from 'react';
+import { Pressable, Text, TextInput, View } from 'react-native';
+
+export default function NewOrder() {
+  const [customer, setCustomer] = useState('');
+
+  function save() {
+    // Save the order here, then close the modal.
+    if (router.canDismiss()) {
+      router.dismiss();
+    } else {
+      router.replace('/');
+    }
+  }
+
+  return (
+    <View style={{ flex: 1, padding: 16, gap: 12 }}>
+      <TextInput value={customer} onChangeText={setCustomer} placeholder="Customer name" />
+      <Pressable accessibilityRole="button" onPress={save} disabled={customer.trim().length === 0}>
+        <Text>Save order</Text>
+      </Pressable>
+    </View>
+  );
+}`,
+      },
+      { type: 'paragraph', text: '`router.canDismiss()` is true when there is something to dismiss to. If it is false (the user came in from a link), we `replace` to the home screen instead, so they never end up stuck on a finished form. The related calls are `router.dismissTo(href)`, which goes back until it reaches that route, and `router.dismissAll()`, which returns to the first screen in the stack.' },
+      { type: 'heading', text: 'Choosing a presentation' },
+      {
+        type: 'table',
+        headers: ['`presentation`', 'What the user sees'],
+        rows: [
+          ['`card`', 'The default: a normal screen that pushes onto the Stack'],
+          ['`modal`', 'Presented modally; a nested Stack can live inside it'],
+          ['`transparentModal`', 'A modal with the previous screen still visible behind it'],
+          ['`fullScreenModal`', 'Covers everything (Android falls back to `modal`)'],
+          ['`formSheet`', 'A bottom sheet with detents, which are the heights it can rest at'],
+        ],
+        caption: 'Other values exist, such as `containedModal`; see the docs table',
+      },
+      { type: 'heading', text: 'Form sheets and detents' },
+      { type: 'paragraph', text: 'A **form sheet** is a bottom sheet. Its **detents** are the heights it can stop at, written as fractions of the screen height. Here is a sheet that opens at half height and can be dragged to full height:' },
+      {
+        type: 'code',
+        language: 'tsx',
+        label: 'src/app/_layout.tsx (the sheet screen)',
+        code: `<Stack.Screen
+  name="add-note"
+  options={{
+    presentation: 'formSheet',
+    sheetAllowedDetents: [0.5, 1],
+    sheetInitialDetentIndex: 0,
+    sheetGrabberVisible: true,
+  }}
+/>`,
+      },
+      { type: 'paragraph', text: '`sheetAllowedDetents` lists the heights, **sorted from smallest to largest**. `sheetInitialDetentIndex` says which one it opens at: index 0 is the first, so half height here. `sheetGrabberVisible` shows the little drag handle, on iOS only. You can also write `sheetAllowedDetents: \'fitToContents\'`, but then your content needs an explicit size, because `flex: 1` does not work with it.' },
+      { type: 'warning', text: 'On Android a form sheet has no native header, nested stacks are not supported inside it, and it supports at most three detents. The options `headerShown`, `title` and header buttons do not render there, so put the sheet\'s title and its Save or Close buttons inside the sheet content.' },
+      {
+        type: 'version',
+        text: 'The Expo Router Modals docs describe `presentation: \'modal\'`, the presentation table above, and `formSheet` with `sheetAllowedDetents` (ascending fractions, or `fitToContents`), `sheetInitialDetentIndex`, `sheetGrabberVisible` (iOS only) and `sheetCornerRadius`. Android supports a maximum of 3 detents and does not render native stack headers in form sheets. In SDK 55 and later, `flex: 1` works on iOS with custom numeric detents but not with `fitToContents`. The Stack docs describe `router.dismiss`, `dismissTo`, `dismissAll` and `canDismiss`.',
+        checked: CHECKED,
+        sources: [DOCS.modals, DOCS.stack],
+      },
+      { type: 'heading', text: 'Headers that do something' },
+      { type: 'paragraph', text: 'You met `title` and `headerShown` in lesson 3. Headers can also hold buttons and larger titles. `headerRight` takes a function that returns an element for the right side, which is the classic place for an Add button. `headerLargeTitleEnabled` gives the big title that collapses as you scroll (iOS). Setting them from inside the screen keeps the button next to the code it controls:' },
+      {
+        type: 'code',
+        language: 'tsx',
+        label: 'src/app/(tabs)/orders/index.tsx',
+        code: `import { Link, Stack } from 'expo-router';
+import { View } from 'react-native';
+
+export default function Orders() {
+  return (
+    <View>
+      <Stack.Screen
+        options={{
+          title: 'Orders',
+          headerLargeTitleEnabled: true,
+          headerRight: () => <Link href="/new-order">New</Link>,
+        }}
+      />
+    </View>
+  );
+}`,
+      },
+      { type: 'paragraph', text: 'The `New` link opens the modal route we built above, so the header button and the modal connect through the URL and nothing else. Other options in the same family include `headerTransparent` and `headerBlurEffect` for translucent headers on iOS and `headerSearchBarOptions` for a native search bar. Some native features, such as large titles and search bars, do not work with a completely custom `header`, so prefer the options.' },
+      { type: 'tip', text: 'If a modal can be opened by a link, set an `anchor` in the Stack layout (lesson 3) so the screen behind it is kept. Without it, a user who dismisses a modal that a link opened may find nothing behind.' },
+      {
+        type: 'version',
+        text: 'The Stack docs list `headerRight`, `headerLargeTitleEnabled` (iOS), `headerTransparent`, `headerBlurEffect` (iOS) and `headerSearchBarOptions`, and add that on iOS 26 and later headers use Liquid Glass by default with no per-screen opt-out. They also describe an alpha composition API (`Stack.Toolbar`) that arrived in SDK 55.',
+        checked: CHECKED,
+        sources: [DOCS.stack],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'Use React Native\'s `Modal` for a quick in-screen alert; use a modal route when the thing should have a URL and join the navigation.',
+          'Set `presentation: \'modal\'` or `\'formSheet\'` on the screen in the Stack, and close it with `router.dismiss()`, checking `router.canDismiss()` first when a link may have opened it.',
+          'A form sheet\'s `sheetAllowedDetents` are fractions of the screen height in ascending order; on Android the sheet has no native header, so put the title in the content.',
+          '`headerRight`, `headerLargeTitleEnabled` and friends go in `Stack.Screen options`, either in the layout or inside the screen.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'expo-router-06-match-1',
+          kind: 'match',
+          title: 'Pick the presentation',
+          prompt: 'Match each design request to the `presentation` value that delivers it.',
+          concept: 'choosing a presentation',
+          labels: { terms: 'The request', meanings: 'The value' },
+          pairs: [
+            { term: 'A panel that rests at half height and can be dragged taller', definition: 'formSheet', note: 'Detents are the resting heights of a sheet.' },
+            { term: 'A scanner that covers the whole screen, status bar to home bar', definition: 'fullScreenModal', note: 'A full-screen overlay is what `fullScreenModal` is for.' },
+            { term: 'A dimmed overlay where the screen underneath is still visible', definition: 'transparentModal', note: 'The previous screen remains visible behind a transparent modal.' },
+            { term: 'An ordinary detail screen that slides onto the pile with a back button', definition: 'card', note: '`card` is the default, a normal push onto the stack.' },
+          ],
+          hints: [
+            'Think about what the user sees, not about how the code looks.',
+            'A sheet has detents, an overlay can be transparent, and the default is a normal screen.',
+            'The scanner covers everything, so it is the full-screen one.',
+          ],
+          explanation: 'Each value describes how the screen is shown: `formSheet` for a bottom sheet with detents, `fullScreenModal` for covering everything, `transparentModal` for seeing through, and `card` for a normal push.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'expo-router-06-fix-bug-1',
+          kind: 'fix-bug',
+          title: 'The sheet opens full height',
+          prompt: 'The add-note sheet should open at half height and be draggable to full height, but it opens at full height. Fix the line with the bug.',
+          concept: 'sheet detents',
+          language: 'tsx',
+          code: "<Stack.Screen\n  name=\"add-note\"\n  options={{\n    presentation: 'formSheet',\n    sheetAllowedDetents: [1, 0.5],\n    sheetGrabberVisible: true,\n  }}\n/>",
+          bugLine: 5,
+          fixes: [
+            { line: '    sheetAllowedDetents: [0.5, 1],', correct: true, why: 'Detents must be in ascending order. With `[0.5, 1]` the default first detent is half height.' },
+            { line: '    sheetInitialDetentIndex: 1,', correct: false, why: 'That removes the detents altogether, so the sheet has no heights to rest at.' },
+            { line: '    sheetAllowedDetents: [50, 100],', correct: false, why: 'Detents are fractions of the screen height between 0 and 1, not percentages.' },
+          ],
+          hints: [
+            'Look at the order of the numbers in the detents list.',
+            'The docs say detents must be sorted from smallest to largest.',
+            'Write `[0.5, 1]`.',
+          ],
+          explanation: 'Detents are screen-height fractions in ascending order, and the sheet opens at the first one by default. `[1, 0.5]` is unsorted and starts at full height.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'expo-router-06-scenario-1',
+          kind: 'scenario',
+          title: 'Add a note to an order',
+          prompt: 'Choose the best build.',
+          concept: 'modal route versus Modal',
+          situation: 'On an order screen, "Add note" should slide up a half-height panel the user can drag taller. A reminder notification should also be able to open that same panel directly for a given order.',
+          options: [
+            { text: 'Make a route `add-note` with `presentation: \'formSheet\'` and detents `[0.5, 1]`, and open it with a link that includes the order id.', consequence: 'The sheet is a real screen with a URL, so the button and the notification can both open it, and it behaves like a native sheet.', quality: 'best' },
+            { text: 'Show a React Native `Modal` with custom styling from a state variable on the order screen.', consequence: 'The panel works from the button, but it has no URL, so the notification cannot open it directly. You also build the drag behaviour yourself.', quality: 'acceptable' },
+            { text: 'Make a normal `card` screen and style it to look like a panel.', consequence: 'It slides in from the side with a header, the screen behind is not visible, and there is no drag-to-resize. It does not match the design.', quality: 'poor' },
+          ],
+          hints: [
+            'Which requirement rules out a plain React Native `Modal`?',
+            'A reminder has to open the panel from outside the screen, so the panel needs an address.',
+            'A route with `presentation: \'formSheet\'` gives you both the address and the detents.',
+          ],
+          explanation: 'Needing to open the panel from a notification means it needs a URL, and needing a draggable half-height panel is exactly what a form sheet with detents provides. Both point to a route with `formSheet`.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'expo-router-06-q1',
+        prompt: 'Why would you make "New order" a modal route instead of a React Native `Modal` if a notification must be able to open it?',
+        choices: [
+          'A route has a URL, so a link or notification can open it; a `Modal` has none',
+          'A `Modal` component cannot be shown on Android, but a route can',
+          'A route is faster because the router preloads every modal at start-up',
+          'A `Modal` cannot contain a form with text fields, but a route can',
+        ],
+        answer: 0,
+        explanation: 'Only a route has an address. Links and notifications open addresses, and the modal then joins the normal navigation history.',
+      },
+      {
+        id: 'expo-router-06-q2',
+        prompt: 'On Android, a form sheet\'s `options` contain `title: \'Add note\'`. What happens to that title?',
+        choices: [
+          'It is shown in the status bar at the top of the screen',
+          'It appears in the sheet\'s grabber handle at the top edge',
+          'It becomes the label of the next screen in the Stack',
+          'It is not rendered, because Android form sheets have no native header; put it in the content',
+        ],
+        answer: 3,
+        explanation: 'The docs say native stack headers are not supported in Android form sheets, so `title` and header buttons do not render. Draw them inside the sheet.',
+      },
+      {
+        id: 'expo-router-06-q3',
+        prompt: 'The new-order modal was opened by a deep link as the first screen. Why is `router.canDismiss()` useful before `router.dismiss()`?',
+        choices: [
+          'It prevents the user from dismissing the modal before the form is valid',
+          'It tells you whether a screen exists to dismiss to; if not, you can `replace` to the home screen',
+          'It saves the form data to disk in case the dismiss is cancelled',
+          'It checks that the user is signed in before closing a protected screen',
+        ],
+        answer: 1,
+        explanation: 'If nothing is underneath, dismissing has nowhere to go. Checking `canDismiss()` lets you fall back to `router.replace(\'/\')`.',
+      },
+      {
+        id: 'expo-router-06-q4',
+        prompt: 'What does `sheetAllowedDetents: [0.5, 1]` mean?',
+        choices: [
+          'The sheet can rest at half the screen height or at the full height',
+          'The sheet is 0.5 seconds slow to open and 1 second to close',
+          'The sheet may be opened up to 0.5 times, and a second time at most',
+          'The sheet is half the screen wide and as tall as its content needs',
+        ],
+        answer: 0,
+        explanation: 'Detents are the heights a sheet can rest at, written as fractions of the screen height in ascending order.',
+      },
+    ],
+    task: {
+      title: 'Add a modal and a sheet',
+      steps: [
+        'In `tindahan`, add `src/app/new-order.tsx` with a name field and a Save button, and register it in the root layout with `presentation: \'modal\'`.',
+        'Add a header button on the Orders screen with `headerRight` that links to `/new-order`. Make Save call `router.dismiss()`.',
+        'Add `src/app/add-note.tsx` registered as a `formSheet` with `sheetAllowedDetents: [0.5, 1]`. Open it from a button.',
+        'If you can, run it on both iOS and Android. Note what changes for the sheet\'s header on Android.',
+      ],
+      minutes: 18,
+    },
+  },
+  // @@MORE_LESSONS@@
+];
+
+const projects: Project[] = [];
+
+export const expoRouterCourse: Course = {
+  id: 'expo-router',
+  kind: 'standard',
+  title: 'Expo and Expo Router',
+  level: 'intermediate',
+  tagline: 'Build real multi-screen mobile apps with Expo, file-based routing, deep links and sign-in flows.',
+  description: 'Learn the Expo workflow from first command to shipped app: development builds, file-based navigation with Expo Router, deep links, authentication and cloud builds with updates. You finish with a multi-screen app that has a real sign-in flow.',
+  finishLine: [
+    'A multi-screen Expo app with stacks, tabs, modals and a protected sign-in flow',
+    'The judgement to choose Expo Go or a development build, and to know when a change needs a rebuild',
+    'A configured app with a deep-link scheme, config plugins and safe environment variables',
+  ],
+  objectives: [
+    'Choose between Expo Go and a development build and use the Expo CLI to run an app',
+    'Build screens and navigation from files in the app directory with layouts, stacks and tabs',
+    'Pass and read route parameters safely with dynamic routes and typed routes',
+    'Present modals and form sheets and customise headers',
+    'Protect screens behind a sign-in flow and handle deep links',
+    'Configure an app with app.json, config plugins and environment variables, and ship it with EAS Build and EAS Update',
+  ],
+  audiences: ['experienced-dev', 'career-changer', 'builder', 'fresh-grad'],
+  skills: [
+    { id: 'expo-workflow', label: 'Expo workflow and CLI' },
+    { id: 'file-routing', label: 'File-based routing' },
+    { id: 'layouts-navigators', label: 'Layouts, stacks and tabs' },
+    { id: 'dynamic-routes', label: 'Dynamic and typed routes' },
+    { id: 'modals-headers', label: 'Modals, sheets and headers' },
+    { id: 'deep-links', label: 'Deep links' },
+    { id: 'auth-flows', label: 'Authentication flows' },
+    { id: 'app-config', label: 'App config, plugins and env vars' },
+    { id: 'eas-build-update', label: 'EAS Build and Update' },
+  ],
+  lessons,
+  projects,
+  icon: 'phone_iphone',
+  updated: '2026-11-14',
+};

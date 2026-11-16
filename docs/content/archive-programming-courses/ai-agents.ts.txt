@@ -1,0 +1,266 @@
+import type { Course, Lesson, Project } from '../../types';
+
+const CHECKED = '2026-11-14';
+
+const DOCS = {
+  effectiveAgents: { label: 'Anthropic engineering: Building effective agents', url: 'https://www.anthropic.com/engineering/building-effective-agents' },
+  claudeToolOverview: { label: 'Claude API docs: Tool use with Claude', url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/overview' },
+  claudeHowItWorks: { label: 'Claude API docs: How tool use works', url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/how-tool-use-works' },
+  claudeHandle: { label: 'Claude API docs: Handle tool calls', url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/handle-tool-calls' },
+  claudeDefine: { label: 'Claude API docs: Define tools', url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools' },
+  claudeMemory: { label: 'Claude API docs: Memory tool', url: 'https://platform.claude.com/docs/en/agents-and-tools/tool-use/memory-tool' },
+  openaiFunctions: { label: 'OpenAI API docs: Function calling', url: 'https://developers.openai.com/api/docs/guides/function-calling' },
+  openaiSdk: { label: 'OpenAI API docs: Agents SDK', url: 'https://developers.openai.com/api/docs/guides/agents/sdk' },
+  openaiRunning: { label: 'OpenAI API docs: Running agents', url: 'https://developers.openai.com/api/docs/guides/agents/running-agents' },
+  geminiFunctions: { label: 'Gemini API docs: Function calling', url: 'https://ai.google.dev/gemini-api/docs/function-calling' },
+  mcpSpec: { label: 'Model Context Protocol specification (revision 2026-07-28)', url: 'https://modelcontextprotocol.io/specification/latest' },
+  mcpTools: { label: 'MCP specification 2026-07-28: Tools', url: 'https://modelcontextprotocol.io/specification/2026-07-28/server/tools.md' },
+  mcpBasic: { label: 'MCP specification 2026-07-28: Base protocol', url: 'https://modelcontextprotocol.io/specification/2026-07-28/basic.md' },
+  owasp: { label: 'OWASP Top 10 for LLM Applications (2025)', url: 'https://genai.owasp.org/llm-top-10/' },
+};
+
+const lessons: Lesson[] = [
+  {
+    id: 'ai-agents-01',
+    day: 1,
+    title: 'What an agent is: the think, act and observe loop',
+    summary: 'The difference between a single call, a workflow and an agent, and the loop every agent runs: think, act, observe.',
+    intro: {
+      objectives: [
+        'Explain the difference between a single model call, a workflow and an agent',
+        'Trace one think, act and observe cycle step by step',
+        'Name the parts of an agent: a model, tools, a loop and a stopping rule',
+      ],
+      why: 'Everything else in this course, from tools to memory to safety, is one part of a single loop. Once you can picture that loop, you can say why an agent worked or failed instead of guessing.',
+    },
+    minutes: 20,
+    skills: ['agent-loop'],
+    body: [
+      { type: 'paragraph', text: "You have already called a model: you send a prompt, it sends text back, and that is the end of it. One question, one answer. Now picture a different job. The owner of a small sari-sari store asks, 'What should I restock this week?' A model on its own cannot answer that honestly, because it cannot walk to the shelf, count the rice, or read the supplier's price list. Someone has to do those things and report back, and then someone has to decide what to look at next. An AI agent is a way of giving a model that ability: it asks, your program does, and the model sees what happened." },
+      { type: 'heading', text: 'One call, a workflow, an agent' },
+      { type: 'paragraph', text: "These three words get mixed up, so fix them first. A **single call** is one request to a model. A **workflow** is several model calls and tools that your code connects in an order you decided in advance. An **agent** is a system where the model itself decides which step comes next and which tools to use, over as many rounds as it needs. Anthropic's engineering article on agents draws the same line: workflows follow predefined code paths, while agents direct their own process and tool use." },
+      {
+        type: 'table',
+        headers: ['Kind', 'Who chooses the next step?', 'Example in the store', 'What you can predict'],
+        rows: [
+          ['Single call', 'Nobody, because there is only one step', 'Rewrite this shelf label so it sounds friendlier', 'Everything: one input, one output'],
+          ['Workflow', 'Your code, in advance', 'Every morning read the stock sheet and text the owner the items under 5', 'The steps; only the wording varies'],
+          ['Agent', 'The model, while it runs', 'Find out what to restock and why, checking whatever seems relevant', 'The goal and the limits, not the exact steps'],
+        ],
+        caption: 'The more the model decides, the less you can predict and the more it costs.',
+      },
+      { type: 'heading', text: 'The loop: think, act, observe' },
+      { type: 'paragraph', text: "Every agent, from a weekend script to a finished product, runs the same loop. The model **thinks**: given the goal and everything that has happened so far, it chooses the next step. Your program **acts**: it carries out that step, usually by running a tool. The result is **observed**: it is added to the conversation so the model can see it. Then the loop starts again, until the model decides it is finished and gives a final answer." },
+      {
+        type: 'diagram',
+        format: 'mermaid',
+        caption: 'The agent loop. The model only proposes; your program does the acting.',
+        source: 'flowchart TD\n  A(Goal from the user) --> B[Think: the model chooses the next step]\n  B --> C{Final answer or a tool request?}\n  C -->|Tool request| D[Act: your program runs the tool]\n  D --> E[Observe: the result joins the history]\n  E --> B\n  C -->|Final answer| F(Done)',
+      },
+      { type: 'paragraph', text: "Notice who does what. The model never runs anything. It proposes a step in a structured form that your code can read (the next lesson shows exactly how). Your program is the one with hands: it decides whether to run the tool and what to hand back. That split is why agent safety is mostly about what your code allows, which lesson 9 covers." },
+      { type: 'heading', text: 'A loop you can read' },
+      { type: 'paragraph', text: "Here is the loop with no model in it at all. The function `decide` plays the model's part: it looks at what has been seen so far and chooses the next step. Everything around it is the real structure." },
+      {
+        type: 'code',
+        language: 'javascript',
+        label: 'The think, act and observe loop',
+        code: `const shelf = { rice: 4, sugar: 12, noodles: 0 };
+const watchList = ['rice', 'sugar', 'noodles'];
+
+// THINK: given what has been seen so far, choose the next step.
+function decide(seen) {
+  if (seen.length < watchList.length) {
+    return { act: 'look', item: watchList[seen.length] };
+  }
+  const low = seen.filter((s) => s.count < 5).map((s) => s.item);
+  return { act: 'finish', text: 'Restock: ' + low.join(', ') };
+}
+
+const seen = [];
+for (let step = 1; step <= 10; step++) {
+  const choice = decide(seen);
+  if (choice.act === 'finish') {
+    console.log('step ' + step + ' - finish: ' + choice.text);
+    break;
+  }
+  const count = shelf[choice.item]; // ACT: really look at the shelf
+  seen.push({ item: choice.item, count: count }); // OBSERVE: keep what came back
+  console.log('step ' + step + ' - looked at ' + choice.item + ': ' + count);
+}`,
+      },
+      {
+        type: 'code',
+        language: 'text',
+        label: 'Output',
+        code: `step 1 - looked at rice: 4
+step 2 - looked at sugar: 12
+step 3 - looked at noodles: 0
+step 4 - finish: Restock: rice, noodles`,
+      },
+      { type: 'paragraph', text: "Read it in three parts. `decide(seen)` is the thinking: while there are items left to check it asks to look at the next one, and once everything has been seen it finishes with a summary. The line `shelf[choice.item]` is the acting, because it is the moment something really happens in the world. `seen.push(...)` is the observing: the result is stored where the next call to `decide` can see it. The `for` loop with `step <= 10` is a limit that keeps a confused agent from running forever. Lesson 4 explains why that one line matters so much." },
+      { type: 'tip', text: 'In a real agent, `decide` is one call to a language model and `seen` is the conversation history. The shape of the loop does not change when you swap them in, and that is exactly what the next lessons build.' },
+      {
+        type: 'version',
+        text: "Anthropic's article 'Building effective agents' defines workflows as systems where models and tools are orchestrated through predefined code paths, and agents as systems where the model dynamically directs its own process and tool use. It describes an agent as a model using tools based on feedback from its environment, in a loop. Product pages use the word 'agent' for many different things, so check which of these two a product really means.",
+        checked: CHECKED,
+        sources: [DOCS.effectiveAgents],
+      },
+      { type: 'warning', text: 'Every pass through the loop is another model call, so a task that takes ten steps costs about ten calls and ten times the waiting. An agent is a good choice when the steps cannot be known in advance and a poor one when they can. Lesson 7 is about telling those cases apart.' },
+      {
+        type: 'takeaways',
+        items: [
+          'A single call answers once, a workflow follows steps your code fixed in advance, and an agent lets the model choose its own next steps.',
+          'Every agent runs one loop: the model thinks, your program acts, the result is observed, and the loop repeats until a final answer.',
+          'The model only proposes steps. Your program runs them, so what an agent can do is decided by your code.',
+          'Each pass is another model call, so agents cost more and take longer than a single call.',
+          'A loop always needs a way to stop, such as a step limit.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'ai-agents-01-predict-output-1',
+          kind: 'predict-output',
+          title: 'Follow the loop',
+          story: 'You change the watch list to check salt first and only two items.',
+          prompt: 'This is the same loop shape with fewer pieces. What does it print?',
+          concept: 'agent loop',
+          language: 'javascript',
+          code: `const shelf = { rice: 4, sugar: 12, noodles: 0, salt: 30 };
+const checks = ['salt', 'rice'];
+const seen = [];
+for (let step = 1; step <= 5; step++) {
+  if (seen.length === checks.length) {
+    console.log('step ' + step + ': finish with ' + seen.join(' + '));
+    break;
+  }
+  const item = checks[seen.length];
+  seen.push(item + '=' + shelf[item]);
+  console.log('step ' + step + ': looked at ' + item);
+}`,
+          expected: 'step 1: looked at salt\nstep 2: looked at rice\nstep 3: finish with salt=30 + rice=4',
+          choices: [
+            'step 1: looked at salt\nstep 2: looked at rice\nstep 3: finish with salt=30 + rice=4',
+            'step 1: looked at rice\nstep 2: looked at salt\nstep 3: finish with rice=4 + salt=30',
+            'step 1: looked at salt\nstep 2: looked at rice',
+            'step 1: looked at salt\nstep 2: looked at rice\nstep 3: finish with salt + rice',
+          ],
+          wrongNotes: {
+            'step 1: looked at rice\nstep 2: looked at salt\nstep 3: finish with rice=4 + salt=30': 'The list is [salt, rice], so salt is looked at first and the summary joins them in that order.',
+            'step 1: looked at salt\nstep 2: looked at rice': 'On step 3 the check seen.length === checks.length is true, so the loop prints a finish line before it stops.',
+            'step 1: looked at salt\nstep 2: looked at rice\nstep 3: finish with salt + rice': 'Each entry pushed is the item, an equals sign and its count, such as salt=30, not just the name.',
+          },
+          hints: [
+            'Take the loop one step at a time and keep track of what is inside seen.',
+            'On step 3, seen already holds two entries, which equals checks.length.',
+            'Each entry is built as item + "=" + count, so the finish line prints salt=30 + rice=4.',
+          ],
+          explanation: 'Steps 1 and 2 each look at one item and remember what came back. On step 3 the thinking part sees that everything has been checked and finishes instead of looking again. The remembered results are what let the next decision be a better one.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'ai-agents-01-match-1',
+          kind: 'match',
+          title: 'Which part of the loop?',
+          prompt: 'Match each moment from a running agent to the part of the loop it belongs to.',
+          concept: 'agent loop',
+          labels: { terms: 'What happens', meanings: 'Part of the loop' },
+          pairs: [
+            { term: 'Your program calls check_stock with the item rice', definition: 'Act: your program carries out the step' },
+            { term: 'The text "rice: 4 on the shelf" is appended to the conversation', definition: 'Observe: the result goes into the history', note: 'This is the result of an action being recorded, not the action itself.' },
+            { term: 'The model replies with a plain summary and no tool request', definition: 'Stop: the loop ends with a final answer' },
+            { term: 'The model reads a stock count and picks the supplier price as the next thing to check', definition: 'Think: the model chooses the next step' },
+          ],
+          hints: [
+            'Ask who is doing the thing: the model, or your program?',
+            'Choosing what to do next is thinking. Doing it is acting. Recording what came back is observing.',
+            'A reply with no tool request means the model considers itself finished.',
+          ],
+          explanation: 'The model thinks and eventually stops; your program acts and records what came back. Telling the parts apart is the first step to finding which of them went wrong when an agent misbehaves.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'ai-agents-01-q1',
+        prompt: 'Two systems use the same model and the same tools. In system A your code always runs three steps in order: classify the message, look up the order, write a reply. In system B the model chooses which tool to use next and when to stop. What are they?',
+        choices: [
+          'Both are agents, because both use tools to get their work done',
+          'A is a workflow and B is an agent',
+          'A is an agent and B is a workflow, because A has more steps',
+          'Both are workflows, because you wrote the code for both of them',
+        ],
+        answer: 1,
+        explanation: 'The line is who chooses the steps. In A your code fixes the order in advance, which makes it a workflow even though a model does the work in each step. In B the model chooses, which makes it an agent.',
+      },
+      {
+        id: 'ai-agents-01-q2',
+        prompt: 'In one pass of the loop, which job belongs to your program rather than the model?',
+        choices: [
+          'Running the tool the model asked for and returning the result',
+          'Choosing which tool to ask for next',
+          'Deciding that the goal has been reached',
+          'Writing the final answer in plain language',
+        ],
+        answer: 0,
+        explanation: 'The model only proposes a tool call. Your code is the part that actually runs it and reports the result, which is why you control what an agent is able to do.',
+      },
+      {
+        id: 'ai-agents-01-q3',
+        prompt: 'A task takes an agent twelve passes through the loop. What does that mean for cost and speed?',
+        choices: [
+          'The cost stays about the same, because the model remembers earlier steps for free',
+          'Only the last pass is charged, because the earlier ones are drafts',
+          'It is free after the first pass, because the tools run on your own machine',
+          'It makes about twelve model calls, so it costs more and takes longer than one call',
+        ],
+        answer: 3,
+        explanation: 'Every pass asks the model to think again, and that is a model call. More steps means more calls, more waiting and more cost, which is why simple tasks should not use an agent.',
+      },
+      {
+        id: 'ai-agents-01-q4',
+        prompt: 'In the loop you read, what does the line seen.push({ item: choice.item, count: count }) represent?',
+        choices: [
+          'Thinking: choosing the next step',
+          'Acting: really looking at the shelf',
+          'Observing: keeping the result where the next decision can see it',
+          'Stopping: ending the loop with a final answer',
+        ],
+        answer: 2,
+        explanation: 'The look at the shelf happened one line earlier. This line records what came back so that the next call to decide can use it. That recording is the observe part of the loop.',
+      },
+    ],
+    task: {
+      title: 'Run the loop and bend it',
+      steps: [
+        'Save the loop from this lesson as loop.js and run it with node loop.js. Check that your output matches the lesson.',
+        'Add a fourth item, salt with 30 on the shelf, to both shelf and watchList. Predict the output before you run it.',
+        'Change the low-stock threshold from 5 to 10 and predict which items now count as low, then run it to check.',
+        'Write one sentence naming the line of code that is the thinking, the acting and the observing.',
+      ],
+      minutes: 10,
+    },
+  },
+  // @@MORE_LESSONS@@
+];
+
+const projects: Project[] = [];
+
+export const aiAgentsCourse: Course = {
+  id: 'ai-agents',
+  kind: 'standard',
+  title: 'AI Agents and Agentic Workflows',
+  level: 'intermediate',
+  tagline: 'Build agents that use tools, remember, plan and ask a human first.',
+  description: 'Learn what an agent really is and build one from the ground up: the loop, well-designed tools, memory, planning, approvals and tracing. You will also learn when a plain workflow is the better choice.',
+  finishLine: ['A working agent loop with three tools, a step limit and a human approval step', 'The judgement to pick a workflow instead of an agent when it is the simpler answer'],
+  objectives: ['Build', 'x', 'y'],
+  audiences: ['experienced-dev', 'builder'],
+  skills: [{ id: 'agent-loop', label: 'Agent loop' }],
+  lessons,
+  projects,
+  icon: 'smart_toy',
+  updated: '2026-11-14',
+};

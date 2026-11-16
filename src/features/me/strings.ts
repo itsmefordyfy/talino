@@ -1,0 +1,56 @@
+import { defineStrings } from '@/lib/i18n';
+
+export const meStrings = defineStrings({
+  en: {
+    title: 'Profile',
+    noName: 'Your progress',
+    goals: {
+      'fresh-grad': 'Fresh graduate, aiming for a first developer job',
+      'experienced-dev': 'Experienced developer, adding AI to my work',
+      'career-changer': 'Career changer, going freelance or VA',
+      educator: 'Educator, teaching with AI',
+      builder: 'Builder, making my own app or website',
+    } as Record<string, string>,
+    stats: { streak: 'Day streak', lessons: 'Lessons', badges: 'Badges', certificates: 'Certificates' },
+    progressTitle: 'Your courses',
+    noCourses: 'Start AI Basics for Tech to see your progress here.',
+    startStarter: 'Start the free course',
+    badgesTitle: 'Badges',
+    seeAllBadges: 'See all',
+    certificatesTitle: 'Certificates',
+    noCertificates: 'Finish a course to earn its certificate.',
+    masterReady: 'Talino Master: every career course done!',
+    newBadge: 'New badge',
+    newBadges: (n: number) => `${n} new badges`,
+    nice: 'Nice!',
+    // Badges screen
+    earned: (date: string) => `Earned ${date}`,
+    locked: 'Not yet',
+  },
+  fil: {
+    title: 'Ako',
+    noName: 'Ang progress mo',
+    goals: {
+      'fresh-grad': 'Fresh graduate, gustong makakuha ng unang trabaho bilang developer',
+      'experienced-dev': 'May experience na developer, nagdaragdag ng AI sa trabaho ko',
+      'career-changer': 'Nagpapalit ng career, mag-fa-freelance o magiging VA',
+      educator: 'Educator, nagtuturo gamit ang AI',
+      builder: 'Builder, gumagawa ng sarili kong app o website',
+    } as Record<string, string>,
+    stats: { streak: 'Day streak', lessons: 'Lessons', badges: 'Badges', certificates: 'Certificates' },
+    progressTitle: 'Ang mga course mo',
+    noCourses: 'Simulan ang AI Basics for Tech para makita dito ang progress mo.',
+    startStarter: 'Start free course',
+    badgesTitle: 'Badges',
+    seeAllBadges: 'View all',
+    certificatesTitle: 'Certificates',
+    noCertificates: 'Tapusin ang isang course para makuha ang certificate nito.',
+    masterReady: 'Talino Master: tapos mo na ang lahat ng career course!',
+    newBadge: 'Bagong badge',
+    newBadges: (n: number) => `${n} bagong badge`,
+    nice: 'Ayos!',
+    // Badges screen
+    earned: (date: string) => `Nakuha noong ${date}`,
+    locked: 'Hindi pa',
+  },
+});

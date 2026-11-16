@@ -1,0 +1,60 @@
+/**
+ * LIVE check of the speech route against the real Gemini text-to-speech (two short pieces, a few cents of the owner's key). Opt-in:
+ *   LIVE_COACH=1 npx jest src/features/coach/lib/speech.live.test.ts
+ */
+import { describe, expect, test } from '@jest/globals';
+import { readFileSync } from 'node:fs';
+import { request } from 'node:https';
+
+import { POST } from '@/app/api/speech+api';
+
+import { voicePieces } from './reply-voice';
+import { replyToSpeech } from './speech';
+
+const LIVE = process.env.LIVE_COACH === '1';
+
+if (LIVE) {
+  for (const line of readFileSync(`${process.cwd()}/.env`, 'utf8').split('\n')) {
+    const match = /^([A-Z_]+)=(.*)$/.exec(line);
+    if (match && !(match[1] in process.env)) process.env[match[1]] = match[2].trim().replace(/^["']|["']$/g, '');
+  }
+  // The Expo test preset's `fetch` returns no HTTP status; use a small one over Node's https for this live run.
+  globalThis.fetch = ((input: unknown, init?: { method?: string; headers?: Record<string, string>; body?: string; signal?: AbortSignal }) =>
+    new Promise<Response>((resolve, reject) => {
+      const req = request(String(input), { method: init?.method ?? 'GET', headers: init?.headers }, (res) => {
+        const chunks: Buffer[] = [];
+        res.on('data', (chunk: Buffer) => chunks.push(chunk));
+        res.on('end', () => resolve(new Response(Buffer.concat(chunks).toString('utf8'), { status: res.statusCode ?? 500 })));
+      });
+      req.on('error', reject);
+      init?.signal?.addEventListener('abort', () => req.destroy(Object.assign(new Error('aborted'), { name: 'AbortError' })));
+      if (init?.body) req.write(init.body);
+      req.end();
+    })) as unknown as typeof fetch;
+}
+
+const answer = '## Why it matters\nA **prompt** is the instruction you give an AI tool. A clear one gets a much better result.\n- Say what you want.\n- Say what it is for.\n```js\nconsole.log("skipped");\n```';
+
+(LIVE ? describe : describe.skip)('speech route, live', () => {
+  for (const [companion, voice] of [['tala', 'Sulafat'], ['tali', 'Achird']] as const) {
+    test(`${companion} is voiced by ${voice}: a real WAV comes back for the first piece of an answer`, async () => {
+      const [first] = voicePieces(replyToSpeech(answer, 'en'));
+      const response = await POST(new Request('http://localhost/api/speech', { method: 'POST', body: JSON.stringify({ deviceId: `livespeech-${companion}-${Date.now()}`, requestId: `req-${Date.now()}-${companion}`, text: first, companion }) }));
+      const body = (await response.json()) as { audio?: string; mime?: string; voice?: string; error?: string };
+      expect(body.error).toBeUndefined();
+      expect(response.status).toBe(200);
+      expect(body.voice).toBe(voice);
+      const bytes = Buffer.from(body.audio ?? '', 'base64');
+      expect(bytes.subarray(0, 4).toString()).toBe('RIFF');
+      expect(bytes.length).toBeGreaterThan(40_000);
+      // Only the audio: the header's data size accounts for every byte, with no metadata chunk after it (that plays as static).
+      expect(bytes.readUInt32LE(40) + 44).toBe(bytes.length);
+      expect(bytes.includes('C2PA')).toBe(false);
+      expect(first).not.toMatch(/console|skipped|\*\*|##/);
+    }, 90_000);
+  }
+});
+
+test('live speech check is opt-in', () => {
+  expect(typeof LIVE).toBe('boolean');
+});

@@ -1,0 +1,151 @@
+import { afterEach, beforeEach, describe, expect, jest, test } from '@jest/globals';
+
+import { POST } from '@/app/api/speech+api';
+
+import { resetChatQuotaMemory } from './ai-chat-quota';
+import { resetModelRest } from './gemini';
+import { resetGlobalCapMemory } from './global-cap';
+
+/** The speech route with Gemini stubbed: nothing calls a network service or needs a real key. */
+describe('speech route', () => {
+  const env = { ...process.env };
+  const fetchMock = jest.fn<typeof fetch>();
+  const audio = (data = 'UklGRg==') => new Response(JSON.stringify({ candidates: [{ content: { parts: [{ inlineData: { mimeType: 'audio/wav', data } }] } }] }), { status: 200 });
+  let id = 0;
+  const fresh = () => `req-${String(++id).padStart(8, '0')}`;
+  let phone = 0;
+  const post = (body: Record<string, unknown>) =>
+    POST(new Request('http://localhost/api/speech', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ deviceId: `device-${phone}`, requestId: fresh(), text: 'Hello there. This is a test.', companion: 'tala', ...body }) }));
+  const json = async (response: Response) => (await response.json()) as Record<string, unknown>;
+  const geminiCall = () => {
+    const [url, init] = fetchMock.mock.calls[0] ?? [];
+    return { url: String(url), body: JSON.parse(String((init as RequestInit).body)) as { contents: { parts: { text: string }[] }[]; generationConfig: { responseModalities: string[]; speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: string } } } } } };
+  };
+
+  beforeEach(() => {
+    phone += 1;
+    process.env.GEMINI_API_KEY = 'test-key';
+    for (const name of ['SUPABASE_URL', 'EXPO_PUBLIC_SUPABASE_URL', 'SUPABASE_SECRET_KEY', 'AI_GLOBAL_DAILY_LIMIT', 'SPEECH_DAILY_LIMIT', 'LESSON_SPEECH_DAILY_LIMIT', 'GEMINI_TTS_MODELS']) delete process.env[name];
+    resetChatQuotaMemory();
+    resetGlobalCapMemory();
+    resetModelRest();
+    fetchMock.mockReset();
+    fetchMock.mockImplementation(async () => audio());
+    globalThis.fetch = fetchMock as unknown as typeof fetch;
+    jest.spyOn(console, 'error').mockImplementation(() => undefined);
+  });
+  afterEach(() => {
+    process.env = { ...env };
+    jest.restoreAllMocks();
+  });
+
+  test('no key: unavailable, nothing called', async () => {
+    delete process.env.GEMINI_API_KEY;
+    const response = await post({});
+    expect(response.status).toBe(503);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  test('Tala is voiced by Sulafat and Tali by Achird, asked for audio from the speech model, and the audio comes back', async () => {
+    const tala = await post({ companion: 'tala' });
+    expect(tala.status).toBe(200);
+    expect(await json(tala)).toEqual({ audio: 'UklGRg==', mime: 'audio/wav', voice: 'Sulafat' });
+    const call = geminiCall();
+    expect(call.url).toContain('gemini-3.8-flash-lite-tts:generateContent');
+    expect(call.body.generationConfig.responseModalities).toEqual(['AUDIO']);
+    expect(call.body.generationConfig.speechConfig.voiceConfig.prebuiltVoiceConfig.voiceName).toBe('Sulafat');
+    expect(call.body.contents[0].parts[0].text).toBe('Hello there. This is a test.');
+
+    fetchMock.mockClear();
+    const tali = await post({ companion: 'tali' });
+    expect((await json(tali)).voice).toBe('Achird');
+    // An unknown or missing coach is Tali, like everywhere else.
+    fetchMock.mockClear();
+    expect((await json(await post({ companion: 'nobody' }))).voice).toBe('Achird');
+  });
+
+  test('bad requests are refused before anything is spent: no text, too much text, no id, no way to tell who asks', async () => {
+    for (const bad of [{ text: '' }, { text: '   ' }, { text: 'x'.repeat(901) }, { requestId: 'short' }, { text: 42 }]) expect((await post(bad)).status).toBe(400);
+    expect((await post({ deviceId: 'no', appUserId: undefined })).status).toBe(400);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  test('each person has a daily allowance of pieces, and a refused one costs nothing', async () => {
+    process.env.SPEECH_DAILY_LIMIT = '2';
+    expect((await post({})).status).toBe(200);
+    expect((await post({})).status).toBe(200);
+    const third = await post({});
+    expect(third.status).toBe(429);
+    expect((await json(third)).error).toBe('speech_limit');
+    expect(fetchMock).toHaveBeenCalledTimes(2);
+    // Someone else is not affected.
+    phone += 1;
+    expect((await post({})).status).toBe(200);
+  });
+
+  test('lesson sentences have their own, larger allowance: reading a lesson never uses up the chat answers’ pieces, and the reverse', async () => {
+    process.env.SPEECH_DAILY_LIMIT = '1';
+    process.env.LESSON_SPEECH_DAILY_LIMIT = '3';
+    for (let sentence = 0; sentence < 3; sentence += 1) expect((await post({ kind: 'lesson', text: `Sentence number ${sentence}.` })).status).toBe(200);
+    const fourth = await post({ kind: 'lesson' });
+    expect(fourth.status).toBe(429);
+    expect((await json(fourth)).error).toBe('speech_limit');
+    // The chat answers' pieces are counted apart (one a day here), and the lesson's own count did not use it.
+    expect((await post({})).status).toBe(200);
+    expect((await post({})).status).toBe(429);
+  });
+
+  test('a lesson sentence that Gemini can’t voice gives its allowance back', async () => {
+    process.env.LESSON_SPEECH_DAILY_LIMIT = '1';
+    fetchMock.mockImplementation(async () => new Response(JSON.stringify({ error: { status: 'INVALID_ARGUMENT', message: 'x' } }), { status: 400 }));
+    expect((await post({ kind: 'lesson' })).status).toBe(503);
+    fetchMock.mockImplementation(async () => audio());
+    expect((await post({ kind: 'lesson' })).status).toBe(200);
+  });
+
+  test('a busy first model falls back to the next one; a failing Gemini gives the allowance back', async () => {
+    fetchMock.mockImplementationOnce(async () => new Response(JSON.stringify({ error: { status: 'RESOURCE_EXHAUSTED' } }), { status: 429 }));
+    const ok = await post({});
+    expect(ok.status).toBe(200);
+    expect(String(fetchMock.mock.calls[1][0])).toContain('gemini-3.8-flash-tts:generateContent');
+
+    process.env.SPEECH_DAILY_LIMIT = '1';
+    phone += 1;
+    fetchMock.mockReset();
+    fetchMock.mockImplementation(async () => new Response(JSON.stringify({ error: { status: 'INVALID_ARGUMENT', message: 'x' } }), { status: 400 }));
+    expect((await post({})).status).toBe(503);
+    fetchMock.mockImplementation(async () => audio());
+    // The failed piece was not counted against the allowance of one.
+    expect((await post({})).status).toBe(200);
+  });
+
+  test('a reply with no audio in it is an error, not an empty success', async () => {
+    fetchMock.mockImplementation(async () => new Response(JSON.stringify({ candidates: [{ content: { parts: [{ text: 'no audio' }] } }] }), { status: 200 }));
+    expect((await post({})).status).toBe(502);
+  });
+
+  test('Gemini’s metadata chunk after the audio is not passed on (it plays as static): the app gets just the audio', async () => {
+    const tag = (bytes: number[], at: number, value: string) => [...value].forEach((char, index) => (bytes[at + index] = char.charCodeAt(0)));
+    const audioBytes = 20;
+    const meta = 40;
+    const raw = new Array<number>(12 + 24 + 8 + audioBytes + 8 + meta).fill(7);
+    tag(raw, 0, 'RIFF');
+    tag(raw, 8, 'WAVE');
+    tag(raw, 12, 'fmt ');
+    raw[16] = 16;
+    raw[17] = raw[18] = raw[19] = 0;
+    tag(raw, 36, 'data');
+    raw[40] = audioBytes;
+    raw[41] = raw[42] = raw[43] = 0;
+    tag(raw, 44 + audioBytes, 'C2PA');
+    raw[48 + audioBytes] = meta;
+    raw[49 + audioBytes] = raw[50 + audioBytes] = raw[51 + audioBytes] = 0;
+    fetchMock.mockImplementation(async () => audio(btoa(String.fromCharCode(...raw))));
+    const body = await json(await post({}));
+    const sent = atob(String(body.audio));
+    expect(sent.length).toBe(44 + audioBytes);
+    expect(sent.includes('C2PA')).toBe(false);
+    expect(sent.slice(0, 4)).toBe('RIFF');
+  });
+});
+

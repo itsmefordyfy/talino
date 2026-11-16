@@ -1,0 +1,963 @@
+import type { Course, Lesson, Project } from '../../types';
+
+const CHECKED = '2026-11-14';
+
+// Official pages that the version notes cite often. Every one was opened and read on CHECKED.
+const DOCS = {
+  webSetup: { label: 'Firebase docs: Add Firebase to your JavaScript project', url: 'https://firebase.google.com/docs/web/setup' },
+  projects: { label: 'Firebase docs: Understand Firebase projects', url: 'https://firebase.google.com/docs/projects/learn-more' },
+  apiKeys: { label: 'Firebase docs: Learn about using and managing API keys', url: 'https://firebase.google.com/docs/projects/api-keys' },
+  pricing: { label: 'Firebase pricing plans', url: 'https://firebase.google.com/pricing' },
+  cli: { label: 'Firebase docs: Firebase CLI reference', url: 'https://firebase.google.com/docs/cli' },
+  dataModel: { label: 'Firestore docs: Cloud Firestore data model', url: 'https://firebase.google.com/docs/firestore/data-model' },
+  queries: { label: 'Firestore docs: Perform simple and compound queries', url: 'https://firebase.google.com/docs/firestore/query-data/queries' },
+  indexes: { label: 'Firestore docs: Index types in Cloud Firestore', url: 'https://firebase.google.com/docs/firestore/query-data/index-overview' },
+  quotas: { label: 'Firestore docs: Quotas and limits', url: 'https://firebase.google.com/docs/firestore/quotas' },
+  transactions: { label: 'Firestore docs: Transactions and batched writes', url: 'https://firebase.google.com/docs/firestore/manage-data/transactions' },
+  editions: { label: 'Firestore docs: Firestore editions', url: 'https://firebase.google.com/docs/firestore/editions' },
+  search: { label: 'Firestore docs: Search with text indexes', url: 'https://firebase.google.com/docs/firestore/solutions/search' },
+  multiRange: { label: 'Firestore docs: Query with range and inequality filters on multiple fields', url: 'https://firebase.google.com/docs/firestore/query-data/multiple-range-fields' },
+  structure: { label: 'Firestore docs: Choose a data structure', url: 'https://firebase.google.com/docs/firestore/manage-data/structure-data' },
+  deleteData: { label: 'Firestore docs: Delete data from Cloud Firestore', url: 'https://firebase.google.com/docs/firestore/manage-data/delete-data' },
+  rulesStructure: { label: 'Firestore docs: Structure Security Rules', url: 'https://firebase.google.com/docs/firestore/security/rules-structure' },
+  rulesConditions: { label: 'Firestore docs: Writing conditions for Security Rules', url: 'https://firebase.google.com/docs/firestore/security/rules-conditions' },
+  rulesQuery: { label: 'Firestore docs: Securely query data', url: 'https://firebase.google.com/docs/firestore/security/rules-query' },
+  rulesLanguage: { label: 'Firebase docs: Security Rules language', url: 'https://firebase.google.com/docs/rules/rules-language' },
+  rulesStart: { label: 'Firestore docs: Get started with Security Rules', url: 'https://firebase.google.com/docs/firestore/security/get-started' },
+  authWeb: { label: 'Firebase docs: Get started with Firebase Authentication on websites', url: 'https://firebase.google.com/docs/auth/web/start' },
+  authOverview: { label: 'Firebase docs: Firebase Authentication', url: 'https://firebase.google.com/docs/auth' },
+  storageUpload: { label: 'Cloud Storage docs: Upload files with Cloud Storage on Web', url: 'https://firebase.google.com/docs/storage/web/upload-files' },
+  storageRules: { label: 'Cloud Storage docs: Get started with Firebase Security Rules', url: 'https://firebase.google.com/docs/storage/security' },
+  storageStart: { label: 'Cloud Storage docs: Get started with Cloud Storage on Web', url: 'https://firebase.google.com/docs/storage/web/start' },
+  functions: { label: 'Firebase docs: Cloud Functions for Firebase', url: 'https://firebase.google.com/docs/functions' },
+  functionsStart: { label: 'Firebase docs: Get started with Cloud Functions', url: 'https://firebase.google.com/docs/functions/get-started' },
+  functionsGen: { label: 'Firebase docs: Cloud Functions version comparison', url: 'https://firebase.google.com/docs/functions/version-comparison' },
+  hosting: { label: 'Firebase docs: Firebase Hosting', url: 'https://firebase.google.com/docs/hosting' },
+  hostingConfig: { label: 'Firebase docs: Configure Hosting behavior', url: 'https://firebase.google.com/docs/hosting/full-config' },
+  appHosting: { label: 'Firebase docs: Firebase App Hosting', url: 'https://firebase.google.com/docs/app-hosting' },
+  listen: { label: 'Firestore docs: Get realtime updates', url: 'https://firebase.google.com/docs/firestore/query-data/listen' },
+  offline: { label: 'Firestore docs: Access data offline', url: 'https://firebase.google.com/docs/firestore/manage-data/enable-offline' },
+  emulator: { label: 'Firebase docs: Install, configure and integrate the Local Emulator Suite', url: 'https://firebase.google.com/docs/emulator-suite/install_and_configure' },
+  rulesTests: { label: 'Firebase docs: Build unit tests for Security Rules', url: 'https://firebase.google.com/docs/rules/unit-tests' },
+  firestorePricing: { label: 'Firestore docs: Understand Cloud Firestore billing', url: 'https://firebase.google.com/docs/firestore/pricing' },
+  bestPractices: { label: 'Firestore docs: Best practices', url: 'https://firebase.google.com/docs/firestore/best-practices' },
+  budgets: { label: 'Google Cloud docs: Create, edit, or delete budgets and budget alerts', url: 'https://docs.cloud.google.com/billing/docs/how-to/budgets' },
+};
+
+const lessons: Lesson[] = [
+  {
+    id: 'firebase-01',
+    day: 1,
+    title: 'What Firebase is, and setting up a project',
+    summary: 'What Firebase gives you, how a project, an app and the config object fit together, and how to connect a web app with the modular SDK.',
+    intro: {
+      objectives: [
+        'Name the Firebase products a small app uses and what each is for',
+        'Create a project, register a web app and initialise the modular SDK',
+        'Explain why the Firebase config is public and what actually protects your data',
+      ],
+      why: 'Firebase lets one developer ship an app with sign-in, a database and hosting without running a server. You only use it safely if you understand which parts are public and which part, the rules, does the protecting.',
+    },
+    minutes: 20,
+    skills: ['firebase-basics'],
+    body: [
+      { type: 'paragraph', text: "Most apps need the same things behind the screen: a database, a way to sign people in, a place for photos, some code that must run on a server, and somewhere to publish. Firebase is Google's backend-as-a-service: ready-made versions of those parts that your app calls directly through a software development kit (SDK), a library you install. You write the front end and some rules, and Google runs the servers." },
+      { type: 'heading', text: 'The products this course covers' },
+      {
+        type: 'table',
+        headers: ['Product', 'What it is', 'What goes wrong without it'],
+        rows: [
+          ['Cloud Firestore', 'A document database you query and listen to from the app', 'You build and host your own API and database'],
+          ['Authentication', 'Sign-in with email and password, Google, phone and more', 'You store passwords and handle resets yourself'],
+          ['Cloud Storage for Firebase', 'File storage for photos, PDFs and other uploads', 'Files end up as huge database values'],
+          ['Cloud Functions', 'Your own JavaScript or Python, run on Google servers by an event or a request', 'Trusted work has to happen on the phone'],
+          ['Hosting and App Hosting', 'A global CDN for your built site; App Hosting also runs framework server code', 'You rent and patch a web server'],
+          ['App Check', 'Checks that requests come from your real app, not a copy or a script', 'Anyone can hammer your backend with your public config'],
+        ],
+        caption: 'Each product has its own pricing and its own rules, which later lessons cover one by one.',
+      },
+      {
+        type: 'diagram',
+        format: 'mermaid',
+        caption: 'The client talks to Firebase directly. Security Rules sit in front of the data; Cloud Functions are the one place you run trusted code.',
+        source: 'flowchart LR\n  App[Your web or mobile app] --> SDK[Firebase SDK]\n  SDK --> Auth[Authentication]\n  SDK --> Rules[Security Rules]\n  Rules --> Data[Firestore and Storage]\n  SDK --> Fn[Cloud Functions]\n  Fn --> Data\n  Host[Hosting] --> App',
+      },
+      { type: 'heading', text: 'Projects, apps and the config object' },
+      { type: 'paragraph', text: "A Firebase **project** is the top-level container: your database, users, files and settings live in it. Under the hood it is a Google Cloud project with Firebase features switched on, so billing and permissions are shared with Google Cloud. Inside a project you **register apps** (a web app, an iOS app, an Android app); they all share the same backend." },
+      { type: 'paragraph', text: "Registering a web app gives you a **config object**. At minimum it holds an `apiKey`, a `projectId` and an `appId`. Notice what the `apiKey` is not: a password. It only tells Google which project your requests are for, and Firebase's docs say the config is considered public. Your data is protected by **Security Rules** (lesson 3) and, for abuse, by App Check. A key that really is secret is a Gemini Developer API key, which must never sit in your web app." },
+      {
+        type: 'version',
+        text: "Firebase's docs say the content of the Firebase config object is considered public, and that data security comes from Security Rules rather than from hiding the API key. They also say a Gemini Developer API key is different: it must be protected and kept out of code and config that ships to users. The current web SDK is the modular one; the docs' own CDN example uses version 13.3.0 of the JavaScript SDK.",
+        checked: CHECKED,
+        sources: [DOCS.apiKeys, DOCS.projects, DOCS.webSetup],
+      },
+      { type: 'heading', text: 'Setting up: the same steps every time' },
+      {
+        type: 'list',
+        ordered: true,
+        items: [
+          'In the Firebase console, create a project, then add a **web app** to it and copy the config object.',
+          'In your project folder run `npm install firebase`. This is the modular SDK: you import only the functions you use.',
+          'Initialise once, in its own file, and import `app` from there everywhere else.',
+          'Install the CLI with `npm install -g firebase-tools`, run `firebase login`, then `firebase init` to create `firebase.json` and `.firebaserc`.',
+        ],
+      },
+      {
+        type: 'code',
+        language: 'javascript',
+        label: 'src/firebase.js: initialise once',
+        code: `import { initializeApp } from 'firebase/app';
+import { getFirestore } from 'firebase/firestore';
+import { getAuth } from 'firebase/auth';
+
+// Paste the values from the console. They identify your project and are not secrets.
+const firebaseConfig = {
+  apiKey: 'AIza...',
+  authDomain: 'my-tindahan.firebaseapp.com',
+  projectId: 'my-tindahan',
+  appId: '1:1234567890:web:abc123',
+};
+
+export const app = initializeApp(firebaseConfig);
+export const db = getFirestore(app);
+export const auth = getAuth(app);`,
+      },
+      { type: 'paragraph', text: "Read it line by line. `initializeApp` connects your code to the project and returns an `app`. `getFirestore(app)` and `getAuth(app)` give you a handle to each service. Nothing is fetched yet: each handle only talks to Google when you read, write or sign in. Because the SDK is modular, a bundler can drop every function you never import, which keeps the web app small." },
+      { type: 'tip', text: "Make a second project for testing (`my-tindahan-dev`) and switch with `firebase use`. Mistakes then land in a project whose data you can throw away. Lesson 9 adds a better tool still: the Emulator Suite, which runs everything on your own laptop." },
+      { type: 'heading', text: 'Firebase or Supabase?' },
+      { type: 'paragraph', text: "Firestore is a **NoSQL document database**: records are documents grouped in collections, with no joins and a limited, index-driven query language (lesson 2). That trade gives you real-time updates, offline support and a database the app can safely talk to directly, if the rules are right. Supabase is built on PostgreSQL, so you get SQL, joins and row-level security. Pick Firebase when your data is shaped like documents you fetch by owner or by id and you want realtime and offline built in. Pick a Postgres-based backend when you need relational reports and ad-hoc queries across many tables. The Supabase course in this catalog covers the other side." },
+      { type: 'heading', text: 'Plans, in words' },
+      { type: 'paragraph', text: "Firebase has two pricing plans. **Spark** is the no-cost plan: no payment method, with usage limits, and it includes limited use of products like Firestore, Authentication and Hosting. **Blaze** is pay as you go: more products and higher limits. Several products, including Cloud Functions, Cloud Storage for Firebase and App Hosting, are listed as needing Blaze. Check the current terms before you plan a launch, because plans and quotas change." },
+      {
+        type: 'version',
+        text: "Firebase's pricing page names the Spark plan as no-cost with usage limits and the Blaze plan as pay as you go, and lists Cloud Functions, Cloud Storage and App Hosting among the products that need Blaze. The Storage setup page says Blaze is required to use Cloud Storage for Firebase. This course describes plans in words only; read the pricing page for current quotas and rates.",
+        checked: CHECKED,
+        sources: [DOCS.pricing, DOCS.storageStart, DOCS.cli],
+        plans: 'Spark (no cost, limited) and Blaze (pay as you go)',
+      },
+      { type: 'warning', text: "A public config only works out if your rules are strict. The console can create a project's database in a mode that is open for a while; lesson 3 shows why that is dangerous and how to lock it down before real users arrive." },
+      {
+        type: 'takeaways',
+        items: [
+          'Firebase is a set of backend services your app calls directly through an SDK; one project holds them all.',
+          'The config object (apiKey, projectId, appId) is public by design. Security Rules protect data; a Gemini API key is the kind of key that must stay on a server.',
+          'Use the modular SDK: install `firebase`, call `initializeApp` once, and import only the functions you need.',
+          'Spark is no-cost with limits; Blaze is pay as you go, and some products need it. Always read the current terms.',
+          'Firestore is NoSQL: great for realtime, offline and document-shaped data, weak for joins and ad-hoc reports, where Postgres or Supabase fits better.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'firebase-01-match-1',
+          kind: 'match',
+          title: 'Which product does the job?',
+          prompt: 'Match each need of a new app to the Firebase product that handles it.',
+          concept: 'Firebase products',
+          labels: { terms: 'The app needs to...', meanings: 'Firebase product' },
+          pairs: [
+            { term: 'Let a customer log in with their Google account', definition: 'Authentication', note: 'Logging in is identity, not storage. Authentication proves who someone is.' },
+            { term: 'Keep every shop\'s products as records the app can search and watch live', definition: 'Cloud Firestore', note: 'Records you query and watch live belong in the database.' },
+            { term: 'Accept a photo of a receipt from a phone', definition: 'Cloud Storage for Firebase', note: 'Large files go to file storage, not into database fields.' },
+            { term: 'Email a receipt on the server after an order is saved', definition: 'Cloud Functions', note: 'Work triggered by an event and run on a server is a function.' },
+            { term: 'Serve the finished React build to visitors around the world', definition: 'Hosting', note: 'Delivering built files from a CDN is what Hosting does.' },
+          ],
+          hints: [
+            'Ask for each line: is it identity, records, files, server code or publishing?',
+            'Photos and receipts are files; they do not belong in the database.',
+            'Sign-in is Authentication, records are Firestore, files are Storage, event-driven server code is Functions, the built site is Hosting.',
+          ],
+          explanation: 'Each Firebase product owns one kind of job. Choosing the product by the kind of work, rather than by its name, is how you plan a backend quickly.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'firebase-01-scenario-1',
+          kind: 'scenario',
+          title: 'The key in the config',
+          prompt: 'Choose the best next step.',
+          concept: 'secrets versus public config',
+          situation: 'A teammate wants the web app to call Gemini directly. To make it quick, they paste a Gemini Developer API key into the same object as the Firebase config, and the app will be published on Hosting.',
+          options: [
+            { text: 'Keep the key out of the web app. Call Gemini from a Cloud Function that first checks the caller is signed in, and keep the key on the server.', consequence: 'Users never receive the key. You can add rate limits and checks in one place.', quality: 'best' },
+            { text: 'Ship the app without the AI feature until the function exists, and tell the teammate why.', consequence: 'Safe, but you lose time. It is a fair choice if the function cannot be built yet.', quality: 'acceptable' },
+            { text: 'Leave it. The Firebase config is public anyway, so one more key in the object is fine.', consequence: 'The Firebase config is public by design; this key is not. Anyone can copy it from the browser and spend your quota.', quality: 'poor' },
+            { text: 'Rename the field to something unusual so people do not find it.', consequence: 'Everything in the shipped JavaScript can be read. Hiding a name hides nothing.', quality: 'poor' },
+          ],
+          hints: [
+            'Which of these keys is designed to be public, and which is not?',
+            'Anything shipped to the browser can be read by every visitor.',
+            'Secrets belong on a server you control; lesson 6 covers Cloud Functions for exactly that.',
+          ],
+          explanation: 'The Firebase config only identifies your project, so it can be public. A Gemini Developer API key grants paid access, so it must stay on a server. A Cloud Function is the Firebase-native place for that code.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'firebase-01-code-challenge-1',
+          kind: 'code-challenge',
+          title: 'Is the config complete?',
+          prompt: 'Write `missingConfigKeys(config)`. The web config needs `apiKey`, `projectId` and `appId`. Return an array of the required keys that are missing or empty, in that order. If nothing is missing, return an empty array.',
+          concept: 'the config object',
+          language: 'javascript',
+          starter: `function missingConfigKeys(config) {
+  // return the required keys that are missing or empty
+}`,
+          solution: `function missingConfigKeys(config) {
+  const required = ['apiKey', 'projectId', 'appId'];
+  return required.filter((key) => !config[key]);
+}`,
+          tests: {
+            kind: 'function',
+            fn: 'missingConfigKeys',
+            cases: [
+              { label: 'complete config', args: [{ apiKey: 'k', projectId: 'p', appId: 'a' }], expected: [] },
+              { label: 'only projectId', args: [{ projectId: 'p' }], expected: ['apiKey', 'appId'] },
+              { label: 'empty apiKey counts as missing', args: [{ apiKey: '', projectId: 'p', appId: 'a' }], expected: ['apiKey'] },
+              { label: 'empty object', args: [{}], expected: ['apiKey', 'projectId', 'appId'], hidden: true },
+            ],
+          },
+          hints: [
+            'Start with an array holding the three required names.',
+            'Use `filter` and keep the keys whose value in `config` is falsy.',
+            'return required.filter((key) => !config[key]);',
+          ],
+          explanation: 'A missing key reads as undefined and an empty string is falsy, so `!config[key]` catches both. Checking the config before calling `initializeApp` turns a confusing runtime failure into a clear message.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'firebase-01-q1',
+        prompt: 'Your firebaseConfig, including the apiKey, is visible to anyone who opens your web app. What is the real protection for the data in Firestore?',
+        choices: [
+          'Obfuscating the JavaScript bundle so the key cannot be read',
+          'Security Rules, plus App Check against abuse of your backend',
+          'Restricting the Hosting site to a short list of IP addresses',
+          'Keeping the apiKey in a private environment variable at build time',
+        ],
+        answer: 1,
+        explanation: 'The config only identifies the project. Rules decide who may read and write each document; App Check adds a check that requests come from your real app. Hiding or obfuscating the key protects nothing, because whatever ships to the browser can be read.',
+      },
+      {
+        id: 'firebase-01-q2',
+        prompt: 'An order is saved and you want an email sent automatically from trusted code that holds your mail credentials. Which product fits?',
+        choices: [
+          'Hosting, with a rewrite to the order page',
+          'Authentication, with a custom claim for the mailer',
+          'Cloud Storage for Firebase, with an upload rule',
+          'Cloud Functions, triggered by the new order document',
+        ],
+        answer: 3,
+        explanation: 'Cloud Functions runs your code on Google servers in response to events, such as a document being created, and keeps credentials out of the app.',
+      },
+      {
+        id: 'firebase-01-q3',
+        prompt: 'A team must run ad-hoc reports that join five tables of sales, customers and stock. Which backend does the lesson point them toward?',
+        choices: [
+          'Firestore, because documents join automatically through subcollections',
+          'Firebase Hosting, because it caches query results at the edge',
+          'A Postgres-based backend such as Supabase, which supports SQL and joins',
+        ],
+        answer: 2,
+        explanation: 'Firestore has no joins and a deliberately limited query language. Relational reporting is what SQL and PostgreSQL are for.',
+      },
+      {
+        id: 'firebase-01-q4',
+        prompt: 'You want to deploy a Cloud Function and store user photos. What does the lesson say about the pricing plan?',
+        choices: [
+          'Spark is enough, because those products have no usage limits there',
+          'Both only need a plan upgrade once you pass a number of users',
+          'Both are listed as needing the Blaze plan, so check the current terms',
+          'Both work on Spark only if the project is in a US region',
+        ],
+        answer: 2,
+        explanation: 'Firebase lists Cloud Functions and Cloud Storage among the products that need Blaze. Plans change, so confirm on the pricing page before you plan a launch.',
+      },
+    ],
+    task: {
+      title: 'Create a project and connect a web app',
+      steps: [
+        'In the Firebase console, create a project and register a web app. Copy the config object.',
+        'In an empty folder run `npm init -y`, then `npm install firebase`. Create `src/firebase.js` like the one in the lesson with your own values.',
+        'Add a line that prints `app.options.projectId` and run it with `node` (add `"type": "module"` to package.json). Confirm it shows your project id.',
+        'Run `npm install -g firebase-tools`, then `firebase login` and `firebase init`. Open `firebase.json` and `.firebaserc` and read what was created.',
+      ],
+      minutes: 15,
+    },
+  },
+  {
+    id: 'firebase-02',
+    day: 2,
+    title: 'Firestore: the data model and CRUD',
+    summary: 'Documents, collections and subcollections, the five basic operations, and the query limits and indexes that shape how you model data.',
+    intro: {
+      objectives: [
+        'Model data as documents, collections and subcollections and write their paths',
+        'Create, read, update and delete documents with the modular SDK',
+        'Predict which queries Firestore allows, and when it needs an index',
+        'Choose between nesting, a subcollection and a root collection for growing data',
+      ],
+      why: 'Firestore rewards you if you design your data around the questions each screen asks, and punishes you if you design it like SQL tables. The limits you learn here decide almost every modelling choice later.',
+    },
+    minutes: 35,
+    skills: ['firestore-data'],
+    body: [
+      { type: 'paragraph', text: "Think of a filing cabinet. A **collection** is a drawer, a **document** is one folder in it, and the **fields** are the sheets inside the folder. A folder can even hold a small drawer of its own: that is a **subcollection**. Firestore is exactly that, and nothing else: documents live in collections, and a document is a set of named fields (strings, numbers, booleans, timestamps, arrays, maps and more). Collections hold only documents, never loose fields, and the path alternates: collection, document, collection, document." },
+      {
+        type: 'diagram',
+        format: 'mermaid',
+        caption: 'A path always alternates collection and document. A subcollection belongs to one parent document.',
+        source: 'flowchart TD\n  A[stores collection] --> B[naga-01 document]\n  A --> C[pili-01 document]\n  B --> D[products subcollection]\n  D --> E[pandesal document]\n  D --> F[asin document]',
+      },
+      { type: 'paragraph', text: "So the pandesal document's path is `stores/naga-01/products/pandesal`. Collections are created the moment you put the first document in them and disappear with the last one. Documents in the same collection do not have to share fields, but keeping them consistent makes queries easy. Two limits shape everything: a document can be at most 1 MiB, and a parent document's deletion does **not** delete its subcollections." },
+      { type: 'heading', text: 'The five operations' },
+      { type: 'paragraph', text: "Each operation starts with a reference, a cheap pointer built with `doc(db, ...)` or `collection(db, ...)`. Making one does not touch the network. Money is stored as whole centavos (`priceCentavos: 200`), because decimals in a number field invite rounding errors." },
+      {
+        type: 'code',
+        language: 'javascript',
+        label: 'CRUD with the modular SDK',
+        code: `import { doc, collection, setDoc, addDoc, getDoc, getDocs, updateDoc, deleteDoc,
+  increment, arrayUnion, serverTimestamp } from 'firebase/firestore';
+
+// Create with an id you choose. setDoc REPLACES the whole document.
+await setDoc(doc(db, 'stores', 'naga-01'), { name: 'Aling Nena', city: 'Naga', tags: ['grocery'] });
+
+// Create with an auto id (20 characters).
+const ref = await addDoc(collection(db, 'stores', 'naga-01', 'products'),
+  { name: 'Pandesal', priceCentavos: 200, stock: 40, createdAt: serverTimestamp() });
+
+// Read one. A missing document is not an error: exists() is false.
+const snap = await getDoc(doc(db, 'stores', 'naga-01'));
+if (snap.exists()) console.log(snap.data());
+
+// Update some fields only. Dot notation reaches into a map.
+await updateDoc(doc(db, 'stores', 'naga-01'), {
+  'meta.visits': increment(1),
+  tags: arrayUnion('load'),
+});
+
+// Delete.
+await deleteDoc(doc(db, 'stores', 'naga-01'));`,
+      },
+      { type: 'paragraph', text: "Run against the Emulator Suite, these behave in ways that surprise people. `setDoc` on an existing document throws the old fields away; `setDoc(..., { merge: true })` keeps them. `updateDoc` on a document that does not exist fails with the code `not-found`. `increment` and `arrayUnion` change a value on the server without you reading it first, which is safer than read-modify-write for counters. When a new value depends on what is stored, use a transaction: it reads first, writes last, and Firestore re-runs it if the data changed underneath you." },
+      {
+        type: 'code',
+        language: 'javascript',
+        label: 'A transaction: reads before writes',
+        code: `import { runTransaction } from 'firebase/firestore';
+
+const left = await runTransaction(db, async (tx) => {
+  const snap = await tx.get(productRef);
+  const next = snap.data().stock - 5;
+  if (next < 0) throw new Error('not enough stock');
+  tx.update(productRef, { stock: next });
+  return next;
+});`,
+      },
+      { type: 'heading', text: 'Queries, and what they cannot do' },
+      { type: 'paragraph', text: "A query is built from a collection plus `where`, `orderBy` and `limit`. This is where Firestore is most different from SQL, so read the limits as part of the design:" },
+      {
+        type: 'code',
+        language: 'javascript',
+        label: 'Queries',
+        code: `import { query, where, orderBy, limit, startAfter, or, getDocs } from 'firebase/firestore';
+
+const stores = collection(db, 'stores');
+
+query(stores, where('city', '==', 'Naga'), orderBy('rating', 'desc'), limit(10));
+query(stores, where('tags', 'array-contains', 'grocery'));
+query(stores, where('city', 'in', ['Naga', 'Pili']));
+query(stores, or(where('open', '==', true), where('rating', '>=', 4.8)));
+
+// Pagination uses a cursor, not an offset.
+const page1 = await getDocs(query(stores, orderBy('rating'), limit(25)));
+const last = page1.docs[page1.docs.length - 1];
+const page2 = await getDocs(query(stores, orderBy('rating'), startAfter(last), limit(25)));`,
+      },
+      {
+        type: 'table',
+        headers: ['You want...', 'Firestore (Standard edition)'],
+        rows: [
+          ['A JOIN of two collections', 'Not available. Copy the data you need into the document, or run two queries.'],
+          ['field IN (many values)', 'At most 30 values; `or`, `in` and `array-contains-any` share a limit of 30 disjunctions.'],
+          ['Two array-contains in one query', 'Not allowed: one `array-contains` per disjunction.'],
+          ['field NOT IN (...)', 'Up to 10 values, and it skips documents that lack the field.'],
+          ['Page through results', 'Use `orderBy`, `limit` and `startAfter`. Offsets still bill the skipped documents.'],
+          ['Search inside text ("contains pan")', 'No such operator. Text search exists only on Enterprise edition databases, with text indexes.'],
+        ],
+        caption: 'The limits you hit first. Read the current numbers on the Firestore quotas and queries pages.',
+      },
+      { type: 'heading', text: 'Indexes: why some queries need setup' },
+      { type: 'paragraph', text: "Firestore answers queries from indexes, not by scanning documents. It builds an index for every field automatically, which is enough for one field compared on its own, or several `==` filters. Combine a range filter on one field with an equality on another, or sort by a field you did not filter on, and you need a **composite index** that you create. When one is missing, the error message contains a link that creates it for you; you can also keep indexes in `firestore.indexes.json` and deploy them with the CLI. Lesson 9 shows a trap: the emulator does **not** enforce composite indexes, so a query can work on your laptop and fail in production." },
+      { type: 'heading', text: 'Modelling: design for the screen' },
+      { type: 'paragraph', text: "Ask what each screen must show, then store data so that screen needs one query. There are three shapes. **Nesting** a list inside a document is simple, but the document grows toward the 1 MiB limit and every read downloads all of it. A **subcollection** keeps the parent small and can be queried on its own, at the cost that deleting a parent leaves the children behind. A **root collection** with a reference field (`storeId`) suits many-to-many relationships. And because there are no joins, you will often **denormalise**: copy a store's name onto each order so the order list needs no second query, and accept that you must update copies when the name changes." },
+      { type: 'tip', text: "Avoid ids that count upward (`Customer1`, `Customer2`) at high write rates: they can create hotspots. Let `addDoc` generate ids, or use ids that are naturally spread out, such as a user's uid." },
+      {
+        type: 'version',
+        text: "Verified against the Firestore docs: a document is at most 1 MiB; subcollections can nest 100 levels; `in` and `array-contains-any` take at most 30 values and `not-in` at most 10; Standard edition needs indexes for queries, while the newer Enterprise edition makes them optional and is the only one with text search. Range and inequality filters on several fields (up to 10) are now supported, with index rules of their own. Examples here were run against the Firestore emulator (Standard edition) with firebase-tools 15.36.0 and JavaScript SDK 13.3.0.",
+        checked: CHECKED,
+        sources: [DOCS.dataModel, DOCS.queries, DOCS.indexes, DOCS.quotas, DOCS.editions, DOCS.multiRange, DOCS.search, DOCS.structure],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'Data lives in documents inside collections; paths alternate, and a subcollection belongs to one parent document.',
+          '`setDoc` replaces a document, `setDoc` with merge or `updateDoc` changes fields, and `increment`, `arrayUnion` and transactions avoid read-modify-write bugs.',
+          'Firestore has no joins, 30-value limits on `in` and `or`, and cursor pagination: model data for the questions each screen asks.',
+          'Composite indexes are created by you; the emulator will not warn you that one is missing.',
+          'Nesting, subcollections and root collections trade document size, query power and deletion; denormalising copies data to save a query.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'firebase-02-scenario-1',
+          kind: 'scenario',
+          title: 'Where do the products go?',
+          prompt: 'Choose the best model.',
+          concept: 'data modelling',
+          situation: 'Each store in your app can have thousands of products, which are added and changed all day. A store page shows only its own products, with the most expensive first.',
+          options: [
+            { text: 'A `products` subcollection under each store document: `stores/{storeId}/products/{productId}`.', consequence: 'The store document stays small, each store page is one query, and products can be added or changed without touching the store.', quality: 'best' },
+            { text: 'A root `products` collection where each product has a `storeId` field.', consequence: 'It works, and it is the right shape if you often search products across all stores. For this screen it adds a field to filter on, but nothing is wrong.', quality: 'acceptable' },
+            { text: 'A `products` array of maps inside each store document.', consequence: 'The document grows toward the 1 MiB limit, every store read downloads every product, and one busy store becomes a write hotspot.', quality: 'poor' },
+            { text: 'One document per store whose fields are product1, product2, product3 and so on.', consequence: 'You cannot query, sort or paginate fields like that, and the document still grows without bound.', quality: 'poor' },
+          ],
+          hints: [
+            'Which choice keeps the store document small as products pile up?',
+            'The screen only ever needs one store\'s products, so a query scoped to the store is enough.',
+            'A subcollection scopes the query to one parent and keeps the parent small.',
+          ],
+          explanation: 'A growing list belongs outside its parent document. A subcollection fits a list that is always viewed per parent; a root collection suits queries across parents. Putting thousands of items into one document fights the 1 MiB limit.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'firebase-02-predict-1',
+          kind: 'predict-output',
+          title: 'Merge or replace?',
+          prompt: 'This code ran against the emulator. What does the last line print?',
+          concept: 'setDoc and merge',
+          language: 'text',
+          code: `await setDoc(doc(db, 'stores', 'naga-03'), { name: 'Pili Mart', city: 'Naga' });
+await setDoc(doc(db, 'stores', 'naga-03'), { name: 'Pili Mart (new)' }, { merge: true });
+const snap = await getDoc(doc(db, 'stores', 'naga-03'));
+console.log(JSON.stringify(snap.data()));`,
+          expected: '{"name":"Pili Mart (new)","city":"Naga"}',
+          choices: ['{"name":"Pili Mart (new)","city":"Naga"}', '{"name":"Pili Mart (new)"}', '{"name":"Pili Mart","city":"Naga"}', 'undefined'],
+          wrongNotes: {
+            '{"name":"Pili Mart (new)"}': 'That is what a setDoc without merge would leave: the old city would be gone.',
+            '{"name":"Pili Mart","city":"Naga"}': 'The second write changed the name, so the old name is gone.',
+            undefined: 'The document exists after the first setDoc, so data() returns an object.',
+          },
+          hints: [
+            'Look at the third argument of the second setDoc.',
+            'With `{ merge: true }`, fields you do not mention are kept.',
+            'The name is overwritten and the city stays.',
+          ],
+          explanation: 'Merge writes only the fields you give and keeps the rest. Without it, the second call would have replaced the document and city would be gone.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'firebase-02-fix-bug-1',
+          kind: 'fix-bug',
+          title: 'The tag query returns nothing',
+          story: 'Stores have a `tags` array such as `["grocery", "load"]`, but the grocery list comes back empty.',
+          prompt: 'Tap the buggy line, then choose the fix.',
+          concept: 'array queries',
+          language: 'javascript',
+          code: `import { collection, getDocs, query, where } from 'firebase/firestore';
+
+async function groceryStores(db) {
+  const q = query(collection(db, 'stores'), where('tags', '==', 'grocery'));
+  const snap = await getDocs(q);
+  return snap.docs.map((d) => d.id);
+}`,
+          bugLine: 4,
+          lineNote: 'That line is fine. The mistake is in how the query compares the array.',
+          fixes: [
+            { line: "  const q = query(collection(db, 'stores'), where('tags', 'array-contains', 'grocery'));", correct: true, why: '`array-contains` matches documents whose array holds the value. We ran the broken version on the emulator: `==` returned 0 documents and `array-contains` returned the store.' },
+            { line: "  const q = query(collection(db, 'stores'), where('tags', 'contains', 'grocery'));", correct: false, why: 'There is no `contains` operator in Firestore queries.' },
+            { line: "  const q = query(collection(db, 'stores'), where('tags', '==', ['grocery']));", correct: false, why: 'That only matches documents whose whole array is exactly `["grocery"]`, so a store tagged grocery and load would still be missed.' },
+            { line: "  const q = query(collection(db, 'stores'), where('tags', 'in', 'grocery'));", correct: false, why: '`in` expects an array of values for a single field, and it matches a field equal to one of them, not an array that contains one.' },
+          ],
+          hints: [
+            'The field holds an array, but the query compares it to a single string.',
+            'Firestore has an operator made for "does the array contain this value".',
+            'Use `array-contains`.',
+          ],
+          explanation: 'Comparing an array field with `==` tests the whole array. To ask whether one value is inside, use `array-contains`.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'firebase-02-code-challenge-1',
+          kind: 'code-challenge',
+          title: 'Flatten a store into documents',
+          prompt: 'Write `toDocuments(store)`. It takes an object with `id`, `name`, `city` and a `products` array (each product has `id`, `name`, `priceCentavos`) and returns a list of documents to write. The first is the store at `stores/<id>` with data `{ name, city }`. Then one per product at `stores/<id>/products/<productId>` with data `{ name, priceCentavos }`. Each item looks like `{ path, data }`; ids are not part of `data`.',
+          concept: 'documents and subcollections',
+          language: 'javascript',
+          starter: `function toDocuments(store) {
+  // build the store document first, then one document per product
+}`,
+          solution: `function toDocuments(store) {
+  const docs = [{ path: 'stores/' + store.id, data: { name: store.name, city: store.city } }];
+  for (const product of store.products) {
+    docs.push({
+      path: 'stores/' + store.id + '/products/' + product.id,
+      data: { name: product.name, priceCentavos: product.priceCentavos },
+    });
+  }
+  return docs;
+}`,
+          tests: {
+            kind: 'function',
+            fn: 'toDocuments',
+            cases: [
+              {
+                label: 'one product',
+                args: [{ id: 'naga-01', name: 'Aling Nena', city: 'Naga', products: [{ id: 'pandesal', name: 'Pandesal', priceCentavos: 200 }] }],
+                expected: [
+                  { path: 'stores/naga-01', data: { name: 'Aling Nena', city: 'Naga' } },
+                  { path: 'stores/naga-01/products/pandesal', data: { name: 'Pandesal', priceCentavos: 200 } },
+                ],
+              },
+              { label: 'no products', args: [{ id: 'pili-01', name: 'Pili Bakery', city: 'Pili', products: [] }], expected: [{ path: 'stores/pili-01', data: { name: 'Pili Bakery', city: 'Pili' } }] },
+              {
+                label: 'two products',
+                args: [{ id: 'a', name: 'A', city: 'X', products: [{ id: 'p1', name: 'One', priceCentavos: 100 }, { id: 'p2', name: 'Two', priceCentavos: 350 }] }],
+                expected: [
+                  { path: 'stores/a', data: { name: 'A', city: 'X' } },
+                  { path: 'stores/a/products/p1', data: { name: 'One', priceCentavos: 100 } },
+                  { path: 'stores/a/products/p2', data: { name: 'Two', priceCentavos: 350 } },
+                ],
+                hidden: true,
+              },
+            ],
+          },
+          hints: [
+            'Start the result with the store document, then loop over `store.products`.',
+            'A path is a string built from the ids: `stores/` plus the store id, then `/products/` plus the product id.',
+            'Push `{ path, data }` for each product, copying only `name` and `priceCentavos` into data.',
+          ],
+          explanation: 'A nested object becomes one document per level: the parent, and one document in a subcollection for each list item. Ids move into the path, and the fields stay in the data. This is how you would import a JSON file into Firestore.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'firebase-02-q1',
+        prompt: 'Which of these is a valid document path?',
+        choices: [
+          'stores/naga-01/products',
+          'stores/naga-01/products/pandesal',
+          'stores/products/pandesal',
+          'stores/naga-01/pandesal',
+        ],
+        answer: 1,
+        explanation: 'Paths alternate collection, document, collection, document. `stores/naga-01/products/pandesal` has four segments and ends on a document. The first ends on a collection, and the other two skip a level.',
+      },
+      {
+        id: 'firebase-02-q2',
+        prompt: 'You call `deleteDoc` on `stores/naga-01`, which has a `products` subcollection. What happens to the products?',
+        choices: [
+          'They are deleted with the store because Firestore deletes recursively',
+          'The delete is refused until the subcollection is empty',
+          'They stay in the database and can still be reached by their full path',
+          'They are moved to a root collection called deleted',
+        ],
+        answer: 2,
+        explanation: 'Deleting a parent document does not delete its subcollections. To remove a whole collection, delete its documents, ideally from a trusted server, or use a recursive delete.',
+      },
+      {
+        id: 'firebase-02-q3',
+        prompt: 'A screen filters stores by `city in [...]` with 45 city names. Standard edition rejects the query. What is the cause and a sensible fix?',
+        choices: [
+          'The index is missing, so create a composite index for city',
+          'The limit is 30 values for `in`, so split the list into batches of 30 or fewer and merge results',
+          'The `in` operator only works with numbers, so convert city names to ids',
+          'The query needs `orderBy` on city, which removes the limit',
+        ],
+        answer: 1,
+        explanation: 'In and or-style queries are capped at 30 values. Running several queries of 30 or fewer and combining the results is the usual workaround.',
+      },
+      {
+        id: 'firebase-02-q4',
+        prompt: 'A query filters on `city == "Naga"` and `rating > 4`, ordered by rating. It works on the emulator but production fails with an error containing a link. What happened?',
+        choices: [
+          'The rating field is a number, and production only allows string comparisons',
+          'The emulator has a bug that should be reported to Firebase',
+          'The query needs a composite index, which the emulator does not enforce, so create the one the link suggests',
+        ],
+        answer: 2,
+        explanation: 'Mixing an equality on one field with a range on another needs a composite index. The emulator executes any valid query and does not track composite indexes, so only the real database tells you.',
+      },
+      {
+        id: 'firebase-02-q5',
+        prompt: 'The order list screen needs each order and the name of its store. Firestore has no joins. What do you do?',
+        choices: [
+          'Copy the store name into each order document, and update the copies if the name changes',
+          'Store the whole store document inside every order and never update it',
+          'Run one query per order inside a loop, which is always cheapest in Firestore',
+          'Use `increment` on the order so it keeps a running link to the store',
+        ],
+        answer: 0,
+        explanation: 'Denormalising, copying the data a screen needs into the document it reads, is the normal Firestore answer to "no joins". The cost is keeping copies current.',
+      },
+    ],
+    task: {
+      title: 'Write a data model and try it on paper',
+      steps: [
+        'Pick an app (a canteen, a jeepney schedule, a book club). List the three screens it needs.',
+        'For each screen, write the one query it runs and the document paths it reads. Note any query that would need a composite index.',
+        'Draw your collections, subcollections and one example document each. Check that no list grows inside a single document.',
+        'Mark every place where you copied data (denormalised) and write when each copy has to be updated.',
+      ],
+      minutes: 15,
+    },
+  },
+  {
+    id: 'firebase-03',
+    day: 3,
+    title: 'Security Rules',
+    summary: 'Write rules that decide who may read and write each document, understand why rules are not filters, and test them before they protect real data.',
+    intro: {
+      objectives: [
+        'Read and write a Firestore rules file with match, allow and conditions',
+        'Use request.auth, resource.data and request.resource.data to protect and validate data',
+        'Explain why a query must match the rules, and why overlapping rules grant access',
+        'Spot an insecure rule such as allow read, write: if true',
+      ],
+      why: 'In a Firebase app the browser talks to the database directly, so rules are the only thing standing between your users\' data and everyone else. Most Firebase security failures are rules that were left open.',
+    },
+    minutes: 30,
+    skills: ['security-rules'],
+    body: [
+      { type: 'paragraph', text: "In a normal web app, the browser asks your server and your server decides what to do. In a Firebase app the browser asks Firestore directly. That is why it is fast to build and why it is dangerous: anyone can open the developer tools and send requests with your public config. **Security Rules** are a small program that Google runs on every request, before any data is read or written. Think of a guard at a door with a list: no matching line on the list, no entry. Rules run on Google's servers, so a user cannot edit them away by editing your front end." },
+      { type: 'heading', text: 'The shape of a rules file' },
+      { type: 'code', language: 'text', label: 'firestore.rules', code: `rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function signedIn() {
+      return request.auth != null;
+    }
+
+    // Notes are private to their author.
+    match /notes/{noteId} {
+      allow read: if signedIn() && resource.data.authorUid == request.auth.uid;
+      allow create: if signedIn()
+                    && request.resource.data.authorUid == request.auth.uid
+                    && request.resource.data.text is string
+                    && request.resource.data.text.size() > 0
+                    && request.resource.data.text.size() <= 280;
+      allow update: if signedIn()
+                    && resource.data.authorUid == request.auth.uid
+                    && request.resource.data.authorUid == resource.data.authorUid
+                    && request.resource.data.text is string
+                    && request.resource.data.text.size() <= 280;
+      allow delete: if signedIn() && resource.data.authorUid == request.auth.uid;
+    }
+  }
+}` },
+      { type: 'paragraph', text: "Read it from the top. `service cloud.firestore` says these rules are for Firestore (Storage has its own file). `match` picks a path: `{noteId}` is a wildcard that captures one document id. Each `allow` names the methods it covers and a condition. If the condition is true, the request is allowed; if no line matches, the request is **denied**. `read` covers `get` (one document) and `list` (a query); `write` covers `create`, `update` and `delete`, and splitting them lets you treat each differently." },
+      { type: 'heading', text: 'What a condition can look at' },
+      {
+        type: 'list',
+        items: [
+          '`request.auth` is the signed-in user, or `null` when nobody is. `request.auth.uid` is their id (lesson 4).',
+          '`resource.data` is the document **as it is stored now**. Use it for reads, and for deciding who may change or delete something.',
+          '`request.resource.data` is the document **as it would be after this write**. Use it to validate incoming data: types, lengths, and fields that must not change.',
+          '`get()` and `exists()` read other documents (for example a membership list). Each call is billed as a read, even if the request is denied, and a request may make 10 of them (20 for batches and transactions).',
+        ],
+      },
+      { type: 'paragraph', text: "Notice the update rule. It checks `resource.data.authorUid` (who owns the note now) and also that `request.resource.data.authorUid` is unchanged, so a user cannot give their note away or steal one. Validation lives here too: `text is string` and `size() <= 280` mean a client cannot save a 300-character note or a number, whatever your form allows. Functions such as `signedIn()` keep conditions readable; each holds a single `return`." },
+      { type: 'heading', text: 'Two rules that surprise everyone' },
+      { type: 'paragraph', text: "**Rules are not filters.** Firestore checks a query against the rules before running it, by asking whether *every possible result* would be allowed. If any could be forbidden, the whole query fails. It does not quietly return only the notes you may see. So `getDocs(collection(db, 'notes'))` fails even if every note in the database is yours, while `where('authorUid', '==', uid)` is accepted, because that constraint guarantees the rule." },
+      { type: 'paragraph', text: "**Overlapping matches add up.** A document can match several `match` blocks, and if *any* of them allows the request, it is allowed. A broad `match /{document=**}` with `allow read: if signedIn()` silently overrides the careful rule next to it. Keep rules narrow, and never leave an unconditioned `allow` that lets everything through." },
+      {
+        type: 'table',
+        headers: ['Request (as the user)', 'Result', 'Why'],
+        rows: [
+          ['ana reads her own note', 'Allowed', 'authorUid matches her uid'],
+          ["ana reads ben's note", 'Denied', "authorUid is ben's"],
+          ['ana lists all notes with no filter', 'Denied', 'The query could return notes that are not hers'],
+          ["ana lists notes where authorUid == her uid", 'Allowed', 'The filter guarantees the rule'],
+          ["ana creates a note with authorUid 'ben'", 'Denied', 'She cannot create content in someone else\'s name'],
+          ['ana creates a note with empty text', 'Denied', 'size() > 0 fails'],
+          ["ana edits her note's authorUid to 'ben'", 'Denied', 'authorUid must not change'],
+          ['A guest reads a note', 'Denied', 'request.auth is null'],
+        ],
+        caption: 'Run against the Firestore emulator with the rules above; every line is real output from the rules unit-testing library.',
+      },
+      { type: 'heading', text: 'Deploying and staying safe' },
+      { type: 'paragraph', text: "Keep `firestore.rules` in your repository and deploy it with `firebase deploy --only firestore` (this overwrites rules edited in the console). A rules change can take up to a minute to affect new queries and up to ten minutes for active listeners. Remember what rules do not cover: the Firebase Admin SDK and other server libraries, such as the one inside your Cloud Functions, **bypass Security Rules** and act with full privilege, so a function must do its own checks." },
+      { type: 'warning', text: "`allow read, write: if true;` makes your database public: anyone can read, overwrite or delete everything. Firebase's own docs say never to use that rule set in production. If a console set-up or a tutorial gave you open rules, replace them before you share the app's address with anyone." },
+      {
+        type: 'version',
+        text: "Verified in the Firebase docs: rules start with rules_version = '2' (needed for collection group queries); read splits into get and list, write into create, update and delete; overlapping matches grant access if any allow is true; queries are all-or-nothing against the rules; get(), exists() and getAfter() calls are limited to 10 per single request and 20 for multi-document operations; server client libraries bypass rules. The rules and test results shown here were run on the Firestore emulator with firebase-tools 15.36.0 and @firebase/rules-unit-testing 6.0.0.",
+        checked: CHECKED,
+        sources: [DOCS.rulesStart, DOCS.rulesStructure, DOCS.rulesConditions, DOCS.rulesQuery, DOCS.rulesLanguage],
+      },
+      {
+        type: 'takeaways',
+        items: [
+          'Security Rules run on Google\'s servers for every request; with no matching allow, the request is denied.',
+          '`resource.data` is the stored document and `request.resource.data` is the incoming one: use the first for who, the second for what.',
+          'Queries are all-or-nothing: add the filter (such as authorUid == uid) that proves every result is allowed.',
+          'Overlapping match blocks are combined with OR, so one broad allow overrides careful rules.',
+          '`allow read, write: if true` publishes your database. Server code and the Admin SDK bypass rules, so Cloud Functions need their own checks.',
+        ],
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'firebase-03-fix-bug-1',
+          kind: 'fix-bug',
+          title: 'Anyone can read and change a note',
+          story: 'Your notes app launched, and a friend shows you they can read and delete other people\'s notes.',
+          prompt: 'Tap the line that opens the notes to everyone, then choose the safe fix.',
+          concept: 'insecure rules',
+          language: 'text',
+          code: `rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /notes/{noteId} {
+      allow create: if request.auth != null && request.resource.data.authorUid == request.auth.uid;
+      allow read, update, delete: if true;
+    }
+  }
+}`,
+          bugLine: 6,
+          lineNote: 'That line is fine. Find the line whose condition is always true.',
+          fixes: [
+            { line: '      allow read, update, delete: if request.auth != null && resource.data.authorUid == request.auth.uid;', correct: true, why: 'Only the signed-in author of the stored document passes. `resource.data` is the existing note, so the check cannot be faked by the request.' },
+            { line: '      allow read, update, delete: if request.auth != null;', correct: false, why: 'Any signed-in user could still read and delete anyone\'s notes. Being signed in is not the same as owning the data.' },
+            { line: '      allow read, update, delete: if resource.data.authorUid != null;', correct: false, why: 'Every note has an authorUid, so this is true for everyone, including guests. It checks that a field exists, not who is asking.' },
+            { line: '      allow read, update, delete: if request.auth.uid == noteId;', correct: false, why: 'The note id is a random id, not the user\'s uid, so authors would be locked out. For a guest the condition also fails with an error.' },
+          ],
+          hints: [
+            'Look for a condition that does not look at the user at all.',
+            'The fix needs both: someone is signed in, and they are the note\'s author.',
+            'Compare `request.auth.uid` with `resource.data.authorUid`, and require `request.auth != null`.',
+          ],
+          explanation: 'A rule is only as strong as the condition. Ownership means comparing the caller\'s uid with the owner stored in the existing document. `if true` and "any signed-in user" both leave the data open.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'firebase-03-predict-1',
+          kind: 'predict-output',
+          title: 'Does the guard let this query through?',
+          prompt: 'The rule below is deployed. Ana is signed in and every note in the database is hers. She runs `getDocs(collection(db, "notes"))` with no filter. What does the emulator report?',
+          concept: 'rules are not filters',
+          language: 'text',
+          code: `match /notes/{noteId} {
+  allow read: if request.auth != null && resource.data.authorUid == request.auth.uid;
+}`,
+          expected: 'DENIED',
+          choices: ['ALLOWED', 'DENIED'],
+          wrongNotes: {
+            ALLOWED: 'Firestore does not look at which notes exist. It asks whether the query could return a note that is not hers.',
+          },
+          hints: [
+            'The rules are checked against the query, not against the data that happens to exist.',
+            'Could this query ever return a note written by someone else?',
+            'Yes, it could, so the whole query is rejected.',
+          ],
+          explanation: 'We ran exactly this against the emulator and the unfiltered list was denied. Adding `where("authorUid", "==", uid)` guarantees every result passes the rule, and that query was allowed.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'firebase-03-predict-2',
+          kind: 'predict-output',
+          title: 'Can she give the note away?',
+          prompt: "Ana owns the note `n-ana`. She runs `updateDoc(doc(db, 'notes/n-ana'), { authorUid: 'ben' })`. With this rule deployed, what is the result?",
+          concept: 'request.resource.data',
+          language: 'text',
+          code: `allow update: if request.auth != null
+              && resource.data.authorUid == request.auth.uid
+              && request.resource.data.authorUid == resource.data.authorUid;`,
+          expected: 'DENIED',
+          choices: ['ALLOWED', 'DENIED'],
+          wrongNotes: {
+            ALLOWED: 'The first two lines pass, but the third compares the incoming authorUid (ben) with the stored one (ana).',
+          },
+          hints: [
+            'Check each line of the condition in turn. Do they all pass?',
+            'Line one and two pass, because Ana is signed in and owns the note.',
+            'Line three compares the new authorUid, ben, with the old one, ana. They differ.',
+          ],
+          explanation: 'All conditions joined by && must be true. The third one stops a change of owner. We confirmed on the emulator that this update is denied, while an edit of the text alone is allowed.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'firebase-03-code-challenge-1',
+          kind: 'code-challenge',
+          title: 'Decide like the rule would',
+          prompt: 'Write `canCreateNote(auth, data)` that returns `true` exactly when the create rule above would allow it: `auth` is not null, `data.authorUid` equals `auth.uid`, `data.text` is a string, and its length is from 1 to 280 characters. Otherwise return `false`.',
+          concept: 'reading rules as logic',
+          language: 'javascript',
+          starter: `function canCreateNote(auth, data) {
+  // return true only when every condition holds
+}`,
+          solution: `function canCreateNote(auth, data) {
+  if (auth === null) return false;
+  if (data.authorUid !== auth.uid) return false;
+  if (typeof data.text !== 'string') return false;
+  return data.text.length > 0 && data.text.length <= 280;
+}`,
+          tests: {
+            kind: 'function',
+            fn: 'canCreateNote',
+            cases: [
+              { label: 'valid note', args: [{ uid: 'ana' }, { authorUid: 'ana', text: 'Buy rice' }], expected: true },
+              { label: 'signed out', args: [null, { authorUid: 'ana', text: 'Buy rice' }], expected: false },
+              { label: 'claims to be someone else', args: [{ uid: 'ana' }, { authorUid: 'ben', text: 'Spoof' }], expected: false },
+              { label: 'empty text', args: [{ uid: 'ana' }, { authorUid: 'ana', text: '' }], expected: false },
+              { label: 'text is a number', args: [{ uid: 'ana' }, { authorUid: 'ana', text: 42 }], expected: false },
+              { label: 'exactly 280 characters', args: [{ uid: 'ana' }, { authorUid: 'ana', text: 'x'.repeat(280) }], expected: true, hidden: true },
+              { label: '281 characters', args: [{ uid: 'ana' }, { authorUid: 'ana', text: 'x'.repeat(281) }], expected: false, hidden: true },
+            ],
+          },
+          hints: [
+            'Handle the signed-out case first: the rule starts with `request.auth != null`.',
+            'Then compare the author, check the type with `typeof`, and check the length.',
+            'The last line returns `data.text.length > 0 && data.text.length <= 280`.',
+          ],
+          explanation: 'A rule is a boolean expression. Writing the same logic as a function shows that every condition must hold at once, and that the order matters when something may be null: check `auth` before you read `auth.uid`.',
+        },
+      },
+      {
+        type: 'activity',
+        activity: {
+          id: 'firebase-03-scenario-1',
+          kind: 'scenario',
+          title: 'The rule next to the rule',
+          prompt: 'Choose the best fix.',
+          concept: 'overlapping matches',
+          situation: 'Your rules file has `match /payments/{id} { allow read: if false; }` to keep payments hidden. Further down, someone added `match /{document=**} { allow read: if request.auth != null; }` "to make the app work". Any signed-in user can now read payments.',
+          options: [
+            { text: 'Remove the broad `{document=**}` rule and add explicit, narrow rules for each collection the app really reads.', consequence: 'Each collection is allowed or denied on purpose, and payments stay hidden. Lesson-9 tests can lock this in.', quality: 'best' },
+            { text: 'Add a second `allow read: if false` to the payments rule so it says it twice.', consequence: 'Nothing changes. If any matching rule allows the read, it is allowed, so a deny cannot cancel an allow.', quality: 'poor' },
+            { text: 'Move the payments match above the broad one in the file.', consequence: 'Order does not matter. All matching rules are combined with OR, so the broad rule still lets the request through.', quality: 'poor' },
+            { text: 'Keep the broad rule but check `request.auth.uid` in the app code before showing payments.', consequence: 'Front-end checks are cosmetic. A user can send the read request directly.', quality: 'poor' },
+          ],
+          hints: [
+            'Does the order of match blocks decide the outcome?',
+            'If any matching rule allows the request, the request is allowed.',
+            'A broad allow cannot be cancelled by a narrower deny; remove or narrow the broad one.',
+          ],
+          explanation: 'Overlapping matches are combined with OR, so there is no "most specific rule wins". Security comes from not having a broad allow in the first place.',
+        },
+      },
+    ],
+    quiz: [
+      {
+        id: 'firebase-03-q1',
+        prompt: 'A user edits your front-end JavaScript to skip the `if (isOwner)` check and sends a write to someone else\'s store. What actually stops it?',
+        choices: [
+          'Security Rules, which Google runs on every request, whatever the client code says',
+          'The Firebase SDK, which refuses requests that break your app\'s logic',
+          'The apiKey, which proves the request came from your own app',
+          'Hosting, which only serves the original uploaded JavaScript',
+        ],
+        answer: 0,
+        explanation: 'Client code is under the user\'s control. Rules run on the server and decide every request. The apiKey is public and the SDK is just a library the attacker can bypass.',
+      },
+      {
+        id: 'firebase-03-q2',
+        prompt: 'A rule allows reading a note only when `resource.data.authorUid == request.auth.uid`. Which query does the emulator accept for Ana?',
+        choices: [
+          'collection(db, "notes") with no filter, because all notes are hers today',
+          'collection(db, "notes") ordered by createdAt with a limit of 10',
+          'collection(db, "notes") with a filter on the text field',
+          'collection(db, "notes") where authorUid == Ana\'s uid',
+        ],
+        answer: 3,
+        explanation: 'Rules are not filters: the query itself must prove that every possible result is allowed. Only a filter on authorUid equal to her uid does that. Ordering or limiting does not change who the notes belong to.',
+      },
+      {
+        id: 'firebase-03-q3',
+        prompt: 'A note document matches two `match` blocks: one has `allow read: if false`, the other `allow read: if request.auth != null`. A signed-in user reads it. What happens?',
+        choices: [
+          'Denied, because the safer rule always wins',
+          'Allowed, because any matching rule that is true grants access',
+          'Denied, because rules lower in the file are ignored',
+          'It depends on which block is listed first in the file',
+        ],
+        answer: 1,
+        explanation: 'Overlapping matches are combined with OR. One true allow is enough, so a deny elsewhere cannot protect the document.',
+      },
+      {
+        id: 'firebase-03-q4',
+        prompt: 'In an update rule, which expression tells you what the document will look like after the write?',
+        choices: [
+          'resource.data',
+          'request.auth.token',
+          'request.resource.data',
+          'get(path).data',
+        ],
+        answer: 2,
+        explanation: '`request.resource.data` is the proposed new state of the document, used to validate incoming values. `resource.data` is the stored state before the write.',
+      },
+      {
+        id: 'firebase-03-q5',
+        prompt: 'A Cloud Function using the Firebase Admin SDK writes to `notes` for a user who is not signed in. The notes rules require `request.auth != null`. What happens?',
+        choices: [
+          'The write succeeds, because server client libraries bypass Security Rules',
+          'The write fails with permission-denied, because the rules apply to every caller',
+          'The write is queued until the user signs in',
+        ],
+        answer: 0,
+        explanation: 'The Admin SDK acts with full privilege and skips rules, which is why a function must validate the caller and the data itself.',
+      },
+    ],
+    task: {
+      title: 'Lock down a rules file',
+      steps: [
+        'Create `firestore.rules` with the notes rules from the lesson (or a collection of your own).',
+        'Write down, for each of the eight requests in the table, whether you expect it to be allowed, before you test anything.',
+        'Add a second collection, `profiles/{uid}`, that only its owner can read and write. Write the rule using the `{uid}` wildcard and `request.auth.uid`.',
+        'Add a deliberately broad `match /{document=**}` rule with `allow read: if true`. Explain in one sentence what it does to your other rules, then delete it.',
+      ],
+      minutes: 15,
+    },
+  },
+  // @@MORE_LESSONS@@
+];
+
+const projects: Project[] = [];
+
+export const firebaseCourse: Course = {
+  id: 'firebase',
+  kind: 'standard',
+  title: 'Firebase Application Development',
+  level: 'intermediate',
+  tagline: 'Build and secure a full app on Firebase: Firestore, rules, sign-in, files, functions and hosting.',
+  description: 'Build a real app on Firebase using the modular JavaScript SDK. You model data in Firestore, learn its query limits honestly, write and test Security Rules, add sign-in, file uploads and Cloud Functions, and deploy to Hosting. You test everything on the Emulator Suite before it touches a real project.',
+  finishLine: ['placeholder one', 'placeholder two'],
+  objectives: ['Model app data as Firestore documents', 'Write and test Security Rules', 'Add sign-in and file uploads', 'Deploy an app to Firebase Hosting'],
+  audiences: ['builder'],
+  skills: [
+    { id: 'firebase-basics', label: 'Firebase basics' },
+    { id: 'firestore-data', label: 'Firestore data modelling' },
+    { id: 'security-rules', label: 'Security Rules' },
+  ],
+  lessons,
+  projects,
+  icon: 'local_fire_department',
+  updated: '2026-11-14',
+};
