@@ -22,6 +22,11 @@ export type SpeechPhrases = {
   version: (checked: string) => string;
   plans: (plans: string) => string;
   toolComparison: string;
+  /** "AI in Action" (the `demo` block): said first, so a listener knows it is an illustration, then each part's label. */
+  demoIntro: string;
+  demoPrompt: string;
+  demoOutput: string;
+  demoNotice: string;
   objectives: string;
   why: string;
 };
@@ -40,6 +45,10 @@ export const SPEECH_PHRASES: Record<Language, SpeechPhrases> = {
     version: (checked) => `Checked on ${checked}, and it may change.`,
     plans: (plans) => `Plans: ${plans}`,
     toolComparison: 'There is a comparison of AI tools on screen.',
+    demoIntro: 'Example. This is a hand-written illustration, not a real model\'s output.',
+    demoPrompt: 'You ask:',
+    demoOutput: 'An AI might answer:',
+    demoNotice: 'Notice:',
     objectives: 'By the end of this lesson you will be able to:',
     why: 'Why it matters.',
   },
@@ -57,6 +66,11 @@ export const SPEECH_PHRASES: Record<Language, SpeechPhrases> = {
     version: (checked) => `Na-check ito noong ${checked}, at puwede pa itong magbago.`,
     plans: (plans) => `Mga plan: ${plans}`,
     toolComparison: 'May paghahambing ng mga AI tool sa screen.',
+    // English placeholders: the owner's rule is that no Filipino is written (2026-11-15); a Tagalog lesson with a demo block would read these in English until translated.
+    demoIntro: 'Example. This is a hand-written illustration, not a real model\'s output.',
+    demoPrompt: 'You ask:',
+    demoOutput: 'An AI might answer:',
+    demoNotice: 'Notice:',
     objectives: 'Sa dulo ng lesson na ito, kaya mo nang:',
     why: 'Bakit ito mahalaga.',
   },

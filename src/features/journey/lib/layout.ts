@@ -7,14 +7,14 @@
 export type LayoutItem =
   | { kind: 'stage'; stageIndex: number; y: number; height: number }
   /** `guideHeight` is the room kept above the node for Tali's guide card (only the learner's current node has any). */
-  | { kind: 'node'; milestoneIndex: number; stageIndex: number; x: number; y: number; height: number; guideHeight: number };
+  | { kind: 'node'; nodeIndex: number; stageIndex: number; x: number; y: number; height: number; guideHeight: number };
 
 export type MapLayout = {
   width: number;
   height: number;
   items: readonly LayoutItem[];
   /** Node centres in journey order, for the path. */
-  points: readonly { x: number; y: number; milestoneIndex: number }[];
+  points: readonly { x: number; y: number; nodeIndex: number }[];
 };
 
 export const NODE_SIZE = 76;
@@ -35,29 +35,29 @@ export function swingOf(position: number): -1 | 0 | 1 {
   return ([0, 1, 0, -1] as const)[position % 4]!;
 }
 
-export type LayoutStage = { milestoneCount: number; collapsed: boolean };
+export type LayoutStage = { nodeCount: number; collapsed: boolean };
 
-/** `guideAt`: the index of the milestone Tali stands above (the learner's current one), if any. */
+/** `guideAt`: the index of the node Tali stands above (the learner’s current one), if any. */
 export function layoutJourney(stages: readonly LayoutStage[], width: number, guideAt: number | null = null): MapLayout {
   const items: LayoutItem[] = [];
-  const points: { x: number; y: number; milestoneIndex: number }[] = [];
+  const points: { x: number; y: number; nodeIndex: number }[] = [];
   const centre = width / 2;
   const reach = Math.max(0, (width - CURRENT_NODE_SIZE) * SWING);
   let y = 12;
-  let milestoneIndex = 0;
+  let nodeIndex = 0;
   stages.forEach((stage, stageIndex) => {
     items.push({ kind: 'stage', stageIndex, y, height: STAGE_HEIGHT });
     y += STAGE_HEIGHT;
     if (stage.collapsed) {
-      milestoneIndex += stage.milestoneCount;
+      nodeIndex += stage.nodeCount;
       return;
     }
-    for (let n = 0; n < stage.milestoneCount; n += 1) {
+    for (let n = 0; n < stage.nodeCount; n += 1) {
       const x = centre + swingOf(n) * reach;
-      const guideHeight = milestoneIndex === guideAt ? GUIDE_HEIGHT : 0;
-      items.push({ kind: 'node', milestoneIndex, stageIndex, x, y, height: ROW_HEIGHT + guideHeight, guideHeight });
-      points.push({ x, y: y + guideHeight + NODE_CENTER, milestoneIndex });
-      milestoneIndex += 1;
+      const guideHeight = nodeIndex === guideAt ? GUIDE_HEIGHT : 0;
+      items.push({ kind: 'node', nodeIndex, stageIndex, x, y, height: ROW_HEIGHT + guideHeight, guideHeight });
+      points.push({ x, y: y + guideHeight + NODE_CENTER, nodeIndex });
+      nodeIndex += 1;
       y += ROW_HEIGHT + guideHeight;
     }
   });

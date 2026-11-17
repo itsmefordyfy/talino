@@ -32,6 +32,23 @@ export const Palette = {
   lavender: '#EDE9FE',
 } as const;
 
+/**
+ * The deep-space scene of a course (owner's brief, 2026-11-16: entering a course is a dive into a learning universe): the dive
+ * overlay and the course screen's header. The same in light and dark, like the other fixed-ink surfaces (a scene is its own
+ * place, not a themed card); every tone is a lighter step of the brand's violet, indigo and mint so it stays Talino.
+ */
+export const Space = {
+  deep: '#0B0A26',
+  mid: '#1B1559',
+  star: '#FFFFFF',
+  violet: '#A593FF',
+  indigo: '#8C9EFF',
+  mint: '#55D6BE',
+  /** Text on the scene: white, and a step softer. */
+  ink: '#FFFFFF',
+  inkSoft: '#C9CFF5',
+} as const;
+
 export const Colors = {
   light: {
     text: Palette.ink,
@@ -287,14 +304,15 @@ export const VerticalChromeMinInset = 56;
 /**
  * The accents, each with a fill (`solid`, the brief's color), a soft tile (`soft`) and an ink for
  * text and icons on either (`ink`, 4.5:1 or more on `soft`, cards and the background). The palette is
- * deliberately small: violet, indigo and mint are the brand, amber is only the streak's flame, red is
- * for problems and neutral is for the rest. The older names (peach, sage, rose, lime, plum, lavender,
+ * deliberately small: violet, indigo and mint are the brand, amber is the streak's flame (and, with
+ * blue, the colors of the four levels, below), red is for problems and neutral is for the rest. The older names (peach, sage, rose, lime, plum, lavender,
  * teal, sky) are kept so no screen breaks, and now point at that small set.
  */
 const ToneSets = {
   light: {
     violet: { ink: '#6A47EA', soft: '#EDE9FE', solid: '#7957F5' },
     indigo: { ink: '#3F54E8', soft: '#E4E8FF', solid: '#536DFE' },
+    blue: { ink: '#0B63B8', soft: '#DCEEFF', solid: '#38A0FF' },
     mint: { ink: '#0F766E', soft: '#D5F5EF', solid: '#55D6BE' },
     amber: { ink: '#92400E', soft: '#FEF3C7', solid: '#FBBF24' },
     red: { ink: '#B91C1C', soft: '#FEE2E2', solid: '#F4A9A2' },
@@ -303,6 +321,7 @@ const ToneSets = {
   dark: {
     violet: { ink: '#B39DFF', soft: '#2B2850', solid: '#7957F5' },
     indigo: { ink: '#8C9EFF', soft: '#1E2750', solid: '#536DFE' },
+    blue: { ink: '#7CC0FF', soft: '#13304D', solid: '#2F86E8' },
     mint: { ink: '#55D6BE', soft: '#12332F', solid: '#55D6BE' },
     amber: { ink: '#F2C266', soft: '#3A2E14', solid: '#C9993B' },
     red: { ink: '#FF8A80', soft: '#3D1D1B', solid: '#C4544B' },
@@ -328,6 +347,17 @@ const withAliases = (set: ToneSet) => ({
 export const Tones = { light: withAliases(ToneSets.light), dark: withAliases(ToneSets.dark) } as const;
 
 export type Tone = keyof typeof Tones.light;
+
+/**
+ * The four learning levels, each with its own color (owner, 2026-11-17: "each level should be color coded"), the one place that says
+ * which: the Roadmap's banners, washes and nodes and Discover's level tiles read it. Green to blue to violet to gold, so the order is
+ * felt as well as read; Expert's gold is the gold of the AI Expert certificate. The level's name, icon and number carry it too, never color alone.
+ */
+export const LevelTones = { beginner: 'mint', intermediate: 'blue', advanced: 'violet', expert: 'amber' } as const satisfies Record<string, Tone>;
+
+/** The ink for a glyph or words on a tone's `solid` fill: white does not read on mint or amber, so those take a dark one. */
+export const OnToneSolid = { mint: '#063B34', amber: '#3B2A05', default: '#FFFFFF' } as const;
+export const onToneSolid = (tone: Tone): string => (tone === 'mint' ? OnToneSolid.mint : tone === 'amber' ? OnToneSolid.amber : OnToneSolid.default);
 
 /**
  * Each area's accent, used for its icon tile, chips and indicators. Learning is indigo, the coach and

@@ -7,7 +7,7 @@ export { CourseCard, COURSE_TONES } from './components/course-card';
 export { CourseHero } from './components/course-hero';
 export { ListenBarFrame } from './components/listen-bar';
 export { LessonBlocks } from './components/lesson-blocks';
-export { ProgressRing } from './components/progress-ring';
+export { ProgressRing } from '@/components/ui/progress-ring';
 export { CourseScreen } from './screens/course-screen';
 export { LessonScreen } from './screens/lesson-screen';
 export { AiToolsScreen } from './screens/ai-tools-screen';

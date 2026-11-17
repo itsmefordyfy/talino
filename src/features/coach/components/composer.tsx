@@ -10,11 +10,13 @@ export type ComposerProps = {
   sendLabel: string;
   disabled?: boolean;
   initialText?: string;
+  /** Characters the box accepts (4,000 by default; the practice role-plays use the length one turn is allowed). */
+  maxLength?: number;
   onSend: (text: string) => void;
 };
 
 /** The message box and its send button, pinned above the keyboard by the screen's footer. */
-export function Composer({ placeholder, sendLabel, disabled = false, initialText = '', onSend }: ComposerProps) {
+export function Composer({ placeholder, sendLabel, disabled = false, initialText = '', maxLength = 4000, onSend }: ComposerProps) {
   const theme = useTheme();
   const [text, setText] = useState(initialText);
   const canSend = !disabled && text.trim().length > 0;
@@ -31,7 +33,7 @@ export function Composer({ placeholder, sendLabel, disabled = false, initialText
         placeholder={placeholder}
         placeholderTextColor={theme.textTertiary}
         multiline
-        maxLength={4000}
+        maxLength={maxLength}
         editable={!disabled}
         accessibilityLabel={placeholder}
         style={[styles.input, { color: theme.text }]}

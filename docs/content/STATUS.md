@@ -36,3 +36,11 @@ host `scripts/audio/out/audio/<voice>/` (about 1.3 MB a lesson) and set `EXPO_PU
   OpenAI help pages that returned 403, Philippine tax and privacy law, which is only pointed at, never stated).
 - `stripe.com` was added to the allowed documentation hosts (`lib/path-rules.ts`); `revenuecat.com`, `open-meteo.com` and `twilio.com` are not.
 - Discover now shows its categories as tabs (For you, All, one per category); Today shows only the learner's own courses and progress.
+
+## 2026-11-16: Programming Fundamentals added
+
+`programming-fundamentals` (beginner, 60 lessons in 12 modules, 11 projects) is registered: the first course with `modules`, written one module per file under
+`catalog/courses/programming-fundamentals/`. It is the owner's deliberate exception to "no standalone programming course" (see CLAUDE.md and
+`docs/superpowers/specs/2026-11-16-programming-fundamentals-design.md`). It carries the five-level pieces, dated version notes where a statement depends on a
+product, and every lesson follows the ten-part shape (`programming-fundamentals-structure.test.ts`). English only (Tagalog is off); Kokoro recordings are generated
+locally (`scripts/audio/run-programming-fundamentals.sh`) and still need hosting. No independent accuracy review yet.

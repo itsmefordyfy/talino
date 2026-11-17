@@ -36,6 +36,8 @@ export function ActivitySlot({ activity, lessonId, courseId }: ActivitySlotProps
     <View style={styles.slot}>
       <ActivityView
         activity={activity}
+        courseId={courseId}
+        lessonId={lessonId}
         guidance={guidance}
         solved={row?.solved === 1}
         onAttempt={(event) => {

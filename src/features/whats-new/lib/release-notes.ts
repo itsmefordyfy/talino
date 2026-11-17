@@ -15,6 +15,12 @@ export type ReleaseNote = { id: ReleaseNoteId; icon: IconName };
 export const RELEASE_NOTES: Readonly<Record<string, readonly ReleaseNote[]>> = {
   '1.0': [
     { id: 'aiJourney', icon: 'route' },
+    { id: 'programmingFundamentals', icon: 'psychology' },
+    { id: 'dataStructuresAlgorithms', icon: 'account_tree' },
+    { id: 'generativeAi', icon: 'auto_awesome' },
+    { id: 'softSkills', icon: 'groups' },
+    { id: 'internationalClients', icon: 'public' },
+    { id: 'timeProductivity', icon: 'schedule' },
     { id: 'aiDevelopment', icon: 'code' },
     { id: 'betterCourses', icon: 'auto_awesome' },
     { id: 'coach', icon: 'record_voice_over' },

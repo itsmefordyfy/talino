@@ -33,6 +33,14 @@ export const ACTIVITY_BASE_XP: Record<ActivityKind, number> = {
   scenario: 8,
   'code-challenge': 15,
   'sql-challenge': 15,
+  // Done by the practice engine (a debrief that could judge the conversation, a message the coach reviewed), never by a right answer: paid once, whatever the score.
+  roleplay: 15,
+  'message-review': 12,
+  // Generative AI course: a lab is done by a live run plus the review of the learner's prompt (any score); a workflow is done when it satisfies every rule.
+  'prompt-lab': 12,
+  'workflow-builder': 10,
+  // Time Management and Productivity: a sorted workload or a day plan that meets every rule of its scenario (rest, slack and a must-do kept).
+  planning: 12,
 };
 
 export const HINT_COST = 0.15;

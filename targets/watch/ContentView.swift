@@ -31,6 +31,10 @@ struct ContentView: View {
   private func debugSnapshot() {
     guard let encoded = UserDefaults.standard.string(forKey: "snapshotb64"), let data = Data(base64Encoded: encoded), let json = String(data: data, encoding: .utf8) else { return }
     PhoneLink.shared.accept(json, remember: false)
+    // `-speaklesson <base64 of a WatchLesson JSON>` starts the Watch's own reading (the voice and the sentence on screen).
+    if let lessonEncoded = UserDefaults.standard.string(forKey: "speaklesson"), let lessonData = Data(base64Encoded: lessonEncoded), let lesson = try? JSONDecoder().decode(WatchLesson.self, from: lessonData) {
+      WatchSpeaker.shared.start(lesson)
+    }
   }
   #else
   private func debugSnapshot() {}

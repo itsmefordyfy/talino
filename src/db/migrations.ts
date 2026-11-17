@@ -342,6 +342,56 @@ const MIGRATIONS: readonly Migration[] = [
       created_at TEXT NOT NULL
     );
   `,
+  // Practice for the Soft Skills course (role-plays and message reviews), on this phone only like the interview: the learner's own
+  // words and an honest debrief are private. A session is made on the phone (id), names the catalog item it practises (`item_id`,
+  // which lives in code, so no foreign key) and, optionally, the lesson or project it was started from. Turns are derived from the
+  // messages, never counted by hand. The debrief or review is one JSON column; `score` is its overall (null when too short to judge).
+  // A message review keeps the learner's own text in `final_text` (the improved version the coach suggests lives only in `report`).
+  `
+    CREATE TABLE IF NOT EXISTS practice_sessions (
+      id TEXT PRIMARY KEY NOT NULL,
+      item_id TEXT NOT NULL,
+      kind TEXT NOT NULL,
+      course_id TEXT,
+      lesson_id TEXT,
+      project_id TEXT,
+      attempt INTEGER NOT NULL DEFAULT 1,
+      status TEXT NOT NULL DEFAULT 'active',
+      turns INTEGER NOT NULL DEFAULT 0,
+      score INTEGER,
+      report TEXT,
+      final_text TEXT,
+      started_at TEXT NOT NULL,
+      ended_at TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_practice_sessions_item ON practice_sessions(item_id, started_at);
+    CREATE INDEX IF NOT EXISTS idx_practice_sessions_project ON practice_sessions(project_id);
+    CREATE TABLE IF NOT EXISTS practice_messages (
+      id TEXT PRIMARY KEY NOT NULL,
+      session_id TEXT NOT NULL REFERENCES practice_sessions(id) ON DELETE CASCADE,
+      position INTEGER NOT NULL,
+      role TEXT NOT NULL,
+      text TEXT NOT NULL,
+      created_at TEXT NOT NULL,
+      UNIQUE (session_id, position)
+    );
+  `,
+  // The Pomodoro timer of the Time Management and Productivity course: one row per finished focus round, made on the phone (the id makes a retry save
+  // once). Phone only, like practice sessions: it is the learner's own working pattern. The tools' other state (matrix, day plan, timer, settings) lives
+  // in `app_state` under `productivity:` keys.
+  `
+    CREATE TABLE IF NOT EXISTS focus_sessions (
+      id TEXT PRIMARY KEY NOT NULL,
+      started_at TEXT NOT NULL,
+      ended_at TEXT NOT NULL,
+      minutes INTEGER NOT NULL,
+      task TEXT,
+      created_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_focus_sessions_ended ON focus_sessions(ended_at);
+  `,
 ];
 
 export const DATABASE_NAME = 'talino.db';

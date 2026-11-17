@@ -29,8 +29,11 @@ const BUSY_COOLDOWN_MS = 60_000;
 const DAILY_COOLDOWN_MS = 30 * 60_000;
 const modelResting = new Map<string, number>();
 
+/** One piece of a reply. `functionCall` is the model asking for a tool; `thoughtSignature` must go back with it on the next round. */
+export type GeminiPart = { text?: string; thought?: boolean; thoughtSignature?: string; functionCall?: { name?: string; args?: unknown } };
+
 export type GeminiResponse = {
-  candidates?: { content?: { parts?: { text?: string; thought?: boolean }[] }; finishReason?: string }[];
+  candidates?: { content?: { parts?: GeminiPart[] }; finishReason?: string }[];
   usageMetadata?: { promptTokenCount?: number; candidatesTokenCount?: number; thoughtsTokenCount?: number };
 };
 
@@ -119,9 +122,18 @@ async function callModel(apiKey: string, model: string, body: Record<string, unk
 
 const isBusy = (status: number) => status === 429 || status === 503 || status === 500 || status === TIMED_OUT;
 
+export type CallOptions = {
+  /**
+   * Ask this one model and no other: no fallback chain, and a busy model is reported as busy instead of being swapped for another. For a call
+   * whose point is *which* model answered (the prompt lab's model comparison); every other route leaves it out and keeps the chain.
+   */
+  model?: string;
+};
+
 /** Asks each model in the chain in turn while one is busy, skipping any that's resting, until one answers. */
-export async function callGemini(apiKey: string, body: Record<string, unknown>): Promise<GeminiResult> {
+export async function callGemini(apiKey: string, body: Record<string, unknown>, options: CallOptions = {}): Promise<GeminiResult> {
   const deadline = Date.now() + TOTAL_BUDGET_MS;
+  if (options.model) return callModel(apiKey, options.model, body, deadline);
   const now = Date.now();
   const chain = modelChain();
   const awake = chain.filter((model) => (modelResting.get(model) ?? 0) <= now);
@@ -139,6 +151,17 @@ export async function callGemini(apiKey: string, body: Record<string, unknown>):
   return result;
 }
 
+/**
+ * The two model tiers of a model comparison: the first and the last of the chain (it is ordered cheapest first), or exactly two names in
+ * LAB_COMPARE_MODELS when the owner wants to choose. Null when there is only one distinct model, because two runs of one model are not a comparison.
+ */
+export function compareModels(): { small: string; large: string } | null {
+  const chosen = (process.env.LAB_COMPARE_MODELS ?? '').split(',').map((model) => model.trim()).filter((model) => /^[\w.-]{3,80}$/.test(model));
+  const chain = modelChain();
+  const [small, large] = chosen.length === 2 ? chosen : [chain[0], chain[chain.length - 1]];
+  return small && large && small !== large ? { small, large } : null;
+}
+
 /** For tests: wakes every model. */
 export function resetModelRest(): void {
   modelResting.clear();
@@ -151,6 +174,14 @@ export function replyText(data: GeminiResponse | undefined): string {
     .join('')
     .trim();
 }
+
+/** The tools the model asked for in a reply, in order. */
+export function functionCallsOf(data: GeminiResponse | undefined): { name: string; args: unknown }[] {
+  return (data?.candidates?.[0]?.content?.parts ?? []).filter((part) => part.functionCall && typeof part.functionCall.name === 'string').map((part) => ({ name: part.functionCall?.name ?? '', args: part.functionCall?.args }));
+}
+
+/** The reply's own parts, as they must go back on the next tool round (a thought signature is part of one). */
+export const modelPartsOf = (data: GeminiResponse | undefined): GeminiPart[] => data?.candidates?.[0]?.content?.parts ?? [];
 
 /**
  * One line per failed Gemini call, in the server's logs: which route and model, and what Google
@@ -173,7 +204,7 @@ function logFailure(route: string, result: GeminiResult): void {
 }
 
 /** The app-facing error for a failed Gemini call (logged), or null when it succeeded. */
-export function geminiError(result: GeminiResult, route: 'coach' | 'review' | 'tailor' | 'resume' | 'interview'): Response | null {
+export function geminiError(result: GeminiResult, route: 'coach' | 'review' | 'tailor' | 'resume' | 'interview' | 'practice'): Response | null {
   if (result.status === 200) return null;
   logFailure(route, result);
   if (result.refusal === 'location') return Response.json({ error: 'unavailable', reason: 'region' }, { status: 503 });

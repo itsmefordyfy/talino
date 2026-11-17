@@ -10,6 +10,10 @@ struct WatchSnapshot: Codable, Equatable {
     let lesson: String
     let course: String
     let canSkip: Bool
+    /// The sentence being said, shown on the wrist; the phone sends none when it can't say which.
+    let sentence: String?
+    let index: Int?
+    let count: Int?
     var isPaused: Bool { state == "paused" }
     var isLoading: Bool { state == "loading" }
   }
@@ -28,15 +32,33 @@ struct WatchSnapshot: Codable, Equatable {
   var sentDate: Date { Date(timeIntervalSince1970: sentAt / 1000) }
 }
 
+/// A lesson the phone hands over so the Watch can speak and show it itself (src/features/watch/types.ts `WatchLesson`).
+struct WatchLesson: Codable, Equatable {
+  let lessonId: String
+  let title: String
+  let course: String
+  /// `en` or `fil`: picks the voice.
+  let language: String
+  let sentences: [String]
+  /// For each sentence, its place among the phone's spoken segments (empty ones are left out), so handing back resumes at the right one.
+  let at: [Int]
+  /// The sentence to start with.
+  let segment: Int
+}
+
 /// The phone's answer to a command: `{"ok":true}` or `{"ok":false,"reason":"…"}` (the same shape the phone's `WatchResult` has).
 struct CommandResult {
   let ok: Bool
   let reason: String?
+  /// Set by a handover (`listen.toWatch`): the lesson to speak here.
+  let lesson: WatchLesson?
 
-  static func failed(_ reason: String) -> CommandResult { CommandResult(ok: false, reason: reason) }
+  static func failed(_ reason: String) -> CommandResult { CommandResult(ok: false, reason: reason, lesson: nil) }
 
   static func parse(_ json: String) -> CommandResult {
     guard let data = json.data(using: .utf8), let object = try? JSONSerialization.jsonObject(with: data) as? [String: Any] else { return .failed("failed") }
-    return CommandResult(ok: object["ok"] as? Bool ?? false, reason: object["reason"] as? String)
+    var lesson: WatchLesson?
+    if let raw = object["lesson"], let bytes = try? JSONSerialization.data(withJSONObject: raw) { lesson = try? JSONDecoder().decode(WatchLesson.self, from: bytes) }
+    return CommandResult(ok: object["ok"] as? Bool ?? false, reason: object["reason"] as? String, lesson: lesson)
   }
 }

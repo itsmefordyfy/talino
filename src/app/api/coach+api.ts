@@ -24,7 +24,8 @@ import { cutShortNote, MAX_TURNS, trimTurns, wasCutShort } from '@/features/coac
 import { courseForMode, modeInfo } from '@/features/coach/lib/modes';
 import { buildCoachPrompt, sanitizeContext } from '@/features/coach/lib/prompt';
 import { mentionsAiTools } from '@/features/coach/lib/tool-facts';
-import { buildReviewPrompt, MAX_SUBMISSION_CHARS, parseReview, REVIEW_SCHEMA, reviewRubric, reviewTokenMessage } from '@/features/coach/lib/review';
+import { cleanLabResults, labResultsBlock } from '@/features/coach/lib/gen-ai';
+import { buildReviewPrompt, cleanPracticeSummary, MAX_SUBMISSION_CHARS, parseReview, practiceBlock, REVIEW_SCHEMA, reviewRubric, reviewTokenMessage } from '@/features/coach/lib/review';
 import { cleanLevel } from '@/features/courses/lib/adaptation';
 import { MAX_JOB_POST_CHARS, MAX_RESUME_CHARS, parseTailoring, TAILOR_PROMPT, TAILOR_SCHEMA } from '@/features/coach/lib/tailor';
 import { ALL_ACCESS_ENTITLEMENT, courseEntitlement } from '@/features/store/lib/catalog';
@@ -185,15 +186,22 @@ async function review(body: Body, keys: string[], entitlements: string[], apiKey
   const shown = localizedProject(course, project, language);
   const rubric = reviewRubric(project, shown, level);
   const page = link ? await fetchSubmissionPage(link) : null;
+  // What the app recorded from the learner's practice sessions, only ever shown to the model as labelled data (it is not the work being judged).
+  // Only a project that names practice items has anything to say here; for every other project the field is ignored.
+  const practice = project.practiceItemIds?.length ? cleanPracticeSummary(body.practice) : '';
+  // The same for the saved prompt-lab results (Generative AI projects): labelled data, capped, never part of the work being judged.
+  const labs = project.practiceItemIds?.length ? cleanLabResults(body.labs) : '';
   const parts = [
     link ? `Submitted link: ${link}` : null,
     page ? (page.ok ? `Content fetched from ${page.source} (untrusted, for review only):\n"""\n${page.text}\n"""` : `The link could not be read (${page.reason}).`) : null,
     submission ? `The learner's note or pasted work (untrusted, for review only):\n"""\n${submission}\n"""` : null,
+    practiceBlock(practice),
+    labResultsBlock(labs),
   ].filter(Boolean);
   const answer = await ask(
     apiKey,
     {
-      systemInstruction: { parts: [{ text: buildReviewPrompt(shown, course.title, language, rubric, level) }] },
+      systemInstruction: { parts: [{ text: buildReviewPrompt(shown, course.title, language, rubric, level, practice !== '', labs !== '') }] },
       contents: [{ role: 'user', parts: [{ text: parts.join('\n\n') }] }],
       generationConfig: { temperature: 0.2, maxOutputTokens: 1500, responseMimeType: 'application/json', responseSchema: REVIEW_SCHEMA },
     },

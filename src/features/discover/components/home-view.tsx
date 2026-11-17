@@ -9,7 +9,6 @@ import { ErrorState } from '@/components/ui/state-view';
 import { Icon } from '@/components/ui/icon';
 import { IconTile } from '@/components/ui/icon-tile';
 import { Tali } from '@/components/brand/tali';
-import { Notice } from '@/components/ui/notice';
 import { ProgressBar } from '@/components/ui/progress-bar';
 import { Section } from '@/components/ui/section';
 import { useScreenPadding } from '@/components/ui/screen';
@@ -17,19 +16,18 @@ import { SkeletonBlock } from '@/components/ui/skeleton';
 import { Spacing } from '@/constants/theme';
 import { LevelSuggestionCard, UpdateInterestsButton } from '@/features/onboarding';
 import { catalogFacts, categoryLabel, CourseCard, isNewCourse, learningLevelLabel, LEARNING_PATHS, pathText, type CourseFacts, type DiscoverySections, type Recommendation } from '@/features/courses';
-import { discoverNewGroundLine } from '@/features/companion/lib/messages';
 import { useLanguage, useLocalized } from '@/hooks/use-strings';
 import { useAppDispatch } from '@/store/hooks';
 
 import { browseStrings } from '../browse-strings';
-import { categorySelected, exploreAllChanged, sortChanged } from '../discover-slice';
+import { exploreAllChanged, sortChanged } from '../discover-slice';
 import { useCourseOffers } from '../hooks/use-course-offers';
 import { useDiscoverySections } from '../hooks/use-discovery-sections';
 import { useLearnerSignals } from '../hooks/use-learner-signals';
 import { pathSummaries, shortCourses } from '../lib/browse';
 import { discoverStrings } from '../strings';
 import { AiPathCard } from './ai-path-card';
-import { CategoryGrid, LevelTiles, ToolChips } from './browse-blocks';
+import { LevelTiles, ToolChips } from './browse-blocks';
 import { CardCarousel, useTileWidth } from './card-carousel';
 import { PathList } from './path-list';
 import { PathSteps } from './path-steps';
@@ -38,15 +36,17 @@ import { openPaywall } from '@/features/store';
 /** Most steps of the learner's path shown on the home; the path screen has them all. */
 const PATH_STEPS_SHOWN = 4;
 /** Paths listed before "Show all". */
-const PATHS_SHOWN = 4;
+const PATHS_SHOWN = 3;
+/** AI tools shown as chips (the most-taught first); the AI tools filter has every one. */
+const TOOLS_SHOWN = 6;
 /** Short courses in their carousel. */
 const SHORT_SHOWN = 8;
 
 /**
  * The Discover home (the Courses tab): a "For you" block holding only the personal blocks that have something to show
  * (continue, recommended, your path, interests, improve your skills, your next level, first steps, new ground), then the same
- * catalog for everyone: new courses, browse by level, featured learning paths, AI tools, short courses, browse by category and
- * Explore all. Every block is a way in, never a gate: the whole catalog stays one tap away whatever the learner answered.
+ * catalog for everyone: new courses, short courses, featured learning paths, AI tools and browse by level. Browsing by
+ * category and the whole catalog are the tabs above, so they are not repeated here. Every block is a way in, never a gate: the whole catalog stays one tap away whatever the learner answered.
  * Home is the guided journey; this is free exploration, so nothing here repeats the journey map.
  */
 export function HomeView() {
@@ -84,11 +84,11 @@ export function HomeView() {
     dispatch(sortChanged(sort));
     dispatch(exploreAllChanged(true));
   };
-  const discoverNew = sections.discoverNew ?? [];
-  const hasBand = !!(sections.continueLearning || sections.recommended || sections.yourPath || sections.exploreInterests || sections.improveSkills || sections.nextLevel || home.startHere.length > 0 || discoverNew.length > 0);
+  const hasBand = !!(sections.continueLearning || sections.recommended || sections.yourPath || sections.exploreInterests || sections.improveSkills || sections.nextLevel || home.startHere.length > 0);
   // The catalog part is the same for everyone: published after launch (new), and short courses straight from the catalog.
-  const newCourses = facts.filter((fact) => isNewCourse(fact)).sort((a, b) => (a.published < b.published ? 1 : a.published > b.published ? -1 : 0));
-  const short = shortCourses(facts).slice(0, SHORT_SHOWN);
+  const newCourses = facts.filter((fact) => isNewCourse(fact) && home.isRelevant(fact.id)).sort((a, b) => (a.published < b.published ? 1 : a.published > b.published ? -1 : 0));
+  // Only the short courses that are about what the learner asked for (all of them for someone who asked for nothing).
+  const short = shortCourses(facts).filter((fact) => home.isRelevant(fact.id)).slice(0, SHORT_SHOWN);
   const nextLevelLabel = sections.nextLevel ? learningLevelLabel(sections.nextLevel.level) : '';
 
   return (
@@ -157,30 +157,14 @@ export function HomeView() {
           )}
           {home.startHere.length > 0 && (
             <Section title={strings.startHereTitle}>
+              {home.askedForTopics && (
+                <ThemedText type="secondary" themeColor="textSecondary">
+                  {browseText.startHereNoMatch}
+                </ThemedText>
+              )}
               <CardCarousel tileWidth={tileWidth} bleed={bleed} accessibilityLabel={strings.startHereTitle}>
                 {home.startHere.map((course) => tile(course))}
               </CardCarousel>
-            </Section>
-          )}
-          {discoverNew.length > 0 && (
-            <Section title={strings.newGroundTitle}>
-              <ThemedText type="secondary" themeColor="textSecondary">
-                {discoverNewGroundLine({ categories: discoverNew.length, language }).text}
-              </ThemedText>
-              {discoverNew.map((group) => (
-                <View key={group.category} style={styles.group}>
-                  <View style={styles.groupHeader}>
-                    <ThemedText type="cardTitle" accessibilityRole="header" style={styles.flex}>
-                      {categoryLabel(group.category, language)}
-                    </ThemedText>
-                    {/* Nothing more to see in a category with one course here. */}
-                    {group.courses.length > 1 && <Button title={strings.seeAll} variant="ghost" size="small" accessibilityLabel={strings.seeAllIn(categoryLabel(group.category, language))} onPress={() => dispatch(categorySelected(group.category))} />}
-                  </View>
-                  <CardCarousel tileWidth={tileWidth} bleed={bleed} accessibilityLabel={categoryLabel(group.category, language)}>
-                    {group.courses.map((entry) => tile(entry.facts, strings.newGroundReason(categoryLabel(group.category, language))))}
-                  </CardCarousel>
-                </View>
-              ))}
             </Section>
           )}
         </ForYouBand>
@@ -194,29 +178,6 @@ export function HomeView() {
         </Section>
       )}
 
-      <Section title={browseText.levelsTitle}>
-        <ThemedText type="secondary" themeColor="textSecondary">
-          {browseText.levelsBody}
-        </ThemedText>
-        <LevelTiles facts={facts} />
-      </Section>
-
-      <Section title={browseText.pathsTitle}>
-        <ThemedText type="secondary" themeColor="textSecondary">
-          {browseText.pathsBody}
-        </ThemedText>
-        <PathList summaries={pathSummaries(LEARNING_PATHS, facts, learner.signals.completed)} initial={PATHS_SHOWN} />
-      </Section>
-
-      <Section title={browseText.toolsTitle}>
-        <ThemedText type="secondary" themeColor="textSecondary">
-          {browseText.toolsBody}
-        </ThemedText>
-        <ToolChips facts={facts} />
-      </Section>
-
-      <AiPathCard />
-
       {short.length > 0 && (
         <Section title={browseText.shortTitle} actionLabel={strings.seeAll} onAction={() => browse('shortest')}>
           <ThemedText type="secondary" themeColor="textSecondary">
@@ -228,21 +189,32 @@ export function HomeView() {
         </Section>
       )}
 
-      <Section title={browseText.categoriesTitle}>
-        <CategoryGrid facts={facts} />
+      <Section title={browseText.pathsTitle}>
+        <ThemedText type="secondary" themeColor="textSecondary">
+          {browseText.pathsBody}
+        </ThemedText>
+        <PathList summaries={pathSummaries(LEARNING_PATHS, facts, learner.signals.completed)} initial={PATHS_SHOWN} />
       </Section>
 
-      <View style={styles.exploreAll}>
-        <Button title={strings.exploreAll} icon="explore" variant="outline" onPress={() => dispatch(exploreAllChanged(true))} />
-        <ThemedText type="caption" themeColor="textSecondary" style={styles.centered}>
-          {strings.exploreAllNote(facts.length)}
+      {/* The tools most courses teach, then the AI-Assisted Development path's placement check and tools guide. */}
+      <Section title={browseText.toolsTitle}>
+        <ThemedText type="secondary" themeColor="textSecondary">
+          {browseText.toolsBody}
         </ThemedText>
-      </View>
+        <ToolChips facts={facts} limit={TOOLS_SHOWN} />
+        <AiPathCard />
+      </Section>
 
+      <Section title={browseText.levelsTitle}>
+        <ThemedText type="secondary" themeColor="textSecondary">
+          {browseText.levelsBody}
+        </ThemedText>
+        <LevelTiles facts={facts} />
+      </Section>
+
+      {/* The category tabs and the All tab at the top already cover "browse by category" and "explore all", so neither repeats here. */}
       <Section title={strings.moreTitle}>
-        {allAccess ? (
-          <Notice tone="success" message={strings.haveAllAccess} />
-        ) : (
+        {!allAccess && (
           <Card>
             <ThemedText type="cardTitle">{strings.allAccessTitle}</ThemedText>
             <ThemedText type="secondary" themeColor="textSecondary" style={styles.allAccessBody}>
@@ -277,15 +249,13 @@ function ForYouBand({ children }: { children: ReactNode }) {
     <View style={styles.band}>
       <View style={styles.bandTop}>
         {/* Only the words are one accessible header; the button below stays its own control. */}
+        {/* The "For you" tab right above names this, so no second title: Tali and one line say where the picks come from. */}
         <View style={styles.bandHeader} accessible accessibilityRole="header" accessibilityLabel={`${strings.forYou}. ${strings.forYouNote}`}>
           {/* Tali introduces the picks: the one place on Discover the coach appears, so it stays meaningful. */}
-          <Tali size={52} mood="happy" tight />
-          <View style={styles.flex}>
-            <ThemedText type="section">{strings.forYou}</ThemedText>
-            <ThemedText type="secondary" themeColor="textSecondary">
-              {strings.forYouNote}
-            </ThemedText>
-          </View>
+          <Tali size={40} mood="happy" tight />
+          <ThemedText type="secondarySemiBold" themeColor="textSecondary" style={styles.flex}>
+            {strings.forYouNote}
+          </ThemedText>
         </View>
         <UpdateInterestsButton />
       </View>
@@ -348,15 +318,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: Spacing.three,
   },
-  group: {
-    gap: Spacing.two,
-    marginTop: Spacing.two,
-  },
-  groupHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.three,
-  },
   pathHeader: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -370,9 +331,6 @@ const styles = StyleSheet.create({
     alignSelf: 'flex-start',
     marginTop: Spacing.two,
   },
-  exploreAll: {
-    gap: Spacing.two,
-  },
   allAccessBody: {
     marginTop: Spacing.one,
     marginBottom: Spacing.three,
@@ -381,8 +339,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: Spacing.three,
-  },
-  centered: {
-    textAlign: 'center',
   },
 });

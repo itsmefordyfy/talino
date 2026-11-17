@@ -1,6 +1,9 @@
 import type { Achievements, ResumeProfile } from '@/features/resume';
 
+import { httpsUrl, type LinkKind, profileLink } from './links';
 import { isShowable, type PortfolioProject } from './projects';
+
+export { httpsUrl, profileLink } from './links';
 
 /** One project as the page shows it (the server's `cleanPortfolio` shape): details and base64 JPEG screenshots for the learner's own, the course and a summary for a passed Talino project. */
 export type PayloadProject = { title: string; course: string; summary: string; description: string; role: string; tech: string[]; url: string; repoUrl: string; images: string[] };
@@ -20,38 +23,8 @@ export type PortfolioPayload = {
   skills: string[];
 };
 
-export type LinkKind = 'website' | 'linkedin' | 'github';
-
 /** The public page's own words for the links (it is English, like the page). */
 const LINK_LABELS: Record<LinkKind, string> = { website: 'Website', linkedin: 'LinkedIn', github: 'GitHub' };
-
-/** The server keeps only full https addresses; anything else would silently vanish from the page. */
-export function httpsUrl(value: string | null | undefined): string | null {
-  try {
-    const url = new URL((value ?? '').trim());
-    return url.protocol === 'https:' && url.hostname.includes('.') ? url.toString() : null;
-  } catch {
-    return null;
-  }
-}
-
-/**
- * A profile link as people type it ("linkedin.com/in/ana", "@ana" for GitHub, "http://site.ph")
- * turned into the https address the page can link to; null when it can't be one.
- */
-export function profileLink(value: string | null | undefined, kind: LinkKind): string | null {
-  let text = (value ?? '').trim();
-  if (text === '') return null;
-  if (/^http:\/\//i.test(text)) text = `https://${text.slice(7)}`;
-  if (!/^[a-z][a-z0-9+.-]*:\/\//i.test(text)) {
-    const handle = text.replace(/^@/, '');
-    const bare = !handle.includes('.') && !handle.includes('/');
-    if (bare && kind === 'linkedin') text = `https://www.linkedin.com/in/${handle}`;
-    else if (bare && kind === 'github') text = `https://github.com/${handle}`;
-    else text = `https://${text}`;
-  }
-  return httpsUrl(text);
-}
 
 const cut = (value: string | null | undefined, max: number) => (value ?? '').replace(/\s+/g, ' ').trim().slice(0, max);
 

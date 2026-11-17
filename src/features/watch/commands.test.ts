@@ -5,17 +5,20 @@ import { createResultLedger } from '@/lib/result-ledger';
 import { handleWatchCommand, type CommandContext, type ListenPort } from './commands';
 import type { WatchResult } from './types';
 
-function setup(state: ReturnType<ListenPort['state']>, canSkip = true) {
+const LESSON = { lessonId: 'starter-02', title: 'Day 2', course: 'AI Basics for Tech', language: 'en', sentences: ['One.', 'Two.'], at: [0, 1], segment: 1 };
+
+function setup(state: ReturnType<ListenPort['state']>, canSkip = true, lesson: typeof LESSON | null = LESSON) {
   let stored: string | null = null;
   const toggle = jest.fn();
   const skip = jest.fn();
+  const stop = jest.fn();
   const pushSnapshot = jest.fn();
   const ctx: CommandContext = {
-    listen: { state: () => state, canSkip: () => canSkip, toggle, skip },
+    listen: { state: () => state, canSkip: () => canSkip, toggle, skip, stop, lessonForWatch: () => lesson, startNext: () => lesson !== null, resume: (id) => id === 'known' },
     ledger: createResultLedger<WatchResult>({ read: () => stored, write: (value) => void (stored = value) }),
     pushSnapshot,
   };
-  return { ctx, toggle, skip, pushSnapshot };
+  return { ctx, toggle, skip, stop, pushSnapshot };
 }
 
 describe('handleWatchCommand', () => {
@@ -67,5 +70,39 @@ describe('handleWatchCommand', () => {
     const live = setup('idle');
     expect(await handleWatchCommand(live.ctx, { id: '1', type: 'snapshot.request' })).toEqual({ ok: true });
     expect(live.pushSnapshot).toHaveBeenCalledTimes(1);
+  });
+
+  describe('choosing where the voice plays', () => {
+    it('hands the lesson to the Watch and silences the phone, so only one plays', async () => {
+      const live = setup('speaking');
+      expect(await handleWatchCommand(live.ctx, { id: 'w1', type: 'listen.toWatch' })).toEqual({ ok: true, lesson: LESSON });
+      expect(live.stop).toHaveBeenCalledTimes(1);
+    });
+
+    it('sends the next lesson without stopping anything when the phone is idle, and says so when there is none', async () => {
+      const idle = setup('idle');
+      expect(await handleWatchCommand(idle.ctx, { id: 'w2', type: 'listen.toWatch' })).toEqual({ ok: true, lesson: LESSON });
+      expect(idle.stop).not.toHaveBeenCalled();
+      const none = setup('idle', true, null);
+      expect(await handleWatchCommand(none.ctx, { id: 'w3', type: 'listen.toWatch' })).toEqual({ ok: false, reason: 'no_lesson' });
+    });
+
+    it('answers a retry of a handover with the same lesson, without stopping or asking the phone again', async () => {
+      const live = setup('playing');
+      const first = await handleWatchCommand(live.ctx, { id: 'w4', type: 'listen.toWatch' });
+      const again = await handleWatchCommand(live.ctx, { id: 'w4', type: 'listen.toWatch' });
+      expect(again).toEqual(first);
+      expect(live.stop).toHaveBeenCalledTimes(1);
+    });
+
+    it('starts the next lesson on the phone, or refuses when there is none', async () => {
+      expect(await handleWatchCommand(setup('idle').ctx, { id: 's1', type: 'listen.start' })).toEqual({ ok: true });
+      expect(await handleWatchCommand(setup('idle', true, null).ctx, { id: 's2', type: 'listen.start' })).toEqual({ ok: false, reason: 'no_lesson' });
+    });
+
+    it('hands the voice back to the phone at a sentence, or refuses a lesson it does not know', async () => {
+      expect(await handleWatchCommand(setup('idle').ctx, { id: 'r1', type: 'listen.resume', lessonId: 'known', segment: 5 })).toEqual({ ok: true });
+      expect(await handleWatchCommand(setup('idle').ctx, { id: 'r2', type: 'listen.resume', lessonId: 'other', segment: 5 })).toEqual({ ok: false, reason: 'no_lesson' });
+    });
   });
 });

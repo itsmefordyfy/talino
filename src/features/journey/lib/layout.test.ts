@@ -4,8 +4,8 @@ import { CURRENT_NODE_SIZE, curveBetween, GUIDE_HEIGHT, layoutJourney, NODE_CENT
 
 describe('layoutJourney', () => {
   const stages = [
-    { milestoneCount: 3, collapsed: false },
-    { milestoneCount: 2, collapsed: false },
+    { nodeCount: 3, collapsed: false },
+    { nodeCount: 2, collapsed: false },
   ];
   const layout = layoutJourney(stages, 390);
 
@@ -19,7 +19,7 @@ describe('layoutJourney', () => {
   });
 
   test('one path point per node, in journey order, at the node centre', () => {
-    expect(layout.points.map((point) => point.milestoneIndex)).toEqual([0, 1, 2, 3, 4]);
+    expect(layout.points.map((point) => point.nodeIndex)).toEqual([0, 1, 2, 3, 4]);
     const nodes = layout.items.filter((item) => item.kind === 'node');
     layout.points.forEach((point, i) => {
       expect(point.y).toBe(nodes[i]!.y + (nodes[i] as { guideHeight: number }).guideHeight + NODE_CENTER);
@@ -45,9 +45,9 @@ describe('layoutJourney', () => {
   });
 
   test('a collapsed stage keeps its banner, drops its nodes and keeps numbering', () => {
-    const collapsed = layoutJourney([{ milestoneCount: 3, collapsed: true }, { milestoneCount: 2, collapsed: false }], 390);
+    const collapsed = layoutJourney([{ nodeCount: 3, collapsed: true }, { nodeCount: 2, collapsed: false }], 390);
     expect(collapsed.items.filter((item) => item.kind === 'node')).toHaveLength(2);
-    expect(collapsed.points.map((point) => point.milestoneIndex)).toEqual([3, 4]);
+    expect(collapsed.points.map((point) => point.nodeIndex)).toEqual([3, 4]);
   });
 
   test("room is kept above only the current node for Tali's guide, and the path still runs through the node", () => {

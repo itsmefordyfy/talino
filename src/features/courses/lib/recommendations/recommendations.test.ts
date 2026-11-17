@@ -23,7 +23,8 @@ describe('a complete beginner interested in web development', () => {
 
   test('starts with coding with AI for complete beginners, prompt engineering and building a website', () => {
     for (const id of ['ai-coding-beginners', 'prompt-engineering-dev', 'build-website-ai']) expect(rankOf(ids, id)).toBeGreaterThanOrEqual(0);
-    expect(ids.slice(0, 10)).toEqual(expect.arrayContaining(['ai-coding-beginners', 'prompt-engineering-dev', 'build-website-ai']));
+    // Programming Fundamentals (added 2026-11-16) is a good early pick for someone who names JavaScript, so the three sit in the first twelve.
+    expect(ids.slice(0, 12)).toEqual(expect.arrayContaining(['ai-coding-beginners', 'prompt-engineering-dev', 'build-website-ai']));
     expect(ids[0]).toBe('ai-coding-beginners');
   });
 

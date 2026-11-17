@@ -130,6 +130,11 @@ export type LessonBlockKind =
    * so the learner knows it can change and where to look. `plans` names the plans a feature needs.
    */
   | { type: 'version'; text: string; checked: string; sources: SourceLink[]; plans?: string }
+  /**
+   * "AI in Action" (Generative AI course): a hand-written illustration of a prompt and the kind of answer it gets, with what to notice. It is NEVER a real
+   * model's output and is always drawn with an "Illustration" badge saying so; a live model run is a `prompt-lab` activity instead.
+   */
+  | { type: 'demo'; title: string; prompt: string; output: string; notice: string }
   /** A comparison of AI tools drawn from `content/ai-dev/tools.ts`, so it stays current with that one file. */
   | { type: 'toolComparison'; tools: AiToolId[]; caption?: string };
 
@@ -222,6 +227,11 @@ export type Project = {
   outcome: string;
   /** The project opens once this lesson day is done. */
   unlockAfterDay: number;
+  /**
+   * The practice items (role-plays and message tasks, ids in `features/practice/scenarios`) the steps name. The project screen shows how many the learner
+   * has practised and the review is given a short, labelled summary of their saved results. Optional: only the Soft Skills projects use it.
+   */
+  practiceItemIds?: string[];
   steps: ProjectStep[];
   submission: {
     /** `url` for a repo, live site or profile link; `text` for pasted work (a proposal, a lesson plan). */
@@ -248,6 +258,19 @@ export type CoachRole = {
   description: string;
   /** Instructions added to the coach's system prompt for this role. */
   instructions: string;
+};
+
+/**
+ * A run of consecutive lessons a long course groups together (Programming Fundamentals has twelve). `firstDay` and `lastDay` are
+ * lesson days, inclusive; the modules of a course cover every lesson once, in order (`standardCourseProblems`). The Adventure map
+ * draws one chapter per module, titled with it.
+ */
+export type CourseModule = {
+  id: string;
+  title: string;
+  summary: string;
+  firstDay: number;
+  lastDay: number;
 };
 
 export type Course = {
@@ -280,6 +303,8 @@ export type Course = {
    * courses `finishLine` plays this part (`learningObjectives`).
    */
   objectives?: string[];
+  /** A long standard course's modules, in order (see `CourseModule`). Most courses have none. */
+  modules?: CourseModule[];
   /** The path this course belongs to and its place in it (1-based). Required for `path` courses. */
   path?: { id: PathId; order: number };
 };

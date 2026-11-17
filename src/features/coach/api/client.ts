@@ -53,7 +53,7 @@ export async function fetchUsage(identity: CoachIdentity): Promise<AiChatQuota |
   return parseQuota((await postJson('/api/coach', { ...who(identity), mode: 'usage' }, { timeoutMs: 15_000 })).quota);
 }
 
-export async function requestReview(identity: CoachIdentity, input: { projectId: string; reviewId: string; link: string; submission: string; language: Language; /** The level the learner was shown the project for; the server builds that level's rubric. */ level?: ExperienceLevel | null }): Promise<{ review: ProjectReview; token: string | null }> {
+export async function requestReview(identity: CoachIdentity, input: { projectId: string; reviewId: string; link: string; submission: string; language: Language; /** The level the learner was shown the project for; the server builds that level's rubric. */ level?: ExperienceLevel | null; /** The learner's saved practice results for the practice items the project names, as the text `practiceSummaryText` builds (empty when it names none). The server treats it as untrusted data and caps it. */ practice?: string; /** The learner's saved prompt-lab results for the labs the project names (`labResultsText`), empty when it names none. Untrusted data, capped by the server. */ labs?: string }): Promise<{ review: ProjectReview; token: string | null }> {
   const body = await postJson('/api/coach', { ...who(identity), mode: 'review', ...input }, { timeoutMs: 60_000 });
   const review = body.review as ProjectReview | undefined;
   if (!review || (review.verdict !== 'pass' && review.verdict !== 'needs_work') || typeof review.summary !== 'string' || !Array.isArray(review.checks)) throw new ApiError('unknown');

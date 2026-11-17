@@ -1,5 +1,6 @@
 import { defineActivity } from './lib/validate';
 import type { Activity } from './types';
+import { PLANNING_SAMPLES } from '@/features/productivity/lib/samples';
 
 /**
  * Two small activities of every kind. They are real, correct and beginner friendly, they double as a
@@ -11,6 +12,7 @@ const STUDENTS_SQL = `CREATE TABLE students (id INTEGER PRIMARY KEY, name TEXT, 
 INSERT INTO students VALUES (1, 'Ana', 'Web', 88), (2, 'Ben', 'Data', 72), (3, 'Cy', 'Web', 95), (4, 'Dee', 'Data', 64), (5, 'Eli', 'Web', 70);`;
 
 export const SAMPLE_ACTIVITIES: readonly Activity[] = [
+  ...PLANNING_SAMPLES,
   // Tap to reveal
   defineActivity({
     id: 'sample-tap-variables',
@@ -373,5 +375,90 @@ export const SAMPLE_ACTIVITIES: readonly Activity[] = [
     solution: 'SELECT course, COUNT(*) AS students FROM students GROUP BY course ORDER BY course;',
     hints: ['You want one row per course, not one per student.', '`GROUP BY course` makes one group per course, and `COUNT(*)` counts the rows in each group.', 'Name the count with `AS students` and finish with `ORDER BY course`.'],
     explanation: '`GROUP BY course` makes one row per course, `COUNT(*) AS students` counts the students in each group, and `ORDER BY course` sorts the result.',
+  }),
+  // Workflow builder
+  defineActivity({
+    id: 'sample-workflow-bakery-replies',
+    kind: 'workflow-builder',
+    title: 'Reply to bakery orders',
+    prompt: 'Build a workflow that drafts replies to customer orders. A person must decide before anything is sent.',
+    concept: 'human review',
+    situation: 'A small bakery gets cake orders by message. The owner wants AI to draft the replies, but a wrong price or a promised date it cannot keep would cost real money.',
+    parts: [
+      { id: 'read-message', lane: 'input', label: 'Read the customer message', detail: 'The order arrives as text.' },
+      { id: 'paste-password', lane: 'input', label: 'Paste the shop login into the prompt', detail: 'So the AI can open the order system itself.' },
+      { id: 'draft-reply', lane: 'ai', label: 'Draft a reply with AI', detail: 'The model writes a polite answer from the message and the price list.' },
+      { id: 'send-direct', lane: 'ai', label: 'AI sends the reply by itself', detail: 'No one looks at it first.' },
+      { id: 'check-price', lane: 'tool', label: 'Check prices against the price list', detail: 'A simple lookup compares each price with the real list.' },
+      { id: 'owner-review', lane: 'human', label: 'Owner reviews and edits the draft', detail: 'The owner approves, fixes or rejects the draft.' },
+      { id: 'send-reply', lane: 'output', label: 'Send the approved reply', detail: 'The reply goes to the customer.' },
+      { id: 'log-order', lane: 'output', label: 'Save the order in the log', detail: 'A record is kept of what was agreed.' },
+    ],
+    rules: [
+      { id: 'needs-ai', kind: 'require', parts: ['draft-reply'], message: 'The point is to have AI draft the reply, so that step has to be in the workflow.' },
+      { id: 'needs-review', kind: 'require', parts: ['owner-review'], message: 'A wrong price or date costs money, so a person has to review the draft.' },
+      { id: 'no-password', kind: 'forbid', parts: ['paste-password'], message: 'A password in a prompt is shared with a service you do not control. Never put secrets in a prompt.' },
+      { id: 'no-auto-send', kind: 'forbid', parts: ['send-direct'], message: 'An AI that sends replies by itself can promise things the bakery cannot keep.' },
+      { id: 'review-before-send', kind: 'before', parts: ['owner-review', 'send-reply'], message: 'The owner must review before the reply is sent, not after.' },
+      { id: 'draft-before-review', kind: 'before', parts: ['draft-reply', 'owner-review'], message: 'There has to be a draft before the owner can review one.' },
+    ],
+    solution: ['read-message', 'draft-reply', 'check-price', 'owner-review', 'send-reply'],
+    minSteps: 4,
+    maxSteps: 6,
+    simulation: {
+      input: 'Hi! Can I order a 10-inch chocolate cake for Saturday? How much is it?',
+      steps: {
+        'read-message': 'The message is read as plain text: a 10-inch chocolate cake, Saturday, price asked.',
+        'draft-reply': 'A draft is written: "Hello! Yes, we can make a 10-inch chocolate cake for Saturday. It is 850 pesos."',
+        'check-price': 'The price list says a 10-inch chocolate cake is 880 pesos, so the draft is flagged as wrong.',
+        'owner-review': 'The owner fixes the price to 880 pesos and approves the draft.',
+        'send-reply': 'The corrected reply is sent to the customer.',
+      },
+      output: 'The customer receives a polite reply with the right price (880 pesos) and the Saturday date confirmed by the owner.',
+    },
+    hints: ['Think about what could go wrong if the AI were left alone.', 'Look for the step where a person decides.', 'The person decides before anything leaves the shop.'],
+    explanation: 'AI is good at drafting, and a person is good at deciding. Putting the human review before the send keeps the speed of AI without its mistakes reaching the customer.',
+  }),
+  defineActivity({
+    id: 'sample-workflow-clinic-reminders',
+    kind: 'workflow-builder',
+    title: 'Appointment reminders for a clinic',
+    prompt: 'Build a workflow that writes reminder messages for appointments. Patient details are private, and a person approves the wording once before the batch goes out.',
+    concept: 'privacy and review',
+    situation: 'A small clinic wants friendly reminder texts for tomorrow\'s appointments. The list has names and phone numbers. The receptionist wants AI to write the wording, but patient details must not be sent to a service the clinic has not approved.',
+    parts: [
+      { id: 'read-schedule', lane: 'input', label: 'Read tomorrow\'s schedule', detail: 'The list of appointment times comes from the clinic\'s own system.' },
+      { id: 'remove-details', lane: 'tool', label: 'Remove names and phone numbers', detail: 'Only the time and the type of visit are kept for the AI.' },
+      { id: 'paste-everything', lane: 'input', label: 'Paste the whole patient list into the prompt', detail: 'Names, numbers and visit reasons, exactly as they are.' },
+      { id: 'write-wording', lane: 'ai', label: 'AI writes the reminder wording', detail: 'The model writes a short, friendly template with a blank for the time.' },
+      { id: 'trust-wording', lane: 'ai', label: 'Trust the wording without reading it', detail: 'Whatever the AI wrote is used as it is.' },
+      { id: 'receptionist-check', lane: 'human', label: 'Receptionist approves the wording', detail: 'A person reads the template once and fixes anything odd.' },
+      { id: 'fill-and-send', lane: 'tool', label: 'Fill in each time and send the texts', detail: 'The clinic\'s own system adds the details and sends the messages.' },
+      { id: 'save-log', lane: 'output', label: 'Save a log of what was sent', detail: 'A record shows which reminders went out.' },
+    ],
+    rules: [
+      { id: 'needs-wording', kind: 'require', parts: ['write-wording'], message: 'The AI\'s job here is the wording, so that step has to be in the workflow.' },
+      { id: 'needs-approval', kind: 'require', parts: ['receptionist-check'], message: 'Messages go to real patients, so a person must read the wording first.' },
+      { id: 'no-paste-list', kind: 'forbid', parts: ['paste-everything'], message: 'Names and phone numbers are private. Do not paste them into a prompt.' },
+      { id: 'no-blind-trust', kind: 'forbid', parts: ['trust-wording'], message: 'An AI can write something wrong or strange. Never use its wording unread.' },
+      { id: 'remove-before-ai', kind: 'before', parts: ['remove-details', 'write-wording'], message: 'Remove the private details before the AI sees anything.' },
+      { id: 'approve-before-send', kind: 'before', parts: ['receptionist-check', 'fill-and-send'], message: 'The wording must be approved before the texts are sent.' },
+    ],
+    solution: ['read-schedule', 'remove-details', 'write-wording', 'receptionist-check', 'fill-and-send'],
+    minSteps: 4,
+    maxSteps: 6,
+    simulation: {
+      input: 'Tomorrow: 9:00 check-up, 9:30 vaccine, 10:15 follow-up.',
+      steps: {
+        'read-schedule': 'The schedule is read from the clinic\'s system: three appointments tomorrow.',
+        'remove-details': 'Names and phone numbers are removed. Only the times and the type of visit stay.',
+        'write-wording': 'A template is written: "Hello! This is a reminder of your visit tomorrow at [time]. Please reply if you need to change it."',
+        'receptionist-check': 'The receptionist reads the template and changes "Hello!" to the clinic\'s usual greeting.',
+        'fill-and-send': 'The clinic\'s system fills in each time and sends three texts.',
+      },
+      output: 'Three patients receive a friendly reminder with their own time, and the AI never saw a name or a phone number.',
+    },
+    hints: ['Ask what the AI really needs to know to write a reminder.', 'Look for a step that removes private details, and make sure it comes first.', 'Remove the details, let the AI write, let a person approve, then send.'],
+    explanation: 'The AI only needs the shape of the message, not the patients. Removing private details first and approving the wording once keeps the work fast and the patients safe.',
   }),
 ];

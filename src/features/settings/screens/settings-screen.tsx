@@ -47,11 +47,9 @@ import {
   selectCareerReminders,
   selectDailyReminder,
   selectDailyReminderTime,
-  selectSpeechRate,
   settingsReset,
   devUnlockAllToggled,
   selectDevUnlockAll,
-  speechRateChanged,
 } from '../settings-slice';
 import { settingsStrings } from '../strings';
 
@@ -73,7 +71,6 @@ export function SettingsScreen() {
   const career = useAppSelector(selectCareerReminders);
   const appearance = useAppSelector(selectAppearance);
   const language = useAppSelector(selectLanguage);
-  const rate = useAppSelector(selectSpeechRate);
   const mock = useMockStoreControls();
   const demo = useDemoData();
   const demoText = useLocalized(demoStrings);
@@ -152,18 +149,6 @@ export function SettingsScreen() {
             />
           </View>
         )}
-        <View style={styles.padded}>
-          <SegmentedControl
-            accessibilityLabel={strings.audioSpeed}
-            value={rate < 0.95 ? 'slow' : rate > 1.05 ? 'fast' : 'normal'}
-            options={[
-              { value: 'slow', label: strings.speeds.slow },
-              { value: 'normal', label: strings.speeds.normal },
-              { value: 'fast', label: strings.speeds.fast },
-            ]}
-            onChange={(value) => dispatch(speechRateChanged(value === 'slow' ? 0.85 : value === 'fast' ? 1.15 : 1))}
-          />
-        </View>
       </SettingsGroup>
 
       <SettingsGroup title={strings.career}>

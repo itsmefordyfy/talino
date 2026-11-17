@@ -10,7 +10,7 @@ const base: SnapshotInput = {
   lessonsThisWeek: 3,
   target: 5,
   next: { course: 'Vibe coding', lesson: 'Your first prompt', day: 4, started: true },
-  listen: { state: 'idle', title: null, course: null, canSkip: false },
+  listen: { state: 'idle', title: null, course: null, canSkip: false, sentence: null, index: 0, count: 0 },
   handled: ['a'],
 };
 
@@ -31,9 +31,9 @@ describe('toWatchSnapshot', () => {
   });
 
   it('shows what is being read and reads the phone voice as playing', () => {
-    expect(toWatchSnapshot({ ...base, listen: { state: 'speaking', title: 'Day 4', course: 'Vibe coding', canSkip: true } }).listen).toEqual({ state: 'playing', lesson: 'Day 4', course: 'Vibe coding', canSkip: true });
-    expect(toWatchSnapshot({ ...base, listen: { state: 'paused', title: 'Day 4', course: 'Vibe coding', canSkip: false } }).listen?.state).toBe('paused');
-    expect(toWatchSnapshot({ ...base, listen: { state: 'loading', title: null, course: null, canSkip: false } }).listen).toEqual({ state: 'loading', lesson: '', course: '', canSkip: false });
+    expect(toWatchSnapshot({ ...base, listen: { state: 'speaking', title: 'Day 4', course: 'Vibe coding', canSkip: true, sentence: 'Hello.', index: 2, count: 9 } }).listen).toEqual({ state: 'playing', lesson: 'Day 4', course: 'Vibe coding', canSkip: true, sentence: 'Hello.', index: 2, count: 9 });
+    expect(toWatchSnapshot({ ...base, listen: { state: 'paused', title: 'Day 4', course: 'Vibe coding', canSkip: false, sentence: null, index: 0, count: 0 } }).listen?.state).toBe('paused');
+    expect(toWatchSnapshot({ ...base, listen: { state: 'loading', title: null, course: null, canSkip: false, sentence: null, index: 0, count: 0 } }).listen).toEqual({ state: 'loading', lesson: '', course: '', canSkip: false, sentence: null, index: 0, count: 0 });
   });
 
   it('never sends a zero target (the ring divides by it)', () => {

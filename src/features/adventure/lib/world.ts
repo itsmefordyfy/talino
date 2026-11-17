@@ -106,14 +106,19 @@ export function chapterTitles(course: Pick<Course, 'skills'>, groups: readonly (
 
 /** `passedProjectIds`: the projects whose review passed (`CourseProgress` only counts them, so the caller says which). */
 export function buildWorld(course: Course, progress: CourseProgress, passedProjectIds: ReadonlySet<string> = new Set()): World {
-  const sizes = chapterSizes(course.lessons.length);
+  // A course made of modules (Programming Fundamentals) is one chapter per module, titled with it; other courses split evenly and take skill names.
+  const modules = course.modules && course.modules.length > 0 ? course.modules : null;
   const groups: Lesson[][] = [];
-  let cursor = 0;
-  for (const size of sizes) {
-    groups.push(course.lessons.slice(cursor, cursor + size));
-    cursor += size;
+  if (modules) {
+    for (const module of modules) groups.push(course.lessons.filter((lesson) => lesson.day >= module.firstDay && lesson.day <= module.lastDay));
+  } else {
+    let cursor = 0;
+    for (const size of chapterSizes(course.lessons.length)) {
+      groups.push(course.lessons.slice(cursor, cursor + size));
+      cursor += size;
+    }
   }
-  const titles = chapterTitles(course, groups);
+  const titles: (Titled & { part: number })[] = modules ? modules.map((module) => ({ skillId: null, title: module.title, part: 1 })) : chapterTitles(course, groups);
 
   const chapters: Chapter[] = groups.map((lessons, index) => {
     const missions: Mission[] = lessons.map((lesson) => {

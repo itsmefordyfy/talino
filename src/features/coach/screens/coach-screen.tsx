@@ -24,6 +24,7 @@ import { Composer } from '../components/composer';
 import { MessageBubble } from '../components/message-bubble';
 import { ThinkingBubble } from '../components/thinking-bubble';
 import { useCoachChat, useCoachUsage } from '../hooks/use-coach';
+import { suggestionKey } from '../lib/code-course';
 import { focusFromParam, focusTitle, type CoachFocus } from '../lib/focus';
 import { allModes, modeInfo } from '../lib/modes';
 import { formatReturnTime } from '../lib/return-time';
@@ -96,7 +97,7 @@ function ChatView({ chatId, mode: initialMode, prompt, focus, onNewChat, header 
   const online = useIsOnline();
   const about = focusTitle(focus);
   // A lesson, question, exercise or project that sent the learner here gets questions about it; otherwise the mode's own.
-  const suggestions = (about && strings.focusSuggestions[about.kind]) || strings.suggestions[chat.mode] || strings.suggestions.role;
+  const suggestions = (about && (strings.focusSuggestions[suggestionKey(focus, about.kind)] ?? strings.focusSuggestions[about.kind])) || strings.suggestions[chat.mode] || strings.suggestions.role;
 
   const footer = (
     <View style={styles.footer}>

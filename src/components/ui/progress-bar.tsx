@@ -32,7 +32,8 @@ export function ProgressBar({ fraction, accessibilityLabel, done = false, thick 
   const fillStyle = useAnimatedStyle(() => ({ width: `${shown.value * 100}%` }));
   const height = thick ? 12 : 8;
   const track = onGradient ? 'rgba(255, 255, 255, 0.28)' : theme.primarySoft;
-  const fill = onGradient ? HeroInk.text : done ? theme.success : theme.primary;
+  // On a dark card the fill is white while under way, and green once finished like every other bar (owner, 2026-11-17).
+  const fill = done ? theme.success : onGradient ? HeroInk.text : theme.primary;
 
   return (
     <View accessible accessibilityRole="progressbar" accessibilityLabel={accessibilityLabel} accessibilityValue={{ min: 0, max: 100, now: Math.round(clamped * 100) }} style={[styles.track, { height, backgroundColor: track }]}>

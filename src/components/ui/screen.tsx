@@ -7,6 +7,7 @@ import { ContentWidthContext } from '@/components/content-width';
 import { useChromeLayout } from '@/hooks/use-chrome-layout';
 import { useTabBarOnTop } from '@/hooks/use-tab-bar-on-top';
 import { followPlace, followTarget, type FollowPlace } from '@/lib/follow-zone';
+import { useTopCovered } from '@/lib/top-cover';
 import { useTheme } from '@/hooks/use-theme';
 
 import { useKeyboardOverlap } from './use-keyboard-overlap';
@@ -183,13 +184,14 @@ export function Screen({ children, footer, variant = 'stack', wide = false, cont
 /** Content padding for scrollable screens and lists, shared so FlatList screens match `Screen`. */
 export function useScreenPadding(variant: ScreenVariant, hasFooter = false) {
   const insets = useSafeAreaInsets();
+  const covered = useTopCovered();
   const chrome = useChromeLayout();
   // An iPad's tab bar floats at the top and the safe area's top inset already includes it (measured on the iPad Air, 2026-11-16).
   const barOnTop = useTabBarOnTop();
   // A tab bar along the side or across the top takes no room at the bottom, and Tali's button doesn't rise out of it.
   const bottomChrome = variant === 'tab' && !chrome.vertical && !barOnTop ? BottomTabInset : 0;
   return {
-    paddingTop: variant === 'tab' ? insets.top + Spacing.three : Spacing.three,
+    paddingTop: variant === 'tab' ? Math.max(0, insets.top - covered) + Spacing.three : Spacing.three,
     paddingBottom: hasFooter ? Spacing.four : insets.bottom + bottomChrome + Spacing.five,
     // A tab screen's footer (the chat box) also clears the part of Tali's button that rises above the bar.
     footerBottom: insets.bottom + Spacing.two + (variant === 'tab' && !chrome.vertical && !barOnTop ? FloatingTaliSize - FloatingTaliDock : 0),

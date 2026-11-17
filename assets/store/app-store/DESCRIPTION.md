@@ -11,6 +11,12 @@ Whether you are a fresh graduate, a career changer, a freelancer or virtual assi
 
 LEARN
 • A free starter course, AI Basics for Tech, to begin right away
+• Programming Fundamentals: 12 modules on how software works, from problem solving to building a small program, with practice you run in the app
+• Data Structures and Algorithms: 72 lessons on arrays, lists, hash tables, trees, graphs, searching and sorting, with visualizers you step through and a task manager to build
+• Generative AI: From Fundamentals to Real-World Applications: 67 lessons on how generative AI works, prompting, images, audio and video, your own documents, agents and building a small AI feature, with live prompt labs, a workflow builder and four projects
+• Soft Skills for the Modern Workplace: 54 lessons on communication, teamwork, thinking, time, emotions, presenting, clients and your career, practised with AI role-play and a message coach
+• Finding International Clients: 52 lessons for freelancers and VAs on finding, approaching and winning clients abroad, practised with a simulated client and a message coach
+• Time Management and Productivity: 43 lessons on priorities, planning a day, focus, procrastination, simple tools and working with AI without burning out, practised with an Eisenhower matrix, a day planner, a Pomodoro timer and planning exercises scored by clear rules
 • Career courses for developers, freelancers and virtual assistants, builders, experienced developers and educators
 • Mini-courses on Python for AI, AI engineering, AI-assisted testing, data, no-code automation and selling your app
 • An AI-assisted development path: learn to work with AI coding tools, step by step

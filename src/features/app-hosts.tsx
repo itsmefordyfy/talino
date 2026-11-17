@@ -25,6 +25,7 @@ export function AppHosts() {
       <CloudAutoRestore />
       <CloudBackupSync />
       <WhatsNewHost />
+      {/* The dive into a course plays above every screen. */}
     </>
   );
 }

@@ -2,8 +2,9 @@ import symbols from '../../../components/ui/material-symbols.json';
 import { validateActivity } from '../../activities';
 import { findVisual } from '../../visuals';
 import { parseMermaidSubset, validateDiagram } from '../../visuals/diagrams';
-import { getSyllabus, MASTERCLASS_MIN_LESSONS, MINI_MAX_LESSONS, STANDARD_MAX_LESSONS, STANDARD_MIN_LESSONS } from '../content/catalog/syllabus';
+import { getSyllabus, lessonLimitOf, MASTERCLASS_MIN_LESSONS, MINI_MAX_LESSONS, STANDARD_MIN_LESSONS } from '../content/catalog/syllabus';
 import type { Course } from '../content/types';
+import { demoBlockProblems } from './demo-block';
 import { lessonStructureProblems } from './lesson-structure';
 import { EXPERIENCE_LEVELS, levelIndex, type Audience } from '../content/levels';
 import { isOfficialSource, versionBlocks } from './path-rules';
@@ -35,7 +36,8 @@ export function standardCourseProblems(course: Course, today: Date = new Date())
   if (course.kind !== 'standard') problems.push(`${course.id} must have kind 'standard'`);
   if (course.level !== syllabus.level) problems.push(`${course.id} level must be ${syllabus.level}`);
   if (course.title !== syllabus.title) problems.push(`${course.id} title must be "${syllabus.title}"`);
-  if (syllabus.topics.length < STANDARD_MIN_LESSONS || syllabus.topics.length > STANDARD_MAX_LESSONS) problems.push(`${course.id} syllabus must have ${STANDARD_MIN_LESSONS} to ${STANDARD_MAX_LESSONS} topics`);
+  if (syllabus.topics.length < STANDARD_MIN_LESSONS || syllabus.topics.length > lessonLimitOf(syllabus)) problems.push(`${course.id} syllabus must have ${STANDARD_MIN_LESSONS} to ${lessonLimitOf(syllabus)} topics`);
+  problems.push(...moduleProblems(course, syllabus));
   if (course.lessons.length !== syllabus.topics.length) problems.push(`${course.id} needs ${syllabus.topics.length} lessons (one per syllabus topic), has ${course.lessons.length}`);
   course.lessons.forEach((lesson, index) => {
     if (syllabus.topics[index] && lesson.title !== syllabus.topics[index]) problems.push(`${lesson.id} title must be "${syllabus.topics[index]}"`);
@@ -117,6 +119,7 @@ export function standardCourseProblems(course: Course, today: Date = new Date())
         else if (!result.ok) problems.push(`${lesson.id} has a diagram that does not validate: ${result.errors.join('; ')}`);
       }
       if (block.type === 'code' && !block.language.trim()) problems.push(`${lesson.id} has a code block with no language`);
+      if (block.type === 'demo') for (const problem of demoBlockProblems(block)) problems.push(`${lesson.id} ${problem}`);
     }
   });
 
@@ -139,6 +142,25 @@ export function standardCourseProblems(course: Course, today: Date = new Date())
     for (const step of project.steps) unique(step.id);
   });
   if (!NOT_YET_ADAPTED.has(course.id)) problems.push(...levelAdaptationProblems(course));
+  return problems;
+}
+
+/** A course made of modules lists them exactly as its syllabus does, each covering consecutive lessons, together every lesson once. */
+export function moduleProblems(course: Course, syllabus: NonNullable<ReturnType<typeof getSyllabus>>): string[] {
+  const planned = syllabus.modules ?? [];
+  const modules = course.modules ?? [];
+  if (planned.length === 0) return modules.length > 0 ? [`${course.id} has modules but its syllabus has none`] : [];
+  const problems: string[] = [];
+  if (modules.length !== planned.length) return [`${course.id} needs ${planned.length} modules (as in its syllabus), has ${modules.length}`];
+  let next = 1;
+  planned.forEach((plan, index) => {
+    const module = modules[index]!;
+    if (module.id !== plan.slug) problems.push(`module ${index + 1} id should be ${plan.slug}`);
+    if (module.title !== plan.title) problems.push(`module ${plan.slug} title must be "${plan.title}"`);
+    if (module.summary.trim().length < 20) problems.push(`module ${plan.slug} needs a summary`);
+    if (module.firstDay !== next || module.lastDay !== next + plan.topics.length - 1) problems.push(`module ${plan.slug} should cover days ${next} to ${next + plan.topics.length - 1}, covers ${module.firstDay} to ${module.lastDay}`);
+    next += plan.topics.length;
+  });
   return problems;
 }
 

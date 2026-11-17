@@ -1,6 +1,13 @@
 import { findLesson, findProject } from '@/features/courses/content';
 import type { Lesson, LessonBlock } from '@/features/courses/content/types';
 
+import { CODE_TEACHING_COURSES, CODE_TEACHING_INSTRUCTIONS } from './code-course';
+import { DSA_COURSE_ID, DSA_TEACHING_INSTRUCTIONS } from './dsa-course';
+import { describeLabActivity, describeWorkflowActivity, GEN_AI_COURSE_ID, GEN_AI_TEACHING_INSTRUCTIONS, isGenAiProject } from './gen-ai';
+import { INTERNATIONAL_CLIENTS_COURSE_ID, INTERNATIONAL_CLIENTS_TEACHING_INSTRUCTIONS, isInternationalClientsProject } from './international-clients';
+import { describePlanningActivity, isProductivityProject, PRODUCTIVITY_COURSE_ID, PRODUCTIVITY_TEACHING_INSTRUCTIONS } from './productivity';
+import { describePracticeActivity, isSoftSkillsProject, SOFT_SKILLS_COURSE_ID, SOFT_SKILLS_TEACHING_INSTRUCTIONS } from './soft-skills';
+
 /**
  * What the learner is doing in Talino when they open Tali, so the answer is about THAT lesson, quiz question,
  * exercise or project and not a generic one. The app sends only ids; the server looks the content up in the
@@ -108,6 +115,10 @@ function lessonText(lesson: Lesson, max: number): string {
       case 'table':
         lines.push(`(table: ${block.headers.join(' | ')})`);
         break;
+      case 'demo':
+        // Said plainly so the coach never treats the example as something a real model produced.
+        lines.push(`(an "AI in Action" illustration written by the course, not a real model's output) The example asks: ${clip(stripInline(block.prompt).replace(/\s+/g, ' '), 200)} The example answer: ${clip(stripInline(block.output).replace(/\s+/g, ' '), 300)} What to notice: ${clip(stripInline(block.notice).replace(/\s+/g, ' '), 200)}`);
+        break;
       default:
         break;
     }
@@ -144,12 +155,17 @@ export function describeFocus(focus: CoachFocus | null | undefined): string[] {
       `Right now the learner is working on the project "${project.title}" in "${course.title}". Help them make progress on their own work: practical next steps, what to check, how to fix what is stuck. Do not write the whole project for them.`,
       steps.length > 0 ? `Project steps:\n${steps.map((step, index) => `${index + 1}. ${stripInline(step)}`).join('\n')}` : '',
       project.rubric.length > 0 ? `The project is reviewed against: ${project.rubric.map(stripInline).join('; ')}.` : '',
+      isSoftSkillsProject(project.id) ? SOFT_SKILLS_TEACHING_INSTRUCTIONS : '',
+      isInternationalClientsProject(project.id) ? INTERNATIONAL_CLIENTS_TEACHING_INSTRUCTIONS : '',
+      isProductivityProject(project.id) ? PRODUCTIVITY_TEACHING_INSTRUCTIONS : '',
+      isGenAiProject(project.id) ? GEN_AI_TEACHING_INSTRUCTIONS : '',
     ].filter(Boolean);
   }
   const found = findLesson(focus.lessonId);
   if (!found) return [];
   const { course, lesson } = found;
   const header = lessonHeader(lesson, course.title);
+  const teachCode = course.id === DSA_COURSE_ID ? [DSA_TEACHING_INSTRUCTIONS] : course.id === SOFT_SKILLS_COURSE_ID ? [SOFT_SKILLS_TEACHING_INSTRUCTIONS] : course.id === INTERNATIONAL_CLIENTS_COURSE_ID ? [INTERNATIONAL_CLIENTS_TEACHING_INSTRUCTIONS] : course.id === PRODUCTIVITY_COURSE_ID ? [PRODUCTIVITY_TEACHING_INSTRUCTIONS] : course.id === GEN_AI_COURSE_ID ? [GEN_AI_TEACHING_INSTRUCTIONS] : CODE_TEACHING_COURSES.has(course.id) ? [CODE_TEACHING_INSTRUCTIONS] : [];
 
   if (focus.kind === 'lesson') {
     const objectives = lesson.intro?.objectives ?? [];
@@ -159,28 +175,61 @@ export function describeFocus(focus: CoachFocus | null | undefined): string[] {
       objectives.length > 0 ? `By the end of the lesson they should be able to: ${objectives.map(stripInline).join('; ')}.` : '',
       `The lesson's own text (Talino's course content: the source of truth for this lesson; do not contradict it, and do not invent details it doesn't contain):\n"""\n${lessonText(lesson, 2200)}\n"""`,
       takeaways.length > 0 ? `The lesson's key takeaways: ${takeaways.join('; ')}.` : '',
+      ...teachCode,
     ].filter(Boolean);
   }
 
   if (focus.kind === 'quiz') {
     const question = focus.questionId ? lesson.quiz.find((entry) => entry.id === focus.questionId) : undefined;
-    if (!question) return [`Right now the learner is taking the quiz of ${header}. Help them understand the ideas without giving answers away.`, `The lesson's key takeaways: ${takeawaysOf(lesson).join('; ')}.`].filter(Boolean);
+    if (!question) return [`Right now the learner is taking the quiz of ${header}. Help them understand the ideas without giving answers away.`, `The lesson's key takeaways: ${takeawaysOf(lesson).join('; ')}.`, ...teachCode].filter(Boolean);
     const letters = 'ABCDEFGH';
     return [
       `Right now the learner is on a quiz question from ${header}.`,
       `The question: ${stripInline(question.prompt)}\nChoices:\n${question.choices.map((choice, index) => `${letters[index]}) ${stripInline(choice)}`).join('\n')}`,
       `For your eyes only: the correct answer is ${letters[question.answer]}) ${stripInline(question.choices[question.answer])}. Why: ${stripInline(question.explanation)} When the aim is learning, do not simply state the letter: first find out what they picked or why, explain the idea in the lesson that decides it, and lead them toward it. Only name the correct answer if they have tried and still ask for it, or after they got it right.`,
       `The lesson's key takeaways: ${takeawaysOf(lesson).join('; ')}.`,
+      ...teachCode,
     ];
   }
 
   const activity = activityOf(lesson, focus.activityId);
   if (!activity) return [];
+  // A role-play or a message task: only what the learner has read goes in (never the activity's explanation, which describes a strong answer, and never the partner's private side).
+  const practice = describePracticeActivity(activity as { kind: string; scenarioId?: string; taskId?: string });
+  if (practice) {
+    return [
+      `Right now the learner is on a practice activity after ${header}: "${activity.title}". What they were asked: ${stripInline(activity.prompt)}`,
+      practice,
+      `Hints Talino already shows them, from gentle to strong (they coach the approach; do not read them all out at once): ${activity.hints.map((hint, index) => `(${index + 1}) ${stripInline(hint)}`).join(' ')}`,
+      ...teachCode,
+    ];
+  }
+  // A prompt lab or a workflow builder (Generative AI course): only what the learner can read goes in, never the lab's framing, key, facts or tool records, and never the activity's explanation or a workflow's rules and solution.
+  const aiWork = describeLabActivity(activity as { kind: string; labId?: string }) ?? describeWorkflowActivity(activity as Parameters<typeof describeWorkflowActivity>[0]);
+  if (aiWork) {
+    return [
+      `Right now the learner is on a hands-on AI activity after ${header}: "${activity.title}". What they were asked: ${stripInline(activity.prompt)}`,
+      aiWork,
+      `Hints Talino already shows them, from gentle to strong (they coach the approach; do not read them all out at once): ${activity.hints.map((hint, index) => `(${index + 1}) ${stripInline(hint)}`).join(' ')}`,
+      ...teachCode,
+    ];
+  }
+  // A planning exercise: only the tasks and the rules on screen go in (never the expected boxes, the reasons or the reference plan, which the explanation below would otherwise carry).
+  const planning = describePlanningActivity(activity as Parameters<typeof describePlanningActivity>[0]);
+  if (planning) {
+    return [
+      `Right now the learner is on a planning exercise after ${header}: "${activity.title}". What they were asked: ${stripInline(activity.prompt)}`,
+      planning,
+      `Hints Talino already shows them, from gentle to strong (they coach the approach; do not read them all out at once): ${activity.hints.map((hint, index) => `(${index + 1}) ${stripInline(hint)}`).join(' ')}`,
+      ...teachCode,
+    ];
+  }
   const code = 'code' in activity && typeof activity.code === 'string' ?`\nThe code they see:\n\`\`\`\n${clip(activity.code, 1200)}\n\`\`\`` : '';
   return [
     `Right now the learner is on a practice exercise after ${header}: "${activity.title}" (${activity.kind}, about ${activity.conceptLabel ?? activity.concept}). What they were asked: ${stripInline(activity.prompt)}${code}`,
     `Hints Talino already has, from gentle to strong: ${activity.hints.map((hint, index) => `(${index + 1}) ${stripInline(hint)}`).join(' ')}`,
     `For your eyes only: why the answer is the answer: ${stripInline(activity.explanation)}. Help with progressive hints, one small step at a time: first ask what they tried, then nudge at the concept, then point to the exact place, and show a full solution only if they ask for it after trying. Never open with the answer.`,
+    ...teachCode,
   ];
 }
 

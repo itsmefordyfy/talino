@@ -368,6 +368,55 @@ export const WORLD_THEMES: Record<string, WorldTheme> = {
     tone: 'indigo',
     story: { premise: "Switchyard Station sends every finished project down the right track to the world.", mission: "Connect it, ship it, and know how to turn back if the signal changes." },
   },
+  // Programming Fundamentals (2026-11-16).
+  'programming-fundamentals': {
+    name: "Logic Lighthouse",
+    icon: 'lightbulb',
+    tone: 'indigo',
+    story: { premise: "The Lighthouse works because every step of its routine happens in the right order, every night.", mission: "Learn to think in clear steps, one module at a time, until you can build and explain a program of your own." },
+  },
+  // Data Structures and Algorithms (2026-11-16).
+  'data-structures-algorithms': {
+    name: "Archive Atrium",
+    icon: 'account_tree',
+    tone: 'violet',
+    story: { premise: "The Archive Atrium holds millions of records, and the librarians find any one of them in a moment because every shelf has a purpose.", mission: "Learn how data is shelved, found and ordered, one module at a time, until you can choose the right shelf for any problem." },
+  },
+  // Object-Oriented Programming (2026-11-16).
+  'object-oriented-programming': {
+    name: "The Parts Foundry",
+    icon: 'construction',
+    tone: 'violet',
+    story: { premise: "In the Foundry, every machine is assembled from parts that each know exactly one job.", mission: "Shape the parts, trust their boundaries and combine them, until you can design a system others can build on and explain why it holds together." },
+  },
+  // Soft Skills for the Modern Workplace (2026-11-17).
+  'soft-skills-workplace': {
+    name: 'The Common Room',
+    icon: 'groups',
+    tone: 'mint',
+    story: { premise: 'In the Common Room, people from every kind of job meet, and what they say and how they say it decides whether the work gets done.', mission: 'Practise real conversations, write messages that land and plan your next steps, until you can work with anyone and show it.' },
+  },
+  // Generative AI: From Fundamentals to Real-World Applications (2026-11-17).
+  'generative-ai-applications': {
+    name: 'The Spark Studio',
+    icon: 'auto_awesome',
+    tone: 'violet',
+    story: { premise: 'In the Spark Studio, words turn into pictures, voices and plans, and the people who do well are the ones who ask clearly and check what comes back.', mission: 'Learn how generative AI works, make things with it, test what it tells you, and build something small that helps a real person.' },
+  },
+  // Finding International Clients (2026-11-17).
+  'international-clients': {
+    name: 'The Open Market',
+    icon: 'public',
+    tone: 'indigo',
+    story: { premise: 'In the Open Market, stalls from every country trade in trust, and the freelancers who thrive are the ones who show up with honest proof and a clear offer.', mission: 'Find your niche, research real prospects, earn a stranger\u2019s trust and agree your first project, until a client on the other side of the world says yes.' },
+  },
+  // Time Management and Productivity (2026-11-17).
+  'time-management-productivity': {
+    name: 'The Clockwork Workshop',
+    icon: 'schedule',
+    tone: 'indigo',
+    story: { premise: 'In the Clockwork Workshop, every bench has a clock and a plan, and the makers who last are the ones who build rest into the schedule.', mission: 'Sort what matters, plan a day that can survive a surprise, protect your focus and put AI to work for you, until your week feels like yours.' },
+  },
 };
 
 const KIND_FALLBACK: Record<string, WorldTone> = { starter: 'indigo', career: 'violet', mini: 'mint', path: 'indigo', standard: 'violet' };

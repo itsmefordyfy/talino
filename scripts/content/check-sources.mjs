@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Checks that every https link written in the new course files (version-note sources and project links) still answers.
 // Usage: node scripts/content/check-sources.mjs [course-id ...]   (no ids = every course file)
-import { readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
@@ -9,12 +9,18 @@ const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const dir = join(root, 'src/features/courses/content/catalog/courses');
 const wanted = process.argv.slice(2);
 const files = readdirSync(dir).filter((file) => file.endsWith('.ts') && (wanted.length === 0 || wanted.includes(file.slice(0, -3))));
+// A course written in modules (a folder named like the course, next to its file) is read too.
+const paths = files.flatMap((file) => {
+  const folder = join(dir, file.slice(0, -3));
+  const parts = existsSync(folder) ? readdirSync(folder).filter((part) => part.endsWith('.ts')).map((part) => `${file.slice(0, -3)}/${part}`) : [];
+  return [file, ...parts];
+});
 const links = new Map();
-for (const file of files) {
+for (const file of paths) {
   for (const match of readFileSync(join(dir, file), 'utf8').matchAll(/https?:\/\/[^\s'"`)\\]+/g)) {
     const url = match[0].replace(/[.,;]+$/, '');
     if (!links.has(url)) links.set(url, new Set());
-    links.get(url).add(file.slice(0, -3));
+    links.get(url).add(file.replace(/\.ts$/, ''));
   }
 }
 const urls = [...links.keys()];

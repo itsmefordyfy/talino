@@ -3,12 +3,12 @@ import { StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { Icon } from '@/components/ui/icon';
 import { ListRow } from '@/components/ui/list-row';
 import { Screen } from '@/components/ui/screen';
-import { Spacing } from '@/constants/theme';
+import { IconSize, Spacing } from '@/constants/theme';
 import { journeyFocusChanged, journeyStartLevelChanged, selectJourneyFocus, selectJourneyStartLevel } from '@/features/settings/settings-slice';
 import { useLocalized } from '@/hooks/use-strings';
-import { useTheme } from '@/hooks/use-theme';
 import { closeScreen } from '@/lib/navigation';
 import { tapFeedback } from '@/lib/haptics';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
@@ -31,9 +31,6 @@ export function CustomizeJourneyScreen() {
   const chosenStart = useAppSelector(selectJourneyStartLevel);
   const journey = useJourney();
   const dispatch = useAppDispatch();
-  // A chosen row is tinted instead of carrying a check mark (owner, 2026-11-16: the ✓ beside the chevron looked awkward).
-  const theme = useTheme();
-  const selectedRow = { backgroundColor: theme.primarySoft };
   const levels = journey.definition.stages;
   const start = journey.state.start;
   const startTitle = levels[start.index]?.title ?? '';
@@ -65,7 +62,8 @@ export function CustomizeJourneyScreen() {
               tapFeedback();
               dispatch(journeyStartLevelChanged(null));
             }}
-            style={chosenStart === null ? selectedRow : undefined}
+            showChevron={false}
+            trailing={<PickMark on={chosenStart === null} />}
           />
           {levels.map((level, index) => (
             <ListRow
@@ -80,7 +78,8 @@ export function CustomizeJourneyScreen() {
                 tapFeedback();
                 dispatch(journeyStartLevelChanged(level.level));
               }}
-              style={chosenStart === level.level ? selectedRow : undefined}
+              showChevron={false}
+              trailing={<PickMark on={chosenStart === level.level} />}
             />
           ))}
         </Card>
@@ -100,7 +99,8 @@ export function CustomizeJourneyScreen() {
             tapFeedback();
             dispatch(journeyFocusChanged(null));
           }}
-          style={chosen === null ? selectedRow : undefined}
+          showChevron={false}
+          trailing={<ToggleMark on={chosen === null} />}
         />
         {JOURNEY_FOCUS_IDS.map((id) => {
           const on = chosen?.includes(id) ?? false;
@@ -112,7 +112,8 @@ export function CustomizeJourneyScreen() {
               tone="violet"
               checked={on}
               onPress={() => toggle(id)}
-              style={on ? selectedRow : undefined}
+              showChevron={false}
+              trailing={<ToggleMark on={on} />}
             />
           );
         })}
@@ -122,6 +123,20 @@ export function CustomizeJourneyScreen() {
   );
 }
 
+// The chosen row's mark (owner, 2026-11-17: "instead of highlight add check"). These rows choose, they open nothing, so they carry no
+// chevron: a check beside a chevron was what looked awkward on 2026-11-16, when the rows were tinted instead.
+
+/** Pick one (where to start): a check on the chosen row only, as in the system's own lists. */
+function PickMark({ on }: { on: boolean }) {
+  return on ? <Icon name="check" size={IconSize.large} color="primary" /> : <View style={styles.mark} />;
+}
+
+/** Pick several (where you are heading): an empty circle that fills with a check, so it reads as a box to tick. */
+function ToggleMark({ on }: { on: boolean }) {
+  return <Icon name={on ? 'check_circle' : 'circle'} size={IconSize.large} color={on ? 'primary' : 'textTertiary'} filled={on} />;
+}
+
 const styles = StyleSheet.create({
+  mark: { width: IconSize.large, height: IconSize.large },
   head: { gap: Spacing.two },
 });

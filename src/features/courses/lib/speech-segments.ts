@@ -137,6 +137,9 @@ export const itemUnit = (unit: string, item: number) => `${unit}-i${item}`;
 export const detailsSummaryUnit = (unit: string) => `${unit}-s`;
 export const detailsBodyUnit = (unit: string, item: number) => `${unit}-d${item}`;
 export const versionTextUnit = (unit: string) => `${unit}-t`;
+/** A demo block's parts: a label said on its own, then the text under it as sentences. `part` is `prompt`, `output` or `notice`. */
+export const demoLabelUnit = (unit: string, part: 'prompt' | 'output' | 'notice') => `${unit}-${part}-label`;
+export const demoTextUnit = (unit: string, part: 'prompt' | 'output' | 'notice') => `${unit}-${part}`;
 export const objectiveUnit = (item: number) => `obj${item}`;
 
 type SpeechLesson = Pick<Lesson, 'title' | 'summary' | 'intro' | 'body'>;
@@ -185,6 +188,16 @@ function addBlock(into: Draft[], block: LessonBlock, unit: string, say: SpeechPh
       break;
     case 'toolComparison':
       addWhole(into, unit, say.toolComparison);
+      break;
+    case 'demo':
+      // The title is not read: the card says what it is, and the voice says it is an illustration before anything else.
+      addWhole(into, unit, say.demoIntro, { pause: 'sentence' });
+      addWhole(into, demoLabelUnit(unit, 'prompt'), say.demoPrompt, { pause: 'sentence' });
+      addText(into, demoTextUnit(unit, 'prompt'), stripInline(block.prompt));
+      addWhole(into, demoLabelUnit(unit, 'output'), say.demoOutput, { pause: 'sentence' });
+      addText(into, demoTextUnit(unit, 'output'), stripInline(block.output));
+      addWhole(into, demoLabelUnit(unit, 'notice'), say.demoNotice, { pause: 'sentence' });
+      addText(into, demoTextUnit(unit, 'notice'), stripInline(block.notice));
       break;
     default:
       break;

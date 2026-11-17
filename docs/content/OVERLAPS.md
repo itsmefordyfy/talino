@@ -56,6 +56,10 @@ repeat a neighbour. Existing courses were **not extended** (see the first decisi
     *Programming Fundamentals* teaches the universal ideas in JavaScript because the in-app code runner executes JavaScript.
 12. **Problem Solving and Computational Thinking** is a six-lesson, language-free course that precedes Programming
     Fundamentals; its ideas return there as code, not as repeated lessons.
+13. **International clients (2026-11-17):** *Finding International Clients* (`international-clients`) owns **winning a first client abroad**: market, niche, where clients are, portfolio,
+    profile, research, outreach, proposals, communication, discovery and negotiation, contract and onboarding, practised with AI role-play. *Freelancer & VA with AI* (existing) keeps the broad
+    toolkit (tools, pricing models, scams in brief, BIR and taxes, getting paid, delivery); *Freelancing with AI Development* keeps software scoping, contracts and retainers; *Soft Skills for the
+    Modern Workplace* keeps general communication. The new course points to those lessons by name instead of repeating them, states no platform fee, policy or price, and gives no legal or tax advice.
 
 ## What stayed as is
 

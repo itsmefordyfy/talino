@@ -1,6 +1,7 @@
 import type { TaliMood } from '@/components/brand/tali';
 
 import type { JourneyText } from '../strings';
+import type { CoursePath } from './course-path';
 import type { JourneyState, MilestoneState } from './types';
 
 export type TaliLine = { text: string; mood: TaliMood };
@@ -19,6 +20,15 @@ export function headerLine(state: JourneyState, text: JourneyText['header']): st
   if (state.fraction < 1 / 3) return text.early;
   if (state.fraction < 2 / 3) return text.middle;
   return text.late;
+}
+
+/** Tali's pose in the header, on the same stages as `headerLine`: ready to start, a thumbs-up, determined, confident, then celebrating. */
+export function headerMood(state: JourneyState): TaliMood {
+  if (state.complete) return 'celebrating';
+  if (state.fraction <= 0) return 'excited';
+  if (state.fraction < 1 / 3) return 'encouraging';
+  if (state.fraction < 2 / 3) return 'determined';
+  return 'confident';
 }
 
 /**
@@ -45,4 +55,21 @@ export function milestoneLine(state: JourneyState, milestone: MilestoneState, te
   if (milestone.status === 'locked') return { text: text.locked(names(state, milestone.blockedBy)), mood: 'curious' };
   if (milestone.status === 'available' || milestone.status === 'skipped') return { text: text.preview(milestone.def.title), mood: 'inspired' };
   return null;
+}
+
+/**
+ * What Tali says beside the learner's current course on Home: the same honesty as `currentLine`, about the course. Nothing is said about
+ * a course they haven't reached, and "great job" only follows a course whose lessons are really done.
+ */
+export function courseLine(path: CoursePath, state: JourneyState, text: JourneyText['tali'], name: string): TaliLine {
+  if (state.complete) return { text: text.allDone, mood: 'celebrating' };
+  const current = path.current;
+  if (!current) return { text: text.closer, mood: 'encouraging' };
+  const before = path.nodes[current.index - 1];
+  const nothingYet = !path.nodes.some((node) => node.status === 'completed') && !current.started;
+  if (nothingYet) return { text: text.hello(name, current.title), mood: 'happy' };
+  if (current.started && current.lessonsTotal > 0) return { text: text.keepGoingLessons(current.lessonsDone, current.lessonsTotal, current.title), mood: 'encouraging' };
+  if (before && before.status === 'completed') return { text: text.completed(before.title, current.title), mood: 'celebrating' };
+  if (current.kind === 'action') return { text: text.challenge, mood: 'determined' };
+  return { text: current.description ? text.nextStep(current.description) : text.justStarted(current.title), mood: 'explaining' };
 }

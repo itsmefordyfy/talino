@@ -43,6 +43,11 @@ export type JourneyMilestone = {
   side?: boolean;
   /** With `audience`: also required for a learner who has not said where they are heading. */
   assumeForAll?: boolean;
+  /**
+   * Added after learners were already on the journey. It never pulls anyone back: a learner who has begun a later milestone and not this one
+   * finds it standing aside (shown as skipped, still open), so adding a course to an existing journey never changes a place already reached.
+   */
+  lateAddition?: boolean;
 };
 
 /** A level of the journey (Beginner, Intermediate, Advanced, Expert): its milestones, in the order their content builds on each other. */
@@ -92,6 +97,12 @@ export type CourseSnapshot = {
   owned: boolean;
   /** Correct answers over questions answered in its quizzes, 0 to 1; null before any quiz. */
   quizAverage: number | null;
+  /** The course's own short description, for the map and the course's timeline. */
+  description?: string;
+  /** The next lesson's number in its course ("Lesson 5"). */
+  nextLessonNumber?: number | null;
+  /** When the learner last finished a lesson of it (ISO), to tell which of several started courses was worked on most recently. */
+  lastActiveAt?: string | null;
 };
 
 export type JourneyFacts = {

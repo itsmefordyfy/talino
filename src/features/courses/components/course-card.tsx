@@ -70,7 +70,7 @@ export function CourseCard({ course: englishCourse, progress, owned, variant = '
   const isNew = !!info && isNewCourse(info);
   // One clear next step: what tapping the card will lead to.
   const action = progress?.complete ? browse.cardReview : started ? browse.cardContinue : !owned && !free ? browse.cardView : browse.cardStart;
-  const bestFor = useBestFor(info?.level ?? 'beginner').text;
+  const bestFor = useBestFor(info?.level ?? 'beginner', course.id).text;
   const label = compact
     ? [isNew ? browse.cardNew : null, course.title, course.tagline, typeLabel, levelLabel, bestFor, compactMeta, status, reason, started && progress ? strings.lessonsDone(progress.lessonsDone, progress.lessonsTotal) : null, action].filter(Boolean).join('. ')
     : [course.title, course.tagline, status, meta].filter(Boolean).join('. ');

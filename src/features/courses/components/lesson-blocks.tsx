@@ -6,6 +6,7 @@ import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
 import { noteMood } from '@/features/companion/lib/messages';
 import { Tali } from '@/components/brand/tali';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Icon } from '@/components/ui/icon';
 import { findVisual, VisualAutoplay } from '@/features/visuals';
@@ -16,10 +17,12 @@ import { useTheme } from '@/hooks/use-theme';
 
 import type { LessonBlock, SourceLink } from '../content/types';
 import { comparisonTable } from '../lib/ai-tools';
+import { copyText } from '@/lib/clipboard';
 import { formatDate } from '@/lib/dates';
+import { demoStrings } from '../demo-strings';
 import { courseStrings } from '../strings';
 import { CopyBlock } from './copy-block';
-import { detailsBodyUnit, detailsSummaryUnit, itemUnit, versionTextUnit } from '../lib/speech-segments';
+import { demoLabelUnit, demoTextUnit, detailsBodyUnit, detailsSummaryUnit, itemUnit, versionTextUnit } from '../lib/speech-segments';
 import { InlineText } from './inline-text';
 import { SpeakFrame, SpokenText, useListenFollow, useSpeakingInside, useUnitSpeaking } from './listen-follow';
 
@@ -143,6 +146,8 @@ function Block({ block, renderActivity }: { block: LessonBlock; renderActivity?:
           <ComparisonTable headers={block.headers} rows={block.rows} caption={block.caption} />
         </SpeakFrame>
       );
+    case 'demo':
+      return <Demo unit={unit} title={block.title} prompt={block.prompt} output={block.output} notice={block.notice} />;
     case 'toolComparison': {
       const table = comparisonTable(block.tools, language);
       if (table.rows.length === 0) return null;
@@ -282,6 +287,76 @@ function Takeaways({ unit, items }: { unit: string | null; items: string[] }) {
   );
 }
 
+type DemoProps = { unit: string | null; title: string; prompt: string; output: string; notice: string };
+
+/**
+ * "AI in Action": a hand-written example of a prompt and the kind of answer it gets. It always says it is an illustration (a badge and a line that
+ * stay on screen), never draws the answer as a chat reply from a product, and the answer box is labelled "An AI might answer", not "AI".
+ */
+function Demo({ unit, title, prompt, output, notice }: DemoProps) {
+  const theme = useTheme();
+  const strings = useLocalized(courseStrings);
+  const demo = useLocalized(demoStrings);
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    if (await copyText(prompt)) {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 1600);
+    }
+  };
+  const label = (part: 'prompt' | 'output' | 'notice', text: string) => (
+    <SpeakFrame unit={unit ? demoLabelUnit(unit, part) : null} marker="none">
+      <SpokenText unit={unit ? demoLabelUnit(unit, part) : null} type="caption" themeColor="textSecondary" text={text} style={styles.demoLabel} />
+    </SpeakFrame>
+  );
+  return (
+    <SpeakFrame unit={unit}>
+      <View style={[styles.demo, { backgroundColor: theme.backgroundElement, borderColor: theme.border }]} accessibilityLabel={demo.label(title)}>
+        <View style={styles.demoHeader}>
+          <Badge label={demo.badge} color="statusWarn" background="statusWarnSoft" />
+          <ThemedText type="bodySemiBold" style={styles.flex} accessibilityRole="header">
+            {title}
+          </ThemedText>
+        </View>
+        <ThemedText type="secondary" themeColor="textSecondary">
+          {demo.disclaimer}
+        </ThemedText>
+
+        <View style={[styles.demoAsk, { backgroundColor: theme.primarySoft, borderLeftColor: theme.primary }]}>
+          <View style={styles.demoBoxHeader}>
+            <Icon name="chat_bubble" size={16} color="primaryText" />
+            <View style={styles.flex}>{label('prompt', demo.youAsk)}</View>
+            <Button title={copied ? strings.copied : strings.copy} icon={copied ? 'check' : 'content_copy'} size="small" variant="ghost" onPress={copy} accessibilityLabel={demo.copyPrompt(title)} />
+          </View>
+          <SpeakFrame unit={unit ? demoTextUnit(unit, 'prompt') : null} marker="none">
+            <SpokenText unit={unit ? demoTextUnit(unit, 'prompt') : null} type="body" text={prompt} selectable />
+          </SpeakFrame>
+        </View>
+
+        <View style={[styles.demoAnswer, { backgroundColor: theme.backgroundSelected, borderColor: theme.border }]}>
+          <View style={styles.demoBoxHeader}>
+            <Icon name="auto_awesome" size={16} color="textSecondary" />
+            <View style={styles.flex}>{label('output', demo.answer)}</View>
+          </View>
+          <SpeakFrame unit={unit ? demoTextUnit(unit, 'output') : null} marker="none">
+            <SpokenText unit={unit ? demoTextUnit(unit, 'output') : null} type="body" text={output} selectable />
+          </SpeakFrame>
+        </View>
+
+        <View style={[styles.demoNotice, { backgroundColor: theme.statusOkSoft }]}>
+          <View style={styles.demoBoxHeader}>
+            <Icon name="lightbulb" size={16} color="statusOk" />
+            <View style={styles.flex}>{label('notice', demo.notice)}</View>
+          </View>
+          <SpeakFrame unit={unit ? demoTextUnit(unit, 'notice') : null} marker="none">
+            <SpokenText unit={unit ? demoTextUnit(unit, 'notice') : null} type="body" text={notice} keyTerms />
+          </SpeakFrame>
+        </View>
+      </View>
+    </SpeakFrame>
+  );
+}
+
 /** Narrowest a column may get before the table scrolls sideways instead of squeezing its words. */
 const MIN_COLUMN = 110;
 
@@ -385,6 +460,50 @@ const styles = StyleSheet.create({
     gap: Spacing.two,
     paddingHorizontal: Spacing.three,
     paddingBottom: Spacing.three,
+  },
+  demo: {
+    gap: Spacing.three,
+    padding: Spacing.three,
+    borderRadius: Radius.medium,
+    borderCurve: 'continuous',
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  demoHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flexWrap: 'wrap',
+    gap: Spacing.two,
+  },
+  demoLabel: {
+    textTransform: 'uppercase',
+    letterSpacing: 0.6,
+  },
+  demoBoxHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: Spacing.two,
+    minHeight: MinTouchSize - Spacing.two,
+  },
+  // The learner's side of the exchange: a quote bar down the left edge.
+  demoAsk: {
+    gap: Spacing.one,
+    padding: Spacing.three,
+    borderRadius: Radius.medium,
+    borderCurve: 'continuous',
+    borderLeftWidth: 4,
+  },
+  demoAnswer: {
+    gap: Spacing.one,
+    padding: Spacing.three,
+    borderRadius: Radius.medium,
+    borderCurve: 'continuous',
+    borderWidth: StyleSheet.hairlineWidth,
+  },
+  demoNotice: {
+    gap: Spacing.one,
+    padding: Spacing.three,
+    borderRadius: Radius.medium,
+    borderCurve: 'continuous',
   },
   takeaways: {
     gap: Spacing.two,

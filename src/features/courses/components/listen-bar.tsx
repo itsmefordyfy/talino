@@ -6,11 +6,13 @@ import { SafeAreaInsetsContext, useSafeAreaInsets } from 'react-native-safe-area
 import { Tali } from '@/components/brand/tali';
 import { ThemedText } from '@/components/themed-text';
 import { Icon } from '@/components/ui/icon';
+import { VoiceWave } from '@/components/ui/voice-wave';
 import { MinTouchSize, Spacing } from '@/constants/theme';
 import { selectSpeechRate } from '@/features/settings/settings-slice';
 import { useLocalized } from '@/hooks/use-strings';
 import { useTheme } from '@/hooks/use-theme';
 import { tapFeedback } from '@/lib/haptics';
+import { setTopCovered } from '@/lib/top-cover';
 import { useAppSelector } from '@/store/hooks';
 
 import { formatClock } from '../audio/lesson-audio';
@@ -34,6 +36,11 @@ export function ListenBarFrame({ children }: { children: ReactNode }) {
 
   const { session, state } = snapshot;
   const visible = !!session && state !== 'idle' && pathname !== `/lesson/${session.lessonId}`;
+  // The tabs measure their own safe area and don't know the bar covers the status bar: tab screens subtract this from their top padding.
+  useEffect(() => {
+    setTopCovered(visible ? insets.top : 0);
+    return () => setTopCovered(0);
+  }, [visible, insets.top]);
   return (
     <View style={styles.root}>
       {visible && <ListenBar snapshot={snapshot} topInset={insets.top} />}
@@ -91,6 +98,7 @@ function ListenBar({ snapshot, topInset }: { snapshot: ReturnType<typeof getList
             </ThemedText>
           </View>
         </Pressable>
+        <VoiceWave active={playing || speaking} />
         {(!speaking || phone) && (
           <Pressable
             accessibilityRole="button"

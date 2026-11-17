@@ -1,5 +1,13 @@
 import type { VisualDefinition } from '../types';
+import { agentLoopStrings } from './agent-loop-strings';
+import { AgentLoopVisual } from './components/agent-loop';
 import { AiAppVisual } from './components/ai-app';
+import { ContextWindowVisual } from './components/context-window';
+import { contextWindowStrings } from './context-window-strings';
+import { ImagePromptBuilderVisual } from './components/image-prompt-builder';
+import { imagePromptStrings } from './image-prompt-strings';
+import { PromptAnatomyVisual } from './components/prompt-anatomy';
+import { promptAnatomyStrings } from './prompt-anatomy-strings';
 import { EmbeddingsVisual } from './components/embeddings';
 import { LlmWorkflowVisual } from './components/llm-workflow';
 import { ModelIoVisual } from './components/model-io';
@@ -76,6 +84,20 @@ const build = (s: typeof aiStrings.en): VisualDefinition[] => [
   },
 ];
 
-export const aiVisuals = build(aiStrings.en);
+/** The Generative AI course's four visuals: context window, prompt anatomy, image prompt builder and the agent loop; each keeps its strings in its own file (English only for now). */
+const buildCourse = (language: 'en' | 'fil'): VisualDefinition[] => {
+  const context = contextWindowStrings[language];
+  const anatomy = promptAnatomyStrings[language];
+  const image = imagePromptStrings[language];
+  const agent = agentLoopStrings[language];
+  return [
+    { id: 'ai-context-window', title: context.title, category: 'ai', summary: context.summary, description: context.description, topics: context.topics, Component: ContextWindowVisual },
+    { id: 'ai-prompt-anatomy', title: anatomy.title, category: 'ai', summary: anatomy.summary, description: anatomy.description, topics: anatomy.topics, Component: PromptAnatomyVisual },
+    { id: 'ai-image-prompt-builder', title: image.title, category: 'ai', summary: image.summary, description: image.description, topics: image.topics, Component: ImagePromptBuilderVisual },
+    { id: 'ai-agent-loop', title: agent.title, category: 'ai', summary: agent.summary, description: agent.description, topics: agent.topics, Component: AgentLoopVisual },
+  ];
+};
+
+export const aiVisuals = [...build(aiStrings.en), ...buildCourse('en')];
 /** The same visuals with their titles, summaries and descriptions in Tagalog (the components read their own language). */
-export const aiVisualsFil = build(aiStrings.fil);
+export const aiVisualsFil = [...build(aiStrings.fil), ...buildCourse('fil')];

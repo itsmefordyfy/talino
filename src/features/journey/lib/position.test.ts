@@ -1,11 +1,12 @@
 import { describe, expect, test } from '@jest/globals';
 
 import { AI_BUILDER_JOURNEY } from '../data/journey';
+import { buildCoursePath } from './course-path';
 import { computeJourney } from './engine';
 import { parsePosition, placeToOpen, signatureOf } from './position';
 import { emptyFacts, finishLessons, newLearner } from './test-helpers';
 
-const run = (facts = emptyFacts()) => computeJourney(AI_BUILDER_JOURNEY, facts, newLearner);
+const run = (facts = emptyFacts()) => buildCoursePath(computeJourney(AI_BUILDER_JOURNEY, facts, newLearner), facts);
 
 describe('restoring the place on the map', () => {
   test('the same progress returns to the exact spot', () => {
@@ -26,12 +27,15 @@ describe('restoring the place on the map', () => {
     expect(placeToOpen(null, 'x', null)).toBeNull();
   });
 
-  test('the signature changes with each step finished', () => {
-    const a = signatureOf(run());
+  test('lessons inside the current course do not move the map; finishing the course does', () => {
+    const before = signatureOf(run());
     const facts = emptyFacts();
     const courses = new Map(facts.courses);
+    courses.set('starter', { ...courses.get('starter')!, lessonsDone: 4, lessonsTotal: 10, started: true });
+    const midway = signatureOf(run({ ...facts, courses }));
+    expect(midway).toBe(before);
     courses.set('starter', { ...courses.get('starter')!, lessonsDone: 10, lessonsTotal: 10, started: true });
-    expect(signatureOf(run({ ...facts, courses }))).not.toBe(a);
+    expect(signatureOf(run({ ...facts, courses }))).not.toBe(midway);
   });
 
   test('a saved value is read back only if it is whole', () => {

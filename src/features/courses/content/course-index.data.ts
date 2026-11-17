@@ -819,5 +819,250 @@ export const COURSE_INDEX_DATA: readonly CourseIndexEntry[] = [
         "title": "Go live: domain, rollback rehearsal and a one-page handover"
       }
     ]
+  },
+  {
+    "id": "programming-fundamentals",
+    "kind": "standard",
+    "title": "Programming Fundamentals: Think Like a Programmer",
+    "projects": [
+      {
+        "id": "programming-fundamentals-p1",
+        "title": "Order food as instructions"
+      },
+      {
+        "id": "programming-fundamentals-p2",
+        "title": "Design an expense calculator"
+      },
+      {
+        "id": "programming-fundamentals-p3",
+        "title": "Model a user profile"
+      },
+      {
+        "id": "programming-fundamentals-p4",
+        "title": "Shopping cart total and discount"
+      },
+      {
+        "id": "programming-fundamentals-p5",
+        "title": "Login validation and eligibility checker"
+      },
+      {
+        "id": "programming-fundamentals-p6",
+        "title": "A number guessing game"
+      },
+      {
+        "id": "programming-fundamentals-p7",
+        "title": "A Reusable Calculator"
+      },
+      {
+        "id": "programming-fundamentals-p8",
+        "title": "Inventory management logic"
+      },
+      {
+        "id": "programming-fundamentals-p9",
+        "title": "Fix the broken program"
+      },
+      {
+        "id": "programming-fundamentals-p10",
+        "title": "Work with an AI partner: total per category"
+      },
+      {
+        "id": "programming-fundamentals-p11",
+        "title": "Your personal expense tracker"
+      }
+    ]
+  },
+  {
+    "id": "data-structures-algorithms",
+    "kind": "standard",
+    "title": "Data Structures and Algorithms: From Fundamentals to Practical Problem Solving",
+    "projects": [
+      {
+        "id": "data-structures-algorithms-p1",
+        "title": "Product inventory manager with arrays"
+      },
+      {
+        "id": "data-structures-algorithms-p2",
+        "title": "Text analyzer: words, characters and repeated words"
+      },
+      {
+        "id": "data-structures-algorithms-p3",
+        "title": "Playlist manager with a linked list"
+      },
+      {
+        "id": "data-structures-algorithms-p4",
+        "title": "Undo and redo for a simple text editor"
+      },
+      {
+        "id": "data-structures-algorithms-p5",
+        "title": "Customer service ticket queue"
+      },
+      {
+        "id": "data-structures-algorithms-p6",
+        "title": "Fast customer lookup with a hash map"
+      },
+      {
+        "id": "data-structures-algorithms-p7",
+        "title": "A file and folder explorer"
+      },
+      {
+        "id": "data-structures-algorithms-p8",
+        "title": "A task scheduler that always does the urgent thing first"
+      },
+      {
+        "id": "data-structures-algorithms-p9",
+        "title": "Autocomplete search for products or contacts"
+      },
+      {
+        "id": "data-structures-algorithms-p10",
+        "title": "A navigation system for a neighbourhood"
+      },
+      {
+        "id": "data-structures-algorithms-p11",
+        "title": "Data sorting visualizer: record every step"
+      },
+      {
+        "id": "data-structures-algorithms-p12",
+        "title": "Slow-Application Optimization with AI"
+      },
+      {
+        "id": "data-structures-algorithms-p13",
+        "title": "The Smart Task Management System"
+      }
+    ]
+  },
+  {
+    "id": "object-oriented-programming",
+    "kind": "standard",
+    "title": "Object-Oriented Programming: From Fundamentals to Practical Software Design",
+    "projects": [
+      {
+        "id": "object-oriented-programming-p1",
+        "title": "Bank account, two ways"
+      },
+      {
+        "id": "object-oriented-programming-p2",
+        "title": "Student Management System"
+      },
+      {
+        "id": "object-oriented-programming-p3",
+        "title": "Product class"
+      },
+      {
+        "id": "object-oriented-programming-p4",
+        "title": "Bank Account that protects its balance"
+      },
+      {
+        "id": "object-oriented-programming-p5",
+        "title": "Payment processing abstraction"
+      },
+      {
+        "id": "object-oriented-programming-p6",
+        "title": "Employee Management System"
+      },
+      {
+        "id": "object-oriented-programming-p7",
+        "title": "Notification system"
+      },
+      {
+        "id": "object-oriented-programming-p8",
+        "title": "Order Management System"
+      },
+      {
+        "id": "object-oriented-programming-p9",
+        "title": "Reusable storage service"
+      },
+      {
+        "id": "object-oriented-programming-p10",
+        "title": "Refactor a poorly structured application"
+      },
+      {
+        "id": "object-oriented-programming-p11",
+        "title": "Refactor a Poorly Structured App with AI"
+      },
+      {
+        "id": "object-oriented-programming-p12",
+        "title": "Final Project: A Library Management System"
+      }
+    ]
+  },
+  {
+    "id": "soft-skills-workplace",
+    "kind": "standard",
+    "title": "Soft Skills for the Modern Workplace",
+    "projects": [
+      {
+        "id": "soft-skills-workplace-p1",
+        "title": "Professional Communication Challenge"
+      },
+      {
+        "id": "soft-skills-workplace-p2",
+        "title": "Workplace Simulation"
+      },
+      {
+        "id": "soft-skills-workplace-p3",
+        "title": "Career Readiness Portfolio"
+      }
+    ]
+  },
+  {
+    "id": "international-clients",
+    "kind": "standard",
+    "title": "Finding International Clients: From Zero to Your First Global Client",
+    "projects": [
+      {
+        "id": "international-clients-p1",
+        "title": "Your International Freelancer Profile"
+      },
+      {
+        "id": "international-clients-p2",
+        "title": "International Client Acquisition Campaign"
+      },
+      {
+        "id": "international-clients-p3",
+        "title": "Win Your First Freelance Contract"
+      }
+    ]
+  },
+  {
+    "id": "generative-ai-applications",
+    "kind": "standard",
+    "title": "Generative AI: From Fundamentals to Real-World Applications",
+    "projects": [
+      {
+        "id": "generative-ai-applications-p1",
+        "title": "AI Content Creation Studio"
+      },
+      {
+        "id": "generative-ai-applications-p2",
+        "title": "AI Knowledge Assistant"
+      },
+      {
+        "id": "generative-ai-applications-p3",
+        "title": "AI Business Automation"
+      },
+      {
+        "id": "generative-ai-applications-p4",
+        "title": "AI-Powered Application"
+      }
+    ]
+  },
+  {
+    "id": "time-management-productivity",
+    "kind": "standard",
+    "title": "Time Management and Productivity",
+    "projects": [
+      {
+        "id": "time-management-productivity-p1",
+        "title": "My Personal Productivity System"
+      },
+      {
+        "id": "time-management-productivity-p2",
+        "title": "AI-Powered Productivity Assistant"
+      },
+      {
+        "id": "time-management-productivity-p3",
+        "title": "The Productive Professional Challenge"
+      }
+    ]
   }
 ];

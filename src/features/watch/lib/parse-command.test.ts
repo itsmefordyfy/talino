@@ -26,4 +26,13 @@ describe('parseWatchCommand', () => {
   it('drops extra fields', () => {
     expect(parse({ id: '1', type: 'listen.play', volume: 11 })).toEqual({ id: '1', type: 'listen.play' });
   });
+
+  it('reads the handover commands and checks the resume place', () => {
+    expect(parse({ id: '1', type: 'listen.start' })).toEqual({ id: '1', type: 'listen.start' });
+    expect(parse({ id: '1', type: 'listen.toWatch' })).toEqual({ id: '1', type: 'listen.toWatch' });
+    expect(parse({ id: '1', type: 'listen.resume', lessonId: 'starter-02', segment: 7 })).toEqual({ id: '1', type: 'listen.resume', lessonId: 'starter-02', segment: 7 });
+    expect(parse({ id: '1', type: 'listen.resume', lessonId: 'starter-02', segment: -1 })).toBeNull();
+    expect(parse({ id: '1', type: 'listen.resume', lessonId: 'starter-02', segment: 1.5 })).toBeNull();
+    expect(parse({ id: '1', type: 'listen.resume', segment: 3 })).toBeNull();
+  });
 });

@@ -52,6 +52,20 @@ export const AI_BUILDER_JOURNEY: JourneyDefinition = {
           requires: [],
         },
         {
+          id: 'think-like-a-programmer',
+          kind: 'learn',
+          title: 'Think like a programmer',
+          summary: 'The ideas under all code, in 12 modules',
+          why: 'Every AI coding tool is easier to direct once you can think in steps and read what it wrote. This is the foundation the rest of the journey stands on.',
+          objectives: ['Break a problem into steps and plan it as pseudocode and a flowchart', 'Read and explain variables, conditions, loops, functions and lists', 'Debug, test and check code, including code an AI wrote'],
+          icon: 'psychology',
+          steps: [
+            { kind: 'learn', courseId: 'programming-fundamentals' },
+            { kind: 'build', courseId: 'programming-fundamentals', projectId: 'programming-fundamentals-p11' },
+          ],
+          lateAddition: true,
+        },
+        {
           id: 'how-ai-tools-work',
           kind: 'learn',
           title: 'How AI coding tools work',
@@ -167,6 +181,23 @@ export const AI_BUILDER_JOURNEY: JourneyDefinition = {
           audience: ['freelance'],
         },
         {
+          // Winning a first client abroad, practised with AI role-play and a message coach (owner's brief, 2026-11-17). Added late so no existing learner's place moves.
+          id: 'international-clients',
+          kind: 'learn',
+          title: 'Find international clients',
+          summary: 'From profile to your first global client',
+          why: 'For freelancers and VAs: build an honest profile and portfolio, research real prospects, write outreach and proposals, and practise discovery calls and negotiation before they count.',
+          objectives: ['Choose a niche and describe your ideal client', 'Research prospects and write outreach and proposals that fit one client', 'Run a discovery call, agree scope and onboard a first client'],
+          icon: 'public',
+          steps: [
+            { kind: 'learn', courseId: 'international-clients' },
+            { kind: 'build', courseId: 'international-clients', projectId: 'international-clients-p3' },
+          ],
+          side: true,
+          audience: ['freelance'],
+          lateAddition: true,
+        },
+        {
           id: 'teach-with-ai',
           kind: 'learn',
           title: 'Teach tech with AI',
@@ -180,6 +211,56 @@ export const AI_BUILDER_JOURNEY: JourneyDefinition = {
           ],
           side: true,
           audience: ['teach'],
+        },
+        {
+          // The human skills that every job needs, practised with AI role-play (owner's brief, 2026-11-17). An optional side step for everyone, added late
+          // so no existing learner's place moves; the road to the AI Expert certificate is unchanged.
+          id: 'soft-skills-at-work',
+          kind: 'learn',
+          title: 'Soft skills at work',
+          summary: 'Communication, teamwork and career readiness',
+          why: 'Teams and clients keep people who communicate clearly, own their work and judge AI advice for themselves. You practise it with AI role-play and a message coach.',
+          objectives: ['Write and speak clearly with coworkers and clients', 'Handle disagreement, deadlines and delays professionally', 'Prepare your introduction, interviews and career plan'],
+          icon: 'groups',
+          steps: [
+            { kind: 'learn', courseId: 'soft-skills-workplace' },
+            { kind: 'build', courseId: 'soft-skills-workplace', projectId: 'soft-skills-workplace-p3' },
+          ],
+          side: true,
+          lateAddition: true,
+        },
+        {
+          // Generative AI for people who use it, with live prompt labs and four projects (owner's brief, 2026-11-17). An optional side step added late so no existing learner's place moves.
+          id: 'generative-ai-foundations',
+          kind: 'learn',
+          title: 'Generative AI, in practice',
+          summary: 'How it works, prompting and building responsibly',
+          why: 'Know what generative AI can and cannot do, prompt it well, ground it in your own documents, keep a person in charge and build a small AI feature, before the code courses ask you to.',
+          objectives: ['Explain how models, tokens and context windows work', 'Write, test and improve prompts and check what comes back', 'Design an AI workflow with human review and build a small AI feature'],
+          icon: 'auto_awesome',
+          steps: [
+            { kind: 'learn', courseId: 'generative-ai-applications' },
+            { kind: 'build', courseId: 'generative-ai-applications', projectId: 'generative-ai-applications-p4' },
+          ],
+          side: true,
+          lateAddition: true,
+        },
+        {
+          // Planning, priorities, focus and working with AI without burning out, practised with a matrix, a day planner, a timer and graded planning exercises (owner's brief,
+          // 2026-11-17). An optional side step for everyone, added late so no existing learner's place moves; the road to the AI Expert certificate is unchanged.
+          id: 'time-and-productivity',
+          kind: 'learn',
+          title: 'Time and productivity',
+          summary: 'Plan your day, protect your focus and use AI well',
+          why: 'Work arrives on time and people stay well when they choose what matters, plan with room to spare and check what AI suggests. You practise with real planning tools.',
+          objectives: ['Prioritize, plan a day and handle interruptions', 'Start hard tasks and protect your focus', 'Use AI to plan and summarize, and keep rest in the plan'],
+          icon: 'schedule',
+          steps: [
+            { kind: 'learn', courseId: 'time-management-productivity' },
+            { kind: 'build', courseId: 'time-management-productivity', projectId: 'time-management-productivity-p3' },
+          ],
+          side: true,
+          lateAddition: true,
         },
       ],
     },
@@ -233,6 +314,37 @@ export const AI_BUILDER_JOURNEY: JourneyDefinition = {
             { kind: 'build', courseId: 'experienced', projectId: 'experienced-p1' },
           ],
           side: true,
+        },
+        {
+          // Computer-science foundations: not needed to build with AI, but how an engineer chooses a structure and judges an algorithm (AI-written or not). Programming Fundamentals is advised first (catalog metadata, never a lock); object-oriented programming is a companion, not a requirement.
+          id: 'data-structures-algorithms',
+          kind: 'learn',
+          title: 'Data structures and algorithms',
+          summary: 'How software organizes and searches data',
+          why: 'Choosing the right structure and spotting a slow algorithm is how you judge code, including code an AI wrote. It is also what technical interviews ask about.',
+          objectives: ['Compare two solutions by counting their work', 'Pick an array, hash map, tree, heap or graph for a problem', 'Review an AI-written algorithm for speed and correctness'],
+          icon: 'account_tree',
+          steps: [
+            { kind: 'learn', courseId: 'data-structures-algorithms' },
+            { kind: 'build', courseId: 'data-structures-algorithms', projectId: 'data-structures-algorithms-p13' },
+          ],
+          side: true,
+        },
+        {
+          // How code is organized into objects: the design vocabulary behind most of the architecture an AI tool generates. Programming Fundamentals is the advised start (catalog metadata, never a lock); a side branch, so the road to the AI Expert certificate does not change.
+          id: 'object-oriented-design',
+          kind: 'learn',
+          title: 'Object-oriented design',
+          summary: 'Classes, objects and design principles',
+          why: 'Most software an AI tool writes is organized as classes, layers and interfaces. Knowing how these fit together lets you judge a design, ask for a better one and keep a codebase easy to change.',
+          objectives: ['Model a problem as classes and objects with clear responsibilities', 'Apply encapsulation, polymorphism, composition and the SOLID principles', 'Review an AI-generated design for unnecessary abstraction and wrong relationships'],
+          icon: 'construction',
+          steps: [
+            { kind: 'learn', courseId: 'object-oriented-programming' },
+            { kind: 'build', courseId: 'object-oriented-programming', projectId: 'object-oriented-programming-p12' },
+          ],
+          side: true,
+          lateAddition: true,
         },
         {
           id: 'spec-first',

@@ -17,6 +17,18 @@ const input = (overrides: Partial<AttemptInput> = {}): AttemptInput => ({ activi
 let tick = 0;
 const stamp = () => new Date(Date.UTC(2026, 10, 13, 10, 0, tick++)).toISOString();
 
+describe('the practice activities (role-play, message coach)', () => {
+  test('they are known kinds: their completion is recorded and pays XP once, whatever the score', async () => {
+    const roleplay = await recordAttempt(db, input({ activityId: 'soft-04-roleplay-1', kind: 'roleplay' }), stamp());
+    expect(roleplay).toMatchObject({ xpEarned: 15, solvedNow: true });
+    const message = await recordAttempt(db, input({ activityId: 'soft-11-message-review-1', kind: 'message-review', hintsUsed: 1 }), stamp());
+    // One hint costs 15% of the base.
+    expect(message).toMatchObject({ xpEarned: 10, solvedNow: true });
+    // Doing it again (a retry for a better score) is a replay: no second payout.
+    expect(await recordAttempt(db, input({ activityId: 'soft-04-roleplay-1', kind: 'roleplay' }), stamp())).toMatchObject({ xpEarned: 0, alreadySolved: true });
+  });
+});
+
 describe('recordAttempt', () => {
   test('a first correct try solves the activity and pays its base XP', async () => {
     const result = await recordAttempt(db, input(), stamp());

@@ -2,9 +2,10 @@
  * Talino has two coaches and the learner picks one in the welcome (owner's request, 2026-11-14): Tali, the young man from
  * the first character sheet, and Tala, the young woman from the second. They are one character in two versions: the same
  * poses, the same words, the same job. What changes is the picture, the name and the voice, because "changing the gender
- * changes the voice": Tali speaks in Kokoro v1's `am_puck` (US English, male), Tala in `af_heart` (US English, female). The lessons' recordings
- * and the Hear samples use them; chat answers and lessons with no recording are read by the phone's own voice (owner, 2026-11-15: Gemini text to
- * speech was dropped for Kokoro, `am_puck` for Tali; before that Tali was Gemini's `Achird` and, in the first Kokoro run, `am_michael`).
+ * changes the voice": each coach has a voice per recording engine (`LESSON_VOICES`): Gemini's `achird` (Tali, male) and `sulafat` (Tala, female), or
+ * Kokoro v1's `am_puck` and `af_heart` (US English). `LESSON_VOICE_ENGINE` says which set the lessons' recordings use; chat answers and lessons
+ * with no recording are read by the phone's own voice. History: Kokoro replaced Gemini on 2026-11-15; on 2026-11-17 the owner
+ * tried Gemini again for one lesson, then chose Kokoro. The Gemini voices stay listed so switching engines is this one constant.
  *
  * Pure: no React, no native modules, so tests and the server can import it.
  */
@@ -13,17 +14,27 @@ export type CompanionId = (typeof COMPANION_IDS)[number];
 
 export const DEFAULT_COMPANION: CompanionId = 'tali';
 
+/** Which engine's recordings the lessons play. Flip to 'kokoro' to go back to the Kokoro set: nothing else changes (both sets are hosted by folder name). */
+export type LessonVoiceEngine = 'gemini' | 'kokoro';
+export const LESSON_VOICE_ENGINE: LessonVoiceEngine = 'kokoro';
+
+/** The folder each coach's recordings live under, per engine (`<origin>/<folder>/<lesson>.m4a`, saved on the phone as `<folder>-<lesson>.m4a`). */
+export const LESSON_VOICES: Readonly<Record<CompanionId, Record<LessonVoiceEngine, string>>> = {
+  tali: { gemini: 'achird', kokoro: 'am_puck' },
+  tala: { gemini: 'sulafat', kokoro: 'af_heart' },
+};
+
 export type Companion = {
   id: CompanionId;
   /** What the coach is called wherever the app says her or his name. */
   name: string;
-  /** The Kokoro voice id (`am_puck`): the folder this coach's lesson recordings are hosted under and saved on the phone as (`<voice>-<lesson>.m4a`). */
+  /** The voice id of the selected engine (`achird` for Gemini, `am_puck` for Kokoro): the folder this coach's lesson recordings are hosted under and saved on the phone as (`<voice>-<lesson>.m4a`). */
   voice: string;
 };
 
 export const COMPANIONS: Readonly<Record<CompanionId, Companion>> = {
-  tali: { id: 'tali', name: 'Tali', voice: 'am_puck' },
-  tala: { id: 'tala', name: 'Tala', voice: 'af_heart' },
+  tali: { id: 'tali', name: 'Tali', voice: LESSON_VOICES.tali[LESSON_VOICE_ENGINE] },
+  tala: { id: 'tala', name: 'Tala', voice: LESSON_VOICES.tala[LESSON_VOICE_ENGINE] },
 };
 
 export function isCompanionId(value: unknown): value is CompanionId {

@@ -103,6 +103,20 @@ export const COURSE_COVERS: Record<string, CourseCoverArt> = {
   // Added 2026-11-15: tool and store walkthroughs.
   'build-with-lovable': { scene: 'phone', palette: 'violet', pose: 'inspired' },
   'publish-to-app-stores': { scene: 'launch', palette: 'mint', pose: 'proud' },
+  // Programming Fundamentals (2026-11-16): the steps of a program as a flow.
+  'programming-fundamentals': { scene: 'flow', palette: 'ocean', pose: 'thinking' },
+  // Data Structures and Algorithms (2026-11-16): structures and the connections between them.
+  'data-structures-algorithms': { scene: 'architecture', palette: 'violet', pose: 'confident' },
+  // Object-Oriented Programming (2026-11-16): a blueprint of classes.
+  'object-oriented-programming': { scene: 'blueprint', palette: 'indigo', pose: 'teaching' },
+  // Soft Skills for the Modern Workplace (2026-11-17): a conversation between people.
+  'soft-skills-workplace': { scene: 'path', palette: 'mint', pose: 'encouraging' },
+  // Generative AI: From Fundamentals to Real-World Applications (2026-11-17): a network of connected nodes.
+  'generative-ai-applications': { scene: 'neural', palette: 'violet', pose: 'inspired' },
+  // Finding International Clients (2026-11-17): the road from a profile to a first client abroad.
+  'international-clients': { scene: 'path', palette: 'ocean', pose: 'proud' },
+  // Time Management and Productivity (2026-11-17): a checklist being worked through.
+  'time-management-productivity': { scene: 'checklist', palette: 'ocean', pose: 'proud' },
   'deploy-with-vercel': { scene: 'cloud', palette: 'violet', pose: 'confident' },
 };
 

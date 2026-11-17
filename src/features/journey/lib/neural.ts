@@ -88,6 +88,20 @@ export function nearestPoints(mesh: Mesh, at: { x: number; y: number }, count: n
 }
 
 /**
+ * How strongly a field neuron or synapse shows: 1 within `near` of the road (the nearest of `anchors`, the milestones' centres), easing
+ * down to `floor` at `far` and beyond, so the network is brightest around the road and calm toward the edges. No anchors: no fade.
+ */
+export function fieldStrength(at: { x: number; y: number }, anchors: readonly { x: number; y: number }[], options: { near: number; far: number; floor: number }): number {
+  if (anchors.length === 0) return 1;
+  let distance = Infinity;
+  for (const anchor of anchors) distance = Math.min(distance, Math.hypot(anchor.x - at.x, anchor.y - at.y));
+  const t = Math.min(1, Math.max(0, (distance - options.near) / Math.max(1, options.far - options.near)));
+  // Eased (smoothstep) so there is no visible ring where the fade begins.
+  const eased = t * t * (3 - 2 * t);
+  return 1 - eased * (1 - options.floor);
+}
+
+/**
  * Extra synapses: a milestone that depends on one further back than the milestone just before it is wired to that one too, so the
  * map shows the real structure of the journey (a challenge beside the road, two courses feeding a capstone). Pairs of journey indexes.
  */
@@ -110,19 +124,6 @@ export function arcBetween(from: { x: number; y: number }, to: { x: number; y: n
   const outwards = middle >= width / 2 ? 1 : -1;
   const cx = Math.min(width - 12, Math.max(12, middle + outwards * bow));
   return `M ${round(from.x)} ${round(from.y)} Q ${round(cx)} ${round(midY)}, ${round(to.x)} ${round(to.y)}`;
-}
-
-/** Points along the S-curve `curveBetween` draws (its two ends included), for something that travels along it. */
-export function curvePoints(from: { x: number; y: number }, to: { x: number; y: number }, count: number): { x: number; y: number }[] {
-  const mid = (from.y + to.y) / 2;
-  return Array.from({ length: Math.max(2, count) }, (_, i) => {
-    const t = i / (Math.max(2, count) - 1);
-    const u = 1 - t;
-    return {
-      x: u * u * u * from.x + 3 * u * u * t * from.x + 3 * u * t * t * to.x + t * t * t * to.x,
-      y: u * u * u * from.y + 3 * u * u * t * mid + 3 * u * t * t * mid + t * t * t * to.y,
-    };
-  });
 }
 
 /** The length of the S-curve `curveBetween` draws between two points, by sampling (good to about a percent). */

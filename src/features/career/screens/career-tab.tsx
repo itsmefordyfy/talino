@@ -20,6 +20,7 @@ import { ErrorState } from '@/components/ui/state-view';
 import { Spacing } from '@/constants/theme';
 import { interviewStrings } from '@/features/interview';
 import { useLocalized } from '@/hooks/use-strings';
+import { useTabWarmup } from '@/hooks/use-tab-warmup';
 import { useViewportSettling } from '@/hooks/use-viewport-settling';
 import { todayISO } from '@/lib/dates';
 import { tapFeedback } from '@/lib/haptics';
@@ -43,6 +44,7 @@ export function CareerTab() {
   const strings = useLocalized(careerStrings);
   const career = useCareer();
   const settling = useViewportSettling();
+  const warming = useTabWarmup();
   const [showAllGoals, setShowAllGoals] = useState(false);
   const header = <TabHeader title={strings.tabTitle} subtitle={strings.tabSubtitle} accessory={<SettingsButton />} />;
 
@@ -55,7 +57,7 @@ export function CareerTab() {
     );
   }
 
-  if (!career.data || settling) return <TabSkeleton variant="career" />;
+  if (!career.data || settling || warming) return <TabSkeleton variant="career" />;
 
   const { applications, income, goals } = career.data;
   const today = todayISO();

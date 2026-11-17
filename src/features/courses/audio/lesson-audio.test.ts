@@ -94,7 +94,7 @@ describe('waveform helpers', () => {
 describe('the coach’s voice', () => {
   test('Tala’s recordings are looked up under her voice, Tali’s stay where they were', () => {
     expect(lessonAudioUrl('https://audio.example.com', 'starter-01', { voice: 'af_heart' })).toBe('https://audio.example.com/af_heart/starter-01.m4a');
-    expect(lessonAudioUrl('https://audio.example.com', 'starter-01')).toBe('https://audio.example.com/am_puck/starter-01.m4a');
+    expect(lessonAudioUrl('https://audio.example.com', 'starter-01')).toBe(`https://audio.example.com/${AUDIO_VOICE}/starter-01.m4a`);
     expect(lessonPeaksUrl('https://audio.example.com', 'starter-01', { voice: 'af_heart' })).toBe('https://audio.example.com/af_heart/starter-01.peaks.json');
   });
 

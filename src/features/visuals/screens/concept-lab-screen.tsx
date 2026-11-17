@@ -16,9 +16,9 @@ import { visualsFor } from '../registry';
 import { visualsStrings } from '../strings';
 import type { VisualCategory } from '../types';
 
-const CATEGORY_ORDER: VisualCategory[] = ['fundamentals', 'oop', 'dsa', 'web', 'software-engineering', 'ai'];
-const CATEGORY_ICON: Record<VisualCategory, IconName> = { fundamentals: 'data_object', oop: 'category', dsa: 'account_tree', web: 'public', 'software-engineering': 'merge_type', ai: 'smart_toy' };
-const CATEGORY_TONE: Record<VisualCategory, Tone> = { fundamentals: 'indigo', oop: 'violet', dsa: 'indigo', web: 'mint', 'software-engineering': 'violet', ai: 'mint' };
+const CATEGORY_ORDER: VisualCategory[] = ['fundamentals', 'oop', 'dsa', 'web', 'software-engineering', 'ai', 'productivity'];
+const CATEGORY_ICON: Record<VisualCategory, IconName> = { fundamentals: 'data_object', oop: 'category', dsa: 'account_tree', web: 'public', 'software-engineering': 'merge_type', ai: 'smart_toy', productivity: 'schedule' };
+const CATEGORY_TONE: Record<VisualCategory, Tone> = { fundamentals: 'indigo', oop: 'violet', dsa: 'indigo', web: 'mint', 'software-engineering': 'violet', ai: 'mint', productivity: 'indigo' };
 
 type Filter = 'all' | VisualCategory;
 

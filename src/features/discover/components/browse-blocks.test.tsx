@@ -12,7 +12,7 @@ import { store } from '@/store';
 
 import { initialDiscoverState } from '../discover-slice';
 import { pathSummaries } from '../lib/browse';
-import { CategoryGrid, LevelTiles, ToolChips } from './browse-blocks';
+import { LevelTiles, ToolChips } from './browse-blocks';
 import { PathList } from './path-list';
 import { SearchSuggestions } from './search-suggestions';
 
@@ -66,16 +66,6 @@ describe('Discover browse blocks render the real catalog and lead somewhere', ()
     const expertCount = facts.filter((fact) => fact.learningLevel === 'expert').length;
     await act(async () => pressable(renderer.container, `Expert, ${expertCount} courses`).props.onPress());
     expect(store.getState().discover).toMatchObject({ tab: 'all', query: '', filters: { ...initialDiscoverState.filters, levels: ['expert'] } });
-    await act(async () => renderer.unmount());
-  });
-
-  test('Browse by category: every category with courses; a tile opens its tab', async () => {
-    resetDiscover();
-    const renderer = await mount(<CategoryGrid facts={facts} />);
-    expect(textOf(renderer.container)).toContain('Vibe Coding and App Building');
-    const count = facts.filter((fact) => fact.category === 'ai-coding-tools').length;
-    await act(async () => pressable(renderer.container, `AI Coding Tools, ${count} courses`).props.onPress());
-    expect(store.getState().discover.tab).toBe('ai-coding-tools');
     await act(async () => renderer.unmount());
   });
 

@@ -1,10 +1,7 @@
-import { router } from 'expo-router';
 import { FlatList, StyleSheet, View } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
-import { Icon } from '@/components/ui/icon';
 import { SkeletonBlock } from '@/components/ui/skeleton';
 import { Spacing } from '@/constants/theme';
 import { catalogFacts, categoryText, CourseCard, hasActiveFilters, learningLevelLabel, searchSuggestions, starterSuggestions } from '@/features/courses';
@@ -14,7 +11,6 @@ import { useAppDispatch, useAppSelector } from '@/store/hooks';
 import { exploreAllChanged, filtersReset, queryChanged, selectDiscoverFilters } from '../discover-slice';
 import { useCatalogDiscovery } from '../hooks/use-catalog-discovery';
 import { useCourseOffers } from '../hooks/use-course-offers';
-import { useDiscoverTab } from '../hooks/use-discover-tab';
 import { buildRows, type ListItem } from '../lib/tabs';
 import { discoverStrings } from '../strings';
 import { tabStrings } from '../tab-strings';
@@ -37,8 +33,8 @@ export type ResultsViewProps = {
 
 /**
  * What the tabs, the search and the filters give: the whole catalog on All (and for any search, whichever tab), or one
- * category's courses grouped by difficulty, beginner first. Shows how many matched, the chosen filters as removable chips and
- * a helpful empty state.
+ * category's courses grouped by difficulty, beginner first. Shows how many matched (only when a search or filter narrows the
+ * list), the chosen filters as removable chips and a helpful empty state.
  */
 export function ResultsView({ columns, paddingLeft, paddingRight, paddingBottom }: ResultsViewProps) {
   const strings = useLocalized(discoverStrings);
@@ -48,7 +44,6 @@ export function ResultsView({ columns, paddingLeft, paddingRight, paddingBottom 
   const dispatch = useAppDispatch();
   const filters = useAppSelector(selectDiscoverFilters);
   const discovery = useCatalogDiscovery();
-  const { personalized } = useDiscoverTab();
   const { offerFor } = useCourseOffers();
   const searching = discovery.text.trim() !== '';
   const category = discovery.inCategory && discovery.tab && discovery.tab !== 'all' && discovery.tab !== 'for-you' ? discovery.tab : null;
@@ -56,44 +51,38 @@ export function ResultsView({ columns, paddingLeft, paddingRight, paddingBottom 
   // Courses of every category are mixed here (All, or a search), so each card names its own.
   const mixed = category === null;
 
-  const heading = category ? categoryText(category, language) : searching ? { label: tabText.searchingAll, description: '' } : { label: tabText.allTitle, description: tabText.allNote };
+  // All needs no heading (its tab says it); a category keeps its name and what it covers, a search says it spans every category.
+  const heading = category ? categoryText(category, language) : searching ? { label: tabText.searchingAll, description: '' } : null;
   const filtered = hasActiveFilters(filters);
+  // "N of M courses" only when a search or a filter narrows the list: otherwise the tab's own count already says it.
+  const narrowed = filtered || searching;
   // Suggestions come from the whole published catalog, whatever the tab and filters, so they can lead somewhere new.
   const suggestions = searching ? searchSuggestions(catalogFacts(), discovery.text) : [];
 
   const header = (
     <View style={styles.header}>
       <DiscoverToolbar />
-      {!personalized && !searching && !filtered && category === null && discovery.tab === 'all' && (
-        <Card onPress={() => router.push('/learning-profile')} accessibilityLabel={`${strings.personalizeTitle}. ${strings.personalizeBody}`}>
-          <View style={styles.personalize}>
-            <View style={styles.flex}>
-              <ThemedText type="cardTitle">{strings.personalizeTitle}</ThemedText>
-              <ThemedText type="secondary" themeColor="textSecondary">
-                {strings.personalizeBody}
-              </ThemedText>
-            </View>
-            <Icon name="chevron_right" size={20} color="textTertiary" />
-          </View>
-        </Card>
-      )}
       {suggestions.length > 0 && discovery.total > 0 && <SearchSuggestions suggestions={suggestions} />}
-      <View style={styles.heading}>
-        <ThemedText type="section" accessibilityRole="header">
-          {heading.label}
-        </ThemedText>
-        {heading.description !== '' && (
-          <ThemedText type="secondary" themeColor="textSecondary">
-            {heading.description}
+      {heading && (
+        <View style={styles.heading}>
+          <ThemedText type="section" accessibilityRole="header">
+            {heading.label}
           </ThemedText>
-        )}
-      </View>
-      <View style={styles.countRow}>
-        <ThemedText type="bodySemiBold" accessibilityLiveRegion="polite" accessibilityLabel={strings.resultCountA11y(discovery.total, discovery.catalogSize)} tabular style={styles.count}>
-          {strings.resultCount(discovery.total, discovery.catalogSize)}
-        </ThemedText>
-        {filtered && <Button title={strings.resetFilters} variant="ghost" size="small" onPress={() => dispatch(filtersReset())} />}
-      </View>
+          {heading.description !== '' && (
+            <ThemedText type="secondary" themeColor="textSecondary">
+              {heading.description}
+            </ThemedText>
+          )}
+        </View>
+      )}
+      {narrowed && (
+        <View style={styles.countRow}>
+          <ThemedText type="bodySemiBold" accessibilityLiveRegion="polite" accessibilityLabel={strings.resultCountA11y(discovery.total, discovery.catalogSize)} tabular style={styles.count}>
+            {strings.resultCount(discovery.total, discovery.catalogSize)}
+          </ThemedText>
+          {filtered && <Button title={strings.resetFilters} variant="ghost" size="small" onPress={() => dispatch(filtersReset())} />}
+        </View>
+      )}
       <ActiveFilters filters={filters} />
     </View>
   );
@@ -109,7 +98,7 @@ export function ResultsView({ columns, paddingLeft, paddingRight, paddingBottom 
   ) : categoryEmpty ? (
     <View style={styles.empty}>
       <ThemedText type="cardTitle" style={styles.emptyText}>
-        {tabText.emptyCategoryTitle(heading.label)}
+        {tabText.emptyCategoryTitle(heading?.label ?? '')}
       </ThemedText>
       <ThemedText type="secondary" themeColor="textSecondary" style={styles.emptyText}>
         {tabText.emptyCategoryBody}
@@ -181,14 +170,6 @@ const styles = StyleSheet.create({
   header: {
     gap: Spacing.three,
     paddingBottom: Spacing.one,
-  },
-  flex: {
-    flex: 1,
-  },
-  personalize: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.three,
   },
   heading: {
     gap: Spacing.one,

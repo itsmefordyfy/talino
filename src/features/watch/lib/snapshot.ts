@@ -8,6 +8,10 @@ export type ListenInput = {
   title: string | null;
   course: string | null;
   canSkip: boolean;
+  /** The sentence being said and its place, from the lesson's spoken sentences; null / 0 when the voice can't say which. */
+  sentence: string | null;
+  index: number;
+  count: number;
 };
 
 export type SnapshotInput = {
@@ -42,7 +46,7 @@ export function toWatchSnapshot(input: SnapshotInput): WatchSnapshot {
     streak: { current: input.streak.current, best: input.streak.best, doneToday: input.streak.doneToday },
     week: { dots: weekDots(input.days, input.today), done: input.lessonsThisWeek, target: Math.max(1, input.target) },
     next: input.next,
-    listen: listen.state === 'idle' ? null : { state: LISTEN_STATE[listen.state], lesson: listen.title ?? '', course: listen.course ?? '', canSkip: listen.canSkip },
+    listen: listen.state === 'idle' ? null : { state: LISTEN_STATE[listen.state], lesson: listen.title ?? '', course: listen.course ?? '', canSkip: listen.canSkip, sentence: listen.sentence, index: listen.index, count: listen.count },
     handled: input.handled,
   };
 }

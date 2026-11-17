@@ -45,6 +45,10 @@ const TEXT_KEYS = new Set([
   'meanings',
   'plans',
   'outcome',
+  // The `demo` block ("AI in Action") and a workflow's simulation: the illustration's own words.
+  'output',
+  'notice',
+  'input',
 ]);
 
 /** Fields a translation may add that the English original doesn't have. */

@@ -19,6 +19,8 @@ export function coreScreens(presets: ScreenPresets): ScreenEntry[] {
     { name: 'subscription', options: presets.push(titles.subscription) },
     { name: 'journey/[id]', options: presets.pageSheet('') },
     { name: 'journey/customize', options: presets.pageSheet('') },
+    // My Learning: the courses Home can show, picked without leaving Home.
+    { name: 'journey/courses', options: presets.pageSheet('') },
     { name: 'tali', options: presets.pageSheet(titles.tali) },
     { name: 'coach-history', options: presets.pageSheet(titles.coachHistory) },
     { name: 'recommend', options: presets.pageSheet(titles.recommend) },

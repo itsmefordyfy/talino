@@ -1,16 +1,16 @@
-import type { JourneyState } from './types';
+import type { CoursePath } from './course-path';
 
 /** Where the learner was on the map when they left, and the progress it was taken at. */
 export type SavedPosition = { y: number; signature: string };
 
 /**
- * A short fingerprint of the learner's place in the journey: the milestone they are on and how much of the journey is done. If it is the
- * same when they come back, they return to the exact spot they left; if they finished something meanwhile, the map takes them to
- * their new current step instead of a place that is no longer where the action is.
+ * A short fingerprint of the learner's place in the journey: the course they are on and how many courses are finished. If it is the
+ * same when they come back, they return to the exact spot they left; if they finished a course meanwhile, the map takes them to
+ * their new current course instead of a place that is no longer where the action is. (Lessons inside a course don't change it: the
+ * resume card on Home shows those.)
  */
-export function signatureOf(state: JourneyState): string {
-  const current = state.current;
-  return `${current?.id ?? 'end'}:${state.done}:${current?.stepsDone ?? 0}`;
+export function signatureOf(path: CoursePath): string {
+  return `${path.current?.key ?? 'end'}:${path.nodes.filter((node) => node.status === 'completed').length}`;
 }
 
 export function parsePosition(raw: string | null): SavedPosition | null {

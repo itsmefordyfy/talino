@@ -13,6 +13,11 @@ export const ACTIVITY_KINDS = [
   'scenario',
   'code-challenge',
   'sql-challenge',
+  'roleplay',
+  'message-review',
+  'prompt-lab',
+  'workflow-builder',
+  'planning',
 ] as const;
 
 export type ActivityKind = (typeof ACTIVITY_KINDS)[number];

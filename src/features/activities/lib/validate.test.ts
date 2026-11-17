@@ -13,8 +13,9 @@ function sample<T extends Activity>(id: string): T {
 const text = (problems: string[]) => problems.join(' | ');
 
 describe('the sample activities', () => {
-  test('there are two of every kind', () => {
-    for (const kind of ACTIVITY_KINDS) expect(SAMPLE_ACTIVITIES.filter((a) => a.kind === kind)).toHaveLength(2);
+  test('there are two of every kind that is answered like a quiz', () => {
+    // Role-plays, message reviews and prompt labs are completed by the practice session and name an item in the practice catalog, so they have no standalone sample.
+    for (const kind of ACTIVITY_KINDS.filter((kind) => kind !== 'roleplay' && kind !== 'message-review' && kind !== 'prompt-lab')) expect(SAMPLE_ACTIVITIES.filter((a) => a.kind === kind)).toHaveLength(2);
   });
   test('ids are unique', () => {
     expect(validateActivitySet(SAMPLE_ACTIVITIES)).toEqual([]);

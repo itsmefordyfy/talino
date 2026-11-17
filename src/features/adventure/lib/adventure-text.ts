@@ -326,6 +326,48 @@ export const WORLD_TEXT_FIL: Record<string, WorldTextFil> = {
     premise: 'Pinapadala ng Switchyard Station ang bawat natapos na proyekto sa tamang riles patungo sa mundo.',
     mission: 'Ikonekta ito, i-ship, at alamin kung paano bumalik kapag nagbago ang signal.',
   },
+  // Programming Fundamentals (2026-11-16). English placeholder: the owner's standing rule is that no Filipino text is written for now.
+  'programming-fundamentals': {
+    name: 'Logic Lighthouse',
+    premise: 'The Lighthouse works because every step of its routine happens in the right order, every night.',
+    mission: 'Learn to think in clear steps, one module at a time, until you can build and explain a program of your own.',
+  },
+  // Data Structures and Algorithms (2026-11-16). English placeholder: the owner's standing rule is that no Filipino text is written for now.
+  'data-structures-algorithms': {
+    name: 'Archive Atrium',
+    premise: 'The Archive Atrium holds millions of records, and the librarians find any one of them in a moment because every shelf has a purpose.',
+    mission: 'Learn how data is shelved, found and ordered, one module at a time, until you can choose the right shelf for any problem.',
+  },
+  // Object-Oriented Programming (2026-11-16). English placeholder: the owner's standing rule is that no Filipino text is written for now.
+  'object-oriented-programming': {
+    name: 'The Parts Foundry',
+    premise: 'In the Foundry, every machine is assembled from parts that each know exactly one job.',
+    mission: 'Shape the parts, trust their boundaries and combine them, until you can design a system others can build on and explain why it holds together.',
+  },
+  // Soft Skills for the Modern Workplace (2026-11-17). English placeholder: the owner's standing rule is that no Filipino text is written for now.
+  'soft-skills-workplace': {
+    name: 'The Common Room',
+    premise: 'In the Common Room, people from every kind of job meet, and what they say and how they say it decides whether the work gets done.',
+    mission: 'Practise real conversations, write messages that land and plan your next steps, until you can work with anyone and show it.',
+  },
+  // Generative AI: From Fundamentals to Real-World Applications (2026-11-17). English placeholder: the owner's standing rule is that no Filipino text is written for now.
+  'generative-ai-applications': {
+    name: 'The Spark Studio',
+    premise: 'In the Spark Studio, words turn into pictures, voices and plans, and the people who do well are the ones who ask clearly and check what comes back.',
+    mission: 'Learn how generative AI works, make things with it, test what it tells you, and build something small that helps a real person.',
+  },
+  // Finding International Clients (2026-11-17). English placeholder: the owner's standing rule is that no Filipino text is written for now.
+  'international-clients': {
+    name: 'The Open Market',
+    premise: 'In the Open Market, stalls from every country trade in trust, and the freelancers who thrive are the ones who show up with honest proof and a clear offer.',
+    mission: 'Find your niche, research real prospects, earn a stranger\u2019s trust and agree your first project, until a client on the other side of the world says yes.',
+  },
+  // Time Management and Productivity (2026-11-17). English placeholder: the owner's standing rule is that no Filipino text is written for now.
+  'time-management-productivity': {
+    name: 'The Clockwork Workshop',
+    premise: 'In the Clockwork Workshop, every bench has a clock and a plan, and the makers who last are the ones who build rest into the schedule.',
+    mission: 'Sort what matters, plan a day that can survive a surprise, protect your focus and put AI to work for you, until your week feels like yours.',
+  },
 };
 
 /** The world of a course that has no hand-written story: its own title in a plain sentence. */

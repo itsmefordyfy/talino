@@ -17,6 +17,9 @@ export type CatalogIndex = {
   dependentsOf: (courseId: string) => readonly string[];
 };
 
+/** A technology listed by more than this share of the catalog is a tool courses use everywhere, not a topic (see `match.ts`). */
+const COMMON_TOOL_SHARE = 0.25;
+
 const cache = new WeakMap<readonly CourseFacts[], CatalogIndex>();
 
 export function catalogIndex(facts: readonly CourseFacts[]): CatalogIndex {
@@ -35,6 +38,7 @@ export function catalogIndex(facts: readonly CourseFacts[]): CatalogIndex {
   const rarity: Rarity = {
     goal: (goal) => 1 - (goalCount.get(goal) ?? 0) / total,
     technology: (technology) => 1 - (technologyCount.get(technology) ?? 0) / total,
+    commonTool: (technology) => (technologyCount.get(technology) ?? 0) / total > COMMON_TOOL_SHARE,
   };
 
   const chains = new Map<string, string[]>();

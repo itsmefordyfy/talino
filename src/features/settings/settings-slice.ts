@@ -2,6 +2,7 @@ import { createSlice, type PayloadAction } from '@reduxjs/toolkit';
 
 import { companionOf, DEFAULT_COMPANION, type CompanionId } from '@/features/companion/lib/companions';
 import { cleanJourneyFocus, cleanJourneyLevel, type JourneyFocusId, type JourneyLevelId } from '@/features/journey/lib/focus-ids';
+import { cleanHomeCourse, type HomeCourseChoice } from '@/features/journey/lib/home-course';
 import type { AudienceId } from '@/features/courses/content/types';
 import type { AppearancePreference } from '@/lib/appearance';
 import { detectLanguage, LANGUAGES, type Language } from '@/lib/i18n';
@@ -36,6 +37,8 @@ export type SettingsState = {
   journeyFocus: JourneyFocusId[] | null;
   /** The journey level the learner chose to start at; null works it out from their experience and progress. Never touches progress. */
   journeyStartLevel: JourneyLevelId | null;
+  /** The course the learner picked for Home's lesson timeline, and when; null follows their progress. Phone-only (a backup never carries it), and never touches progress. */
+  homeCourse: HomeCourseChoice | null;
   /** Career tracker follow-up and interview reminders. */
   careerReminders: boolean;
   /** Lesson audio speed for the read-aloud (0.8–1.2). */
@@ -67,6 +70,7 @@ export const initialSettingsState: SettingsState = {
   dailyMinutes: null,
   journeyFocus: null,
   journeyStartLevel: null,
+  homeCourse: null,
   careerReminders: true,
   speechRate: 1,
   devUnlockAll: false,
@@ -116,6 +120,7 @@ export function hydrateSettingsState(saved: Partial<SettingsState>): SettingsSta
     dailyMinutes: Number.isFinite(Number(merged.dailyMinutes)) && Number(merged.dailyMinutes) > 0 ? Math.min(120, Math.round(Number(merged.dailyMinutes))) : null,
     journeyFocus: cleanJourneyFocus(merged.journeyFocus),
     journeyStartLevel: cleanJourneyLevel(merged.journeyStartLevel),
+    homeCourse: cleanHomeCourse(merged.homeCourse),
     careerReminders: merged.careerReminders !== false,
     speechRate: Number.isFinite(rate) ? Math.min(1.2, Math.max(0.8, rate)) : 1,
     devUnlockAll: __DEV__ && merged.devUnlockAll === true,
@@ -167,6 +172,10 @@ export const settingsSlice = createSlice({
     journeyStartLevelChanged(state, action: PayloadAction<JourneyLevelId | null>) {
       state.journeyStartLevel = cleanJourneyLevel(action.payload);
     },
+    /** The learner picked a course for Home (the switcher, a course on the map, the suggested next course). The time is the pick's own, so later work can outrank it. */
+    homeCourseChosen(state, action: PayloadAction<string>) {
+      state.homeCourse = cleanHomeCourse({ id: action.payload, at: new Date().toISOString() });
+    },
     careerRemindersToggled(state, action: PayloadAction<boolean>) {
       state.careerReminders = action.payload;
     },
@@ -207,6 +216,7 @@ export const {
   dailyMinutesChanged,
   journeyFocusChanged,
   journeyStartLevelChanged,
+  homeCourseChosen,
   careerRemindersToggled,
   speechRateChanged,
   devUnlockAllToggled,
@@ -232,6 +242,7 @@ export const selectReminderDays = (state: WithSettings) => state.settings.remind
 export const selectDailyMinutes = (state: WithSettings) => state.settings.dailyMinutes;
 export const selectJourneyFocus = (state: WithSettings) => state.settings.journeyFocus;
 export const selectJourneyStartLevel = (state: WithSettings) => state.settings.journeyStartLevel;
+export const selectHomeCourse = (state: WithSettings) => state.settings.homeCourse;
 export const selectCareerReminders = (state: WithSettings) => state.settings.careerReminders;
 export const selectSpeechRate = (state: WithSettings) => state.settings.speechRate;
 /** True only in a development build with the Developer switch on. */

@@ -10,8 +10,11 @@ struct GlanceView: View {
 
   @Environment(\.isLuminanceReduced) private var dimmed
   @ScaledMetric(relativeTo: .largeTitle) private var streakSize: CGFloat = 44
+  @ObservedObject private var speaker = WatchSpeaker.shared
   @State private var busy = false
   @State private var notice: String?
+  /// "Play on": the iPhone or this Apple Watch, asked when a lesson is about to play.
+  @State private var choosingOutput = false
 
   var body: some View {
     // Once a minute, so the streak and the week turn over at midnight even if the app stays open.
@@ -22,7 +25,11 @@ struct GlanceView: View {
       ScrollViewReader { proxy in
         ScrollView {
           VStack(alignment: .leading, spacing: 8) {
-            if let listen = snapshot.listen { listenPanel(listen) }
+            if speaker.isActive {
+              watchListenPanel
+            } else if let listen = snapshot.listen {
+              listenPanel(listen)
+            }
             streakHeader(current: streak.current, doneToday: streak.doneToday)
             weekPanel(dots: dots, today: context.date)
             goalPanel.id("goal")
@@ -33,6 +40,16 @@ struct GlanceView: View {
         }
         .onAppear { debugScroll(proxy) }
       }
+    }
+    // One voice at a time: if the phone starts reading after the lesson was handed to the Watch, the Watch goes quiet. A snapshot built before
+    // the handover (the phone was still reading then) is older than the hand-over, so it is not mistaken for that.
+    .onChange(of: snapshot.sentAt) { _, sentAt in
+      if speaker.isActive, snapshot.listen != nil, sentAt > speaker.startedAt + 500 { speaker.stop() }
+    }
+    .confirmationDialog("Play lesson on", isPresented: $choosingOutput, titleVisibility: .visible) {
+      Button("iPhone") { startOnPhone() }
+      Button("Apple Watch") { startOnWatch() }
+      Button("Cancel", role: .cancel) {}
     }
   }
 
@@ -131,9 +148,16 @@ struct GlanceView: View {
         Text(next.started ? "Up next" : "Start here").font(.footnote).foregroundStyle(.secondary)
         Text(next.lesson).font(.headline).lineLimit(3)
         Text("\(next.course) · Day \(next.day)").font(.caption2).foregroundStyle(.secondary).lineLimit(2)
+        // Not while a lesson is already being read (on either device): its own panel has the controls.
+        if snapshot.listen == nil && !speaker.isActive {
+          Button { choosingOutput = true } label: { Label("Listen", systemImage: "headphones") }
+            .buttonStyle(PrimaryButtonStyle())
+            .disabled(busy)
+            .padding(.top, 4)
+            .accessibilityHint("Choose to play the lesson on your iPhone or on this watch")
+        }
       }
     }
-    .accessibilityElement(children: .combine)
   }
 
   // MARK: Listen
@@ -144,6 +168,8 @@ struct GlanceView: View {
         Label("Listening", systemImage: "headphones").font(.footnote).foregroundStyle(dimmed ? Color.secondary : talinoVioletText)
         Text(listen.lesson.isEmpty ? "Your lesson" : listen.lesson).font(.headline).lineLimit(2)
         if !listen.course.isEmpty { Text(listen.course).font(.caption2).foregroundStyle(.secondary).lineLimit(1) }
+        // What is being said, so the lesson can be followed on the wrist.
+        if let sentence = listen.sentence, !sentence.isEmpty { sentenceText(sentence, index: listen.index ?? 0, count: listen.count ?? 0) }
         HStack(spacing: 6) {
           Button { send("listen.skip", by: -1) } label: { Image(systemName: "backward.fill") }
             .buttonStyle(RoundControlStyle())
@@ -160,22 +186,105 @@ struct GlanceView: View {
             .disabled(!listen.canSkip || busy)
             .accessibilityLabel("Forward a sentence")
         }
+        Button { moveToWatch() } label: { Label("Play on Apple Watch", systemImage: "applewatch") }
+          .buttonStyle(RoundTextStyle())
+          .disabled(busy)
+          .accessibilityHint("The iPhone goes quiet and this watch reads the lesson")
       }
     }
+  }
+
+  /// The lesson being read by this Apple Watch: the sentence now being said, big enough to read, with the same controls and a way back to the iPhone.
+  private var watchListenPanel: some View {
+    Panel {
+      VStack(alignment: .leading, spacing: 6) {
+        Label("On Apple Watch", systemImage: "applewatch").font(.footnote).foregroundStyle(dimmed ? Color.secondary : talinoVioletText)
+        if let lesson = speaker.lesson {
+          Text(lesson.title.isEmpty ? "Your lesson" : lesson.title).font(.headline).lineLimit(2)
+          if !lesson.course.isEmpty { Text(lesson.course).font(.caption2).foregroundStyle(.secondary).lineLimit(1) }
+        }
+        if let sentence = speaker.sentence { sentenceText(sentence, index: speaker.index + 1, count: speaker.count) }
+        HStack(spacing: 6) {
+          Button { speaker.skip(-1) } label: { Image(systemName: "backward.fill") }
+            .buttonStyle(RoundControlStyle())
+            .accessibilityLabel("Back a sentence")
+          Button { speaker.isSpeaking ? speaker.pause() : speaker.resume() } label: { Image(systemName: speaker.isSpeaking ? "pause.fill" : "play.fill") }
+            .buttonStyle(PrimaryButtonStyle())
+            .accessibilityLabel(speaker.isSpeaking ? "Pause" : "Play")
+          Button { speaker.skip(1) } label: { Image(systemName: "forward.fill") }
+            .buttonStyle(RoundControlStyle())
+            .accessibilityLabel("Forward a sentence")
+        }
+        Button { moveToPhone() } label: { Label("Play on iPhone", systemImage: "iphone") }
+          .buttonStyle(RoundTextStyle())
+          .disabled(busy)
+          .accessibilityHint("This watch goes quiet and the iPhone carries on from here")
+        Button(role: .destructive) { speaker.stop() } label: { Label("Stop", systemImage: "stop.fill") }
+          .buttonStyle(RoundTextStyle())
+      }
+    }
+  }
+
+  /// The sentence being said, in the body size, with its place in the lesson.
+  private func sentenceText(_ sentence: String, index: Int, count: Int) -> some View {
+    VStack(alignment: .leading, spacing: 2) {
+      Text(sentence).font(.body).fixedSize(horizontal: false, vertical: true)
+      if index > 0 && count > 0 { Text("\(index) of \(count)").font(.caption2).foregroundStyle(.secondary).monospacedDigit() }
+    }
+    .accessibilityElement(children: .combine)
+  }
+
+  // MARK: Where the voice plays
+
+  /// Starts the lesson Home leads with on the iPhone.
+  private func startOnPhone() {
+    run("listen.start") { _ in }
+  }
+
+  /// Starts the lesson Home leads with on this watch: the phone sends the lesson (and is not reading anything).
+  private func startOnWatch() {
+    run("listen.toWatch") { result in
+      if let lesson = result.lesson { speaker.start(lesson) } else { notice = Self.message(for: "no_lesson") }
+    }
+  }
+
+  /// The lesson the iPhone is reading goes to this watch, from the sentence it was at: the phone is silenced before the watch speaks.
+  private func moveToWatch() {
+    run("listen.toWatch") { result in
+      if let lesson = result.lesson { speaker.start(lesson) } else { notice = Self.message(for: "no_lesson") }
+    }
+  }
+
+  /// This watch goes quiet first, then the iPhone is asked to carry on from the same sentence. If the phone can't be reached, the watch keeps reading.
+  private func moveToPhone() {
+    guard let lesson = speaker.lesson else { return }
+    let segment = speaker.phoneSegment
+    guard PhoneLink.shared.reachable else {
+      notice = Self.message(for: "unreachable")
+      return
+    }
+    speaker.stop()
+    run("listen.resume", fields: ["lessonId": lesson.lessonId, "segment": segment]) { _ in }
   }
 
   /// Sends one Listen command. The phone's answer comes back as a haptic (a click when it worked, a failure buzz when it did not) and,
   /// when it did not, a line of words under the controls. The new state itself arrives in the phone's next snapshot.
   private func send(_ type: String, by: Int? = nil) {
+    run(type, fields: by.map { ["by": $0] } ?? [:]) { _ in }
+  }
+
+  /// Sends a command; `done` runs on success with the phone's answer (a handover carries a lesson in it).
+  private func run(_ type: String, fields: [String: Any] = [:], done: @escaping (CommandResult) -> Void) {
     guard !busy else { return }
     busy = true
     notice = nil
     Task {
-      let result = await PhoneLink.shared.send(type, fields: by.map { ["by": $0] } ?? [:])
+      let result = await PhoneLink.shared.send(type, fields: fields)
       await MainActor.run {
         busy = false
         if result.ok {
           WKInterfaceDevice.current().play(.click)
+          done(result)
         } else {
           WKInterfaceDevice.current().play(.failure)
           notice = Self.message(for: result.reason)
@@ -189,6 +298,7 @@ struct GlanceView: View {
     case "unreachable": return "Open Talino on your iPhone."
     case "nothing_playing": return "Nothing is playing now."
     case "cannot_skip": return "This voice can't skip yet."
+    case "no_lesson": return "No lesson to play yet."
     default: return "Couldn't reach Talino."
     }
   }

@@ -63,6 +63,9 @@ function speechParts(title: string, blocks: readonly LessonBlock[], language: La
       case 'toolComparison':
         add(say.toolComparison);
         break;
+      case 'demo':
+        add(say.demoIntro, `${say.demoPrompt} ${stripInline(block.prompt)}`, `${say.demoOutput} ${stripInline(block.output)}`, `${say.demoNotice} ${stripInline(block.notice)}`);
+        break;
     }
   }
   return parts;

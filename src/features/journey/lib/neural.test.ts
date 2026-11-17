@@ -1,7 +1,7 @@
 import { describe, expect, test } from '@jest/globals';
 
 import { AI_BUILDER_JOURNEY } from '../data/journey';
-import { arcBetween, crossLinks, curveLength, curvePoints, nearestPoints, neuralMesh, seeded } from './neural';
+import { arcBetween, crossLinks, curveLength, nearestPoints, neuralMesh, seeded } from './neural';
 
 describe('neuralMesh', () => {
   test('is the same picture every time for the same size', () => {
@@ -77,12 +77,3 @@ describe('arcBetween', () => {
   });
 });
 
-describe('curvePoints', () => {
-  test('runs from one end to the other, downwards', () => {
-    const points = curvePoints({ x: 10, y: 0 }, { x: 200, y: 300 }, 20);
-    expect(points).toHaveLength(20);
-    expect(points[0]).toEqual({ x: 10, y: 0 });
-    expect(points[19]).toEqual({ x: 200, y: 300 });
-    for (let i = 1; i < points.length; i += 1) expect(points[i]!.y).toBeGreaterThanOrEqual(points[i - 1]!.y);
-  });
-});

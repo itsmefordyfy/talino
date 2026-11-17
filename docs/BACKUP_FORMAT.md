@@ -61,6 +61,9 @@ badges and learning days, so they come back with those rows.
 
 - **Tali's chats** (`coach_chats`, `coach_messages`): private conversations stay on the phone that had them. The list is
   `EXCLUDED_TABLES` in `lib/schema.ts`; the owner can move a table into `BACKUP_TABLES` to include it.
+- **Mock interviews and practice sessions** (`interviews`, `interview_messages`, `interview_reports`, `practice_sessions`, `practice_messages`): the
+  learner's own words in private practice conversations, with an honest debrief, stay on the phone that had them.
+- **Focus rounds** (`focus_sessions`, the Pomodoro timer of the Time Management and Productivity course): the learner's own working pattern stays on the phone that had it.
 - **`app_state`**: it holds the portfolio edit key, the class code and referral data, which are credential-like.
 - **`project_progress.review_token`**: a signed assertion tied to the install's store id. Never written, never restored.
 - Purchases, RevenueCat ids, the device id, the Keychain id, any address that carries a key, and the phone-only

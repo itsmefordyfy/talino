@@ -2,7 +2,7 @@ import { describe, expect, test } from '@jest/globals';
 
 import { CATEGORY_IDS, LEARNING_GOAL_IDS } from '../types';
 import { COURSES } from '../index';
-import { CATALOG_SYLLABUS, STANDARD_MAX_LESSONS, STANDARD_MIN_LESSONS } from './syllabus';
+import { CATALOG_SYLLABUS, lessonLimitOf, STANDARD_MIN_LESSONS } from './syllabus';
 import { COURSE_META } from './meta';
 import { LEARNING_PATHS } from './paths';
 import { getTechnology, TECHNOLOGIES } from './technologies';
@@ -10,16 +10,18 @@ import { getTechnology, TECHNOLOGIES } from './technologies';
 const knownIds = new Set([...COURSES.map((course) => course.id), ...CATALOG_SYLLABUS.map((entry) => entry.id)]);
 
 describe('the catalog syllabus', () => {
-  test('has the 39 planned AI-first courses with unique ids and titles', () => {
-    expect(CATALOG_SYLLABUS).toHaveLength(39);
-    expect(new Set(CATALOG_SYLLABUS.map((entry) => entry.id)).size).toBe(39);
-    expect(new Set(CATALOG_SYLLABUS.map((entry) => entry.title)).size).toBe(39);
+  test('has the 39 AI-first courses and the programming foundations courses, with unique ids and titles', () => {
+    expect(CATALOG_SYLLABUS.length).toBeGreaterThanOrEqual(40);
+    expect(CATALOG_SYLLABUS.map((entry) => entry.id)).toContain('programming-fundamentals');
+    expect(new Set(CATALOG_SYLLABUS.map((entry) => entry.id)).size).toBe(CATALOG_SYLLABUS.length);
+    expect(new Set(CATALOG_SYLLABUS.map((entry) => entry.title)).size).toBe(CATALOG_SYLLABUS.length);
   });
 
   test.each(CATALOG_SYLLABUS.map((entry) => [entry.id, entry] as const))('%s is well formed', (_id, entry) => {
     expect(entry.id).toMatch(/^[a-z0-9]+(-[a-z0-9]+)*$/);
     expect(entry.topics.length).toBeGreaterThanOrEqual(STANDARD_MIN_LESSONS);
-    expect(entry.topics.length).toBeLessThanOrEqual(STANDARD_MAX_LESSONS);
+    expect(entry.topics.length).toBeLessThanOrEqual(lessonLimitOf(entry));
+    if (entry.modules) expect(entry.modules.flatMap((module) => module.topics)).toEqual(entry.topics);
     expect(new Set(entry.topics).size).toBe(entry.topics.length);
     expect(CATEGORY_IDS).toContain(entry.category);
     for (const goal of entry.goals) expect(LEARNING_GOAL_IDS).toContain(goal);

@@ -18,6 +18,7 @@ import { Spacing } from '@/constants/theme';
 import { coachErrorCode, requestReview, reviewFeedback, useCoachIdentity } from '@/features/coach';
 import { adaptProject, inheritLevels, LevelNote, levelStrings, courseStrings, findProject, localizedProject, parseStepsDone, useLearning, useSaveReview, useSaveSubmissionDraft, useSetProjectSteps } from '@/features/courses';
 import { onboardingStrings, useLearnerLevel } from '@/features/onboarding';
+import { labResultsText, practiceStrings, practiceSummaryText, useLabSummaries, usePracticeSummaries } from '@/features/practice';
 import { useAccess } from '@/features/store';
 import { useIsOnline } from '@/hooks/use-is-online';
 import { useLanguage, useLocalized } from '@/hooks/use-strings';
@@ -25,6 +26,8 @@ import { successFeedback } from '@/lib/haptics';
 import { newId } from '@/lib/id';
 import { reportError } from '@/lib/monitoring';
 
+import { PracticeSummaryCard } from '../components/practice-summary-card';
+import { practiceRows } from '../lib/practice-summary';
 import { isValidLink, parseSubmission, serializeSubmission } from '../lib/submission';
 
 /** A course project: its steps, the learner's work, and Tali's review (which the certificate needs). */
@@ -34,6 +37,7 @@ export function ProjectScreen({ projectId }: { projectId: string }) {
   const levelLabels = useLocalized(onboardingStrings).experience;
   const learner = useLearnerLevel();
   const language = useLanguage();
+  const practiceText = useLocalized(practiceStrings);
   const found = findProject(projectId);
   const learning = useLearning();
   const access = useAccess();
@@ -48,6 +52,11 @@ export function ProjectScreen({ projectId }: { projectId: string }) {
   const [reviewing, setReviewing] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
   const online = useIsOnline();
+  // The practice items the steps name (Soft Skills projects): what the learner has done shows here, and the same summary goes to the review.
+  const practiceIds = found?.project.practiceItemIds ?? [];
+  const practice = usePracticeSummaries(practiceIds);
+  // The prompt labs among them (Generative AI projects) go to the review as their own labelled block.
+  const labs = useLabSummaries(practiceIds);
 
   if (!found) return <NotFoundState icon="rocket_launch" title={strings.notFound} />;
   if (learning.isPending || learner.isPending) return <LoadingState />;
@@ -83,7 +92,7 @@ export function ProjectScreen({ projectId }: { projectId: string }) {
     setReviewing(true);
     const submission = serializeSubmission({ link: linkValue, note: noteValue });
     try {
-      const result = await requestReview(identity, { projectId, reviewId: newId(), link: isLink ? linkValue.trim() : '', submission: noteValue.trim(), language, level: learner.level });
+      const result = await requestReview(identity, { projectId, reviewId: newId(), link: isLink ? linkValue.trim() : '', submission: noteValue.trim(), language, level: learner.level, practice: practiceSummaryText(practice.data ?? []), labs: labResultsText(labs.data ?? []) });
       await saveReview.mutateAsync({ projectId, courseId: course.id, outcome: { status: result.review.verdict === 'pass' ? 'passed' : 'needs_work', feedback: reviewFeedback(result.review, language), token: result.token, submission } });
       if (result.review.verdict === 'pass') successFeedback();
     } catch (error) {
@@ -137,6 +146,8 @@ export function ProjectScreen({ projectId }: { projectId: string }) {
           </View>
         </View>
       </Card>
+
+      {owned && practiceIds.length > 0 && <PracticeSummaryCard rows={practiceRows(practiceIds, practice.data ?? [])} text={practiceText} nudge={open && !passed} />}
 
       <Section title={strings.projectSteps}>
         <Card padded={false}>

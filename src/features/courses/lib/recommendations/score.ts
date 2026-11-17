@@ -53,6 +53,11 @@ export type CourseScore = {
   score: number;
   /** The goal and interest match alone, before level, readiness and the rest: whether the course is about what they want. */
   relevance: number;
+  /**
+   * Only what the learner said they want (goals and interests, and the foundations of those), without the courses they happened to open:
+   * what a personal section is gated on when they have said anything, so browsing history alone never recommends a course.
+   */
+  declared: number;
   status: CourseStatus;
   readiness: Readiness;
   /** The strongest reasons, most important first (at most four). */
@@ -146,7 +151,7 @@ function decayedSum(values: readonly number[], decay: readonly number[]): number
 
 type Weighted = { reason: RecommendationReason; weight: number };
 
-export type Relevance = { relevance: number; reasons: Weighted[]; stretched: boolean };
+export type Relevance = { relevance: number; /** The goal and interest part alone, without curiosity. */ declared: number; reasons: Weighted[]; stretched: boolean };
 
 /** The goal, interest and curiosity part of the score: how much the course is about what the learner wants. */
 export function relevanceOf(facts: CourseFacts, signals: LearnerSignals, index: CatalogIndex): Relevance {
@@ -180,7 +185,8 @@ export function relevanceOf(facts: CourseFacts, signals: LearnerSignals, index: 
   if (exploredTechnology && explored > 0) reasons.push({ reason: { kind: 'explored', technology: exploredTechnology }, weight: explored });
 
   const stretched = goalMatches.some((entry) => entry.match.total >= RELEVANT_MATCH && GOAL_TARGETS[entry.goal].stretch) && LEVEL_INDEX[facts.level] >= 1;
-  return { relevance: goalPart + interestPart + explored + (stretched ? 0.8 : 0), reasons, stretched };
+  const declared = goalPart + interestPart + (stretched ? 0.8 : 0);
+  return { relevance: declared + explored, declared, reasons, stretched };
 }
 
 export function scoreCourse(facts: CourseFacts, signals: LearnerSignals, catalog: CatalogIndex | readonly CourseFacts[]): CourseScore {
@@ -192,19 +198,24 @@ export function scoreCourse(facts: CourseFacts, signals: LearnerSignals, catalog
   const own = relevanceOf(facts, signals, index);
   reasons.push(...own.reasons);
   let relevance = own.relevance;
+  let declared = own.declared;
 
   // Foundations for what they want: a prerequisite of a course they are after is relevant too (a beginner who wants React
   // Native is shown the JavaScript it rests on), unless this learner can be assumed to know it already.
   const status: CourseStatus = signals.completed.has(facts.id) ? 'completed' : signals.started.has(facts.id) ? 'in-progress' : 'new';
   if (status !== 'completed' && LEVEL_INDEX[facts.level] > assumedKnownLevel(experience)) {
     let best = { relevance: 0, courseId: '' };
+    let bestDeclared = 0;
     for (const dependentId of index.dependentsOf(facts.id)) {
       const dependent = index.byId.get(dependentId);
       if (!dependent || signals.completed.has(dependentId)) continue;
-      const wanted = relevanceOf(dependent, signals, index).relevance;
-      if (wanted > best.relevance) best = { relevance: wanted, courseId: dependentId };
+      const wanted = relevanceOf(dependent, signals, index);
+      if (wanted.relevance > best.relevance) best = { relevance: wanted.relevance, courseId: dependentId };
+      bestDeclared = Math.max(bestDeclared, wanted.declared);
     }
     const lift = Math.min(PREPARES_CAP, PREPARES_FACTOR * best.relevance);
+    const declaredLift = Math.min(PREPARES_CAP, PREPARES_FACTOR * bestDeclared);
+    if (declaredLift >= 1) declared += declaredLift;
     if (lift >= 1) {
       relevance += lift;
       reasons.push({ reason: { kind: 'prepares-for', courseId: best.courseId }, weight: lift });
@@ -270,6 +281,7 @@ export function scoreCourse(facts: CourseFacts, signals: LearnerSignals, catalog
   return {
     score,
     relevance,
+    declared,
     status,
     readiness,
     reasons: reasons

@@ -132,7 +132,8 @@ describe('buildWorld', () => {
 describe('chapter titles', () => {
   test('come from the course skill labels, never invented', () => {
     for (const course of COURSES) {
-      const labels = new Set(course.skills.map((skill) => skill.label));
+      // A course made of modules titles its chapters with them (the module titles come from its syllabus).
+      const labels = new Set([...course.skills.map((skill) => skill.label), ...(course.modules ?? []).map((module) => module.title)]);
       const world = buildWorld(course, computeCourseProgress(course, [], []));
       for (const chapter of world.chapters) {
         expect(chapter.title === null || labels.has(chapter.title)).toBe(true);
@@ -183,5 +184,25 @@ describe('next and remaining', () => {
   test('remainingMissions lists what is not done', () => {
     const world = buildWorld(dev, computeCourseProgress(dev, done(dev, [1, 2, 3]), []));
     expect(remainingMissions(world)).toHaveLength(17);
+  });
+});
+
+describe('a course made of modules', () => {
+  const long = { ...makeCourse('long-course', 12, [10]), modules: [
+    { id: 'one', title: 'Module One', summary: 'The first module of the course.', firstDay: 1, lastDay: 3 },
+    { id: 'two', title: 'Module Two', summary: 'The second module of the course.', firstDay: 4, lastDay: 9 },
+    { id: 'three', title: 'Module Three', summary: 'The third module of the course.', firstDay: 10, lastDay: 12 },
+  ] };
+
+  test('has one chapter per module, titled with it, covering every lesson once', () => {
+    const world = buildWorld(long, computeCourseProgress(long, [], []));
+    expect(world.chapters.map((chapter) => chapter.title)).toEqual(['Module One', 'Module Two', 'Module Three']);
+    expect(world.chapters.map((chapter) => chapter.total)).toEqual([3, 6, 3]);
+    expect(world.chapters.flatMap((chapter) => chapter.missions).map((mission) => mission.lesson.day)).toEqual([1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]);
+  });
+
+  test('a course with no modules is split as before', () => {
+    const world = buildWorld(dev, computeCourseProgress(dev, [], []));
+    expect(world.chapters).toHaveLength(4);
   });
 });

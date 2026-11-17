@@ -2,7 +2,8 @@ import { LEARNING_PATHS, type LearningPathDef } from '../../content/catalog/path
 import type { LearningGoalId } from '../../content/types';
 import type { CourseFacts } from '../catalog-facts';
 import { catalogIndex } from './catalog-index';
-import { GOAL_TARGETS } from './profile-mapping';
+import { NOT_SURE } from '../../../onboarding/lib/options';
+import { GOAL_TARGETS, INTEREST_TARGETS } from './profile-mapping';
 import { learnerExperience, levelFit, readinessOf, relevanceOf } from './score';
 import type { LearnerSignals } from './signals';
 
@@ -39,6 +40,8 @@ const GAP_PENALTY = 0.6;
 const PROGRESS_WEIGHT = 1.5;
 /** Below this a path is not about anything the learner asked for, and is not offered. */
 const MIN_FIT = 2;
+/** How much of what the learner declared the first courses of a path must be about, on average, for it to count as theirs. */
+const MIN_DECLARED = 3;
 /** A course whose level fit is at or below this is basics for the learner (see `levelFit`). */
 const BASICS_FIT = -3;
 
@@ -89,6 +92,16 @@ function fitOf(path: LearningPathDef, steps: readonly PathStep[], signals: Learn
   return GOAL_FIT_WEIGHT * goalFit + RELEVANCE_WEIGHT * relevance + LEVEL_WEIGHT * level - GAP_PENALTY * gaps + PROGRESS_WEIGHT * progress;
 }
 
+/** A path serves a goal the learner named, or its first courses are about what they declared (not just what they opened or finished). */
+function pathIsAboutThem(path: LearningPathDef, steps: readonly PathStep[], signals: LearnerSignals, facts: readonly CourseFacts[]): boolean {
+  const wanted = new Set<LearningGoalId>(signals.goals.flatMap((goal) => GOAL_TARGETS[goal].goals ?? []));
+  if (path.goals.some((goal) => wanted.has(goal))) return true;
+  const index = catalogIndex(facts);
+  const soon = steps.filter((step) => step.state !== 'done').slice(0, FIRST_COURSES_CONSIDERED);
+  if (soon.length === 0) return false;
+  return soon.reduce((sum, step) => sum + relevanceOf(step.facts, signals, index).declared, 0) / soon.length >= MIN_DECLARED;
+}
+
 /**
  * One specific path's plan, whether or not it suits the learner (the path screen opens any path from the list). Its
  * courses are marked done, current, next or upcoming; `fit` is how well it suits them (negative infinity when finished).
@@ -109,11 +122,14 @@ export function planForPath(path: LearningPathDef, signals: LearnerSignals, fact
  */
 export function pickLearningPath(signals: LearnerSignals, facts: readonly CourseFacts[], paths: readonly LearningPathDef[] = LEARNING_PATHS): PathPlan | null {
   let best: PathPlan | null = null;
+  const asked = signals.goals.length > 0 || signals.interests.some((interest) => interest !== NOT_SURE && interest in INTEREST_TARGETS);
   for (const path of paths) {
     const steps = stepsFor(path, signals, facts);
     if (steps.length === 0) continue;
     const fit = fitOf(path, steps, signals, facts);
     if (fit < MIN_FIT) continue;
+    // Progress alone can lift a path over MIN_FIT, so a learner who named goals or interests is offered only a path that is about them.
+    if (asked && !pathIsAboutThem(path, steps, signals, facts)) continue;
     if (!best || fit > best.fit) {
       const nextStep = steps.find((step) => step.state === 'current') ?? steps.find((step) => step.state === 'next') ?? null;
       best = { path, fit, steps, nextStep, done: steps.filter((step) => step.state === 'done').length, total: steps.length };

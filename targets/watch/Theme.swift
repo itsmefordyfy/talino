@@ -35,6 +35,20 @@ struct RoundControlStyle: ButtonStyle {
   }
 }
 
+/// A quiet full-width text button (a second action under the main controls), at the 44 pt minimum target.
+struct RoundTextStyle: ButtonStyle {
+  @Environment(\.isEnabled) private var isEnabled
+
+  func makeBody(configuration: Configuration) -> some View {
+    configuration.label
+      .font(.footnote.weight(.semibold))
+      .foregroundStyle(.primary)
+      .frame(maxWidth: .infinity, minHeight: 44)
+      .background(Color.white.opacity(configuration.isPressed ? 0.28 : 0.16), in: RoundedRectangle(cornerRadius: 22, style: .continuous))
+      .opacity(isEnabled ? 1 : 0.4)
+  }
+}
+
 /// A rounded panel on the black screen, the way watchOS lists draw their rows.
 struct Panel<Content: View>: View {
   @ViewBuilder let content: Content

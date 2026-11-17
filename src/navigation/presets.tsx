@@ -38,7 +38,7 @@ export function makeScreenPresets(colors: ThemeColors, language: Language, compa
             ...headerCloseOptions({ onPress: closeSheet }, 'left'),
             contentStyle: { backgroundColor: colors.background },
           }
-        : { title, presentation: 'modal', unstable_headerLeftItems: undefined, ...headerCloseOptions({ onPress: closeSheet }, 'left') },
+        : { title, presentation: 'modal', headerBackVisible: false, unstable_headerLeftItems: undefined, ...headerCloseOptions({ onPress: closeSheet }, 'left') },
     push: (title) => ({ title }),
     fullScreen: () => ({ presentation: 'fullScreenModal', headerShown: false }),
   };

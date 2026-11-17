@@ -22,13 +22,16 @@ import { useDbQuery } from '@/db/use-db-query';
 import { useGame, XpCard } from '@/features/adventure';
 import { JOURNEY_CERTIFICATE_ID, JOURNEY_CERTIFICATE_TITLE, readCertificates } from '@/features/certificates';
 import { badgeDefinitions, CAREER_COURSES, COURSES, courseStrings, getCourse, localizedCourse, ProgressRing, useLearning } from '@/features/courses';
+import { useLearningPlan } from '@/features/onboarding';
 import { profileCompleteness, profileStrings, useProfilePhoto, useResumeProfile } from '@/features/resume';
 import { selectGoal, selectLearnerName } from '@/features/settings/settings-slice';
+import { lessonsThisWeek, WeekCard } from '@/features/today';
 import { useLanguage, useLocalized } from '@/hooks/use-strings';
+import { useTabWarmup } from '@/hooks/use-tab-warmup';
 import { useViewportSettling } from '@/hooks/use-viewport-settling';
 import { useTheme } from '@/hooks/use-theme';
 import { useTones } from '@/hooks/use-tones';
-import { formatDate } from '@/lib/dates';
+import { formatDate, todayISO } from '@/lib/dates';
 import { useAppSelector } from '@/store/hooks';
 
 import { meExtraStrings } from '../me-extra-strings';
@@ -48,7 +51,9 @@ export function MeTab() {
   const name = useAppSelector(selectLearnerName);
   const goal = useAppSelector(selectGoal);
   const learning = useLearning();
+  const { plan } = useLearningPlan();
   const settling = useViewportSettling();
+  const warming = useTabWarmup();
   const game = useGame();
   const certificates = useDbQuery(['certificates'], readCertificates);
   const journeyCertificate = certificates.data?.find((row) => row.course_id === JOURNEY_CERTIFICATE_ID) ?? null;
@@ -81,7 +86,7 @@ export function MeTab() {
       </Screen>
     );
   }
-  if (learning.isPending || settling) return <TabSkeleton variant="me" />;
+  if (learning.isPending || settling || warming) return <TabSkeleton variant="me" />;
 
   const stats = [
     { label: strings.stats.streak, value: learning.streak.current, icon: 'local_fire_department' as const },
@@ -116,6 +121,16 @@ export function MeTab() {
               </ThemedText>
               <Button title={extra.editProfile} icon="edit" variant="secondary" size="small" onPress={() => router.push('/resume/profile')} />
             </Card>
+
+            {/* The daily streak and the week at a glance, as Today had them (owner, 2026-11-17). */}
+            <WeekCard
+              days={learning.data?.days ?? []}
+              streak={learning.streak.current}
+              best={learning.streak.best}
+              doneToday={learning.streak.doneToday}
+              lessonsDone={lessonsThisWeek(learning.data?.lessons ?? [], todayISO())}
+              target={plan?.schedule.lessonsPerWeek ?? 5}
+            />
 
             {!game.isPending && <XpCard xp={game.xp} levelTitle={game.levelTitle} progress={game.progressToNext} />}
 

@@ -1,5 +1,15 @@
 import type { CategoryId, CourseLevel, LearningGoalId } from '../types';
 
+/** A group of consecutive lessons (a module) of a long course. Its `topics` are lesson titles, in order. */
+export type SyllabusModule = {
+  /** kebab-case, unique in the course. */
+  slug: string;
+  title: string;
+  /** One sentence: what the module does for the learner. */
+  summary: string;
+  topics: string[];
+};
+
 /**
  * One course of the wider catalog (`kind: 'standard'`): everything the catalog needs to know about it before a
  * lesson is written. The course file follows this entry (one lesson per topic, in this order, this level), and
@@ -23,8 +33,10 @@ export type SyllabusEntry = {
    * dated, officially-sourced `version` note (`lib/standard-rules.ts`). A stable subject (an algorithm, a pattern) doesn't need them.
    */
   volatile: boolean;
-  /** Lesson titles, one lesson each, in teaching order. 5 to 15. */
+  /** Lesson titles, one lesson each, in teaching order. 5 to 15 (up to `MODULE_COURSE_MAX_LESSONS` for a course made of `modules`). */
   topics: string[];
+  /** A long course grouped into modules: `topics` is exactly their topics, in order. Most courses have none. */
+  modules?: readonly SyllabusModule[];
   /** What sets this course apart from its neighbours, so a writer doesn't repeat another course (`docs/content/OVERLAPS.md`). */
   scope: string;
 };

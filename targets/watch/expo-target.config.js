@@ -8,7 +8,7 @@ module.exports = {
   deploymentTarget: '10.0',
   // The home-screen icon: the plugin builds the AppIcon set from the app's own icon.
   icon: '../../assets/images/icon.png',
-  frameworks: ['SwiftUI', 'WatchConnectivity', 'WidgetKit'],
+  frameworks: ['SwiftUI', 'WatchConnectivity', 'WidgetKit', 'AVFoundation'],
   // Shared with the complication (targets/watch-widget); a group never crosses devices.
   entitlements: { 'com.apple.security.application-groups': ['group.com.fordytechsolutions.talino'] },
 };

@@ -21,8 +21,9 @@ describe('a new learner', () => {
   });
 
   test('everything after the start is locked until its prerequisites are learned', () => {
+    expect(status(state, 'think-like-a-programmer')).toBe('locked');
+    expect(milestone(state, 'think-like-a-programmer').blockedBy).toEqual(['meet-ai']);
     expect(status(state, 'how-ai-tools-work')).toBe('locked');
-    expect(milestone(state, 'how-ai-tools-work').blockedBy).toEqual(['meet-ai']);
     expect(status(state, 'first-full-stack')).toBe('locked');
   });
 
@@ -49,10 +50,10 @@ describe('progress comes only from real work', () => {
     const state = run(lessons);
     expect(status(state, 'meet-ai')).toBe('available');
     expect(milestone(state, 'meet-ai').learned).toBe(true);
-    expect(state.current?.id).toBe('how-ai-tools-work');
+    expect(state.current?.id).toBe('think-like-a-programmer');
     const passed = run(passProjects(lessons, 'starter-p1'));
     expect(status(passed, 'meet-ai')).toBe('done');
-    expect(passed.current?.id).toBe('how-ai-tools-work');
+    expect(passed.current?.id).toBe('think-like-a-programmer');
   });
 
   test('everything after the current course is locked: the road, side steps and optional milestones alike', () => {
@@ -237,6 +238,44 @@ describe('missing content', () => {
     courses.delete('starter');
     const state = run({ ...facts, courses });
     expect(status(state, 'meet-ai')).toBe('soon');
-    expect(state.current?.id).toBe('how-ai-tools-work');
+    expect(state.current?.id).toBe('think-like-a-programmer');
+  });
+});
+
+describe('a course added after learners began (a late addition)', () => {
+  test('a learner who has not gone past it is guided to it, right after Meet AI', () => {
+    const state = run(finishLessons(emptyFacts(), 'starter'));
+    expect(milestone(state, 'think-like-a-programmer').def.lateAddition).toBe(true);
+    expect(state.current?.id).toBe('think-like-a-programmer');
+    expect(milestone(state, 'think-like-a-programmer').required).toBe(true);
+  });
+
+  test('a learner already into a later milestone is never pulled back to it: it stands aside, still open', () => {
+    const facts = finishLessons(emptyFacts(), 'starter', 'ai-dev-intro');
+    const state = run(facts);
+    const added = milestone(state, 'think-like-a-programmer');
+    expect(added.status).toBe('skipped');
+    expect(added.required).toBe(false);
+    expect(state.current?.id).not.toBe('think-like-a-programmer');
+    expect(state.current?.stageId).toBe('beginner');
+    // what follows it requires what it required, so nothing is trapped behind it
+    expect(milestone(state, 'how-ai-tools-work').blockedBy).not.toContain('think-like-a-programmer');
+  });
+
+  test('once begun, it counts like any other milestone', () => {
+    const facts = emptyFacts();
+    const courses = new Map(facts.courses);
+    courses.set('programming-fundamentals', { ...courses.get('programming-fundamentals')!, lessonsDone: 3, started: true });
+    const state = run(finishLessons({ ...facts, courses }, 'starter', 'ai-dev-intro'));
+    const added = milestone(state, 'think-like-a-programmer');
+    expect(added.status).not.toBe('skipped');
+    expect(added.required).toBe(true);
+  });
+
+  test('finishing it never loses progress already made elsewhere', () => {
+    const before = run(finishLessons(emptyFacts(), 'starter', 'ai-dev-intro'));
+    const after = run(finishLessons(passProjects(emptyFacts(), 'programming-fundamentals-p11'), 'starter', 'ai-dev-intro', 'programming-fundamentals'));
+    expect(after.done).toBeGreaterThanOrEqual(before.done);
+    expect(milestone(after, 'think-like-a-programmer').status).toBe('done');
   });
 });

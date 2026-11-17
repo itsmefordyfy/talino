@@ -1,7 +1,10 @@
 import { compareSql, runCodeTests, runJs, validateSelect } from '@/features/code-runner';
 import type { CodeTests } from '@/features/code-runner';
+import { findPracticeItem } from '@/features/practice/catalog';
+import { planningProblems } from '@/features/productivity/lib/planning';
+import type { PracticeItem } from '@/features/practice/types';
 
-import type { Activity, ArrangeActivity, CodeChallengeActivity, FillBlankActivity, FixBugActivity, PredictOutputActivity, SqlChallengeActivity } from '../types';
+import type { Activity, ArrangeActivity, CodeChallengeActivity, FillBlankActivity, FixBugActivity, PredictOutputActivity, SqlChallengeActivity, WorkflowBuilderActivity, WorkflowRule } from '../types';
 import { expectedOutputOf, runSqlQuery } from './check';
 import { recordRobotCommands, simulateRobot, validateWorld } from './robot';
 import { countBlanks, fillBlanks, isKebabCase, normalizeCode, normalizeOutput, replaceLine } from './text';
@@ -122,8 +125,69 @@ export function validateStructure(activity: Activity): string[] {
       if (activity.expected.rows.length === 0 && !activity.expected.columns) add('expected needs rows or columns.');
       break;
     }
+    // Whether the id resolves in the practice catalog is checked by `validateActivity`, so a lesson can be authored before its scenario exists.
+    case 'roleplay':
+      if (!isKebabCase(activity.scenarioId ?? '')) add(`scenarioId "${activity.scenarioId}" is not a kebab-case id.`);
+      break;
+    case 'message-review':
+      if (!isKebabCase(activity.taskId ?? '')) add(`taskId "${activity.taskId}" is not a kebab-case id.`);
+      break;
+    case 'prompt-lab':
+      if (!isKebabCase(activity.labId ?? '')) add(`labId "${activity.labId}" is not a kebab-case id.`);
+      break;
+    case 'workflow-builder':
+      validateWorkflowStructure(activity, add);
+      break;
+    case 'planning':
+      for (const problem of planningProblems(activity.challenge)) add(problem);
+      break;
   }
   return problems;
+}
+
+/** The Workflow Builder's own rules (no code runs): the palette, the rules and the reference solution must agree. */
+export function workflowProblems(activity: WorkflowBuilderActivity): string[] {
+  const problems: string[] = [];
+  const ids = activity.parts.map((part) => part.id);
+  if (new Set(ids).size !== ids.length) problems.push('two parts share an id.');
+  if (activity.parts.length < 5) problems.push('needs at least 5 parts in the palette.');
+  if (activity.parts.some((part) => !part.label.trim() || !part.detail.trim() || !isKebabCase(part.id))) problems.push('a part has an empty label or detail, or an id that is not kebab-case.');
+  const lanes = new Set(activity.parts.map((part) => part.lane));
+  if (!lanes.has('ai') || !lanes.has('human')) problems.push('the palette needs at least an AI step and a human review step.');
+  if (!Number.isInteger(activity.minSteps) || !Number.isInteger(activity.maxSteps) || activity.minSteps < 3 || activity.maxSteps < activity.minSteps || activity.maxSteps > activity.parts.length) problems.push('minSteps and maxSteps must be whole numbers, 3 or more, within the palette.');
+  if (activity.rules.length < 2) problems.push('needs at least 2 rules.');
+  if (new Set(activity.rules.map((rule) => rule.id)).size !== activity.rules.length) problems.push('two rules share an id.');
+  for (const rule of activity.rules) {
+    if (!rule.message.trim()) problems.push(`rule ${rule.id} has no message.`);
+    if (rule.parts.length === 0 || rule.parts.some((id) => !ids.includes(id))) problems.push(`rule ${rule.id} names a part that is not in the palette.`);
+    if (rule.kind === 'before' && rule.parts.length !== 2) problems.push(`rule ${rule.id} ("before") needs exactly two parts.`);
+  }
+  if (!activity.rules.some((rule) => rule.kind === 'require')) problems.push('needs at least one "require" rule.');
+  if (!activity.rules.some((rule) => rule.kind === 'forbid')) problems.push('needs at least one "forbid" rule (a tempting wrong step).');
+  const broken = brokenWorkflowRules(activity.rules, activity.solution);
+  if (new Set(activity.solution).size !== activity.solution.length || activity.solution.some((id) => !ids.includes(id))) problems.push('the solution repeats a part or names one that is not in the palette.');
+  else if (activity.solution.length < activity.minSteps || activity.solution.length > activity.maxSteps) problems.push('the solution has fewer steps than minSteps or more than maxSteps.');
+  else if (broken.length > 0) problems.push(`the reference solution breaks its own rules: ${broken.join(', ')}.`);
+  const missing = activity.solution.filter((id) => !(id in activity.simulation.steps));
+  if (missing.length > 0) problems.push(`the simulation has no line for: ${missing.join(', ')}.`);
+  if (!activity.simulation.input.trim() || !activity.simulation.output.trim()) problems.push('the simulation needs an input and an output.');
+  return problems;
+}
+
+/** Ids of the rules the ordered workflow breaks (pure; also used by the activity's check). */
+export function brokenWorkflowRules(rules: readonly WorkflowRule[], order: readonly string[]): string[] {
+  return rules
+    .filter((rule) => {
+      if (rule.kind === 'require') return !rule.parts.every((id) => order.includes(id));
+      if (rule.kind === 'forbid') return rule.parts.some((id) => order.includes(id));
+      const [a, b] = rule.parts;
+      return order.includes(a) && order.includes(b) && order.indexOf(a) > order.indexOf(b);
+    })
+    .map((rule) => rule.id);
+}
+
+function validateWorkflowStructure(activity: WorkflowBuilderActivity, add: (message: string) => void) {
+  for (const problem of workflowProblems(activity)) add(problem);
 }
 
 function passes(source: string, tests: CodeTests): string | null {
@@ -225,7 +289,7 @@ function validateChallenge(activity: CodeChallengeActivity, add: (message: strin
  * its own tests, a predict-output snippet must run, a Parsons solution must run). Returns [] when it is
  * good. SQL runs need a database: use `validateActivityDeep` for those.
  */
-export function validateActivity(activity: Activity): string[] {
+export function validateActivity(activity: Activity, findItem: (id: string) => PracticeItem | undefined = findPracticeItem): string[] {
   const problems = validateStructure(activity);
   if (problems.length > 0) return problems;
   const add = (message: string) => problems.push(message);
@@ -244,6 +308,15 @@ export function validateActivity(activity: Activity): string[] {
       break;
     case 'code-challenge':
       validateChallenge(activity, add);
+      break;
+    case 'roleplay':
+      if (findItem(activity.scenarioId)?.kind !== 'roleplay') add(findItem(activity.scenarioId) ? `"${activity.scenarioId}" is not a role-play scenario.` : `scenarioId "${activity.scenarioId}" is not in the practice catalog.`);
+      break;
+    case 'prompt-lab':
+      if (findItem(activity.labId)?.kind !== 'lab') add(findItem(activity.labId) ? `"${activity.labId}" is not a prompt lab.` : `labId "${activity.labId}" is not in the practice catalog.`);
+      break;
+    case 'message-review':
+      if (findItem(activity.taskId)?.kind !== 'message') add(findItem(activity.taskId) ? `"${activity.taskId}" is not a message task.` : `taskId "${activity.taskId}" is not in the practice catalog.`);
       break;
     default:
       break;

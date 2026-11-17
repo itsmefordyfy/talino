@@ -5,20 +5,18 @@ import { ThemedText } from '@/components/themed-text';
 import { Card } from '@/components/ui/card';
 import { IconTile } from '@/components/ui/icon-tile';
 import type { IconName } from '@/components/ui/icon';
-import { Spacing, type Tone } from '@/constants/theme';
-import { categoryText, localizedCategories, popularTechnologies, technologyLabel, type CourseFacts, type LearningLevel } from '@/features/courses/data';
+import { LevelTones, Spacing } from '@/constants/theme';
+import { popularTechnologies, technologyLabel, type CourseFacts } from '@/features/courses/data';
 import { isAiTool } from '@/features/courses/lib/discovery/filters';
-import { useLanguage, useLocalized } from '@/hooks/use-strings';
+import { useLocalized } from '@/hooks/use-strings';
 import { useTwoUp } from '@/hooks/use-two-up';
 import { useAppDispatch } from '@/store/hooks';
 
 import { browseStrings } from '../browse-strings';
-import { browsedBy, categorySelected } from '../discover-slice';
+import { browsedBy } from '../discover-slice';
 import { levelBrowse } from '../lib/browse';
 import { SearchSuggestions } from './search-suggestions';
 
-/** The same colours as the level banners on Home: Beginner mint, Intermediate indigo, Advanced and Expert violet. */
-const LEVEL_TONES: Record<LearningLevel, Tone> = { beginner: 'mint', intermediate: 'indigo', advanced: 'violet', expert: 'violet' };
 
 /** Cards in rows of `columns`, every card the same width (a short last row keeps empty cells). */
 function Grid<T>({ items, columns, render, keyOf }: { items: readonly T[]; columns: number; render: (item: T) => ReactNode; keyOf: (item: T) => string }) {
@@ -57,7 +55,7 @@ export function LevelTiles({ facts }: { facts: readonly CourseFacts[] }) {
         <Card onPress={() => dispatch(browsedBy({ dimension: 'levels', value: entry.level }))} accessibilityLabel={`${strings.levelTile(entry.label, entry.count)}. ${entry.description}`} style={styles.fill}>
           <View style={styles.tile}>
             <View style={styles.tileTop}>
-              <IconTile icon={entry.icon as IconName} tone={LEVEL_TONES[entry.level]} size={36} />
+              <IconTile icon={entry.icon as IconName} tone={LevelTones[entry.level]} size={36} />
               <ThemedText type="caption" themeColor="textSecondary" tabular>
                 {entry.count}
               </ThemedText>
@@ -67,39 +65,6 @@ export function LevelTiles({ facts }: { facts: readonly CourseFacts[] }) {
             </ThemedText>
             <ThemedText type="caption" themeColor="textSecondary" numberOfLines={3}>
               {entry.description}
-            </ThemedText>
-          </View>
-        </Card>
-      )}
-    />
-  );
-}
-
-/** "Browse by category": every category with its icon and course count; a tap opens its tab. */
-export function CategoryGrid({ facts }: { facts: readonly CourseFacts[] }) {
-  const strings = useLocalized(browseStrings);
-  const language = useLanguage();
-  const dispatch = useAppDispatch();
-  const wide = useTwoUp();
-  const categories = localizedCategories(language)
-    .map((category) => ({ category, count: facts.filter((fact) => fact.category === category.id).length }))
-    .filter((entry) => entry.count > 0);
-  return (
-    <Grid
-      items={categories}
-      columns={wide ? 3 : 2}
-      keyOf={(entry) => entry.category.id}
-      render={({ category, count }) => (
-        <Card onPress={() => dispatch(categorySelected(category.id))} accessibilityLabel={`${strings.levelTile(categoryText(category.id, language).label, count)}. ${category.description}`} style={styles.fill}>
-          <View style={styles.tile}>
-            <View style={styles.tileTop}>
-              <IconTile icon={category.icon as IconName} tone="indigo" size={36} />
-              <ThemedText type="caption" themeColor="textSecondary" tabular>
-                {count}
-              </ThemedText>
-            </View>
-            <ThemedText type="cardTitle" numberOfLines={3}>
-              {category.label}
             </ThemedText>
           </View>
         </Card>

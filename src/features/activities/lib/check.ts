@@ -17,6 +17,8 @@ import type {
   SqlChallengeActivity,
   TapRevealActivity,
 } from '../types';
+import { checkPlanning } from '@/features/productivity/lib/planning';
+import { checkWorkflow } from './workflow';
 import { recordRobotCommands, simulateRobot } from './robot';
 import { formatValue, normalizeCode, normalizeOutput, replaceLine } from './text';
 
@@ -243,5 +245,7 @@ export async function checkActivity(activity: Activity, answer: ActivityAnswer, 
   if (answer.kind === 'scenario' && activity.kind === 'scenario') return checkScenario(activity, answer.option, text);
   if (answer.kind === 'code-challenge' && activity.kind === 'code-challenge') return checkCodeChallenge(activity, answer.code, text);
   if (answer.kind === 'sql-challenge' && activity.kind === 'sql-challenge') return checkSqlChallenge(activity, answer.query, text);
+  if (answer.kind === 'workflow-builder' && activity.kind === 'workflow-builder') return checkWorkflow(activity, answer.order);
+  if (answer.kind === 'planning' && activity.kind === 'planning') return checkPlanning(activity, answer);
   throw new Error(`The answer is for "${answer.kind}" but the activity is "${activity.kind}".`);
 }

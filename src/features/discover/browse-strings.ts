@@ -6,10 +6,10 @@ import { defineStrings } from '@/lib/i18n';
  */
 const en = {
   // Home sections
+  startHereNoMatch: 'No course is about what you picked yet. These are good places to start while we add more.',
   levelsTitle: 'Browse by level',
   levelsBody: 'A course’s level is what it expects you to know about building with AI. Explore any level, whatever yours is.',
   levelTile: (label: string, count: number) => `${label}, ${count === 1 ? '1 course' : `${count} courses`}`,
-  categoriesTitle: 'Browse by category',
   toolsTitle: 'Learn an AI tool',
   toolsBody: 'Courses that teach each tool in real work.',
   toolChip: (label: string, count: number) => `${label}, ${count === 1 ? '1 course' : `${count} courses`}`,
@@ -49,7 +49,6 @@ const en = {
   // Course page
   levelDetail: (level: string) => `${level} level`,
   accessFree: 'Free',
-  accessIncluded: 'Included with Pro',
   accessPro: 'Pro',
   buildTitle: 'What you’ll build',
   buildBody: 'The hands-on projects in this course. Tali reviews each one.',

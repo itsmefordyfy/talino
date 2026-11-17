@@ -11,9 +11,8 @@ import { useTheme } from '@/hooks/use-theme';
 type StackScreenOptions = Exclude<NonNullable<ComponentProps<typeof Stack>['screenOptions']>, (...args: never[]) => unknown>;
 
 /**
- * Header settings shared by every stack screen, so they all look the same: centered titles and the
- * round back button (HeaderBackButton). iOS 26 wraps header buttons in its own glass; the back
- * button brings its own circle, so it goes in as a custom item with that shared background hidden.
+ * Header settings shared by every stack screen, so they all look the same: centered titles and a
+ * round back button: the system's own on iOS (see below), HeaderBackButton on Android.
  * Page sheets clear it (see pageSheet in the root layout), so their own Cancel button shows instead.
  */
 export function useStackHeaderOptions(): StackScreenOptions {
@@ -39,12 +38,18 @@ export function useStackHeaderOptions(): StackScreenOptions {
     headerStyle: { backgroundColor: colors.background },
     // Titles centered on Android too, as on the iPhone.
     headerTitleAlign: 'center',
-    headerBackVisible: false,
     ...(process.env.EXPO_OS === 'ios'
       ? {
-          unstable_headerLeftItems: ({ canGoBack }: { canGoBack?: boolean }) =>
-            canGoBack ? [{ type: 'custom' as const, element: <HeaderBackButton />, hidesSharedBackground: true }] : [],
+          // The system's own back button (owner, 2026-11-17: "when going back the header is glitching or the back button is disappearing").
+          // A custom left item is removed at once on a pop, so the circle vanished, the title slid over and the previous screen's circle
+          // faded in late (found by recording the simulator and stepping the frames; the same bug as Ulamin's 2026-11-11). On iOS 26 the
+          // system button is already a round glass circle and animates with the title. Page sheets clear it and draw their own X.
+          headerBackVisible: true,
+          headerBackButtonDisplayMode: 'minimal' as const,
         }
-      : { headerLeft: ({ canGoBack }: { canGoBack?: boolean }) => (canGoBack ? <HeaderBackButton /> : null) }),
+      : {
+          headerBackVisible: false,
+          headerLeft: ({ canGoBack }: { canGoBack?: boolean }) => (canGoBack ? <HeaderBackButton /> : null),
+        }),
   };
 }

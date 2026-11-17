@@ -7,7 +7,7 @@
 import type { AiChatPlan } from '@/constants/ai-chat';
 
 import { cleanKeys, quotaFor, type ChatBegin } from './ai-chat-quota';
-import { callGemini, geminiError, replyText, type GeminiResult } from './gemini';
+import { callGemini, functionCallsOf, geminiError, replyText, type GeminiResult } from './gemini';
 import { refundGlobal, reserveGlobal } from './global-cap';
 
 const DEVICE_ID = /^[\w-]{8,64}$/;
@@ -30,8 +30,15 @@ export function refusal(begun: ChatBegin, plan: AiChatPlan, limitError = 'chat_l
   return null;
 }
 
+export type AskOptions = {
+  /** Pin one model (no fallback chain): see `CallOptions.model`. */
+  model?: string;
+  /** A reply that is only a request for a tool is an answer, not an empty reply (the prompt lab's tool-use rounds). */
+  allowToolCalls?: boolean;
+};
+
 /** Asks Gemini under the all-callers cap; on any failure the reservation (if any) and the allowance are given back. */
-export async function ask(apiKey: string, request: Record<string, unknown>, giveBack: () => Promise<void>, route: 'interview'): Promise<{ text: string; result: GeminiResult } | Response> {
+export async function ask(apiKey: string, request: Record<string, unknown>, giveBack: () => Promise<void>, route: 'interview' | 'practice', options: AskOptions = {}): Promise<{ text: string; result: GeminiResult } | Response> {
   const slot = await reserveGlobal();
   if (slot === 'full') {
     await giveBack();
@@ -39,7 +46,7 @@ export async function ask(apiKey: string, request: Record<string, unknown>, give
   }
   let result: GeminiResult;
   try {
-    result = await callGemini(apiKey, request);
+    result = await callGemini(apiKey, request, options.model ? { model: options.model } : {});
   } catch {
     await refundGlobal(slot);
     await giveBack();
@@ -52,7 +59,7 @@ export async function ask(apiKey: string, request: Record<string, unknown>, give
     return error;
   }
   const text = replyText(result.data);
-  if (!text) {
+  if (!text && !(options.allowToolCalls && functionCallsOf(result.data).length > 0)) {
     await refundGlobal(slot);
     await giveBack();
     return Response.json({ error: 'unknown' }, { status: 502 });

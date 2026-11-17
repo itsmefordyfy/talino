@@ -24,7 +24,7 @@ type ActivityBlock = Extract<LessonBlock, { type: 'activity' }>;
 
 const words = (text: string) => text.split(/\s+/).filter(Boolean).length;
 
-/** Words of actual explanation in these blocks: prose, lists, tips, tables and "show more" text; code counts half. Prompts and activities are practice, not teaching. */
+/** Words of actual explanation in these blocks: prose, lists, tips, tables and "show more" text; code counts half. Prompts, "AI in Action" demos (illustrations) and activities are practice, not teaching. */
 export function teachingWords(blocks: readonly LessonBlock[]): number {
   let total = 0;
   for (const block of blocks) {

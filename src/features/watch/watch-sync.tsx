@@ -1,11 +1,13 @@
 import kvStore from 'expo-sqlite/kv-store';
 import { useEffect, useRef, useSyncExternalStore } from 'react';
 
-import { canJumpBySentence, getListenSnapshot, getCourse, localizedCourse, skipSegment, subscribeListen, togglePlayPause, useLearning } from '@/features/courses';
+import { canJumpBySentence, getListenSnapshot, getCourse, localizedCourse, recordingVoice, skipSegment, spokenLesson, startLessonListening, stopListening, subscribeListen, togglePlayPause, useLearning } from '@/features/courses';
+import { companionOf } from '@/features/companion/lib/companions';
 import { useLearningPlan } from '@/features/onboarding';
-import { selectFocusCourseId } from '@/features/settings/settings-slice';
+import { selectCompanion, selectFocusCourseId, selectSpeechRate } from '@/features/settings/settings-slice';
 import { useAccess } from '@/features/store';
 import { lessonsThisWeek, pickFocusCourse } from '@/features/today';
+import { useIsOnline } from '@/hooks/use-is-online';
 import { useOnAppActive } from '@/hooks/use-on-app-active';
 import { useLanguage } from '@/hooks/use-strings';
 import { todayISO } from '@/lib/dates';
@@ -14,8 +16,17 @@ import { useAppSelector } from '@/store/hooks';
 
 import { onWatchCommand, pushSnapshot, watchStatus } from './bridge';
 import { handleWatchCommand, type CommandContext } from './commands';
+import { lessonForWatch } from './lib/lesson-text';
 import { toWatchSnapshot } from './lib/snapshot';
 import type { WatchResult, WatchSnapshot } from './types';
+
+/** The sentence being said, for the wrist: its text (kept short), its place from 1 and the lesson's sentence count. Nothing when the voice can't say which. */
+function sentenceOf(listen: ReturnType<typeof getListenSnapshot>): { sentence: string | null; index: number; count: number } {
+  const segments = listen.session?.kind === 'reply' ? [] : (listen.session?.segments ?? []);
+  const at = listen.activeSegment;
+  if (at === null || segments[at] === undefined) return { sentence: null, index: 0, count: segments.length };
+  return { sentence: segments[at].text.replace(/\s+/g, ' ').trim().slice(0, 240), index: at + 1, count: segments.length };
+}
 
 /** Learning changes come in bursts (a lesson, then a badge); push once they settle. */
 const DEBOUNCE_MS = 700;
@@ -45,6 +56,9 @@ export function WatchSync() {
   const language = useLanguage();
   const chosen = useAppSelector(selectFocusCourseId);
   const listen = useSyncExternalStore(subscribeListen, getListenSnapshot);
+  const rate = useAppSelector(selectSpeechRate);
+  const coach = companionOf(useAppSelector(selectCompanion));
+  const online = useIsOnline();
 
   // The same lesson Today leads with (the course the learner chose, else the one under way, else the starter).
   const focusId = pickFocusCourse(learning.progress, chosen, access.owns);
@@ -66,10 +80,17 @@ export function WatchSync() {
         title: listen.session?.lessonTitle ?? null,
         course: listen.session?.courseTitle ?? null,
         canSkip: canJumpBySentence(listen),
+        ...sentenceOf(listen),
       },
       handled: ledger.ids(),
     });
   };
+
+  // What the Watch's commands need to start a lesson, read when one arrives (the command listener below is set up once).
+  const latest = useRef({ nextId: null as string | null, language, rate, online, voice: recordingVoice(coach.voice, language) });
+  useEffect(() => {
+    latest.current = { nextId: next?.id ?? null, language, rate, online, voice: recordingVoice(coach.voice, language) };
+  });
 
   const push = useRef<() => void>(() => {});
   useEffect(() => {
@@ -104,6 +125,22 @@ export function WatchSync() {
         canSkip: () => canJumpBySentence(),
         toggle: togglePlayPause,
         skip: (by) => skipSegment(by),
+        stop: stopListening,
+        lessonForWatch: () => {
+          const now = getListenSnapshot();
+          const session = now.session;
+          if (session && session.kind !== 'reply' && session.segments.length > 0 && now.state !== 'idle') {
+            return lessonForWatch({ lessonId: session.lessonId, title: session.lessonTitle, course: session.courseTitle, language: session.voiceLanguage === 'fil-PH' ? 'fil' : 'en', segments: session.segments, segment: now.activeSegment ?? 0 });
+          }
+          const { nextId, language: shown } = latest.current;
+          const lesson = nextId ? spokenLesson(nextId, shown) : null;
+          return lesson ? lessonForWatch({ ...lesson, segment: 0 }) : null;
+        },
+        startNext: () => {
+          const { nextId, ...options } = latest.current;
+          return nextId ? startLessonListening({ lessonId: nextId, ...options }) : false;
+        },
+        resume: (lessonId, segment) => startLessonListening({ lessonId, segment, ...latest.current }),
       },
       ledger,
       pushSnapshot: () => push.current(),

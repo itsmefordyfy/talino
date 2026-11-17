@@ -10,6 +10,7 @@ import { MaxContentWidth, Spacing, WideContentMaxWidth, SideFiltersMinWidth } fr
 import { useLocalized } from '@/hooks/use-strings';
 import { useTheme } from '@/hooks/use-theme';
 import { useSplitView } from '@/hooks/use-split-view';
+import { useTabWarmup } from '@/hooks/use-tab-warmup';
 import { useViewportSettling } from '@/hooks/use-viewport-settling';
 import { useTwoUp } from '@/hooks/use-two-up';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
@@ -19,7 +20,6 @@ import { FilterPanel } from '../components/filter-panel';
 import { HomeView } from '../components/home-view';
 import { ResultsView } from '../components/results-view';
 import { SearchField } from '../components/search-field';
-import { DiscoverToolbar } from '../components/discover-toolbar';
 import { queryChanged, selectDiscoverQuery } from '../discover-slice';
 import { useDiscoverTab, useIsBrowsing } from '../hooks/use-discover-tab';
 import { tabCounts } from '../lib/tabs';
@@ -55,9 +55,10 @@ function DiscoverContent() {
   const width = wide ? WideContentMaxWidth : MaxContentWidth;
   const sideFilters = roomy && browsing;
   const settling = useViewportSettling();
+  const warming = useTabWarmup();
 
   // The saved tab is still being read, or the window just changed width (a fold): the tab's whole shape, not a bare header.
-  if ((tab === null && query.trim() === '') || settling) return <TabSkeleton variant="courses" />;
+  if ((tab === null && query.trim() === '') || settling || warming) return <TabSkeleton variant="courses" />;
 
   return (
     <View style={[styles.root, { backgroundColor: theme.background }]}>
@@ -79,11 +80,9 @@ function DiscoverContent() {
               </View>
             </View>
           ) : (
+            // No Filters or Sort here: they narrow a list, and For you is picks, not a list (owner, 2026-11-17: remove what is redundant).
             <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={{ paddingTop: Spacing.three, paddingBottom: padding.paddingBottom }}>
-              <View style={styles.homeStack}>
-                <DiscoverToolbar />
-                <HomeView />
-              </View>
+              <HomeView />
             </ScrollView>
           )}
         </View>
@@ -109,9 +108,6 @@ const styles = StyleSheet.create({
   },
   bodyInner: {
     flex: 1,
-  },
-  homeStack: {
-    gap: Spacing.three,
   },
   split: {
     flex: 1,

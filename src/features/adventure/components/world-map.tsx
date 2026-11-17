@@ -1,11 +1,12 @@
-import { StyleSheet, View, Pressable } from 'react-native';
+import { useRef } from 'react';
+import { StyleSheet, View, Pressable, type LayoutChangeEvent } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
 import { Card } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
 import { ListRow } from '@/components/ui/list-row';
 import { ProgressBar } from '@/components/ui/progress-bar';
-import { Radius, Spacing, type ThemeColor } from '@/constants/theme';
+import { IconSize, Radius, Spacing, type ThemeColor } from '@/constants/theme';
 import { useLocalized } from '@/hooks/use-strings';
 import { useTheme } from '@/hooks/use-theme';
 import { useTones } from '@/hooks/use-tones';
@@ -26,6 +27,10 @@ export type WorldMapProps = {
   projectStatus?: (projectId: string) => string | undefined;
   onOpenMission: (lessonId: string) => void;
   onOpenProject: (projectId: string) => void;
+  /** Draws the world's header card (name, level, XP) above the chapters; the course page does, Home has its own course bar. */
+  showHeader?: boolean;
+  /** Told where the current mission sits, measured from the top of this map, so a screen can scroll to it. */
+  onCurrentY?: (y: number) => void;
 };
 
 const NODE = 36;
@@ -41,23 +46,30 @@ const LINE = 3;
  * are muted with a lock and what to finish first. Meaning never rests on color alone: every node
  * also has an icon and a word.
  */
-export function WorldMap({ world, theme, xp, owned, projectStatus, onOpenMission, onOpenProject }: WorldMapProps) {
+export function WorldMap({ world, theme, xp, owned, projectStatus, onOpenMission, onOpenProject, showHeader = true, onCurrentY }: WorldMapProps) {
   const strings = useLocalized(adventureStrings);
   return (
     <View style={styles.map}>
-      <WorldHeader world={world} theme={theme} xp={xp} />
+      {showHeader && <WorldHeader world={world} theme={theme} xp={xp} />}
       {world.chapters.map((chapter) => (
-        <ChapterView key={chapter.id} chapter={chapter} owned={owned} started={world.missionsDone > 0} onOpenMission={onOpenMission} />
+        <ChapterView key={chapter.id} chapter={chapter} owned={owned} started={world.missionsDone > 0} onOpenMission={onOpenMission} onCurrentY={onCurrentY} />
       ))}
       {world.boss && <BossView boss={world.boss} owned={owned} projectStatus={projectStatus} onOpenProject={onOpenProject} title={strings.boss} />}
     </View>
   );
 }
 
-function ChapterView({ chapter, owned, started, onOpenMission }: { chapter: Chapter; owned: boolean; started: boolean; onOpenMission: (lessonId: string) => void }) {
+function ChapterView({ chapter, owned, started, onOpenMission, onCurrentY }: { chapter: Chapter; owned: boolean; started: boolean; onOpenMission: (lessonId: string) => void; onCurrentY?: (y: number) => void }) {
   const strings = useLocalized(adventureStrings);
+  // The current mission's place from the top of the map: this chapter's offset in the map + the missions' in the chapter + the row's in them.
+  const offsets = useRef<{ chapter?: number; missions?: number; row?: number }>({});
+  const report = (part: 'chapter' | 'missions' | 'row', y: number) => {
+    offsets.current[part] = y;
+    const { chapter: c, missions: m, row: r } = offsets.current;
+    if (onCurrentY && c !== undefined && m !== undefined && r !== undefined) onCurrentY(c + m + r);
+  };
   return (
-    <View style={styles.chapter}>
+    <View style={styles.chapter} onLayout={onCurrentY ? (event) => report('chapter', event.nativeEvent.layout.y) : undefined}>
       <View style={styles.chapterHeader} accessible accessibilityRole="header" accessibilityLabel={`${strings.chapter(chapter.index + 1)}. ${strings.chapterTitle(chapter.title, chapter.index + 1, chapter.part)}. ${strings.chapterProgress(chapter.done, chapter.total)}`}>
         <ThemedText type="caption" themeColor="textSecondary" style={styles.eyebrow}>
           {strings.chapter(chapter.index + 1)}
@@ -72,16 +84,16 @@ function ChapterView({ chapter, owned, started, onOpenMission }: { chapter: Chap
           </ThemedText>
         </View>
       </View>
-      <View style={styles.missions}>
+      <View style={styles.missions} onLayout={onCurrentY ? (event) => report('missions', event.nativeEvent.layout.y) : undefined}>
         {chapter.missions.map((mission, index) => (
-          <MissionRow key={mission.lesson.id} mission={mission} first={index === 0} last={index === chapter.missions.length - 1} owned={owned} started={started} onOpen={onOpenMission} />
+          <MissionRow key={mission.lesson.id} mission={mission} first={index === 0} last={index === chapter.missions.length - 1} owned={owned} started={started} onOpen={onOpenMission} onRowY={onCurrentY ? (y) => report('row', y) : undefined} />
         ))}
       </View>
     </View>
   );
 }
 
-function MissionRow({ mission, first, last, owned, started, onOpen }: { mission: Mission; first: boolean; last: boolean; owned: boolean; started: boolean; onOpen: (lessonId: string) => void }) {
+function MissionRow({ mission, first, last, owned, started, onOpen, onRowY }: { mission: Mission; first: boolean; last: boolean; owned: boolean; started: boolean; onOpen: (lessonId: string) => void; onRowY?: (y: number) => void }) {
   const strings = useLocalized(adventureStrings);
   const theme = useTheme();
   const tones = useTones();
@@ -114,22 +126,23 @@ function MissionRow({ mission, first, last, owned, started, onOpen }: { mission:
           {note ?? `${strings.day(lesson.day)} · ${strings.minutes(lesson.minutes)}`}
         </ThemedText>
       </View>
-      <ThemedText type="caption" themeColor={done ? 'statusOk' : current ? 'primaryText' : 'textTertiary'} style={styles.stateLabel}>
-        {current ? (started ? strings.missionContinue : strings.missionStart) : stateLabel}
-      </ThemedText>
+      {/* No "Start" / "Done" word on the right (owner, 2026-11-17: it looked awkward): the node's icon and the tinted row already say which lesson is next, and the accessibility label still names the state. */}
+      {!locked && <Icon name="chevron_right" size={IconSize.medium} color={current ? 'primaryText' : 'textTertiary'} />}
     </>
   );
   const rowStyle = [styles.missionRow, current && { backgroundColor: theme.primarySoft }];
+  // Only the current mission says where it is.
+  const onLayout = current && onRowY ? (event: LayoutChangeEvent) => onRowY(event.nativeEvent.layout.y) : undefined;
   const label = strings.missionLabel(lesson.day, lesson.title, note ? `${stateLabel}. ${note}` : stateLabel);
   if (locked) {
     return (
-      <View accessible accessibilityRole="text" accessibilityLabel={label} accessibilityState={{ disabled: true }} style={rowStyle}>
+      <View accessible accessibilityRole="text" accessibilityLabel={label} accessibilityState={{ disabled: true }} style={rowStyle} onLayout={onLayout}>
         {content}
       </View>
     );
   }
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={() => onOpen(lesson.id)} style={({ pressed }) => [rowStyle, pressed && { backgroundColor: theme.backgroundSelected }]}>
+    <Pressable accessibilityRole="button" accessibilityLabel={label} onPress={() => onOpen(lesson.id)} onLayout={onLayout} style={({ pressed }) => [rowStyle, pressed && { backgroundColor: theme.backgroundSelected }]}>
       {content}
     </Pressable>
   );
@@ -243,10 +256,6 @@ const styles = StyleSheet.create({
     flex: 1,
     paddingVertical: Spacing.two,
     paddingRight: Spacing.two,
-  },
-  stateLabel: {
-    textAlign: 'right',
-    maxWidth: 80,
   },
   bossHeader: {
     flexDirection: 'row',

@@ -53,7 +53,7 @@ const lessons: Lesson[] = [
         caption: 'You rarely need all six. The more the AI would have to guess, the more of them you write.',
       },
       { type: 'paragraph', text: "A tiny, familiar change might need only a goal and one constraint. A new feature, or anything you could not explain to a friend in one breath, needs most of the six. The order above is a good habit too: say the overall goal first, then the details. GitHub's Copilot guidance gives the same advice, to start general and then get specific, with the most important requirements first." },
-      { type: 'diagram', format: 'mermaid', caption: 'The six parts go into one prompt. The Check is how you decide, not the AI.', source: 'flowchart TD\n  A[Goal] --> G[Your prompt]\n  B[Context] --> G\n  C[Constraints] --> G\n  D[Example] --> G\n  E[Format] --> G\n  F[Check] --> G\n  G --> H[The AI writes a result]\n  H --> I[You run the Check]\n  I -->|Fails| G\n  I -->|Passes| J(Keep it)' },
+      { type: 'diagram', format: 'mermaid', caption: 'The six parts (goal, context, constraints, example, format and check) go into one prompt. The Check is how you decide, not the AI.', source: 'flowchart TD\n  A[Goal and context] --> G[Your prompt]\n  B[Constraints] --> G\n  C[Example and format] --> G\n  D[Check] --> G\n  G --> H[The AI writes a result]\n  H --> I[You run the Check]\n  I -->|Fails| G\n  I -->|Passes| J(Keep it)' },
       { type: 'heading', text: 'A weak prompt and a strong prompt, side by side' },
       { type: 'prompt', label: 'Weak prompt', text: 'Make an app for utang.' },
       {

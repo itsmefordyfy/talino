@@ -1,0 +1,52 @@
+import { defineStrings } from '@/lib/i18n';
+
+const arrayOps = {
+  title: 'Array operations',
+  summary: 'An array keeps values side by side, so reading one is instant, but inserting or deleting in the middle makes every later element shift.',
+  description: 'Choose a value and an index, then insert, delete, append, traverse or search. Each cell shows its index. Step through an operation to watch elements being read and shifted one cell at a time. The counters show how many reads and writes it needed, and the complexity note says how that cost grows with the size of the array.',
+  topics: ['array', 'arrays', 'insert', 'insertion', 'delete', 'deletion', 'append', 'traversal', 'traverse', 'linear search', 'shifting', 'index', 'O(1)', 'O(n)', 'big o', 'time complexity', 'data structure', 'contiguous memory'],
+  valueLabel: 'Value',
+  indexLabel: 'Index',
+  sizeLabel: 'Start with this many numbers',
+  buttons: { insert: 'Insert at index', delete: 'Delete at index', append: 'Append', traverse: 'Traverse', search: 'Search value', reset: 'Reset array' },
+  operationNames: { insert: 'Insert', delete: 'Delete', append: 'Append', traverse: 'Traverse', search: 'Search' },
+  operationLabel: 'Operation',
+  noOperation: 'none yet',
+  reads: (n: number) => `Reads: ${n}`,
+  writes: (n: number) => `Writes: ${n}`,
+  total: (n: number) => `Total: ${n}`,
+  complexityLabel: 'Cost of this operation',
+  complexityNotes: {
+    O1: 'O(1), constant: it takes the same number of steps however long the array is.',
+    On: 'O(n), linear: the work grows with the number of elements that must be read or moved.',
+  },
+  complexityIdle: 'Run an operation to see its cost.',
+  emptySlot: 'empty',
+  legend: { read: 'Read', written: 'Written', found: 'Found', fresh: 'New value', removed: 'Removed' },
+  legendNote: 'Cells are numbered by index, starting at 0. Grey cells past the end are spare room.',
+  arrayLabel: (values: readonly number[]) => (values.length === 0 ? 'Empty array' : `Array with ${values.length} element${values.length === 1 ? '' : 's'}: ${values.map((value, index) => `index ${index} holds ${value}`).join(', ')}`),
+  intro: (count: number) => `This array holds ${count} numbers. Choose an operation, then step through it.`,
+  full: (max: number) => `The array holds at most ${max} numbers in this picture, so nothing was added.`,
+  badIndex: (index: number, low: number, high: number) => `Index ${index} is not possible here: valid positions are ${low} to ${high}, so nothing changed.`,
+  emptyArray: 'The array is empty, so there is nothing to delete, visit or find.',
+  insertStart: (value: number, index: number, shifts: number) => `Insert ${value} at index ${index}. ${shifts === 0 ? 'No element sits at or after that position, so nothing has to move.' : `The ${shifts} element${shifts === 1 ? '' : 's'} from index ${index} onward must each move one cell right to open a gap.`}`,
+  shift: (from: number, to: number, value: number) => `Read index ${from} (${value}) and write it into index ${to}.`,
+  place: (value: number, index: number, reads: number, writes: number) => `Write ${value} into index ${index}. Total cost: ${reads} read${reads === 1 ? '' : 's'} and ${writes} write${writes === 1 ? '' : 's'}.`,
+  appendStart: (value: number, index: number) => `Append ${value}: it goes into the next free cell, index ${index}. No other element moves.`,
+  deleteStart: (value: number, index: number, shifts: number) => `Delete ${value} at index ${index}. ${shifts === 0 ? 'It is the last element, so nothing has to move.' : `The ${shifts} element${shifts === 1 ? '' : 's'} after it must each move one cell left to close the gap.`}`,
+  deleteDone: (value: number, reads: number, writes: number) => `The array is one shorter: the last cell is spare room again and ${value} is gone. Total cost: ${reads} read${reads === 1 ? '' : 's'} and ${writes} write${writes === 1 ? '' : 's'}.`,
+  traverseStart: (count: number) => `Traverse: visit every element once, from index 0 to index ${count - 1}.`,
+  visit: (index: number, value: number) => `Read index ${index}: ${value}.`,
+  traverseDone: (count: number) => `Visited all ${count} element${count === 1 ? '' : 's'}: ${count} read${count === 1 ? '' : 's'}. Twice as many elements would mean twice as many reads.`,
+  searchStart: (value: number) => `Search for ${value}. The array is not sorted, so look at each cell in turn from index 0 (linear search).`,
+  searchMiss: (index: number, value: number, target: number) => `Index ${index} holds ${value}, not ${target}. Check the next cell.`,
+  searchFound: (index: number, value: number, reads: number) => `Index ${index} holds ${value}: found after ${reads} read${reads === 1 ? '' : 's'}. If it had been last, or missing, all of them would have been read.`,
+  searchNone: (target: number, count: number) => `All ${count} cell${count === 1 ? '' : 's'} were read and none holds ${target}, so it is not in the array.`,
+  readByIndex: 'Reading by index, like numbers[3], is O(1): the computer jumps straight to that cell.',
+};
+
+export const arrayOpsStrings = defineStrings({
+  en: arrayOps,
+  // Placeholder, not a translation: the owner's rule is no Filipino text, so this stays English until a translation is commissioned.
+  fil: arrayOps,
+});

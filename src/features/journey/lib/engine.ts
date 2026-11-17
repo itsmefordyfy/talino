@@ -198,6 +198,10 @@ export function computeJourney(definition: JourneyDefinition, facts: JourneyFact
     }
   });
 
+  // A late addition stands aside for a learner who has already begun a later milestone (and not this one): their place never moves backwards.
+  for (const base of bases) {
+    if (base.def.lateAddition && !base.done && !base.started && bases.some((later) => later.index > base.index && later.started)) base.skipped = true;
+  }
   const byId = new Map(bases.map((base) => [base.def.id, base]));
   const requiresOf = (base: Base): readonly string[] => base.def.requires ?? (base.index > 0 ? [bases[base.index - 1]!.def.id] : []);
   // A milestone that stands aside: optional for this learner, coming soon, or skipped as known ground.

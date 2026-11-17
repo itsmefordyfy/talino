@@ -1,9 +1,11 @@
 import type { CodeTests, SqlExpectation, SqlRunResult } from '@/features/code-runner';
 import type { Audience } from '@/features/courses/content/levels';
+import type { MatrixResult } from '@/features/productivity/lib/matrix';
+import type { PlanningAnswer, PlanningChallenge, ScheduleResult } from '@/features/productivity/types';
 
 export type { CodeTests, SqlExpectation };
 
-export const ACTIVITY_KINDS = ['tap-reveal', 'predict-output', 'fix-bug', 'arrange', 'fill-blank', 'match', 'scenario', 'code-challenge', 'sql-challenge'] as const;
+export const ACTIVITY_KINDS = ['tap-reveal', 'predict-output', 'fix-bug', 'arrange', 'fill-blank', 'match', 'scenario', 'code-challenge', 'sql-challenge', 'roleplay', 'message-review', 'prompt-lab', 'workflow-builder', 'planning'] as const;
 export type ActivityKind = (typeof ACTIVITY_KINDS)[number];
 
 /** How much help the learner gets: guided offers hints early, independent keeps only the last two. */
@@ -171,6 +173,81 @@ export type SqlChallengeActivity = ActivityBase & {
   solution: string;
 };
 
+/**
+ * A live conversation with a simulated person (Soft Skills course). The scenario is `practice/scenarios` by id. Done when the learner
+ * has had at least the scenario's `minTurns` turns and the debrief was delivered; the score is stored, XP is paid once. `prompt`
+ * and `hints` coach the approach (never a model answer).
+ */
+export type RoleplayActivity = ActivityBase & {
+  kind: 'roleplay';
+  scenarioId: string;
+};
+
+/** A message the learner writes and the message coach reviews against a `MessageTask` (`practice/scenarios`) by id. */
+export type MessageReviewActivity = ActivityBase & {
+  kind: 'message-review';
+  taskId: string;
+};
+
+/**
+ * The Prompt Playground, an AI Experiment Lab task or a Model Comparison (Generative AI course): the learner edits a prompt and runs it on a live
+ * model against a `LabTask` (`practice/labs`) by id. Done when at least one run came back and the review of the learner's prompt was delivered;
+ * XP once; the score is stored but completing never depends on it. `hints` coach the approach and never hold a model prompt.
+ */
+export type PromptLabActivity = ActivityBase & {
+  kind: 'prompt-lab';
+  labId: string;
+};
+
+/**
+ * The Productivity Challenge (Time Management and Productivity course): sort a fictional workload into the Eisenhower matrix (`mode: 'prioritize'`) or build a
+ * day from tasks, fixed commitments and an optional interruption (`mode: 'schedule'`). Checked by rules in `features/productivity` (never by a model); a
+ * schedule that overlaps, runs past the day, drops a must-do task, has no break or no slack never passes. The scenario is data in the lesson, with a
+ * reference solution that `validateActivity` runs against the scenario's own rules.
+ */
+export type PlanningActivity = ActivityBase & {
+  kind: 'planning';
+  challenge: PlanningChallenge;
+};
+
+/** Lanes of the Workflow Builder, in the order work flows through them. */
+export const WORKFLOW_LANES = ['input', 'ai', 'tool', 'human', 'output'] as const;
+export type WorkflowLane = (typeof WORKFLOW_LANES)[number];
+
+export type WorkflowPart = {
+  id: string;
+  lane: WorkflowLane;
+  /** A short name for the step ("Draft a reply with AI"). */
+  label: string;
+  /** One sentence on what happens in this step. */
+  detail: string;
+};
+
+/**
+ * `require`: every part in `parts` is in the workflow. `forbid`: none of them is. `before`: `parts` is `[a, b]`, and when both are in the workflow `a` comes
+ * first (a rule about order never forces a part in; add a `require` for that). `message` is what the learner reads when the rule is broken: why, not just what.
+ */
+export type WorkflowRule = { id: string; kind: 'require' | 'forbid' | 'before'; parts: string[]; message: string };
+
+/**
+ * The AI Workflow Builder (Generative AI course): the learner picks and orders steps (input, AI processing, tool or action, human review, output) from a
+ * palette that includes tempting wrong steps, and the rules are checked by code (no model call). Once it passes, `simulation` plays a sample request through
+ * the chosen steps; it is hand-written and the screen labels it "Simulated run, not a real model". Done when the workflow satisfies every rule.
+ */
+export type WorkflowBuilderActivity = ActivityBase & {
+  kind: 'workflow-builder';
+  /** The business situation and what the workflow must achieve (2 to 4 sentences). */
+  situation: string;
+  parts: WorkflowPart[];
+  rules: WorkflowRule[];
+  /** One valid order of part ids; `validateActivity` checks it satisfies every rule. */
+  solution: string[];
+  minSteps: number;
+  maxSteps: number;
+  /** The sample request, and what each step of the *solution* does with it (keyed by part id), and the final output. Hand-written. */
+  simulation: { input: string; steps: Record<string, string>; output: string };
+};
+
 export type Activity =
   | TapRevealActivity
   | PredictOutputActivity
@@ -180,7 +257,12 @@ export type Activity =
   | MatchActivity
   | ScenarioActivity
   | CodeChallengeActivity
-  | SqlChallengeActivity;
+  | SqlChallengeActivity
+  | RoleplayActivity
+  | MessageReviewActivity
+  | PromptLabActivity
+  | WorkflowBuilderActivity
+  | PlanningActivity;
 
 /** What the learner submitted, per kind. */
 export type ActivityAnswer =
@@ -193,7 +275,10 @@ export type ActivityAnswer =
   | { kind: 'match'; pairs: Record<number, number> }
   | { kind: 'scenario'; option: number }
   | { kind: 'code-challenge'; code: string }
-  | { kind: 'sql-challenge'; query: string };
+  | { kind: 'sql-challenge'; query: string }
+  /** Part ids in the learner's order. */
+  | { kind: 'workflow-builder'; order: string[] }
+  | ({ kind: 'planning' } & PlanningAnswer);
 
 export type CaseOutcome = { label: string; pass: boolean; hidden: boolean; message: string };
 
@@ -206,7 +291,10 @@ export type CheckDetail =
   | { kind: 'match'; right: number[]; wrong: number[] }
   | { kind: 'scenario'; quality: ScenarioQuality }
   | { kind: 'code-challenge'; passed: number; total: number; cases: CaseOutcome[]; output: string[]; error: string | null; world?: RobotOutcome }
-  | { kind: 'sql-challenge'; result: SqlRunResult | null };
+  | { kind: 'sql-challenge'; result: SqlRunResult | null }
+  | { kind: 'workflow-builder'; /** Ids of the rules the workflow breaks, in rule order. */ broken: string[]; steps: number }
+  | { kind: 'planning'; mode: 'prioritize'; matrix: MatrixResult }
+  | { kind: 'planning'; mode: 'schedule'; schedule: ScheduleResult };
 
 export type CheckResult = {
   correct: boolean;

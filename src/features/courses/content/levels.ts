@@ -59,9 +59,18 @@ const SUITS: Record<CourseDifficulty, [ExperienceLevel, ExperienceLevel]> = {
   advanced: ['advanced', 'professional'],
 };
 
-/** The learner levels a course of this difficulty is aimed at (advice shown on cards, never a restriction). */
-export function levelsSuitedTo(difficulty: CourseDifficulty): ExperienceLevel[] {
-  const [from, to] = SUITS[difficulty];
+/**
+ * Courses whose "Best for" line is wider than their difficulty tier gives (owner's call, 2026-11-17): Data Structures and Algorithms is
+ * an Intermediate course, but it starts from what an array is and counts operations before naming Big O, so a complete beginner can
+ * follow it too. Advice only; the tier still orders catalogs and paths.
+ */
+const SUITED_OVERRIDES: Readonly<Record<string, [ExperienceLevel, ExperienceLevel]>> = {
+  'data-structures-algorithms': ['complete-beginner', 'intermediate'],
+};
+
+/** The learner levels a course of this difficulty is aimed at (advice shown on cards, never a restriction); a course id may carry its own range. */
+export function levelsSuitedTo(difficulty: CourseDifficulty, courseId?: string): ExperienceLevel[] {
+  const [from, to] = (courseId && SUITED_OVERRIDES[courseId]) || SUITS[difficulty];
   return EXPERIENCE_LEVELS.slice(levelIndex(from), levelIndex(to) + 1);
 }
 

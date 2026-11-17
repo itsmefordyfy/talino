@@ -22,6 +22,11 @@ export function parseWatchCommand(json: string): WatchCommand | null {
     case 'listen.play':
     case 'listen.pause':
       return { id, type: c.type };
+    case 'listen.start':
+    case 'listen.toWatch':
+      return { id, type: c.type };
+    case 'listen.resume':
+      return isText(c.lessonId) && typeof c.segment === 'number' && Number.isInteger(c.segment) && c.segment >= 0 && c.segment <= 100_000 ? { id, type: 'listen.resume', lessonId: c.lessonId, segment: c.segment } : null;
     case 'listen.skip':
       return c.by === 1 || c.by === -1 ? { id, type: 'listen.skip', by: c.by } : null;
     default:

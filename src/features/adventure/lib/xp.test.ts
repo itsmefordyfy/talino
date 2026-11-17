@@ -7,7 +7,7 @@ const lesson = (overrides: Partial<Parameters<typeof computeXp>[0]['lessonRows']
 
 describe('activityXp', () => {
   test('base XP by kind, and reading pays nothing', () => {
-    expect(ACTIVITY_BASE_XP).toEqual({ 'tap-reveal': 0, 'predict-output': 8, 'fix-bug': 12, arrange: 10, 'fill-blank': 8, match: 8, scenario: 8, 'code-challenge': 15, 'sql-challenge': 15 });
+    expect(ACTIVITY_BASE_XP).toEqual({ 'tap-reveal': 0, 'predict-output': 8, 'fix-bug': 12, arrange: 10, 'fill-blank': 8, match: 8, scenario: 8, 'code-challenge': 15, 'sql-challenge': 15, roleplay: 15, 'message-review': 12, 'prompt-lab': 12, 'workflow-builder': 10, planning: 12 });
     expect(activityXp('tap-reveal', { hintsUsed: 0, wrong: 0 })).toBe(0);
     for (const kind of ACTIVITY_KINDS) expect(activityXp(kind, { hintsUsed: 0, wrong: 0 })).toBe(ACTIVITY_BASE_XP[kind]);
   });

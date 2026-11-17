@@ -43,6 +43,11 @@ export type ActivitySession = {
   /** Checks an answer: counts the try, reports it and, the first time it is right, reports the solve. */
   check: (answer: ActivityAnswer) => Promise<CheckResult | null>;
   revealHint: () => void;
+  /**
+   * For an activity finished by its own flow instead of by checking an answer (a role-play whose debrief arrived, a message the coach reviewed):
+   * counts the try, reports it as right and, the first time, reports the solve. Called once per visit; a later one does nothing.
+   */
+  complete: () => void;
   /** Clears the feedback so the learner can try again. */
   dismiss: () => void;
 };
@@ -58,7 +63,7 @@ export function useActivitySession({ activity, guidance, onAttempt, onSolved, so
   const [result, setResult] = useState<CheckResult | null>(null);
   const [last, setLast] = useState<ActivitySession['last']>(null);
   // Plain counters mirror the state so the callbacks always see the latest numbers, even for quick taps.
-  const counts = useRef({ attempts: 0, wrong: 0, hints: 0, solved: solvedBefore, busy: false });
+  const counts = useRef({ attempts: 0, wrong: 0, hints: 0, solved: solvedBefore, busy: false, finished: false });
 
   const check = async (answer: ActivityAnswer) => {
     if (counts.current.busy) return null;
@@ -97,6 +102,21 @@ export function useActivitySession({ activity, guidance, onAttempt, onSolved, so
     }
   };
 
+  const complete = () => {
+    if (counts.current.finished) return;
+    counts.current.finished = true;
+    counts.current.attempts += 1;
+    setAttempts(counts.current.attempts);
+    onAttempt({ activityId: activity.id, correct: true, hintsUsed: counts.current.hints });
+    successFeedback();
+    setLast('solved');
+    setDone(true);
+    if (!counts.current.solved) {
+      counts.current.solved = true;
+      onSolved({ activityId: activity.id, attempts: counts.current.attempts, wrong: counts.current.wrong, hintsUsed: counts.current.hints });
+    }
+  };
+
   const revealHint = () => {
     const available = nextHint(activity.hints, guidance, counts.current.hints);
     if (!available) return;
@@ -124,6 +144,7 @@ export function useActivitySession({ activity, guidance, onAttempt, onSolved, so
     next: nextHint(activity.hints, guidance, hintsUsed),
     offerHint: !done && shouldOfferHint(guidance, wrong, hintsUsed, activity.hints),
     check,
+    complete,
     revealHint,
     dismiss: () => setResult(null),
   };

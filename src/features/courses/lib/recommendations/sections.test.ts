@@ -1,15 +1,14 @@
 import { describe, expect, test } from '@jest/globals';
 
 import { LEARNING_PATHS } from '../../content/catalog/paths';
-import { CATEGORY_IDS } from '../../content/types';
 import { buildCourseFacts } from '../catalog-facts';
 import { makeCourse } from '../fixtures.test-helpers';
 import { FLAT_RARITY, matchTarget } from './match';
-import { GOAL_TARGETS, INTEREST_TARGETS, type TopicInterestId } from './profile-mapping';
+import { INTEREST_TARGETS } from './profile-mapping';
 import { EMPTY_FILTERS } from '../discovery/filters';
 import { runDiscovery } from '../discovery/query';
 import { recommendCourses } from './recommend';
-import { buildDiscoverySections, shownCourseIds } from './sections';
+import { buildDiscoverySections, MIN_RELEVANCE, shownCourseIds } from './sections';
 import { signalsFrom } from './signals';
 import { FACTS, finished, idsOf, profileOf, signalsFor } from './recommendations.test-helpers';
 
@@ -49,30 +48,8 @@ describe('the beginner interested in web development', () => {
   });
 });
 
-describe('a student who wants to explore outside their preferences', () => {
+describe('a student keeps the whole catalog whatever they picked', () => {
   const profile = { experience: 'intermediate' as const, goals: ['frontend' as const, 'full-stack' as const], interests: ['react' as const, 'nextjs' as const, 'typescript' as const] };
-  const sections = sectionsFor(profile);
-
-  test('"discover something new" offers beginner-friendly courses from categories they did not pick', () => {
-    const groups = sections.discoverNew ?? [];
-    expect(groups.length).toBeGreaterThan(0);
-    const picked = new Set<string>([
-      ...profile.goals.flatMap((goal) => GOAL_TARGETS[goal].categories ?? []),
-      ...profile.interests.flatMap((interest) => INTEREST_TARGETS[interest as TopicInterestId].categories ?? []),
-    ]);
-    for (const group of groups) {
-      expect(picked.has(group.category)).toBe(false);
-      expect(group.courses.length).toBeGreaterThanOrEqual(1);
-      expect(group.courses.length).toBeLessThanOrEqual(2);
-      for (const entry of group.courses) {
-        expect(entry.facts.category).toBe(group.category);
-        // The gentlest way into the category: nothing above the lowest level it offers.
-        const lowest = Math.min(...FACTS.filter((facts) => facts.category === group.category).map((facts) => ['beginner', 'intermediate', 'advanced'].indexOf(facts.level)));
-        expect(['beginner', 'intermediate', 'advanced'].indexOf(entry.facts.level)).toBe(lowest);
-      }
-    }
-    expect(new Set(groups.map((group) => group.category)).size).toBe(groups.length);
-  });
 
   test('personalizing never filters the catalog: every course is still reachable', () => {
     const all = recommendCourses(signalsFor(profile), FACTS, { scope: 'everything' });
@@ -81,22 +58,17 @@ describe('a student who wants to explore outside their preferences', () => {
     expect(idsOf(all)).toEqual(expect.arrayContaining(['freelancer', 'educator', 'ai-coding-security', 'build-mobile-app-ai']));
   });
 
-  test('"Explore all" shows the full catalog, whatever they picked, and discover offers other categories than their own', () => {
+  test('"Explore all" shows the full catalog, whatever they picked', () => {
     const explored = runDiscovery(FACTS, { text: '', filters: EMPTY_FILTERS, sort: 'recommended' }, { recommendedRank: new Map(recommendCourses(signalsFor(profile), FACTS, { scope: 'everything' }).map((entry, index) => [entry.facts.id, index])) });
     expect(explored.total).toBe(FACTS.length);
     expect(explored.results).toHaveLength(FACTS.length);
-    const own = new Set((sections.recommended ?? []).map((entry) => entry.facts.category));
-    const elsewhere = (sections.discoverNew ?? []).filter((group) => !own.has(group.category));
-    expect(elsewhere.length).toBeGreaterThanOrEqual(2);
-    expect((sections.discoverNew ?? []).flatMap((group) => idsOf(group.courses))).not.toEqual([]);
   });
 
-  test('a learner with no goals or interests still gets a way in to every kind of course', () => {
+  test('a learner with no goals or interests is recommended nothing (the home offers first steps instead)', () => {
     const open = sectionsFor({});
     expect(open.recommended).toBeUndefined();
     expect(open.yourPath).toBeUndefined();
     expect(open.exploreInterests).toBeUndefined();
-    expect(open.discoverNew?.length).toBeGreaterThan(0);
   });
 });
 
@@ -143,7 +115,7 @@ describe('continue learning', () => {
   });
 
   test('a started course is for "continue", not "recommended"; a completed one is never recommended', () => {
-    const everywhere = [...idsOf(sections.recommended ?? []), ...idsOf(sections.exploreInterests ?? []), ...(sections.discoverNew ?? []).flatMap((group) => idsOf(group.courses)), ...idsOf(sections.recentlyAdded ?? [])];
+    const everywhere = [...idsOf(sections.recommended ?? []), ...idsOf(sections.exploreInterests ?? []), ...idsOf(sections.recentlyAdded ?? [])];
     for (const id of ['ai-coding-beginners', 'prompt-engineering-dev', 'starter', 'understanding-ai-code']) expect(everywhere).not.toContain(id);
   });
 
@@ -286,7 +258,6 @@ describe('no course is shown twice on the same screen', () => {
     for (const step of sections.yourPath?.steps ?? []) {
       if (step.listedAbove) expect(['continueLearning', 'recommended']).toContain(step.listedAbove);
     }
-    for (const group of sections.discoverNew ?? []) expect(CATEGORY_IDS).toContain(group.category);
   });
 });
 
@@ -313,5 +284,58 @@ describe('evolution', () => {
     expect(idsOf(data.continueLearning ?? [])).toEqual(['prompt-engineering-dev']);
     expect(web.continueLearning?.[0].fraction).toBe(0.5);
     for (const sections of [web, data]) expect(shownCourseIds(sections)).not.toContain('ai-coding-beginners');
+  });
+});
+
+describe('For you shows only what is about the learner\'s goals and interests (owner, 2026-11-17)', () => {
+  const quiz = (courseId: string, quizAverage: number) => ({ courseId, fraction: 0.5, complete: false, started: true, quizAverage, lessonsDone: 4 });
+  const profiles = {
+    'web beginner': { experience: 'complete-beginner' as const, goals: ['from-scratch' as const, 'frontend' as const], interests: ['html-css' as const, 'javascript' as const] },
+    'mobile': { experience: 'beginner' as const, goals: ['mobile' as const], interests: ['flutter' as const, 'ios' as const] },
+    'data': { experience: 'intermediate' as const, goals: ['data-science' as const], interests: ['python' as const, 'ml' as const, 'sql' as const] },
+    'generative AI': { experience: 'beginner' as const, goals: ['ai' as const], interests: ['genai' as const, 'llm' as const] },
+    'game development (no course of its own)': { experience: 'beginner' as const, goals: ['game-dev' as const], interests: [] },
+  };
+
+  for (const [name, profile] of Object.entries(profiles)) {
+    test(`${name}: every course in every personal section is about what they asked for`, () => {
+      const signals = signalsFor(profile, [quiz('ai-dev-intro', 0.4), ...finished('starter')]);
+      const sections = buildDiscoverySections(signals, FACTS, { now: NOW, learnerLevel: 'beginner' });
+      const relevanceOf = new Map(recommendCourses(signals, FACTS, { scope: 'everything' }).map((entry) => [entry.facts.id, entry.relevance]));
+      const lists = { recommended: sections.recommended, exploreInterests: sections.exploreInterests, nextLevel: sections.nextLevel?.courses, improveSkills: sections.improveSkills };
+      for (const [section, list] of Object.entries(lists)) {
+        for (const entry of list ?? []) expect([name, section, entry.facts.id, (relevanceOf.get(entry.facts.id) ?? 0) >= MIN_RELEVANCE]).toEqual([name, section, entry.facts.id, true]);
+      }
+    });
+  }
+
+  test('a generative AI learner is not sent to time management or soft skills', () => {
+    const sections = buildDiscoverySections(signalsFor(profiles['generative AI']), FACTS, { now: NOW, learnerLevel: 'beginner' });
+    const shown = shownCourseIds(sections);
+    expect(shown).not.toContain('time-management-productivity');
+    expect(shown).not.toContain('soft-skills-workplace');
+    expect(shown).toContain('generative-ai-applications');
+  });
+
+  test('there is no "discover something new" block of categories the learner did not pick', () => {
+    expect('discoverNew' in buildDiscoverySections(signalsFor(profiles['web beginner']), FACTS, { now: NOW })).toBe(false);
+  });
+
+  test('what they merely opened does not recommend a course: a game-development learner who browsed LLM courses is not sent to them', () => {
+    const signals = signalsFor(profiles['game development (no course of its own)'], [], { exploredTechnologies: { llm: 6, chatgpt: 4 } });
+    const sections = buildDiscoverySections(signals, FACTS, { now: NOW, learnerLevel: 'beginner' });
+    expect(sections.recommended).toBeUndefined();
+    expect(sections.exploreInterests).toBeUndefined();
+  });
+
+  test('a learning path is offered only when it is about their goals or interests, not because of progress already made', () => {
+    const signals = signalsFor(profiles['game development (no course of its own)'], [...finished('starter', 'ai-coding-beginners')]);
+    expect(buildDiscoverySections(signals, FACTS, { now: NOW, learnerLevel: 'beginner' }).yourPath).toBeUndefined();
+  });
+
+  test('someone who named nothing still gets what their own activity points at', () => {
+    const signals = signalsFor({}, [], { exploredTechnologies: { cursor: 6, 'claude-code': 4 } });
+    const sections = buildDiscoverySections(signals, FACTS, { now: NOW });
+    expect((sections.recommended ?? []).length).toBeGreaterThan(0);
   });
 });

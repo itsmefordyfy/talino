@@ -1,0 +1,20 @@
+/** Time Management and Productivity: the course's tools (Eisenhower matrix, day planner, Pomodoro timer, prompt playground) and the rules that check them. */
+export * from './types';
+export { productivityStrings, type ProductivityText } from './strings';
+export { DEFAULT_PASS_RATIO, groupByQuadrant, moveTask, quadrantFor, scoreMatrix, type MatrixGroups, type MatrixResult } from './lib/matrix';
+export { allFixedBlocks, findOverlaps, focusRuns, freeGaps, resolveRules, scheduleProblems, scoreSchedule } from './lib/schedule';
+export { checkPlanning, planningProblems } from './lib/planning';
+export * from './lib/pomodoro';
+export { checkPrompt, findPlaceholders, privacyRisks, PART_IDS, PART_INFO, type PromptCheck, type PromptPart, type PrivacyRisk } from './lib/prompt-check';
+export { PROMPT_TEMPLATES, findPromptTemplate, type PromptTemplate, type PromptTemplateId } from './data/prompt-templates';
+export * from './lib/time';
+export { EMPTY_DAY, EMPTY_MATRIX, MAX_TOOL_TASKS, MAX_TITLE, parseDayState, parseMatrixState, type DayToolState, type MatrixToolState } from './lib/state';
+export * from './api/productivity-repo';
+export { MatrixBoard, type MatrixBoardProps } from './components/matrix-board';
+export { DayPlanner, type DayPlannerProps } from './components/day-planner';
+export { Stepper, type StepperProps } from './components/stepper';
+export { dayAdvice, daySummary, removeTaskBlocks, type DayAdvice, type DaySummary } from './lib/day-plan';
+export { MAX_TASK_LENGTH, TICK_MS, focusSessionId, usePomodoro, usePomodoroSaved, type PomodoroNotice, type PomodoroSaved, type UsePomodoroOptions } from './hooks/use-pomodoro';
+export { elapsedFraction, roundNumber } from './lib/pomodoro-view';
+export { DRAFT_SAVE_DELAY_MS, usePromptDraft, useSavedPromptDraft, type UsePromptDraftOptions } from './hooks/use-prompt-draft';
+export type { ReadOnce } from './hooks/use-read-once';

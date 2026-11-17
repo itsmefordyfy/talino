@@ -1,4 +1,4 @@
-import { profileLink } from './build-portfolio';
+import { profileLink } from './links';
 
 /** What the public page and its server accept (`lib/server/portfolio`): screenshots are small JPEGs held as base64 text. */
 export const MAX_PROJECT_IMAGES = 4;

@@ -243,6 +243,11 @@ export const EXCLUDED_TABLES = [
   'interviews',
   'interview_messages',
   'interview_reports',
+  // Practice sessions (role-plays and message reviews) are the same kind of private conversation: the learner's own words and an honest debrief stay on the phone that had them.
+  'practice_sessions',
+  'practice_messages',
+  // Finished Pomodoro focus rounds are the learner's own working pattern: they stay on the phone that had them.
+  'focus_sessions',
   // The portfolio edit key, the class code and the referral state: credential-like, never in a file.
   'app_state',
 ] as const;
