@@ -6,7 +6,7 @@ import { validateDiagram } from './validate';
 export const MERMAID_MAX_CHARS = 6000;
 export const MERMAID_MAX_LINES = 200;
 
-const SUPPORTED = 'Supported diagrams: flowchart (TD or LR), sequenceDiagram, classDiagram and erDiagram.';
+const SUPPORTED = 'Supported diagrams: flowchart (TD or LR), sequenceDiagram, classDiagram, erDiagram and the C4 diagrams C4Context, C4Container and C4Component.';
 
 class MermaidError extends Error {}
 
@@ -316,6 +316,91 @@ function parseEr(lines: Line[]): { entities: ErEntity[]; relationships: ErRelati
   return { entities: [...entities.values()], relationships };
 }
 
+
+/* ----------------------------------- C4 ---------------------------------- */
+
+const C4_ELEMENT = new RegExp(`^(Person|Person_Ext|System|System_Ext|SystemDb|SystemDb_Ext|Container|Container_Ext|ContainerDb|ContainerDb_Ext|Component|Component_Ext|ComponentDb|ComponentDb_Ext)\\s*\\((.*)\\)$`);
+const C4_BOUNDARY = new RegExp(`^(Boundary|Enterprise_Boundary|System_Boundary|Container_Boundary)\\s*\\((.*)\\)\\s*\\{$`);
+const C4_REL = new RegExp(`^(Rel|BiRel|Rel_U|Rel_D|Rel_L|Rel_R)\\s*\\((.*)\\)$`);
+const C4_IGNORED = /^(UpdateLayoutConfig|UpdateElementStyle|UpdateRelStyle|LAYOUT_[A-Z_]+|SHOW_LEGEND|HIDE_STEREOTYPE)\b/;
+
+/** Splits the arguments of a C4 call on commas that are not inside double quotes; each is unquoted and trimmed. */
+function splitC4Args(text: string, no: number): string[] {
+  const args: string[] = [];
+  let current = '';
+  let quoted = false;
+  for (const char of text) {
+    if (char === '"') quoted = !quoted;
+    if (char === ',' && !quoted) {
+      args.push(stripQuotes(current));
+      current = '';
+    } else current += char;
+  }
+  if (quoted) bad(no, 'a quote is not closed');
+  args.push(stripQuotes(current));
+  return args.filter((arg, index) => !(index === args.length - 1 && arg === '' && args.length > 1));
+}
+
+function parseC4(lines: Line[], keyword: string): { nodes: DiagramNode[]; edges: DiagramEdge[]; title?: string } {
+  const nodes: DiagramNode[] = [];
+  const edges: DiagramEdge[] = [];
+  const boundaries: string[] = [];
+  let title: string | undefined;
+  for (const { no, text } of lines) {
+    if (C4_IGNORED.test(text)) continue;
+    const titled = /^title\s+(.+)$/i.exec(text);
+    if (titled) {
+      title = stripQuotes(titled[1]);
+      continue;
+    }
+    if (text === '}') {
+      if (boundaries.length === 0) bad(no, 'a "}" closes nothing; there is no open boundary');
+      boundaries.pop();
+      continue;
+    }
+    const boundary = C4_BOUNDARY.exec(text);
+    if (boundary) {
+      const args = splitC4Args(boundary[2], no);
+      if (args.length < 2 || !new RegExp(`^${ID}$`).test(args[0])) bad(no, 'a boundary needs an id and a label: System_Boundary(id, "Label") {');
+      boundaries.push(cut(args[1], DIAGRAM_LIMITS.maxGroup));
+      continue;
+    }
+    const element = C4_ELEMENT.exec(text);
+    if (element) {
+      const kind = element[1];
+      const args = splitC4Args(element[2], no);
+      if (args.length < 2 || !new RegExp(`^${ID}$`).test(args[0])) bad(no, `${kind} needs an id and a label, for example ${kind}(id, "Label", "Description")`);
+      const person = kind.startsWith('Person');
+      const technical = kind.startsWith('Container') || kind.startsWith('Component');
+      const technology = technical ? args[2] : undefined;
+      const description = technical ? args[3] : args[2];
+      const note = [technology ? `[${technology}]` : '', description ?? ''].filter(Boolean).join(' ');
+      const external = kind.endsWith('_Ext');
+      const group = boundaries.length > 0 ? boundaries[boundaries.length - 1] : external ? 'External' : person ? 'People' : undefined;
+      nodes.push({
+        id: args[0],
+        label: cut(args[1], DIAGRAM_LIMITS.maxLabel),
+        shape: person ? 'actor' : kind.includes('Db') ? 'database' : 'box',
+        ...(note ? { note: cut(note, DIAGRAM_LIMITS.maxNote) } : {}),
+        ...(group ? { group } : {}),
+      });
+      continue;
+    }
+    const rel = C4_REL.exec(text);
+    if (rel) {
+      const args = splitC4Args(rel[2], no);
+      if (args.length < 3) bad(no, `${rel[1]} needs two ids and a label, for example ${rel[1]}(from, to, "What it does")`);
+      const label = args[3] ? `${args[2]} (${args[3]})` : args[2];
+      edges.push({ from: args[0], to: args[1], label: cut(label, DIAGRAM_LIMITS.maxLabel), ...(rel[1] === 'BiRel' ? { bidirectional: true } : {}) });
+      continue;
+    }
+    if (/^(Rel_Back|Rel_Neighbor|RelIndex|Lay_|Deployment_Node|Node)/.test(text)) bad(no, `"${text.split(/[\s(]/)[0]}" isn't supported yet; use Person, System, Container, Component, a Boundary and Rel`);
+    bad(no, `can't read this ${keyword} line; write something like System(id, "Name", "What it does") or Rel(a, b, "Uses")`);
+  }
+  if (boundaries.length > 0) bad(null, 'a boundary is missing its closing "}"');
+  return { nodes, edges, title };
+}
+
 /* --------------------------------- entry --------------------------------- */
 
 export type MermaidOptions = { title?: string; summary?: string };
@@ -328,7 +413,9 @@ function cut(text: string, max: number): string {
  * Reads a safe subset of Mermaid into a `DiagramSpec`: `flowchart TD|LR` (nodes `A[Box]`, `(Rounded)`,
  * `{Decision}`, `((Circle))`, `[(Database)]`, arrows `-->`, `-.->`, `-->|label|`), `sequenceDiagram`
  * (`participant`, `->>`, `-->>`), `classDiagram` (`class`, members, `<|--`, `*--`, `o--`, `-->`, `..>`,
- * `..|>`) and `erDiagram` (`A ||--o{ B : has`, attribute blocks). The text is only ever parsed, never
+ * `..|>`), `erDiagram` (`A ||--o{ B : has`, attribute blocks) and the C4 views `C4Context`, `C4Container` and `C4Component`
+ * (`Person`, `System`, `Container`, `Component` and their `_Ext` / `Db` forms, `System_Boundary(id, "Name") { }`, `Rel`, `BiRel`; drawn as an
+ * architecture diagram, the boundary or External/People becoming the colour group). The text is only ever parsed, never
  * evaluated; anything else is a friendly error. The result is checked by `validateDiagram` as well.
  */
 export function parseMermaidSubset(text: string, options: MermaidOptions = {}): DiagramResult {
@@ -367,6 +454,9 @@ export function parseMermaidSubset(text: string, options: MermaidOptions = {}): 
       draft = { kind: 'sequence', title: title ?? 'Sequence diagram', ...placeholder, ...parseSequence(lines) };
     } else if (keyword === 'classdiagram' && heading.length === 1) {
       draft = { kind: 'class', title: title ?? 'Class diagram', ...placeholder, ...parseClassDiagram(lines) };
+    } else if ((keyword === 'c4context' || keyword === 'c4container' || keyword === 'c4component') && heading.length === 1) {
+      const parsed = parseC4(lines, heading[0]);
+      draft = { kind: 'architecture', title: title ?? parsed.title ?? 'C4 diagram', ...placeholder, direction: 'TD', nodes: parsed.nodes, edges: parsed.edges };
     } else if (keyword === 'erdiagram' && heading.length === 1) {
       draft = { kind: 'er', title: title ?? 'Entity relationship diagram', ...placeholder, ...parseEr(lines) };
     } else {

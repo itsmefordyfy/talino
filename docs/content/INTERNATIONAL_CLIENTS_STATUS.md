@@ -1,6 +1,6 @@
 # Finding International Clients: status (2026-11-17)
 
-**State: written, registered, wired and passing its checks in code. Built on the Soft Skills practice engine; the engine was not changed. Never run against live Gemini, never played end to end on a device, not narrated.**
+**State: written, registered, wired and passing its checks in code. Built on the Soft Skills practice engine; the engine was not changed. Never run against live Gemini, never played end to end on a device. Kokoro recordings are generated locally, not uploaded.**
 Design: `docs/superpowers/specs/2026-11-17-international-clients-course-design.md`. Writer brief: `docs/content/INTERNATIONAL_CLIENTS_BRIEF.md`.
 
 ## What exists
@@ -42,7 +42,7 @@ named laws, tax forms, payment providers and Filipino words (none stated; the pe
 
 ## Not done, and why
 - **Tagalog / Taglish: none written.** The owner's standing rule (no Filipino text; `TAGALOG_ENABLED` false; Kokoro has no Filipino voice) against the brief. Tali and Tala already answer in Taglish when the learner writes it.
-- **Kokoro recordings not generated** (scripts exported only; run `scripts/audio/run-international-clients.sh` on the Mac, upload is the owner's). The phone's voice reads lessons until then.
+- **Kokoro recordings generated locally (2026-11-18), not uploaded and not listened to.** All 52 lessons for both voices (am_puck for Tali, af_heart for Tala): 52 `.m4a`, 52 timing and 52 peaks files each, about 156 MB per voice, about 7.3 hours per voice by file duration, no errors in the logs. Output is in `scripts/audio/out/audio/<voice>/international-clients-NN.*`. Checked only by counts, sizes and durations: no lesson was played, so pronunciation of names and terms is unheard. Hosting is the owner's step (`scripts/audio/upload-r2.mjs`); until then the phone's voice reads lessons. If a lesson's text changes, re-run `export-scripts.cjs` for it and regenerate it.
 - **No live Gemini call was made** (the owner's prepaid key): partner behaviour, debrief and review wording, and whether the models respect `private` and `reactions` are unseen. A smoke test of two or three sessions is the next step, with the owner's go-ahead.
   The hosted `/api/practice` must be deployed (same as Soft Skills).
 - **Not seen:** a real role-play or review on screen, the quiz and Practice stages, a lesson's AI in Action, the intermediate tips, the journey milestone, the learning paths, iPad, Android emulator, web, VoiceOver, dark mode. No taps are possible in a simulator here.

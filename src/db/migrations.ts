@@ -392,6 +392,24 @@ const MIGRATIONS: readonly Migration[] = [
     );
     CREATE INDEX IF NOT EXISTS idx_focus_sessions_ended ON focus_sessions(ended_at);
   `,
+  // v11: the learner's own architecture work from Software Architecture with AI: diagrams (Mermaid text), decision records and trade-off matrices (JSON), saved
+  // by the course's tools and optionally tied to a project. Backed up (it is project work) and deletable, so its deletes leave a tombstone like a résumé does.
+  `
+    CREATE TABLE IF NOT EXISTS architecture_artifacts (
+      id TEXT PRIMARY KEY NOT NULL,
+      kind TEXT NOT NULL,
+      title TEXT NOT NULL,
+      content TEXT NOT NULL,
+      project_id TEXT,
+      created_at TEXT NOT NULL,
+      updated_at TEXT NOT NULL
+    );
+    CREATE INDEX IF NOT EXISTS idx_architecture_artifacts_kind ON architecture_artifacts(kind, updated_at);
+    CREATE INDEX IF NOT EXISTS idx_architecture_artifacts_project ON architecture_artifacts(project_id);
+    CREATE TRIGGER IF NOT EXISTS trg_architecture_artifacts_deleted AFTER DELETE ON architecture_artifacts BEGIN
+      INSERT OR REPLACE INTO deleted_rows (table_name, row_id, deleted_at) VALUES ('architecture_artifacts', OLD.id, strftime('%Y-%m-%dT%H:%M:%fZ', 'now'));
+    END;
+  `,
 ];
 
 export const DATABASE_NAME = 'talino.db';

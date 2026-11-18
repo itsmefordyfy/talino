@@ -51,7 +51,7 @@ export function CourseOutline({ courseId, currentLessonId }: CourseOutlineProps)
   const open = (lessonId: string, inert: boolean) => {
     if (inert) return;
     tapFeedback();
-    if (access.known && !owned) void openPaywall('courses');
+    if (access.known && !access.canOpenLesson(course.id, lessonId)) void openPaywall('courses');
     else router.replace({ pathname: '/lesson/[id]', params: { id: lessonId } });
   };
 

@@ -7,6 +7,8 @@ const GOAL_FOCUS: Readonly<Record<string, JourneyFocusId>> = {
   backend: 'web',
   'full-stack': 'web',
   ai: 'ai',
+  // Data science is machine learning and AI work first.
+  'data-science': 'ai',
   freelance: 'freelance',
   'software-engineer': 'hired',
   'interview-prep': 'hired',
@@ -27,6 +29,10 @@ const INTEREST_FOCUS: Readonly<Record<string, JourneyFocusId>> = {
   'html-css': 'web',
   apis: 'web',
   databases: 'web',
+  backend: 'web',
+  express: 'web',
+  // The plain "Artificial intelligence" interest, the one every AI learner ticks, pointed nowhere before.
+  ai: 'ai',
   'ai-coding': 'ai',
   genai: 'ai',
   llm: 'ai',

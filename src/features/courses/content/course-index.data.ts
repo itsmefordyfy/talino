@@ -1064,5 +1064,124 @@ export const COURSE_INDEX_DATA: readonly CourseIndexEntry[] = [
         "title": "The Productive Professional Challenge"
       }
     ]
+  },
+  {
+    "id": "ai-fundamentals-everyone",
+    "kind": "standard",
+    "title": "AI Fundamentals for Everyone",
+    "projects": [
+      {
+        "id": "ai-fundamentals-everyone-p1",
+        "title": "Your First AI-Assisted Task"
+      },
+      {
+        "id": "ai-fundamentals-everyone-p2",
+        "title": "Responsible AI Real-World Challenge"
+      }
+    ]
+  },
+  {
+    "id": "software-architecture-ai",
+    "kind": "standard",
+    "title": "Software Architecture with AI: Design Scalable, Secure, and Production-Ready Systems",
+    "projects": [
+      {
+        "id": "software-architecture-ai-p1",
+        "title": "Design a Multi-Tenant SaaS Architecture"
+      },
+      {
+        "id": "software-architecture-ai-p2",
+        "title": "Scale an Existing Application"
+      },
+      {
+        "id": "software-architecture-ai-p3",
+        "title": "Build an AI-Assisted Architecture Blueprint"
+      }
+    ]
+  },
+  {
+    "id": "how-llms-work",
+    "kind": "standard",
+    "title": "How Large Language Models Work",
+    "projects": [
+      {
+        "id": "how-llms-work-p1",
+        "title": "Design an AI Assistant Workflow"
+      }
+    ]
+  },
+  {
+    "id": "ai-automation-business",
+    "kind": "standard",
+    "title": "AI Automation for Business and Everyday Work",
+    "projects": [
+      {
+        "id": "ai-automation-business-p1",
+        "title": "Personal Productivity Automations"
+      },
+      {
+        "id": "ai-automation-business-p2",
+        "title": "Document and Report Automations"
+      },
+      {
+        "id": "ai-automation-business-p3",
+        "title": "Marketing and Sales Workflow"
+      },
+      {
+        "id": "ai-automation-business-p4",
+        "title": "Customer Support Workflow"
+      },
+      {
+        "id": "ai-automation-business-p5",
+        "title": "Automated Customer Inquiry Workflow"
+      },
+      {
+        "id": "ai-automation-business-p6",
+        "title": "Small-Business Automation System"
+      },
+      {
+        "id": "ai-automation-business-p7",
+        "title": "Final Project: An AI-Powered Business Workflow"
+      }
+    ]
+  },
+  {
+    "id": "building-ai-agents",
+    "kind": "standard",
+    "title": "Building AI Agents",
+    "projects": [
+      {
+        "id": "building-ai-agents-p1",
+        "title": "Build a Basic AI Agent"
+      },
+      {
+        "id": "building-ai-agents-p2",
+        "title": "Build a Tool-Using Agent"
+      },
+      {
+        "id": "building-ai-agents-p3",
+        "title": "Build an Assistant with Memory"
+      },
+      {
+        "id": "building-ai-agents-p4",
+        "title": "Build a Document-Aware AI Agent"
+      },
+      {
+        "id": "building-ai-agents-p5",
+        "title": "Build a Research Agent"
+      },
+      {
+        "id": "building-ai-agents-p6",
+        "title": "Build a Multi-Agent Research System"
+      },
+      {
+        "id": "building-ai-agents-p7",
+        "title": "Build a Customer Support Agent"
+      },
+      {
+        "id": "building-ai-agents-p8",
+        "title": "Capstone: Build Your Own AI Agent"
+      }
+    ]
   }
 ];

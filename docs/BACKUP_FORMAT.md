@@ -57,6 +57,8 @@ Tables: `lesson_progress`, `project_progress`, `learning_days`, `badges`, `certi
 XP, levels and streaks are **not** stored anywhere: they are worked out from the lesson, activity and project rows,
 badges and learning days, so they come back with those rows.
 
+**Architecture work** (`architecture_artifacts`, from Software Architecture with AI, schema v11): the learner's saved diagrams (Mermaid text), decision records and trade-off matrices are project work, so they travel with a backup like a portfolio project: merged by id (the newer edit wins) and deleted with a tombstone.
+
 ## What is never in it, and why
 
 - **Tali's chats** (`coach_chats`, `coach_messages`): private conversations stay on the phone that had them. The list is

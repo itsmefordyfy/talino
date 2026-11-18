@@ -210,3 +210,56 @@ describe('parseMermaidSubset: everything else', () => {
     expect(result.ok && result.spec.summary).toBe('My summary.');
   });
 });
+
+describe('parseMermaidSubset: C4', () => {
+  const context = `C4Context
+    title Booking system context
+    Person(customer, "Customer", "Books a haircut")
+    System(app, "Booking App", "Lets customers book and pay a deposit")
+    System_Ext(wallet, "E-wallet", "Takes the deposit")
+    Rel(customer, app, "Books with")
+    Rel(app, wallet, "Charges deposits through", "HTTPS")`;
+
+  test('a context diagram becomes an architecture diagram with people and external groups', () => {
+    const spec = parse(context);
+    expect(spec.kind).toBe('architecture');
+    if (spec.kind !== 'architecture') return;
+    expect(spec.title).toBe('Booking system context');
+    expect(spec.nodes.map((node) => [node.id, node.shape, node.group])).toEqual([
+      ['customer', 'actor', 'People'],
+      ['app', 'box', undefined],
+      ['wallet', 'box', 'External'],
+    ]);
+    expect(spec.edges).toEqual([
+      { from: 'customer', to: 'app', label: 'Books with' },
+      { from: 'app', to: 'wallet', label: 'Charges deposits through (HTTPS)' },
+    ]);
+  });
+
+  test('a container diagram keeps technology in the note and groups by boundary', () => {
+    const spec = parse(`C4Container
+      Person(owner, "Owner")
+      System_Boundary(sys, "Booking App") {
+        Container(web, "Web app", "React", "The booking screens")
+        Container(api, "API", "Node.js", "Booking rules")
+        ContainerDb(db, "Database", "PostgreSQL", "Bookings")
+      }
+      Rel(owner, web, "Uses")
+      Rel(web, api, "Calls", "JSON/HTTPS")
+      Rel(api, db, "Reads and writes", "SQL")`);
+    if (spec.kind !== 'architecture') throw new Error('expected architecture');
+    expect(spec.nodes.find((node) => node.id === 'db')).toEqual({ id: 'db', label: 'Database', shape: 'database', note: '[PostgreSQL] Bookings', group: 'Booking App' });
+    expect(spec.nodes.find((node) => node.id === 'api')?.group).toBe('Booking App');
+    expect(spec.edges).toHaveLength(3);
+  });
+
+  test('layout calls are ignored and friendly errors name the line', () => {
+    expect(parseMermaidSubset(`${context}\n    UpdateLayoutConfig($c4ShapeInRow="3")\n    LAYOUT_WITH_LEGEND()`).ok).toBe(true);
+    expect(errors('C4Context\n  System(app "no commas")')).toMatch(/Line 2/);
+    expect(errors('C4Context\n  System(app, "A")\n  }')).toMatch(/closes nothing/);
+    expect(errors('C4Context\n  System_Boundary(b, "B") {\n  System(a, "A")')).toMatch(/missing its closing/);
+    expect(errors('C4Context\n  Rel(a, b)')).toMatch(/needs two ids and a label/);
+    expect(errors('C4Context\n  System(a, "A")\n  Rel(a, zzz, "Uses")')).toMatch(/zzz/);
+    expect(errors('C4Deployment\n  Node(a, "A")')).toMatch(/isn't a supported diagram type/);
+  });
+});

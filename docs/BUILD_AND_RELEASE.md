@@ -197,6 +197,14 @@ uploads it. `app.json` already carries what the app needs (`ios.usesIcloudStorag
    native module only exist after a prebuild. A build made before this change has no iCloud module; the app then shows
    "iCloud backup isn't available", keeps its snapshots on the phone, and never claims a cloud backup.
 
+### Lock Screen goal card (Live Activity)
+
+`expo-widgets` (plugin in `app.json`) adds a small widget extension that draws the daily-goal Live Activity. **One-time steps for the
+owner:** register the App ID `com.fordytechsolutions.talino.widgets` with the App Group `group.com.fordytechsolutions.talino` (the same
+group the Watch uses); `release:ios` runs `prebuild --clean` and signs the extension with `-allowProvisioningUpdates`. Then prebuild and
+rebuild natively; a build made before this has no extension and simply shows no card. After installing or changing the layout, restart
+Metro with `npx expo start --dev-client -c`, otherwise the layout stays a function and the card is skipped (a dev warning says so).
+
 The learner must be signed in to iCloud with iCloud Drive on for Talino (Settings → [name] → iCloud → Drive → Talino).
 The screen says so when it is off. A backup counts as done only after iCloud confirms the upload; until then it is shown
 as waiting.

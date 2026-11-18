@@ -156,6 +156,7 @@ const MERGERS: Record<TableName, (local: Row, remote: Row) => Row> = {
   resume_versions: newerRow,
   resume_documents: newerRow,
   portfolio_projects: newerRow,
+  architecture_artifacts: newerRow,
   learner_profile: mergeLearnerProfile,
 };
 

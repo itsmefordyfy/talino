@@ -1,6 +1,9 @@
 import { findLesson, findProject } from '@/features/courses/content';
 import type { Lesson, LessonBlock } from '@/features/courses/content/types';
 
+import { AI_AGENTS_COURSE_ID, AI_AGENTS_TEACHING_INSTRUCTIONS, isAiAgentsProject } from './ai-agents';
+import { AI_AUTOMATION_COURSE_ID, AI_AUTOMATION_TEACHING_INSTRUCTIONS, isAiAutomationProject } from './ai-automation';
+import { ARCHITECTURE_ASSISTANT_INSTRUCTIONS, ARCHITECTURE_COURSE_ID, ARCHITECTURE_TEACHING_INSTRUCTIONS, isArchitectureProject } from './architecture';
 import { CODE_TEACHING_COURSES, CODE_TEACHING_INSTRUCTIONS } from './code-course';
 import { DSA_COURSE_ID, DSA_TEACHING_INSTRUCTIONS } from './dsa-course';
 import { describeLabActivity, describeWorkflowActivity, GEN_AI_COURSE_ID, GEN_AI_TEACHING_INSTRUCTIONS, isGenAiProject } from './gen-ai';
@@ -22,7 +25,9 @@ export type CoachFocus =
   | { kind: 'quiz'; lessonId: string; questionId: string | null }
   | { kind: 'activity'; lessonId: string; activityId: string }
   | { kind: 'project'; projectId: string }
-  | { kind: 'resume' };
+  | { kind: 'resume' }
+  /** The Software Architecture with AI course's Architecture Assistant, opened from its tool: no lesson or project, just the assistant's rules. */
+  | { kind: 'architecture' };
 
 export type CoachFocusKind = CoachFocus['kind'];
 
@@ -42,6 +47,8 @@ export function focusToParam(focus: CoachFocus): string {
       return `project:${focus.projectId}`;
     case 'resume':
       return 'resume';
+    case 'architecture':
+      return 'architecture';
   }
 }
 
@@ -50,6 +57,7 @@ export function focusFromParam(value: unknown): CoachFocus | null {
   if (typeof value !== 'string') return null;
   const [kind, a, b] = value.split(':');
   if (kind === 'resume' && a === undefined) return { kind: 'resume' };
+  if (kind === 'architecture' && a === undefined) return { kind: 'architecture' };
   if (kind === 'lesson' && isId(a) && b === undefined) return { kind: 'lesson', lessonId: a };
   if (kind === 'quiz' && isId(a) && (b === '-' || isId(b))) return { kind: 'quiz', lessonId: a, questionId: b === '-' ? null : b };
   if (kind === 'activity' && isId(a) && isId(b)) return { kind: 'activity', lessonId: a, activityId: b };
@@ -65,6 +73,7 @@ export function sanitizeFocus(value: unknown): CoachFocus | null {
   if (typeof value !== 'object' || value === null) return null;
   const raw = value as Record<string, unknown>;
   if (raw.kind === 'resume') return { kind: 'resume' };
+  if (raw.kind === 'architecture') return { kind: 'architecture' };
   if (raw.kind === 'project') return isId(raw.projectId) && findProject(raw.projectId) ? { kind: 'project', projectId: raw.projectId } : null;
   if (!isId(raw.lessonId)) return null;
   const found = findLesson(raw.lessonId);
@@ -146,6 +155,7 @@ export function describeFocus(focus: CoachFocus | null | undefined): string[] {
       'Right now the learner is building or improving their résumé, profile or job application material in Talino. Help with structure, clear and honest wording, strong action verbs and measurable results, ATS-friendly formatting, and tailoring to a job post. Never invent employers, titles, dates, numbers, skills or achievements: ask what really happened and work from that, or write a clearly marked placeholder such as [number].',
     ];
   }
+  if (focus.kind === 'architecture') return [ARCHITECTURE_ASSISTANT_INSTRUCTIONS, ARCHITECTURE_TEACHING_INSTRUCTIONS];
   if (focus.kind === 'project') {
     const found = findProject(focus.projectId);
     if (!found) return [];
@@ -159,13 +169,16 @@ export function describeFocus(focus: CoachFocus | null | undefined): string[] {
       isInternationalClientsProject(project.id) ? INTERNATIONAL_CLIENTS_TEACHING_INSTRUCTIONS : '',
       isProductivityProject(project.id) ? PRODUCTIVITY_TEACHING_INSTRUCTIONS : '',
       isGenAiProject(project.id) ? GEN_AI_TEACHING_INSTRUCTIONS : '',
+      isArchitectureProject(project.id) ? ARCHITECTURE_TEACHING_INSTRUCTIONS : '',
+      isAiAutomationProject(project.id) ? AI_AUTOMATION_TEACHING_INSTRUCTIONS : '',
+      isAiAgentsProject(project.id) ? AI_AGENTS_TEACHING_INSTRUCTIONS : '',
     ].filter(Boolean);
   }
   const found = findLesson(focus.lessonId);
   if (!found) return [];
   const { course, lesson } = found;
   const header = lessonHeader(lesson, course.title);
-  const teachCode = course.id === DSA_COURSE_ID ? [DSA_TEACHING_INSTRUCTIONS] : course.id === SOFT_SKILLS_COURSE_ID ? [SOFT_SKILLS_TEACHING_INSTRUCTIONS] : course.id === INTERNATIONAL_CLIENTS_COURSE_ID ? [INTERNATIONAL_CLIENTS_TEACHING_INSTRUCTIONS] : course.id === PRODUCTIVITY_COURSE_ID ? [PRODUCTIVITY_TEACHING_INSTRUCTIONS] : course.id === GEN_AI_COURSE_ID ? [GEN_AI_TEACHING_INSTRUCTIONS] : CODE_TEACHING_COURSES.has(course.id) ? [CODE_TEACHING_INSTRUCTIONS] : [];
+  const teachCode = course.id === DSA_COURSE_ID ? [DSA_TEACHING_INSTRUCTIONS] : course.id === SOFT_SKILLS_COURSE_ID ? [SOFT_SKILLS_TEACHING_INSTRUCTIONS] : course.id === INTERNATIONAL_CLIENTS_COURSE_ID ? [INTERNATIONAL_CLIENTS_TEACHING_INSTRUCTIONS] : course.id === PRODUCTIVITY_COURSE_ID ? [PRODUCTIVITY_TEACHING_INSTRUCTIONS] : course.id === GEN_AI_COURSE_ID ? [GEN_AI_TEACHING_INSTRUCTIONS] : course.id === ARCHITECTURE_COURSE_ID ? [ARCHITECTURE_TEACHING_INSTRUCTIONS] : course.id === AI_AUTOMATION_COURSE_ID ? [AI_AUTOMATION_TEACHING_INSTRUCTIONS] : course.id === AI_AGENTS_COURSE_ID ? [AI_AGENTS_TEACHING_INSTRUCTIONS] : CODE_TEACHING_COURSES.has(course.id) ? [CODE_TEACHING_INSTRUCTIONS] : [];
 
   if (focus.kind === 'lesson') {
     const objectives = lesson.intro?.objectives ?? [];
@@ -237,6 +250,7 @@ export function describeFocus(focus: CoachFocus | null | undefined): string[] {
 export function focusTitle(focus: CoachFocus | null | undefined): { kind: CoachFocusKind; title: string } | null {
   if (!focus) return null;
   if (focus.kind === 'resume') return { kind: 'resume', title: '' };
+  if (focus.kind === 'architecture') return { kind: 'architecture', title: '' };
   if (focus.kind === 'project') {
     const found = findProject(focus.projectId);
     return found ? { kind: 'project', title: found.project.title } : null;

@@ -7,11 +7,13 @@ export { AI_DEV_COURSES, CAREER_COURSES, COURSES, findLesson, findProject, getCo
 export type { AiTool, AiToolId, AudienceId, Course, CourseKind, CourseLevel, Lesson, LessonBlock, Project } from './content/types';
 export { canJumpBySentence, getListenSnapshot, loadAudio, skipSegment, speakReply, stopListening, subscribeListen, togglePlayPause } from './audio/listen-controller';
 export { useAwardBadges, useLearning, useMarkBadgesSeen, useSaveReview, useSaveSubmissionDraft, useSetProjectSteps } from './hooks/use-learning';
+export { getLessonVisits, recordLessonVisit, useLessonVisits } from './api/lesson-visits';
+export { recentVisits, type LessonVisits, type RecentVisit } from './lib/lesson-visits';
 export { spokenLesson, startLessonListening, type SpokenLesson } from './audio/start-lesson';
 export { recordingVoice } from './audio/lesson-audio';
 export { badgeDefinitions, earnedBadges, type BadgeDefinition } from './lib/badges';
 export { computeCourseProgress, parseStepsDone, type CourseProgress, type ProjectRow } from './lib/progress';
-export { buildDiscoverySections, goalCoverage, MIN_RELEVANCE, pickLearningPath, planForPath, recommendCourses, scoreCourse, shownCourseIds, signalsFrom, topicCoverage, type ContinueItem, type DiscoverySections, type ImproveItem, type NextLevelSection, type LearnerSignals, type PathPlan, type Recommendation, type PathStep, type PathStepState, type RecommendationReason, type SectionKey } from './lib/recommendations';
+export { buildDiscoverySections, fitsLevel, goalCoverage, learnerExperience, MIN_RELEVANCE, pickLearningPath, planForPath, recommendCourses, scoreCourse, shownCourseIds, signalsFrom, topicCoverage, type ContinueItem, type DiscoverySections, type ImproveItem, type NextLevelSection, type LearnerSignals, type PathPlan, type Recommendation, type PathStep, type PathStepState, type RecommendationReason, type SectionKey } from './lib/recommendations';
 export { courseForAudience, recommendCourse, recommendQuestions, RECOMMEND_QUESTIONS, type CareerCourseId } from './lib/recommend';
 export { useCourseNotTranslated, useLocalizedCourse } from './hooks/use-localized-course';
 export { courseHasLanguage, localizedCourse, localizedFound, localizedLesson, localizedProject } from './lib/localization';

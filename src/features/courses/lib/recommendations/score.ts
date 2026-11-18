@@ -78,6 +78,17 @@ export function levelFit(experience: ExperienceLevel, level: CourseLevel): numbe
   return LEVEL_FIT[experience][LEVEL_INDEX[level]];
 }
 
+/**
+ * A course whose level fit is at or below this is far from where the learner is: the basics for an experienced developer, or well beyond a
+ * beginner. The personal blocks list the courses that fit first and these after them (never dropped: "Show everything" and search are untouched).
+ */
+export const LEVEL_MISFIT = -3;
+
+/** Whether a course's level is near the learner's (not the basics for an expert, nor far beyond a beginner). */
+export function fitsLevel(experience: ExperienceLevel, level: CourseLevel): boolean {
+  return levelFit(experience, level) > LEVEL_MISFIT;
+}
+
 const GOAL_DECAY = [1, 0.7, 0.5, 0.4, 0.3];
 const INTEREST_DECAY = [1, 0.8, 0.65, 0.5, 0.4, 0.3, 0.25];
 const INTEREST_SCALE = 1.2;

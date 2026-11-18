@@ -49,6 +49,7 @@ const en = {
   // Course page
   levelDetail: (level: string) => `${level} level`,
   accessFree: 'Free',
+  tryFirstLesson: 'Try the first lesson free',
   accessPro: 'Pro',
   buildTitle: 'What you’ll build',
   buildBody: 'The hands-on projects in this course. Tali reviews each one.',

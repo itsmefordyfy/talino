@@ -98,8 +98,9 @@ function MissionRow({ mission, first, last, owned, started, onOpen, onRowY }: { 
   const theme = useTheme();
   const tones = useTones();
   const { lesson, state } = mission;
-  // Without the course nothing opens, whatever the progress rows say.
-  const visible = owned ? state : 'locked';
+  // Without the course only its very first lesson opens (a free taste), whatever the progress rows say.
+  const freeFirst = mission.chapterIndex === 0 && first;
+  const visible = owned || freeFirst ? state : 'locked';
   const done = visible === 'done';
   const current = visible === 'current';
   const locked = visible === 'locked';
@@ -107,7 +108,7 @@ function MissionRow({ mission, first, last, owned, started, onOpen, onRowY }: { 
   const nodeBackground = done ? tones.mint.soft : current ? theme.primary : theme.backgroundSelected;
   const lineColor = done ? tones.mint.solid : theme.border;
   const stateLabel = done ? strings.missionDone : current ? strings.missionCurrent : strings.missionLocked;
-  const note = locked ? (owned ? (mission.finishFirst ? strings.finishFirst(mission.finishFirst.title) : null) : strings.getCourseFirst) : null;
+  const note = locked ? (owned || freeFirst ? (mission.finishFirst ? strings.finishFirst(mission.finishFirst.title) : null) : strings.getCourseFirst) : null;
   const titleColor: ThemeColor = locked ? 'textSecondary' : 'text';
   const content = (
     <>

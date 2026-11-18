@@ -1,6 +1,6 @@
 import { describe, expect, test } from '@jest/globals';
 
-import { hasAllAccess, hasAnyPurchase, ownsCourse } from './access';
+import { canOpenLesson, hasAllAccess, hasAnyPurchase, isFreeLesson, ownsCourse } from './access';
 import { ALL_ACCESS_ENTITLEMENT, courseEntitlement } from './catalog';
 
 describe('catalog ids', () => {
@@ -30,5 +30,22 @@ describe('ownsCourse', () => {
     expect(hasAllAccess({ entitlements: ['talino_pro'] })).toBe(true);
     expect(hasAnyPurchase({ entitlements: [] })).toBe(false);
     expect(hasAnyPurchase({ entitlements: ['mini_ai_qa'] })).toBe(true);
+  });
+});
+
+describe('the free first lesson', () => {
+  const course = { id: 'developer', kind: 'career' as const, lessons: [{ id: 'developer-01' }, { id: 'developer-02' }, { id: 'developer-03' }] };
+  test('only the first lesson of a course is free', () => {
+    expect(isFreeLesson(course, 'developer-01')).toBe(true);
+    expect(isFreeLesson(course, 'developer-02')).toBe(false);
+    expect(isFreeLesson({ lessons: [] }, 'x')).toBe(false);
+  });
+  test('without the course, the first lesson opens and the rest do not', () => {
+    expect(canOpenLesson(null, course, 'developer-01')).toBe(true);
+    expect(canOpenLesson({ entitlements: [] }, course, 'developer-02')).toBe(false);
+  });
+  test('with the course or Talino Pro, every lesson opens', () => {
+    expect(canOpenLesson({ entitlements: ['course_developer'] }, course, 'developer-03')).toBe(true);
+    expect(canOpenLesson({ entitlements: [ALL_ACCESS_ENTITLEMENT] }, course, 'developer-03')).toBe(true);
   });
 });

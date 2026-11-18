@@ -36,8 +36,9 @@ describe('the profiles from the brief', () => {
     expect(start.level).toBe('beginner');
     expect(start.category).toBe('ai-coding-fundamentals');
     expect(start.prerequisites).toEqual([]);
-    expect(plan.startsWithFree).toBe(true);
-    expect(plan.firstStep).toMatchObject({ kind: 'lesson', courseId: 'starter', free: true });
+    // The first lesson of every course is free, so the plan starts in the course itself.
+    expect(plan.startsWithFree).toBe(false);
+    expect(plan.firstStep).toMatchObject({ kind: 'lesson', courseId: 'ai-coding-beginners', lessonId: 'ai-coding-beginners-01', free: true });
     expect(plan.schedule.lessonsPerWeek).toBeLessThan(7);
     expect(plan.nextCourses.every((course) => facts(course.id).level === 'beginner')).toBe(true);
   });
@@ -75,7 +76,8 @@ describe('the profiles from the brief', () => {
     expect(aiCategories).toContain(facts(plan.startCourse.id).category);
     expect(plan.nextCourses.every((course) => aiCategories.includes(facts(course.id).category))).toBe(true);
     expect([plan.startCourse.id, ...plan.nextCourses.map((course) => course.id)]).toEqual(expect.arrayContaining(['agentic-coding']));
-    expect(plan.topics.find((topic) => topic.interest === 'llm')).toMatchObject({ status: 'course', courseId: 'ai-dev-intro' });
+    // Since 2026-11-18 the LLMs interest has a course of its own, How Large Language Models Work (it was ai-dev-intro before).
+    expect(plan.topics.find((topic) => topic.interest === 'llm')).toMatchObject({ status: 'course', courseId: 'how-llms-work' });
     // RAG, Python and machine learning have no course of their own: they point at the courses that use them and say so.
     expect(plan.topics.find((topic) => topic.interest === 'rag')?.status).toBe('related');
     expect(plan.topics.find((topic) => topic.interest === 'python')).toMatchObject({ status: 'related', courseId: 'mini-python-ai' });
@@ -117,6 +119,24 @@ describe('plan rules', () => {
         }
       }
     }
+  });
+
+  test('the course the learner picked starts the plan; a paid pick still begins with the free course', () => {
+    const base = profile({ experience: 'beginner', goals: ['freelance'] });
+    expect(buildPlan(base, CATALOG).startCourse.id).toBe('freelancer');
+    const picked = buildPlan(base, CATALOG, mineOwns(), { preferredStartId: 'educator' });
+    expect(picked.startCourse.id).toBe('educator');
+    expect(picked.nextCourses.some((course) => course.id === 'educator')).toBe(false);
+    expect(picked.startsWithFree).toBe(false);
+    expect(picked.firstStep).toMatchObject({ courseId: 'educator', lessonId: 'educator-01', free: true });
+    // Its free first lesson already done and the course not bought: on with the free starter course.
+    const afterTaste = buildPlan(base, CATALOG, { ...mineOwns(), nextLesson: (id) => (id === 'educator' ? { id: 'educator-02', title: 'Lesson 2', day: 2 } : mineOwns().nextLesson(id)) }, { preferredStartId: 'educator' });
+    expect(afterTaste.startsWithFree).toBe(true);
+    expect(afterTaste.firstStep).toMatchObject({ courseId: 'starter', free: true });
+    // Owned, it is the first step; an id that is not in the catalog, or finished, is ignored.
+    expect(buildPlan(base, CATALOG, mineOwns('educator'), { preferredStartId: 'educator' }).firstStep).toMatchObject({ courseId: 'educator' });
+    expect(buildPlan(base, CATALOG, mineOwns(), { preferredStartId: 'no-such-course' }).startCourse.id).toBe('freelancer');
+    expect(buildPlan(base, CATALOG, { ...mineOwns(), complete: (id) => id === 'educator' }, { preferredStartId: 'educator' }).startCourse.id).toBe('freelancer');
   });
 
   test('freelance and teaching goals keep their own courses', () => {

@@ -28,6 +28,7 @@ const text = {
       backupFile: 'Backup file',
     },
     starter: 'Starter',
+    first: 'First lesson of each',
     all: 'All',
     unlimited: 'Unlimited',
     perDay: (count: number) => `${count} a day`,
@@ -35,7 +36,7 @@ const text = {
     notIncluded: 'Not included',
   },
   fairUseNote: `Unlimited AI chat is subject to fair use: up to ${AI_CHAT_PRO_DAILY_LIMIT} new chats per rolling 24 hours.`,
-  freeNote: 'Free also keeps the starter course, the résumé builder, the career tracker, job boards, the portfolio and automatic backup.',
+  freeNote: 'Free also keeps the starter course, the first lesson of every course, the résumé builder, the career tracker, job boards, the portfolio and automatic backup.',
   justPerWeek: (price: string) => `Just ${price} a week`,
 };
 

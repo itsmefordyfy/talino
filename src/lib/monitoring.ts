@@ -36,7 +36,7 @@ export function initMonitoring() {
 }
 
 /** The part of the app an error came from, as a `feature` tag to filter by in Sentry. */
-export type Feature = 'app' | 'courses' | 'coach' | 'career' | 'certificates' | 'portfolio' | 'purchases' | 'notifications' | 'classes' | 'companion' | 'interview' | 'practice';
+export type Feature = 'app' | 'courses' | 'coach' | 'career' | 'certificates' | 'portfolio' | 'purchases' | 'notifications' | 'classes' | 'companion' | 'interview' | 'practice' | 'goal-activity';
 
 /**
  * Reports an error the app recovered from (the screen shows a message or carries on), tagged with its feature. `extra` holds

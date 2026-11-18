@@ -65,7 +65,8 @@ export function buildTimeline({ lessons, lessonState, projects, owned }: Timelin
   const items: TimelineItem[] = [];
   const halfAt = total >= HALFWAY_FROM ? Math.ceil(total / 2) : null;
   lessons.forEach((lesson, i) => {
-    const state: TimelineLessonState = done(lesson) ? 'completed' : lock ? 'locked' : lesson.id === firstOpen?.id ? 'current' : 'upcoming';
+    // Without the course only its first lesson is open (a free taste); the rest wait behind Talino Pro.
+    const state: TimelineLessonState = done(lesson) ? 'completed' : lock && i > 0 ? 'locked' : lesson.id === firstOpen?.id ? 'current' : 'upcoming';
     items.push({ kind: 'lesson', id: lesson.id, number: lesson.day, title: lesson.title, summary: lesson.summary, minutes: lesson.minutes, state });
     if (halfAt !== null && i + 1 === halfAt) items.push({ kind: 'waypoint', type: 'halfway', reached: done(lesson) });
   });

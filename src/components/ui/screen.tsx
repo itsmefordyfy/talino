@@ -12,13 +12,14 @@ import { useTheme } from '@/hooks/use-theme';
 
 import { useKeyboardOverlap } from './use-keyboard-overlap';
 
-export type ScreenVariant = 'stack' | 'tab';
+export type ScreenVariant = 'stack' | 'tab' | 'root';
 
 export type ScreenProps = Omit<ScrollViewProps, 'contentContainerStyle'> & {
   children: ReactNode;
   /**
    * `stack`: below a native header, which supplies the top inset.
    * `tab`: a tab root with no header, so pad for the status bar and tab bar.
+   * `root`: no header and no tab bar (onboarding): pad for the status bar and the home indicator only.
    */
   variant?: ScreenVariant;
   /**
@@ -191,7 +192,7 @@ export function useScreenPadding(variant: ScreenVariant, hasFooter = false) {
   // A tab bar along the side or across the top takes no room at the bottom, and Tali's button doesn't rise out of it.
   const bottomChrome = variant === 'tab' && !chrome.vertical && !barOnTop ? BottomTabInset : 0;
   return {
-    paddingTop: variant === 'tab' ? Math.max(0, insets.top - covered) + Spacing.three : Spacing.three,
+    paddingTop: variant !== 'stack' ? Math.max(0, insets.top - covered) + Spacing.three : Spacing.three,
     paddingBottom: hasFooter ? Spacing.four : insets.bottom + bottomChrome + Spacing.five,
     // A tab screen's footer (the chat box) also clears the part of Tali's button that rises above the bar.
     footerBottom: insets.bottom + Spacing.two + (variant === 'tab' && !chrome.vertical && !barOnTop ? FloatingTaliSize - FloatingTaliDock : 0),

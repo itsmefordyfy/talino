@@ -1,7 +1,7 @@
 import { useDbQuery } from '@/db/use-db-query';
 import { getCourse, localizedCourse, useLearning } from '@/features/courses';
 import { useProfile } from '@/features/onboarding';
-import { selectJourneyFocus, selectJourneyStartLevel } from '@/features/settings/settings-slice';
+import { selectHomeCourse, selectJourneyFocus, selectJourneyStartLevel } from '@/features/settings/settings-slice';
 import { useAccess } from '@/features/store';
 import { useLanguage } from '@/hooks/use-strings';
 import { useAppSelector } from '@/store/hooks';
@@ -25,10 +25,13 @@ export function useJourney(definition: JourneyDefinition = AI_BUILDER_JOURNEY) {
   const profile = useProfile();
   const chosen = useAppSelector(selectJourneyFocus);
   const chosenStart = useAppSelector(selectJourneyStartLevel);
+  const homeCourse = useAppSelector(selectHomeCourse);
   const language = useLanguage();
   const actions = useDbQuery(['journey', 'actions'], readJourneyActions);
 
-  const isPending = learning.isPending || actions.isPending;
+  // The saved answers too: until they are read the journey would be worked out for a learner who said nothing (the beginner level, no direction), and
+  // Home would open at that place and then move.
+  const isPending = learning.isPending || actions.isPending || profile.isPending;
   const isError = learning.isError || actions.isError;
 
   const facts = buildFacts(definition, {
@@ -50,7 +53,7 @@ export function useJourney(definition: JourneyDefinition = AI_BUILDER_JOURNEY) {
   };
   const state = computeJourney(definition, facts, learner);
   // The same journey as courses: what Home draws and resumes from.
-  const path = buildCoursePath(state, facts);
+  const path = buildCoursePath(state, facts, { pickedCourseId: homeCourse?.id ?? null });
 
   return {
     definition,

@@ -88,7 +88,7 @@ export function CompanionPicker({ autoPlay = false }: CompanionPickerProps) {
           />
         ))}
       </View>
-      <ThemedText type="secondary" themeColor="textSecondary" style={styles.note}>
+      <ThemedText type="caption" themeColor="textSecondary" style={styles.note}>
         {strings.voiceNote} {strings.changeAnytime}
       </ThemedText>
     </View>
@@ -113,7 +113,7 @@ function CompanionCard({ id, selected, voice, hearLabel, hearing, accessibilityL
       <Pressable accessibilityRole="radio" accessibilityState={{ selected, checked: selected }} accessibilityLabel={accessibilityLabel} onPress={onPick} style={styles.pick}>
         <View style={styles.face}>
           {/* The picture is the coach's own, whoever is chosen: the card passes its coach to Tali. Tala's canvas is larger (328 against 310 px), so she is drawn proportionally larger to stand as tall as Tali. */}
-          <Tali size={id === 'tala' ? 144 : 136} tight mood="happy" companion={id} />
+          <Tali size={id === 'tala' ? 100 : 94} tight mood="happy" companion={id} />
         </View>
         <View style={styles.titleRow}>
           <ThemedText type="cardTitle">{COMPANIONS[id].name}</ThemedText>
@@ -121,7 +121,7 @@ function CompanionCard({ id, selected, voice, hearLabel, hearing, accessibilityL
             {selected && <Icon name="check" size={14} tint={theme.onPrimary} />}
           </View>
         </View>
-        <ThemedText type="secondary" themeColor="textSecondary">
+        <ThemedText type="caption" themeColor="textSecondary">
           {voice}
         </ThemedText>
       </Pressable>
@@ -132,27 +132,27 @@ function CompanionCard({ id, selected, voice, hearLabel, hearing, accessibilityL
 
 const styles = StyleSheet.create({
   wrap: {
-    gap: Spacing.three,
+    gap: Spacing.two,
   },
   row: {
     flexDirection: 'row',
-    gap: Spacing.three,
+    gap: Spacing.two,
   },
   card: {
     flex: 1,
-    gap: Spacing.two,
-    padding: Spacing.three,
+    gap: Spacing.one,
+    padding: Spacing.two,
     borderRadius: Radius.large,
     borderCurve: 'continuous',
   },
   pick: {
     alignItems: 'center',
-    gap: Spacing.one,
+    gap: Spacing.half,
     minHeight: MinTouchSize,
   },
   face: {
     // One height for both, so the names line up whichever picture is shorter.
-    height: 104,
+    height: 76,
     alignItems: 'center',
     justifyContent: 'flex-end',
   },

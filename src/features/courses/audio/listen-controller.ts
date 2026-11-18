@@ -1,6 +1,7 @@
 import { requireOptionalNativeModule } from 'expo';
 import * as Speech from 'expo-speech';
 
+import { COMPANION_IDS, COMPANIONS, type CompanionId } from '@/features/companion/lib/companions';
 import { reportError } from '@/lib/monitoring';
 import { chunkForSpeech } from '@/lib/speech-chunks';
 
@@ -253,6 +254,35 @@ function checkTimingAgainst(session: ListenSession, audioDuration: number) {
   update({ timing: null, activeSegment: null, session: { ...session, outline: snapshot.session?.outline ?? session.outline } });
 }
 
+/** Which coach a recording's voice id belongs to (`am_puck`, or `am_puck_fil` for a language's own recording): Tali when unknown. */
+function coachOfVoice(id: string): CompanionId {
+  return COMPANION_IDS.find((coach) => id === COMPANIONS[coach].voice || id.startsWith(`${COMPANIONS[coach].voice}_`)) ?? 'tali';
+}
+
+const ARTWORK: Record<CompanionId, number> = {
+  tali: require('@/assets/images/activity/tali-art.png'),
+  tala: require('@/assets/images/activity/tala-art.png'),
+};
+const artworkUris = new Map<CompanionId, string | null>();
+
+/** The coach's square picture as an address the system's now-playing card can load (the bundled file once resolved), or null. */
+async function coachArtwork(coach: CompanionId): Promise<string | null> {
+  const known = artworkUris.get(coach);
+  if (known !== undefined) return known;
+  let uri: string | null = null;
+  try {
+    // eslint-disable-next-line @typescript-eslint/no-require-imports
+    const { Asset } = require('expo-asset') as typeof import('expo-asset');
+    const asset = Asset.fromModule(ARTWORK[coach]);
+    await asset.downloadAsync();
+    uri = asset.localUri ?? asset.uri ?? null;
+  } catch {
+    // No picture: the card just has none.
+  }
+  artworkUris.set(coach, uri);
+  return uri;
+}
+
 async function playFile(session: ListenSession, uri: string, mine: number, audio: ExpoAudio, startAt: number) {
   // Background playback: the lesson carries on when the phone is locked or the learner leaves the app (the Live Activity and the
   // Lock Screen's now-playing card show it). `doNotMix` is what lets the system tie those controls to this player.
@@ -275,7 +305,12 @@ async function playFile(session: ListenSession, uri: string, mine: number, audio
     tick(status.currentTime, status.duration > 0 ? status.duration : snapshot.duration);
   });
   player = next;
-  next.setActiveForLockScreen(true, { title: session.lessonTitle, artist: 'Talino', albumTitle: session.courseTitle });
+  // The Lock Screen card shows the coach reading (name and picture) rather than the app's name and an empty square.
+  const coach = coachOfVoice(voice);
+  const artworkUrl = await withinMs(coachArtwork(coach), 600);
+  // Another lesson started meanwhile: that start already dropped this player (it was stored above).
+  if (run !== mine) return;
+  next.setActiveForLockScreen(true, { title: session.lessonTitle, artist: COMPANIONS[coach].name, albumTitle: session.courseTitle, artworkUrl: artworkUrl ?? undefined });
   // Carrying on from where the learner stopped: move there first, then play, so the lesson never starts from 0 for an instant.
   if (startAt > 0) await withinMs(jump(next, startAt), 900);
   if (run !== mine) return;

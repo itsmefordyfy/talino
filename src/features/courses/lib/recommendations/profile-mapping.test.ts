@@ -41,8 +41,9 @@ describe('topicCoverage is derived from what the catalog really teaches', () => 
       apis: 'ai-api-integration',
       databases: 'ai-database-design',
       'db-management': 'ai-database-design',
-      architecture: 'ai-architecture',
-      'system-design': 'ai-architecture',
+      // The deep course (2026-11-18) is the better answer for these interests; AI-Assisted Software Architecture stays as its shorter introduction.
+      architecture: 'software-architecture-ai',
+      'system-design': 'software-architecture-ai',
       cybersecurity: 'ai-coding-security',
       'ai-apps': 'build-ai-app',
     };

@@ -50,6 +50,13 @@ describe('lesson states', () => {
     expect(list).toHaveLength(4);
   });
 
+  test('a course the learner does not own: its first lesson is a free taste, so it is open and current', () => {
+    const timeline = buildTimeline(input(5, 0, { owned: false }));
+    expect(states(timeline)).toEqual(['current', 'locked', 'locked', 'locked', 'locked']);
+    expect(timeline.lock).toBe('pro');
+    expect(timeline.currentLessonId).toBe('c-01');
+  });
+
   test('a course the learner does not own: unfinished lessons are locked (they open the paywall), finished ones stay completed', () => {
     const timeline = buildTimeline(input(5, 1, { owned: false }));
     expect(states(timeline)).toEqual(['completed', 'locked', 'locked', 'locked', 'locked']);

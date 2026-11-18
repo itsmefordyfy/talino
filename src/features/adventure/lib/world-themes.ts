@@ -417,6 +417,41 @@ export const WORLD_THEMES: Record<string, WorldTheme> = {
     tone: 'indigo',
     story: { premise: 'In the Clockwork Workshop, every bench has a clock and a plan, and the makers who last are the ones who build rest into the schedule.', mission: 'Sort what matters, plan a day that can survive a surprise, protect your focus and put AI to work for you, until your week feels like yours.' },
   },
+  // AI Automation for Business and Everyday Work (2026-11-18).
+  'ai-automation-business': {
+    name: 'The Tinker Mill',
+    icon: 'account_tree',
+    tone: 'violet',
+    story: { premise: 'In the Tinker Mill, small machines hum along every wall, and the millers who thrive are the ones who know which jobs a machine can do, and which ones still need a hand on the lever.', mission: 'Spot the work that repeats, build workflows with an AI step and a person who approves, and keep every one of them safe, until the mill runs while you do the thinking.' },
+  },
+  // AI Fundamentals for Everyone (2026-11-18).
+  'ai-fundamentals-everyone': {
+    name: 'The Lantern Town',
+    icon: 'psychology',
+    tone: 'mint',
+    story: { premise: 'In Lantern Town, every street has a lamp that learned where people walk, and the townsfolk who thrive are the ones who know what the lamps can do, and when to light their own.', mission: 'Learn what AI is, try it on real tasks, check what it tells you and use it fairly and safely, until you can explain it to a friend.' },
+  },
+  // Software Architecture with AI (2026-11-18).
+  'software-architecture-ai': {
+    name: 'The Blueprint Hall',
+    icon: 'account_tree',
+    tone: 'indigo',
+    story: { premise: 'In the Blueprint Hall, every wall on the plans was chosen on purpose, and the architects who last are the ones who write down why.', mission: 'Turn needs into measurable requirements, weigh the options, draw and record your decisions and test what AI proposes, until your design stands up to review.' },
+  },
+  // Building AI Agents (2026-11-18).
+  'building-ai-agents': {
+    name: 'The Agent Workshop',
+    icon: 'smart_toy',
+    tone: 'indigo',
+    story: { premise: 'In the Agent Workshop, every little machine can think, reach for a tool and try again, and the builders who last are the ones who give each machine a limit, a log and a person to ask.', mission: 'Connect a model to tools, memory and your documents, plan the steps, add the limits and the approvals, and test it, until your agent does real work you can trust.' },
+  },
+  // How Large Language Models Work (2026-11-18).
+  'how-llms-work': {
+    name: 'The Glass Engine Room',
+    icon: 'psychology',
+    tone: 'violet',
+    story: { premise: 'In the Glass Engine Room, every gear of an AI assistant turns in plain view, and the people who learn to read it stop being surprised by what it says.', mission: 'Follow a sentence from tokens to numbers to attention to a finished reply, learn why models forget and make things up, and design a workflow you can trust.' },
+  },
 };
 
 const KIND_FALLBACK: Record<string, WorldTone> = { starter: 'indigo', career: 'violet', mini: 'mint', path: 'indigo', standard: 'violet' };

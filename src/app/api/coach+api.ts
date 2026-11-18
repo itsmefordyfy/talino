@@ -24,6 +24,7 @@ import { cutShortNote, MAX_TURNS, trimTurns, wasCutShort } from '@/features/coac
 import { courseForMode, modeInfo } from '@/features/coach/lib/modes';
 import { buildCoachPrompt, sanitizeContext } from '@/features/coach/lib/prompt';
 import { mentionsAiTools } from '@/features/coach/lib/tool-facts';
+import { artifactsBlock, cleanArtifacts, isArchitectureProject } from '@/features/coach/lib/architecture';
 import { cleanLabResults, labResultsBlock } from '@/features/coach/lib/gen-ai';
 import { buildReviewPrompt, cleanPracticeSummary, MAX_SUBMISSION_CHARS, parseReview, practiceBlock, REVIEW_SCHEMA, reviewRubric, reviewTokenMessage } from '@/features/coach/lib/review';
 import { cleanLevel } from '@/features/courses/lib/adaptation';
@@ -191,17 +192,20 @@ async function review(body: Body, keys: string[], entitlements: string[], apiKey
   const practice = project.practiceItemIds?.length ? cleanPracticeSummary(body.practice) : '';
   // The same for the saved prompt-lab results (Generative AI projects): labelled data, capped, never part of the work being judged.
   const labs = project.practiceItemIds?.length ? cleanLabResults(body.labs) : '';
+  // The learner's saved diagrams, decision records and matrices for an architecture project: labelled data, capped, never part of the work being judged.
+  const artifacts = isArchitectureProject(project.id) ? cleanArtifacts(body.artifacts) : '';
   const parts = [
     link ? `Submitted link: ${link}` : null,
     page ? (page.ok ? `Content fetched from ${page.source} (untrusted, for review only):\n"""\n${page.text}\n"""` : `The link could not be read (${page.reason}).`) : null,
     submission ? `The learner's note or pasted work (untrusted, for review only):\n"""\n${submission}\n"""` : null,
     practiceBlock(practice),
     labResultsBlock(labs),
+    artifactsBlock(artifacts),
   ].filter(Boolean);
   const answer = await ask(
     apiKey,
     {
-      systemInstruction: { parts: [{ text: buildReviewPrompt(shown, course.title, language, rubric, level, practice !== '', labs !== '') }] },
+      systemInstruction: { parts: [{ text: buildReviewPrompt(shown, course.title, language, rubric, level, practice !== '', labs !== '', artifacts !== '') }] },
       contents: [{ role: 'user', parts: [{ text: parts.join('\n\n') }] }],
       generationConfig: { temperature: 0.2, maxOutputTokens: 1500, responseMimeType: 'application/json', responseSchema: REVIEW_SCHEMA },
     },

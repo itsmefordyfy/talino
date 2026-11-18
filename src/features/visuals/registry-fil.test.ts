@@ -6,7 +6,7 @@ import { findVisual, VISUALS, visualsFor } from './registry';
  * Visuals added after the owner switched Tagalog off (2026-11-15: "do not work on Filipino text") whose `fil` text is still the English text, as a
  * placeholder; delete an id here when it is translated. The Data Structures and Algorithms visuals of 2026-11-16 and the Generative AI course's four visuals of 2026-11-17.
  */
-const PENDING_TRANSLATION: ReadonlySet<string> = new Set(['array-operations', 'hash-table-collisions', 'recursion-call-stack', 'trie-autocomplete', 'heap-operations', 'graph-shortest-path', 'union-find', 'sort-extra', 'eisenhower-matrix', 'daily-schedule-builder', 'pomodoro-timer', 'ai-prompt-playground', 'ai-context-window', 'ai-prompt-anatomy', 'ai-image-prompt-builder', 'ai-agent-loop']);
+const PENDING_TRANSLATION: ReadonlySet<string> = new Set(['array-operations', 'hash-table-collisions', 'recursion-call-stack', 'trie-autocomplete', 'heap-operations', 'graph-shortest-path', 'union-find', 'sort-extra', 'eisenhower-matrix', 'daily-schedule-builder', 'pomodoro-timer', 'ai-prompt-playground', 'ai-context-window', 'ai-prompt-anatomy', 'ai-image-prompt-builder', 'ai-agent-loop', 'llm-attention', 'llm-sampling', 'llm-transformer-flow', 'arch-diagram-workbench', 'arch-tradeoff-matrix', 'arch-adr-builder', 'arch-assistant']);
 
 describe('visuals in Tagalog', () => {
   test('every visual exists in both languages with the same id, category and component', () => {

@@ -9,12 +9,17 @@
  *   node --env-file=.env scripts/audio/upload-r2.mjs --dry-run       list the bucket and say what would be sent (nothing is written)
  *   node --env-file=.env scripts/audio/upload-r2.mjs                 send everything finished, both voices
  *   node --env-file=.env scripts/audio/upload-r2.mjs am_puck         one voice
+ *   node --env-file=.env scripts/audio/upload-r2.mjs --course=generative-ai-applications   one course (lesson ids start with `<course>-`)
+ *
+ * Which lessons: every recording found in out/audio/<voice>/, NOT the last export's manifest. The manifest is rewritten by every export
+ * (it held only building-ai-agents on 2026-11-18), so reading it made this script silently skip every other finished course, and
+ * Generative AI never reached the bucket (store builds then fell back to the phone's own voice).
  *
  * Needs five lines in `.env` (gitignored; never in the app): R2_ACCOUNT_ID, R2_ACCESS_KEY_ID, R2_SECRET_ACCESS_KEY, R2_BUCKET (default
  * talino-audio) and R2_PUBLIC_URL (the bucket's public https address, no trailing slash). Its own `package.json` here holds the S3
  * client, so run `npm install` in scripts/audio once; nothing here ships in the app.
  */
-import { existsSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { join } from 'node:path';
 
 const ROOT = new URL('.', import.meta.url).pathname;
@@ -24,7 +29,17 @@ const plan = args.includes('--plan');
 const dryRun = args.includes('--dry-run');
 const voices = args.filter((arg) => !arg.startsWith('--'));
 const useVoices = voices.length > 0 ? voices : ['am_puck', 'af_heart'];
-const ids = JSON.parse(readFileSync(join(OUT, 'scripts/_manifest.json'), 'utf8')).map((entry) => entry.id);
+const course = args.find((arg) => arg.startsWith('--course='))?.slice('--course='.length);
+const ids = [
+  ...new Set(
+    useVoices.flatMap((voice) => {
+      const folder = join(OUT, 'audio', voice);
+      return existsSync(folder) ? readdirSync(folder).filter((name) => name.endsWith('.m4a')).map((name) => name.slice(0, -'.m4a'.length)) : [];
+    }),
+  ),
+]
+  .filter((id) => !course || id.startsWith(`${course}-`))
+  .sort();
 const SUFFIXES = ['.m4a', '.timing.json', '.peaks.json'];
 const TYPES = { '.m4a': 'audio/mp4', '.json': 'application/json' };
 

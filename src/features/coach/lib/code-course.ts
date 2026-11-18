@@ -1,3 +1,6 @@
+import { aiAgentsSuggestionKey } from './ai-agents';
+import { aiAutomationSuggestionKey } from './ai-automation';
+import { architectureSuggestionKey } from './architecture';
 import { isDsaLesson } from './dsa-course';
 import type { CoachFocus } from './focus';
 import { genAiSuggestionKey } from './gen-ai';
@@ -31,6 +34,15 @@ export function suggestionKey(focus: CoachFocus | null | undefined, kind: string
   // Finding International Clients has its own set (`lib/international-clients.ts`).
   const intl = internationalClientsSuggestionKey(focus, kind);
   if (intl) return intl;
+  // Software Architecture with AI has its own set (`lib/architecture.ts`), and the Architecture Assistant its own.
+  const arch = architectureSuggestionKey(focus, kind);
+  if (arch) return arch;
+  // AI Automation for Business and Everyday Work has its own set (`lib/ai-automation.ts`).
+  const auto = aiAutomationSuggestionKey(focus, kind);
+  if (auto) return auto;
+  // Building AI Agents has its own set (`lib/ai-agents.ts`).
+  const agents = aiAgentsSuggestionKey(focus, kind);
+  if (agents) return agents;
   // Generative AI: From Fundamentals to Real-World Applications has its own set (`lib/gen-ai.ts`).
   const genAi = genAiSuggestionKey(focus, kind);
   if (genAi) return genAi;

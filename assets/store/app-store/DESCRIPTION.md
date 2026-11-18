@@ -16,6 +16,8 @@ LEARN
 • Generative AI: From Fundamentals to Real-World Applications: 67 lessons on how generative AI works, prompting, images, audio and video, your own documents, agents and building a small AI feature, with live prompt labs, a workflow builder and four projects
 • Soft Skills for the Modern Workplace: 54 lessons on communication, teamwork, thinking, time, emotions, presenting, clients and your career, practised with AI role-play and a message coach
 • Finding International Clients: 52 lessons for freelancers and VAs on finding, approaching and winning clients abroad, practised with a simulated client and a message coach
+• Software Architecture with AI: 44 lessons on requirements, architecture styles, data, APIs, cloud, scaling, security and production review, with editable diagrams, a trade-off matrix, decision records and an architecture assistant, ending in a full blueprint and a working proof of concept
+• How Large Language Models Work: 77 lessons on what happens inside an AI assistant: tokens, embeddings, attention, how replies are generated, training and alignment, context limits, hallucinations, retrieval, multimodal models and agents, with interactive pictures, a 25-question assessment and a practical challenge. No programming needed
 • Time Management and Productivity: 43 lessons on priorities, planning a day, focus, procrastination, simple tools and working with AI without burning out, practised with an Eisenhower matrix, a day planner, a Pomodoro timer and planning exercises scored by clear rules
 • Career courses for developers, freelancers and virtual assistants, builders, experienced developers and educators
 • Mini-courses on Python for AI, AI engineering, AI-assisted testing, data, no-code automation and selling your app

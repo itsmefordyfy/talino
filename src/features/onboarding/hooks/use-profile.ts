@@ -16,7 +16,7 @@ export { profileKey, useLearnerLevel, useProfile, useSaveProfile, type LearnerLe
  * so it follows the learner as they finish lessons or buy a course. `plan` is null until the learner has
  * answered what a plan needs (experience and at least one goal).
  */
-export function usePlanner(): { planFor: (profile: LearnerProfile) => LearningPlan | null; isPending: boolean } {
+export function usePlanner(): { planFor: (profile: LearnerProfile, preferredStartId?: string | null) => LearningPlan | null; isPending: boolean } {
   const learning = useLearning();
   const access = useAccess();
   const context: PlanContext = {
@@ -28,7 +28,7 @@ export function usePlanner(): { planFor: (profile: LearnerProfile) => LearningPl
     complete: (id) => !!learning.progressFor(id)?.complete,
     progress: learning.progress,
   };
-  return { planFor: (profile) => (REQUIRED_FOR_PLAN(profile) && !learning.isPending ? buildPlan(profile, COURSES, context) : null), isPending: learning.isPending };
+  return { planFor: (profile, preferredStartId = null) => (REQUIRED_FOR_PLAN(profile) && !learning.isPending ? buildPlan(profile, COURSES, context, { preferredStartId }) : null), isPending: learning.isPending };
 }
 
 /** The saved profile and its plan. `plan` is null until experience and a goal are answered. */

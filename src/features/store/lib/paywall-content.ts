@@ -30,7 +30,7 @@ export function orderedFeatures(lead: PaywallFeature | null): PaywallFeature[] {
 }
 
 /** A plan's cell in the table: has it or not, or how much (`perDay` is the coach's free chats). */
-export type ComparisonCell = boolean | 'starter' | 'all' | 'unlimited' | { perDay: number };
+export type ComparisonCell = boolean | 'starter' | 'first' | 'all' | 'unlimited' | { perDay: number };
 
 /**
  * Where Free and Pro differ, as the app gates them (the marketing site's plan table, from `ownsCourse`, `canUseManualBackup`, the résumé
@@ -38,7 +38,8 @@ export type ComparisonCell = boolean | 'starter' | 'all' | 'unlimited' | { perDa
  * portfolio and automatic backup) is said under the table.
  */
 export const COMPARISON_ROWS: readonly { key: 'courses' | 'reviews' | 'certificates' | 'coach' | 'tailor' | 'kit' | 'backupFile'; free: ComparisonCell; pro: ComparisonCell }[] = [
-  { key: 'courses', free: 'starter', pro: 'all' },
+  // Free: the starter course in full and the first lesson of every other course (owner, 2026-11-18).
+  { key: 'courses', free: 'first', pro: 'all' },
   { key: 'reviews', free: 'starter', pro: 'all' },
   { key: 'certificates', free: 'starter', pro: 'all' },
   { key: 'coach', free: { perDay: AI_CHAT_FREE_DAILY_LIMIT }, pro: 'unlimited' },

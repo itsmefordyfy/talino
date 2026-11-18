@@ -9,8 +9,9 @@ import { Screen } from '@/components/ui/screen';
 import { Section } from '@/components/ui/section';
 import { ErrorState, LoadingState } from '@/components/ui/state-view';
 import { Radius, Spacing } from '@/constants/theme';
+import { getCourse, localizedCourse, recentVisits, useLearning, useLessonVisits, useOpenLesson } from '@/features/courses';
 import { homeCourseChosen, selectHomeCourse } from '@/features/settings/settings-slice';
-import { useLocalized } from '@/hooks/use-strings';
+import { useLanguage, useLocalized } from '@/hooks/use-strings';
 import { useTheme } from '@/hooks/use-theme';
 import { tapFeedback } from '@/lib/haptics';
 import { closeScreen } from '@/lib/navigation';
@@ -32,12 +33,34 @@ export function CourseSwitcherScreen() {
   const journey = useJourney();
   const dispatch = useAppDispatch();
   const choice = useAppSelector(selectHomeCourse);
+  const visits = useLessonVisits();
+  const learning = useLearning();
+  const language = useLanguage();
+  const openLesson = useOpenLesson();
 
   if (journey.isError) return <ErrorState message={text.empty.body} onRetry={journey.refetch} />;
   if (journey.isPending) return <LoadingState />;
 
   const active = resolveActiveCourse(journey.path, choice);
-  const entries = myLearning(journey.path, active?.key ?? null);
+  const opened = Object.fromEntries(Object.entries(visits).map(([courseId, visit]) => [courseId, visit.at]));
+  const entries = myLearning(journey.path, active?.key ?? null, opened);
+  // The lessons the learner opened last and hasn't finished, newest first (a finished one points at what follows it; a finished course is left out).
+  const leftOff = recentVisits(visits)
+    .flatMap(({ courseId }) => {
+      const original = getCourse(courseId);
+      const progress = learning.progressFor(courseId);
+      const lessonId = visits[courseId]?.lessonId;
+      if (!original || !progress || !lessonId || progress.complete) return [];
+      const course = localizedCourse(original, language);
+      const visited = course.lessons.find((lesson) => lesson.id === lessonId);
+      const finished = progress.lessonState(lessonId) === 'done';
+      const target = finished ? progress.nextLesson : visited;
+      if (!target) return [];
+      const lesson = course.lessons.find((entry) => entry.id === target.id) ?? target;
+      const detail = finished ? text.home.leftOffNext(course.title, lesson.day) : text.home.leftOffContinue(course.title, lesson.day);
+      return [{ courseId, lessonId: lesson.id, title: lesson.title, detail }];
+    })
+    .slice(0, 3);
   const stages = journey.state.stages;
   const choose = (entry: LearningEntry) => {
     tapFeedback();
@@ -61,6 +84,27 @@ export function CourseSwitcherScreen() {
           {text.home.pickerBody}
         </ThemedText>
       </View>
+      {leftOff.length > 0 && (
+        <Section title={text.home.leftOffTitle}>
+          <Card padded={false}>
+            {leftOff.map((entry) => (
+              <ListRow
+                key={entry.courseId}
+                title={entry.title}
+                titleLines={2}
+                subtitle={entry.detail}
+                icon="play_circle"
+                iconColor="primary"
+                accessibilityLabel={text.home.leftOffLabel(entry.title, entry.detail)}
+                onPress={() => {
+                  tapFeedback();
+                  openLesson(entry.lessonId);
+                }}
+              />
+            ))}
+          </Card>
+        </Section>
+      )}
       {current && (
         <Section title={text.home.showingOnHome}>
           <Card onPress={() => choose(current)} accessibilityLabel={text.home.activeLabel(current.node.title, levelOf(current), detailOf(current))} style={[styles.active, { borderColor: theme.primary }]}>

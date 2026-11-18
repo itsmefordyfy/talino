@@ -6,7 +6,8 @@ import { LAB_EXPERIMENTS, type LabTask } from '../types';
  * what the model alone may know, so those are checked as hard as the shape.
  */
 
-const ID = /^lab-\d{2}-[a-z0-9]+(-[a-z0-9]+)*$/;
+// `lab-NN-` for the Generative AI course, `arch-NN-` for Software Architecture with AI.
+const ID = /^(lab|arch)-\d{2}-[a-z0-9]+(-[a-z0-9]+)*$/;
 const KEBAB = /^[a-z0-9]+(-[a-z0-9]+)*$/;
 const TOOL_NAME = /^[a-z][a-z0-9_]*$/;
 const NEEDS_MATERIAL = ['summarization', 'classification', 'document-analysis', 'structured-output'];
@@ -42,7 +43,7 @@ export function labProblems(lab: LabTask): string[] {
   const add = (message: string) => problems.push(message);
   const blank = (text: unknown) => typeof text !== 'string' || text.trim() === '';
 
-  if (!ID.test(lab.id)) add(`id "${lab.id}" is not lab-NN-kebab.`);
+  if (!ID.test(lab.id)) add(`id "${lab.id}" is not lab-NN-kebab or arch-NN-kebab.`);
   if (lab.kind !== 'lab') add('kind is not "lab".');
   if (!(LAB_EXPERIMENTS as readonly string[]).includes(lab.experiment)) add(`experiment "${lab.experiment}" is unknown.`);
   for (const [name, value] of [['title', lab.title], ['situation', lab.situation], ['goal', lab.goal], ['starterPrompt', lab.starterPrompt], ['system', lab.system], ['example.prompt', lab.example?.prompt], ['example.outcome', lab.example?.outcome]] as const) if (blank(value)) add(`${name} is empty.`);

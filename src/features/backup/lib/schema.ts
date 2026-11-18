@@ -46,6 +46,7 @@ export type TableName =
   | 'resume_versions'
   | 'resume_documents'
   | 'portfolio_projects'
+  | 'architecture_artifacts'
   | 'learner_profile';
 
 export type TableSpec = {
@@ -196,6 +197,12 @@ export const BACKUP_TABLES: readonly TableSpec[] = [
     columns: [text('id'), text('title'), text('summary', { fallback: '' }), text('description', { fallback: '' }), text('role', { fallback: '' }), jsonList('tech'), optionalText('url'), optionalText('repo_url'), jsonList('images'), count('sort'), ts('created_at'), ts('updated_at')],
   },
   {
+    // The learner's saved diagrams, decision records and matrices from Software Architecture with AI: project work, so it travels with a backup.
+    name: 'architecture_artifacts',
+    key: 'id',
+    columns: [text('id'), text('kind', { oneOf: ['diagram', 'adr', 'matrix'] }), text('title'), text('content'), optionalText('project_id'), ts('created_at'), ts('updated_at')],
+  },
+  {
     name: 'learner_profile',
     key: 'id',
     columns: [
@@ -232,7 +239,7 @@ export function tableSpec(name: TableName): TableSpec {
  * The tables whose rows the learner can delete, and so the ones with a tombstone trigger (migration v4).
  * A résumé version's tombstone id is its `goal`.
  */
-export const TOMBSTONE_TABLES: readonly TableName[] = ['applications', 'income', 'career_goals', 'resume_items', 'resume_versions', 'resume_documents', 'portfolio_projects', 'certificates'];
+export const TOMBSTONE_TABLES: readonly TableName[] = ['applications', 'income', 'career_goals', 'resume_items', 'resume_versions', 'resume_documents', 'portfolio_projects', 'certificates', 'architecture_artifacts'];
 
 /** The tables a backup never holds, and why: the owner can move a name into `BACKUP_TABLES` above to include it. */
 export const EXCLUDED_TABLES = [

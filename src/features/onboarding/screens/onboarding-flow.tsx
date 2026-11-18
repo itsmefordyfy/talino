@@ -15,28 +15,33 @@ import { Icon, type IconName } from '@/components/ui/icon';
 import { Spacing } from '@/constants/theme';
 import { CompanionPicker } from '@/features/companion/components/companion-picker';
 import { COMPANIONS } from '@/features/companion/lib/companions';
+import { COURSES } from '@/features/courses/data';
+import { useAccess } from '@/features/store';
 import { requestNotificationPermission } from '@/features/notifications';
-import { dailyMinutesChanged, dailyReminderTimeChanged, dailyReminderToggled, focusCourseChanged, goalChanged, languageChanged, learnerNameChanged, onboardingFinished, reminderDaysChanged, selectDailyReminder, selectCompanion, selectDailyReminderTime, selectLanguage, selectLearnerName } from '@/features/settings/settings-slice';
+import { dailyMinutesChanged, dailyReminderTimeChanged, dailyReminderToggled, focusCourseChanged, goalChanged, homeCourseChosen, languageChanged, learnerNameChanged, onboardingFinished, reminderDaysChanged, selectDailyReminder, selectCompanion, selectDailyReminderTime, selectLanguage, selectLearnerName } from '@/features/settings/settings-slice';
 import { useLocalized } from '@/hooks/use-strings';
 import { isLanguage, LANGUAGE_LABELS, SHOWN_LANGUAGES } from '@/lib/i18n';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 
+import { ChoiceBody, ChoiceTitle, CourseStep, PaywallStep } from '../components/course-steps';
 import { ExperienceStep, GoalsStep, InterestsStep, MinutesStep, NameStep, ScheduleStep, StylesStep } from '../components/profile-steps';
 import { PlanView } from '../components/plan-view';
 import { usePlanner, useProfile, useSaveProfile } from '../hooks/use-profile';
 import { audienceFor } from '../lib/audience';
+import { courseChoices } from '../lib/course-choices';
 import type { ExperienceLevel, GoalId, InterestId, StyleId, TimeOfDay } from '../lib/options';
 import { REQUIRED_FOR_PLAN, type LearnerProfile } from '../lib/profile';
+import { onboardingCourseStrings } from '../course-strings';
 import { onboardingFinishStrings } from '../finish-strings';
 import { onboardingNotificationStrings } from '../notification-strings';
 import { onboardingStrings } from '../strings';
 
-export const STEPS = ['welcome', 'coach', 'name', 'experience', 'goals', 'interests', 'styles', 'time', 'schedule', 'notifications', 'plan'] as const;
+export const STEPS = ['welcome', 'coach', 'name', 'experience', 'goals', 'interests', 'styles', 'course', 'choice', 'time', 'schedule', 'notifications', 'paywall', 'plan'] as const;
 export type StepId = (typeof STEPS)[number];
 
 /** The questions nobody has to answer: each offers Skip. */
-const OPTIONAL: readonly StepId[] = ['name', 'interests', 'styles', 'time', 'schedule'];
-const POSES: Record<StepId, TaliMood> = { welcome: 'happy', coach: 'happy', name: 'confident', experience: 'curious', goals: 'explaining', interests: 'inspired', styles: 'learning', time: 'focused', schedule: 'encouraging', notifications: 'encouraging', plan: 'celebrating' };
+const OPTIONAL: readonly StepId[] = ['interests', 'styles', 'time', 'schedule'];
+const POSES: Record<StepId, TaliMood> = { welcome: 'happy', coach: 'happy', name: 'confident', experience: 'curious', goals: 'explaining', interests: 'inspired', styles: 'learning', course: 'curious', choice: 'celebrating', paywall: 'confident', time: 'focused', schedule: 'encouraging', notifications: 'encouraging', plan: 'celebrating' };
 const TIME_OF_DAY_HOUR: Record<TimeOfDay, number> = { morning: 8, afternoon: 13, evening: 19 };
 
 /**
@@ -47,6 +52,8 @@ const TIME_OF_DAY_HOUR: Record<TimeOfDay, number> = { morning: 8, afternoon: 13,
  */
 export function OnboardingFlow() {
   const strings = useLocalized(onboardingStrings);
+  const courseText = useLocalized(onboardingCourseStrings);
+  const access = useAccess();
   const finishText = useLocalized(onboardingFinishStrings);
   const notificationText = useLocalized(onboardingNotificationStrings);
   const dispatch = useAppDispatch();
@@ -65,6 +72,8 @@ export function OnboardingFlow() {
   const [name, setName] = useState(savedName);
   const [denied, setDenied] = useState(false);
   const [asking, setAsking] = useState(false);
+  // The course picked in the course step; until then (and after a resume) the best match stands in, so every later step has one.
+  const [courseId, setCourseId] = useState<string | null>(null);
   const started = useRef(false);
 
   // Resume: take the saved answers and the step they were left on, once.
@@ -80,8 +89,14 @@ export function OnboardingFlow() {
 
   const id = STEPS[step];
   const update = (patch: Partial<LearnerProfile>) => setDraft((current) => (current ? { ...current, ...patch } : current));
-  const total = STEPS.length - 1;
-  const plan = planner.planFor(draft);
+  const choices = courseChoices(draft, COURSES);
+  const chosenId = courseId !== null && choices.some((choice) => choice.id === courseId) ? courseId : (choices[0]?.id ?? null);
+  // A paid course the learner doesn't own leads to the Talino Pro step; a free or owned one skips it.
+  const showPaywall = chosenId !== null && !access.owns(chosenId);
+  const visible = STEPS.filter((candidate) => candidate !== 'paywall' || showPaywall);
+  const position = Math.max(0, visible.indexOf(id));
+  const total = visible.length - 1;
+  const plan = planner.planFor(draft, chosenId);
   const resumed = !!stored && stored.step > 0 && step === stored.step && step === 0;
 
   const goTo = (index: number, patch: Partial<LearnerProfile> = {}) => {
@@ -89,7 +104,10 @@ export function OnboardingFlow() {
     save.mutate({ ...draft, ...patch, step: next });
     setStep(next);
   };
-  const advance = () => goTo(step + 1);
+  const nextId = (): StepId => visible[Math.min(visible.length - 1, visible.indexOf(id) + 1)];
+  const previousId = (): StepId => visible[Math.max(0, visible.indexOf(id) - 1)];
+  const advance = () => goTo(STEPS.indexOf(nextId()));
+  const goBack = () => goTo(STEPS.indexOf(previousId()));
 
   const remindToggle = async (on: boolean) => {
     const granted = on ? await requestNotificationPermission() : false;
@@ -114,7 +132,6 @@ export function OnboardingFlow() {
     advance();
   };
   const skip = () => {
-    if (id === 'name') setName('');
     advance();
   };
 
@@ -136,23 +153,26 @@ export function OnboardingFlow() {
     const done: LearnerProfile = { ...draft, plan: plan ? { startCourseId: plan.startCourse.id, nextCourseIds: plan.nextCourses.map((course) => course.id), generatedAt: new Date().toISOString() } : null };
     save.mutate({ ...done, step: STEPS.length - 1, status: 'completed' });
     dispatch(goalChanged(audienceFor(done)));
-    dispatch(focusCourseChanged(plan?.firstStep.courseId ?? plan?.startCourse.id ?? 'starter'));
+    dispatch(focusCourseChanged(chosenId ?? plan?.firstStep.courseId ?? plan?.startCourse.id ?? 'starter'));
+    // Home's Active Course is the one the learner picked here (its first lesson is free even when the course isn't theirs yet), not whatever the plan fell back to.
+    if (chosenId) dispatch(homeCourseChosen(chosenId));
     dispatch(onboardingFinished());
     // The tabs replace this screen as soon as the flag is set, and the learner lands on Home, their journey, where the first step is
     // waiting (owner, 2026-11-16: "after the onboarding the user should be brought to the home screen"; the first lesson used to open over it).
     router.navigate('/');
   };
 
-  const required = id === 'experience' ? draft.experience !== null : id === 'goals' ? draft.goals.length > 0 : true;
+  const required = id === 'name' ? name.trim().length > 0 : id === 'experience' ? draft.experience !== null : id === 'goals' ? draft.goals.length > 0 : id === 'course' ? chosenId !== null : true;
   const optional = OPTIONAL.includes(id);
   const hasPlan = !!plan && REQUIRED_FOR_PLAN(draft);
 
-  const copy: Record<Exclude<StepId, 'welcome' | 'plan'>, { title: string; body: string }> = {
+  const copy: Record<Exclude<StepId, 'welcome' | 'plan' | 'choice' | 'paywall'>, { title: string; body: string }> = {
     coach: { title: strings.coachTitle, body: strings.coachBody },
     name: { title: strings.nameTitle, body: strings.nameBody },
     experience: { title: strings.experienceTitle, body: strings.experienceBody },
     goals: { title: strings.goalsTitle, body: strings.goalsBody },
     interests: { title: strings.interestsTitle, body: strings.interestsBody },
+    course: { title: courseText.courseTitle, body: courseText.courseBody },
     styles: { title: strings.stylesTitle, body: strings.stylesBody },
     time: { title: strings.timeTitle, body: strings.timeBody },
     schedule: { title: strings.scheduleTitle, body: strings.scheduleBody },
@@ -186,7 +206,9 @@ export function OnboardingFlow() {
     );
 
   const body =
-    id === 'coach' ? (
+    id === 'course' ? (
+      <CourseStep choices={choices} value={chosenId} onChange={setCourseId} />
+    ) : id === 'coach' ? (
       <CompanionPicker autoPlay />
     ) : id === 'name' ? (
       <NameStep value={name} onChange={setName} />
@@ -228,20 +250,30 @@ export function OnboardingFlow() {
       </View>
     ) : null;
 
+  // Back on the left, the step count in the middle, and on the Talino Pro step Skip on the right (leaving without buying, on with the free course).
+  const top =
+    id !== 'welcome' ? (
+      <View style={styles.top}>
+        <View style={styles.topRow}>
+          <View style={[styles.topSide, styles.topStart]}>
+            <Button title={strings.back} variant="ghost" size="small" icon="arrow_back" onPress={goBack} />
+          </View>
+          <ThemedText type="caption" themeColor="textSecondary" tabular>
+            {strings.step(position, total)}
+          </ThemedText>
+          <View style={[styles.topSide, styles.topEnd]}>{id === 'paywall' && !access.allAccess && <Button title={strings.skip} variant="ghost" size="small" onPress={advance} />}</View>
+        </View>
+        <ProgressBar fraction={position / total} accessibilityLabel={strings.progressLabel(position, total)} />
+      </View>
+    ) : null;
+
+  // The Talino Pro step has its own pinned buttons (subscribe, not now), so it is its own screen with the same header.
+  if (id === 'paywall') return <PaywallStep courseId={chosenId ?? ''} header={top} onDone={advance} />;
+
   return (
     // The welcome screen's content sits in the middle of the space between the top and the button.
-    <Screen variant="tab" footer={footer} contentStyle={id === 'welcome' ? styles.centered : undefined}>
-      {id !== 'welcome' && (
-        <View style={styles.top}>
-          <View style={styles.topRow}>
-            <Button title={strings.back} variant="ghost" size="small" icon="arrow_back" onPress={() => goTo(step - 1)} />
-            <ThemedText type="caption" themeColor="textSecondary" tabular>
-              {strings.step(step, total)}
-            </ThemedText>
-          </View>
-          <ProgressBar fraction={step / total} accessibilityLabel={strings.progressLabel(step, total)} />
-        </View>
-      )}
+    <Screen variant="root" footer={footer} contentStyle={id === 'welcome' ? styles.centered : undefined}>
+      {top}
 
       {/* The mascot stays still; only the step's content fades in. */}
       {/* The coach step shows both coaches in its own cards, so no extra mascot above them. */}
@@ -254,6 +286,11 @@ export function OnboardingFlow() {
       <Animated.View key={id} entering={FadeIn.duration(220)} style={styles.content}>
         {id === 'welcome' ? (
           <Welcome resumed={resumed} />
+        ) : id === 'choice' && chosenId ? (
+          <>
+            <ChoiceTitle courseId={chosenId} />
+            <ChoiceBody courseId={chosenId} />
+          </>
         ) : id === 'plan' ? (
           <>
             <ThemedText type="title" style={styles.center} accessibilityRole="header">
@@ -273,10 +310,10 @@ export function OnboardingFlow() {
                 </ThemedText>
               )}
               <ThemedText type="title" accessibilityRole="header">
-                {id === 'name' && name.trim() ? strings.nice(name.trim().split(' ')[0]) : copy[id].title}
+                {id === 'name' && name.trim() ? strings.nice(name.trim().split(' ')[0]) : copy[id as keyof typeof copy].title}
               </ThemedText>
               <ThemedText type="body" themeColor="textSecondary">
-                {copy[id].body}
+                {copy[id as keyof typeof copy].body}
               </ThemedText>
             </View>
             {body}
@@ -349,7 +386,17 @@ const styles = StyleSheet.create({
   topRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+  },
+  // Equal sides keep the step count exactly in the middle.
+  topSide: {
+    flex: 1,
+    flexDirection: 'row',
+  },
+  topStart: {
+    justifyContent: 'flex-start',
+  },
+  topEnd: {
+    justifyContent: 'flex-end',
   },
   mascot: {
     alignItems: 'center',

@@ -125,6 +125,12 @@ const OFFICIAL_HOSTS = [
   'formspree.io',
   'github.github.io',
   'mozilla.org',
+  // Building AI Agents (2026-11-18): agent framework, SDK and observability documentation, official pages only.
+  'crewai.com',
+  'openai.github.io',
+  'google.github.io',
+  'opentelemetry.io',
+  'pydantic.dev',
 ];
 
 /** True for an https link on an official documentation host (or a subdomain of one). */

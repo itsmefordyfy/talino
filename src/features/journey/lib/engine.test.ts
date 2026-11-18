@@ -179,6 +179,15 @@ describe('directions', () => {
     expect(milestone(run(emptyFacts(), { ...newLearner, focus: ['mobile'] }), 'ship-to-app-stores').required).toBe(true);
   });
 
+  test('the phone-app courses are set aside only by choosing the web, not by any other direction', () => {
+    for (const focus of [['ai'], ['freelance'], ['hired'], ['teach'], ['ai', 'freelance']] as const) {
+      expect(milestone(run(emptyFacts(), { ...newLearner, focus: [...focus] }), 'app-on-your-phone').required).toBe(true);
+      expect(milestone(run(emptyFacts(), { ...newLearner, focus: [...focus] }), 'ship-to-app-stores').required).toBe(true);
+    }
+    expect(milestone(run(emptyFacts(), { ...newLearner, focus: ['web', 'mobile'] }), 'app-on-your-phone').required).toBe(true);
+    expect(milestone(run(emptyFacts(), { ...newLearner, focus: ['web', 'freelance'] }), 'ship-to-app-stores').required).toBe(false);
+  });
+
   test('a side step becomes part of the road for its own audience', () => {
     expect(milestone(run(emptyFacts(), { ...newLearner, focus: ['freelance'] }), 'earn-with-ai-services').required).toBe(true);
     expect(milestone(run(emptyFacts(), { ...newLearner, focus: ['teach'] }), 'teach-with-ai').required).toBe(true);

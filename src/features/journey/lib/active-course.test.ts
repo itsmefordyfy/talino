@@ -123,6 +123,20 @@ describe('myLearning', () => {
     expect(keys(myLearning(p, null))).toEqual(['c3', 'c1']);
   });
 
+  test('a course whose lesson was only opened is in progress, ordered by when it was opened', () => {
+    const p = pathOf({ c1: 3 }, { c1: '2026-11-02T00:00:00Z' });
+    const list = myLearning(p, 'c1', { c4: '2026-11-04T00:00:00Z' });
+    expect(keys(list)).toEqual(['c1', 'c4']);
+    expect(list.find((entry) => entry.node.key === 'c4')).toMatchObject({ group: 'in-progress', active: false });
+    // Opened after c1 was last worked on, and c1 not the active one: the opened course is the more recent.
+    expect(keys(myLearning(p, null, { c4: '2026-11-04T00:00:00Z' }))).toEqual(['c4', 'c1']);
+  });
+
+  test('an opened course that is already finished stays under finished', () => {
+    const p = pathOf({ c1: 10 }, { c1: '2026-11-02T00:00:00Z' });
+    expect(myLearning(p, 'c3', { c1: '2026-11-04T00:00:00Z' }).find((entry) => entry.node.key === 'c1')).toMatchObject({ group: 'completed' });
+  });
+
   test('the journey’s next course is offered while it is untouched, and courses the learner never touched are not', () => {
     const p = pathOf({ c1: 10 }, { c1: '2026-11-02T00:00:00Z' });
     const list = myLearning(p, 'c1');

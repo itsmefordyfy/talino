@@ -148,7 +148,7 @@ export const courseStrings = defineStrings({
     alreadyDone: 'You finished this lesson. Take the quiz again any time.',
     notOwned: 'This lesson is part of a course you haven’t got yet.',
     notOwnedTitle: 'This lesson is part of Talino Pro',
-    notOwnedBody: 'Subscribe to open every course, project review and certificate. I’ll be right here when you’re in.',
+    notOwnedBody: 'The first lesson of every course is free. Subscribe to open the rest, with every project review and certificate. I’ll be right here when you’re in.',
     lockedTitle: 'Not open yet',
     notFound: 'This lesson isn’t here any more',
     courseNotFound: 'This course isn’t here any more',

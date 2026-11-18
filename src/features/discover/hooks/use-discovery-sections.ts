@@ -1,4 +1,4 @@
-import { catalogFacts, getCourse, buildDiscoverySections, categoryLabel, MIN_RELEVANCE, recommendCourses, technologyLabel, type CourseFacts, type DiscoverySections, type Recommendation } from '@/features/courses';
+import { catalogFacts, getCourse, buildDiscoverySections, categoryLabel, fitsLevel, learnerExperience, MIN_RELEVANCE, recommendCourses, technologyLabel, type CourseFacts, type DiscoverySections, type Recommendation } from '@/features/courses';
 // The hook by its path: the journey's index also exports its screens, which import this feature's parent screens back.
 import { useJourney } from '@/features/journey/hooks/use-journey';
 import { onboardingStrings } from '@/features/onboarding/strings';
@@ -28,6 +28,8 @@ export type DiscoveryHome = {
   askedForTopics: boolean;
   /** Whether a course is about what the learner asked for (their goals and interests); true for everything when they asked for nothing. */
   isRelevant: (courseId: string) => boolean;
+  /** A list of courses with the ones at the learner's own level first (the order inside each part is kept); nothing is dropped. */
+  orderByLevel: <T extends { id: string }>(courses: readonly T[]) => T[];
   /** A short human reason for a recommended course ("Because you want to become a software engineer"), or null. */
   reasonOf: (entry: Recommendation) => string | null;
   isPending: boolean;
@@ -64,6 +66,11 @@ export function useDiscoverySections(): DiscoveryHome {
   // Improve and next level come from real progress, so they stay for someone who skipped the welcome too.
   const wantsStartHere = !sections.recommended && !sections.yourPath;
 
+  // The level the learner works at (what they said, the skill check, courses they finished): the lists below put courses at that level first.
+  const experience = learnerExperience(signals, facts);
+  const levelOf = new Map(facts.map((fact) => [fact.id, fact.level]));
+  const orderByLevel = <T extends { id: string }>(courses: readonly T[]): T[] => [...courses.filter((course) => fitsLevel(experience, levelOf.get(course.id) ?? 'beginner')), ...courses.filter((course) => !fitsLevel(experience, levelOf.get(course.id) ?? 'beginner'))];
+
   const reasonOf = (entry: Recommendation) =>
     reasonLine(entry.reasons, strings.reasons, {
       courseTitle: (id) => getCourse(id)?.title,
@@ -75,12 +82,13 @@ export function useDiscoverySections(): DiscoveryHome {
   const started = sections.continueLearning?.length ?? 0;
   return {
     sections,
-    startHere: wantsStartHere ? startHere(facts, signals) : [],
+    startHere: wantsStartHere ? startHere(facts, { completed: signals.completed, started: signals.started, experience }) : [],
     personalized,
     hasPicks: !!(sections.recommended || sections.yourPath || sections.exploreInterests || sections.continueLearning || sections.improveSkills || sections.nextLevel),
     startedCount: started,
     askedForTopics: asked,
     isRelevant: (courseId) => !asked || aboutThem.has(courseId),
+    orderByLevel,
     reasonOf,
     isPending: learner.isPending,
     isError: learner.isError,

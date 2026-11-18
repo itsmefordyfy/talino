@@ -9,7 +9,13 @@ import { imagePromptStrings } from './image-prompt-strings';
 import { PromptAnatomyVisual } from './components/prompt-anatomy';
 import { promptAnatomyStrings } from './prompt-anatomy-strings';
 import { EmbeddingsVisual } from './components/embeddings';
+import { LlmAttentionVisual } from './components/llm-attention';
+import { LlmSamplingVisual } from './components/llm-sampling';
+import { LlmTransformerFlowVisual } from './components/llm-transformer-flow';
 import { LlmWorkflowVisual } from './components/llm-workflow';
+import { llmAttentionStrings } from './llm-attention-strings';
+import { llmSamplingStrings } from './llm-sampling-strings';
+import { llmTransformerStrings } from './llm-transformer-strings';
 import { ModelIoVisual } from './components/model-io';
 import { NeuralNetVisual } from './components/neural-net';
 import { RagVisual } from './components/rag';
@@ -90,11 +96,17 @@ const buildCourse = (language: 'en' | 'fil'): VisualDefinition[] => {
   const anatomy = promptAnatomyStrings[language];
   const image = imagePromptStrings[language];
   const agent = agentLoopStrings[language];
+  const attention = llmAttentionStrings[language];
+  const sampling = llmSamplingStrings[language];
+  const flow = llmTransformerStrings[language];
   return [
     { id: 'ai-context-window', title: context.title, category: 'ai', summary: context.summary, description: context.description, topics: context.topics, Component: ContextWindowVisual },
     { id: 'ai-prompt-anatomy', title: anatomy.title, category: 'ai', summary: anatomy.summary, description: anatomy.description, topics: anatomy.topics, Component: PromptAnatomyVisual },
     { id: 'ai-image-prompt-builder', title: image.title, category: 'ai', summary: image.summary, description: image.description, topics: image.topics, Component: ImagePromptBuilderVisual },
     { id: 'ai-agent-loop', title: agent.title, category: 'ai', summary: agent.summary, description: agent.description, topics: agent.topics, Component: AgentLoopVisual },
+    { id: 'llm-attention', title: attention.title, category: 'ai', summary: attention.summary, description: attention.description, topics: attention.topics, Component: LlmAttentionVisual },
+    { id: 'llm-sampling', title: sampling.title, category: 'ai', summary: sampling.summary, description: sampling.description, topics: sampling.topics, Component: LlmSamplingVisual },
+    { id: 'llm-transformer-flow', title: flow.title, category: 'ai', summary: flow.summary, description: flow.description, topics: flow.topics, Component: LlmTransformerFlowVisual },
   ];
 };
 

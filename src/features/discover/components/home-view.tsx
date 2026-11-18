@@ -86,9 +86,9 @@ export function HomeView() {
   };
   const hasBand = !!(sections.continueLearning || sections.recommended || sections.yourPath || sections.exploreInterests || sections.improveSkills || sections.nextLevel || home.startHere.length > 0);
   // The catalog part is the same for everyone: published after launch (new), and short courses straight from the catalog.
-  const newCourses = facts.filter((fact) => isNewCourse(fact) && home.isRelevant(fact.id)).sort((a, b) => (a.published < b.published ? 1 : a.published > b.published ? -1 : 0));
+  const newCourses = home.orderByLevel(facts.filter((fact) => isNewCourse(fact) && home.isRelevant(fact.id)).sort((a, b) => (a.published < b.published ? 1 : a.published > b.published ? -1 : 0)));
   // Only the short courses that are about what the learner asked for (all of them for someone who asked for nothing).
-  const short = shortCourses(facts).filter((fact) => home.isRelevant(fact.id)).slice(0, SHORT_SHOWN);
+  const short = home.orderByLevel(shortCourses(facts).filter((fact) => home.isRelevant(fact.id))).slice(0, SHORT_SHOWN);
   const nextLevelLabel = sections.nextLevel ? learningLevelLabel(sections.nextLevel.level) : '';
 
   return (

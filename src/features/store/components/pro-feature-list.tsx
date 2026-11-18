@@ -22,15 +22,17 @@ const LOOKS: Record<PaywallFeature, { icon: IconName; color: ThemeColor; backgro
 export type ProFeatureListProps = ViewProps & {
   /** What the learner reached for: listed first. */
   lead?: PaywallFeature | null;
+  /** Only the first few (onboarding's short pitch); the paywall lists them all. */
+  limit?: number;
 };
 
 /** What Pro adds, each with what it means for the learner. */
-export function ProFeatureList({ lead = null, style, ...rest }: ProFeatureListProps) {
+export function ProFeatureList({ lead = null, limit, style, ...rest }: ProFeatureListProps) {
   const { features } = useLocalized(paywallStrings);
   const theme = useTheme();
   return (
     <View style={[styles.list, style]} {...rest}>
-      {orderedFeatures(lead).map((key) => {
+      {orderedFeatures(lead).slice(0, limit).map((key) => {
         const look = LOOKS[key];
         return (
           <View key={key} style={styles.row}>

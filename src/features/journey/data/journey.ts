@@ -230,6 +230,23 @@ export const AI_BUILDER_JOURNEY: JourneyDefinition = {
           lateAddition: true,
         },
         {
+          // AI literacy for anyone: what AI, machine learning and generative AI are, how to prompt and check an assistant, and using AI fairly, privately and safely, ending in a
+          // final assessment and a responsible-AI challenge (owner's brief, 2026-11-18). An optional side step for everyone, added late so no existing learner's place moves.
+          id: 'ai-fundamentals-everyone',
+          kind: 'learn',
+          title: 'AI fundamentals, for everyone',
+          summary: 'What AI is, how to use it well and how to stay in charge of it',
+          why: 'Before any tool or code, it helps to know what AI really is, where it goes wrong and what stays your decision. You finish with a real task done with an assistant and a responsible-use challenge.',
+          objectives: ['Explain AI, machine learning and generative AI in plain words', 'Write clear prompts and check what an assistant tells you', 'Protect privacy, spot bias and deepfakes, and keep people in charge of decisions'],
+          icon: 'psychology',
+          steps: [
+            { kind: 'learn', courseId: 'ai-fundamentals-everyone' },
+            { kind: 'build', courseId: 'ai-fundamentals-everyone', projectId: 'ai-fundamentals-everyone-p2' },
+          ],
+          side: true,
+          lateAddition: true,
+        },
+        {
           // Generative AI for people who use it, with live prompt labs and four projects (owner's brief, 2026-11-17). An optional side step added late so no existing learner's place moves.
           id: 'generative-ai-foundations',
           kind: 'learn',
@@ -258,6 +275,23 @@ export const AI_BUILDER_JOURNEY: JourneyDefinition = {
           steps: [
             { kind: 'learn', courseId: 'time-management-productivity' },
             { kind: 'build', courseId: 'time-management-productivity', projectId: 'time-management-productivity-p3' },
+          ],
+          side: true,
+          lateAddition: true,
+        },
+        {
+          // Practical AI automation for work: workflows with an AI step and a person who approves, for email, documents, marketing, support and small businesses, plus AI agents
+          // and safe practice (owner's brief, 2026-11-18). An optional side step for everyone, added late so no existing learner's place moves; the road to the AI Expert certificate is unchanged.
+          id: 'ai-automation-work',
+          kind: 'learn',
+          title: 'AI automation for work',
+          summary: 'Automate repetitive work with AI, safely',
+          why: 'The tasks that repeat can run in the background while you do the thinking, if you know what a rule should decide, what AI can draft, and where a person must approve.',
+          objectives: ['Tell what rules should decide from what AI can judge', 'Design workflows for email, documents, support and sales', 'Keep a person in charge and protect data, keys and customers'],
+          icon: 'account_tree',
+          steps: [
+            { kind: 'learn', courseId: 'ai-automation-business' },
+            { kind: 'build', courseId: 'ai-automation-business', projectId: 'ai-automation-business-p5' },
           ],
           side: true,
           lateAddition: true,
@@ -342,6 +376,54 @@ export const AI_BUILDER_JOURNEY: JourneyDefinition = {
           steps: [
             { kind: 'learn', courseId: 'object-oriented-programming' },
             { kind: 'build', courseId: 'object-oriented-programming', projectId: 'object-oriented-programming-p12' },
+          ],
+          side: true,
+          lateAddition: true,
+        },
+        {
+          // How a whole system is shaped, decided and documented, practised with diagram, trade-off, decision-record and assistant tools and three projects (owner's brief, 2026-11-18). An optional side step added late so no existing learner's place moves; the road to the AI Expert certificate is unchanged.
+          id: 'software-architecture',
+          kind: 'learn',
+          title: 'Software architecture with AI',
+          summary: 'Design, document and review whole systems',
+          why: 'Once you can build, the work that matters is deciding how the whole system is shaped, writing the decision down and testing what an AI proposes before you build it.',
+          objectives: ['Turn business needs into measurable requirements and choose an architecture on evidence', 'Design components, data, APIs, security and scaling, and record the decisions', 'Review AI-generated architecture and direct coding agents inside your boundaries'],
+          icon: 'account_tree',
+          steps: [
+            { kind: 'learn', courseId: 'software-architecture-ai' },
+            { kind: 'build', courseId: 'software-architecture-ai', projectId: 'software-architecture-ai-p3' },
+          ],
+          side: true,
+          lateAddition: true,
+        },
+        {
+          // The inside of an AI assistant: tokens, embeddings, attention, how a reply is written, training, limits and retrieval, with no code (owner's brief, 2026-11-18). An optional side step added late so no existing learner's place moves; the road to the AI Expert certificate is unchanged.
+          id: 'how-llms-work',
+          kind: 'learn',
+          title: 'How LLMs work inside',
+          summary: 'Tokens, attention, training and why AI makes things up',
+          why: 'When you know what an assistant does with your words, you stop being surprised by it: you give better context, spot where it will go wrong and decide when a person has to check.',
+          objectives: ['Explain tokens, embeddings and attention in plain words', 'Describe how a reply is generated and what temperature changes', 'Explain forgetting, hallucination and retrieval, and design an AI workflow with a human check'],
+          icon: 'psychology',
+          steps: [
+            { kind: 'learn', courseId: 'how-llms-work' },
+            { kind: 'build', courseId: 'how-llms-work', projectId: 'how-llms-work-p1' },
+          ],
+          side: true,
+          lateAddition: true,
+        },
+        {
+          // Building agents that call an LLM: tools, memory, your own documents, bounded multi-step runs, several agents, frameworks, security and deployment, with runnable coding exercises and eight projects (owner's brief, 2026-11-18). An optional side step added late so no existing learner's place moves.
+          id: 'building-ai-agents',
+          kind: 'learn',
+          title: 'Building AI agents',
+          summary: 'Tools, memory, your documents and safe limits',
+          why: 'Using AI is one skill and building with it is another: an agent that calls tools, remembers and reads your documents has to be bounded, tested and secured before anyone relies on it.',
+          objectives: ['Connect a model to tools, memory and your own documents', 'Plan multi-step and multi-agent work with hard limits and human approval', 'Test, secure and deploy an agent, then build your own capstone'],
+          icon: 'smart_toy',
+          steps: [
+            { kind: 'learn', courseId: 'building-ai-agents' },
+            { kind: 'build', courseId: 'building-ai-agents', projectId: 'building-ai-agents-p8' },
           ],
           side: true,
           lateAddition: true,

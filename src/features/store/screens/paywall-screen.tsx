@@ -1,6 +1,5 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import * as WebBrowser from 'expo-web-browser';
-import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { OfflineNotice } from '@/components/offline-notice';
@@ -11,29 +10,21 @@ import { Notice } from '@/components/ui/notice';
 import { Screen } from '@/components/ui/screen';
 import { SkeletonBlock } from '@/components/ui/skeleton';
 import { Spacing } from '@/constants/theme';
-import { useIsOnline } from '@/hooks/use-is-online';
 import { useLocalized, useStrings } from '@/hooks/use-strings';
-import { successFeedback } from '@/lib/haptics';
-import { reportError } from '@/lib/monitoring';
 import { celebrateProAfterClose } from '@/lib/pro-celebration';
 
 import { usesMockStore } from '../api/purchases';
-import { useCustomerInfo, useManageSubscription, usePurchase, useRestorePurchases, useStoreItems } from '../api/queries';
+import { useManageSubscription } from '../api/queries';
 import { PaywallHero } from '../components/paywall-hero';
 import { PlanComparison } from '../components/plan-comparison';
 import { PlanPicker } from '../components/plan-picker';
 import { ProFeatureList } from '../components/pro-feature-list';
-import { useAccess } from '../hooks/use-access';
-import { OFFERING_ID } from '../lib/catalog';
+import { useSubscribe } from '../hooks/use-subscribe';
+import { LEGAL } from '../lib/legal-links';
 import { leadFeature } from '../lib/paywall-content';
 import { paywallReason } from '../lib/paywall-reasons';
-import { sortPlans } from '../lib/plans';
 import { paywallStrings } from '../paywall-strings';
 import { storeStrings } from '../strings';
-import { PurchaseCancelledError, PurchasePendingError, StoreUnavailableError } from '../types';
-
-/** Placeholders until the marketing site has these pages (an owner step in CLAUDE.md); the same two as Settings. */
-const LEGAL = { privacy: 'https://talino.fordytechsolutions.com/privacy', terms: 'https://talino.fordytechsolutions.com/terms' };
 
 /**
  * The app's own paywall, laid out as Ulamin's "See plans" screen (owner, 2026-11-16): the hero with the coach, the plans (yearly chosen to
@@ -48,50 +39,14 @@ export function PaywallScreen() {
   const { reason: reasonParam } = useLocalSearchParams<{ reason?: string }>();
   const reason = paywallReason(reasonParam);
   const headline = strings.headlines[reason];
-  const items = useStoreItems(OFFERING_ID);
-  const customer = useCustomerInfo();
-  const online = useIsOnline();
-  const access = useAccess();
-  const purchase = usePurchase();
-  const restore = useRestorePurchases();
   const manage = useManageSubscription();
-  const [selectedId, setSelectedId] = useState<string | null>(null);
-  const [message, setMessage] = useState<{ tone: 'success' | 'warning' | 'info'; text: string } | null>(null);
-
-  const plans = sortPlans(items.data ?? []);
-  // Yearly is first once sorted, so it is what is chosen until the learner picks another.
-  const selected = plans.find((plan) => plan.productId === selectedId) ?? plans[0] ?? null;
-  const unavailable = items.error instanceof StoreUnavailableError;
-  const busy = purchase.isPending || restore.isPending;
-
-  const subscribe = async () => {
-    if (!selected) return;
-    setMessage(null);
-    try {
-      const info = await purchase.mutateAsync(selected);
-      successFeedback();
+  const { items, customer, online, access, purchase, restore, plans, selected, select: setSelectedId, unavailable, busy, message, setMessage, subscribe, doRestore } = useSubscribe({
+    onPurchased: (info) => {
       router.back();
       // Only once the purchase has come back with the entitlement; the paywall closes first, then Tali celebrates.
       if (info.allAccess) celebrateProAfterClose();
-    } catch (error) {
-      if (error instanceof PurchaseCancelledError) return;
-      if (error instanceof PurchasePendingError) setMessage({ tone: 'info', text: strings.pending });
-      else {
-        reportError(error, 'purchases', { step: 'subscribe' });
-        setMessage({ tone: 'warning', text: strings.failed });
-      }
-    }
-  };
-
-  const doRestore = async () => {
-    setMessage(null);
-    try {
-      const info = await restore.mutateAsync();
-      setMessage(info.entitlements.length > 0 ? { tone: 'success', text: strings.restored } : { tone: 'info', text: strings.nothingToRestore });
-    } catch (error) {
-      setMessage({ tone: 'warning', text: error instanceof StoreUnavailableError ? strings.unavailable : strings.loadError });
-    }
-  };
+    },
+  });
 
   const footer = (
     <View style={styles.footer}>

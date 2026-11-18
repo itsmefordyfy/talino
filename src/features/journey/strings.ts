@@ -86,6 +86,11 @@ const en = {
     emptyBody: 'Your journey has no course to start with yet. Open the roadmap and pick one.',
     seeAll: 'See roadmap',
     pickerEmpty: 'Start a course and it appears here.',
+    // Lessons opened and not finished, newest first: a way back to the exact lesson (owner, 2026-11-18).
+    leftOffTitle: 'Where you left off',
+    leftOffContinue: (course: string, lessonNumber: number) => `${course} · Lesson ${lessonNumber}`,
+    leftOffNext: (course: string, lessonNumber: number) => `Up next in ${course} · Lesson ${lessonNumber}`,
+    leftOffLabel: (lesson: string, detail: string) => `Continue ${lesson}. ${detail}.`,
   },
   sheet: {
     why: 'Why it matters',

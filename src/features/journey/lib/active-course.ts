@@ -48,13 +48,17 @@ export type LearningEntry = { node: PathNode; group: LearningGroup; active: bool
  * "My Learning": the courses the learner can switch to from Home. Started courses (finished ones last), the journey's own next course
  * when it hasn't been started, and the active course whatever it is. Locked courses and untouched skipped ones are not offered: they
  * are in the All courses view and in Discover. Order: in progress (active first, then most recent), ready to start, finished.
+ * `opened` is when a lesson was last opened in each course (courseId to ISO time): a course whose lesson was opened but not yet finished
+ * counts as in progress too, and as worked on at that time, so a learner who starts reading finds the course here.
  */
-export function myLearning(path: CoursePath, activeKey: string | null): LearningEntry[] {
+export function myLearning(path: CoursePath, activeKey: string | null, opened: Readonly<Record<string, string>> = {}): LearningEntry[] {
   const entries: LearningEntry[] = [];
+  const lastTouched = (node: PathNode) => Math.max(timeOf(node.lastActiveAt), node.courseId ? timeOf(opened[node.courseId]) : 0);
   for (const node of courseNodes(path)) {
     const active = node.key === activeKey;
-    if (!active && !node.started && node.status !== 'current') continue;
-    const group: LearningGroup = node.status === 'completed' ? 'completed' : node.started ? 'in-progress' : 'ready';
+    const began = node.started || (!!node.courseId && !!opened[node.courseId]);
+    if (!active && !began && node.status !== 'current') continue;
+    const group: LearningGroup = node.status === 'completed' ? 'completed' : began ? 'in-progress' : 'ready';
     entries.push({ node, group, active });
   }
   const rank = { 'in-progress': 0, ready: 1, completed: 2 } as const;
@@ -62,7 +66,7 @@ export function myLearning(path: CoursePath, activeKey: string | null): Learning
     (a, b) =>
       rank[a.group] - rank[b.group] ||
       Number(b.active) - Number(a.active) ||
-      (a.group === 'ready' ? Number(b.node.status === 'current') - Number(a.node.status === 'current') : timeOf(b.node.lastActiveAt) - timeOf(a.node.lastActiveAt)) ||
+      (a.group === 'ready' ? Number(b.node.status === 'current') - Number(a.node.status === 'current') : lastTouched(b.node) - lastTouched(a.node)) ||
       a.node.index - b.node.index,
   );
 }

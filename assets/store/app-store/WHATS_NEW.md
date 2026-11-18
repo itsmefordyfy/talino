@@ -9,6 +9,11 @@ New: Programming Fundamentals. Learn to think like a programmer, then build with
 
 ## What's New in This Version
 
+New: a friendlier welcome that builds your path
+• Pick the course you want to learn from the ones that match your answers, with a clear Recommended pick and Free or Pro on each
+• A "Great choice" moment for your course, and daily goals with names: Casual, Regular, Serious and more
+• The first lesson of every course is free, so you can try any course before you decide. Pro opens the rest
+• If you pick a Pro course, see Talino Pro's plans right there, or skip and start with the free first lesson
 New: a "What's new" sheet after every update, and in Settings under About
 New: Talino on iPad
 • A layout built for the iPad's bigger screen: your course outline beside the lesson, your learning journey beside its summary, and two-column Career and Profile
@@ -37,6 +42,21 @@ New: Finding International Clients, a beginner course for freelancers and VAs wh
 • 52 lessons in 10 modules: the international market, your niche, where clients are, portfolio, profile, outreach, proposals, communication, discovery calls and negotiation, and your first contract
 • Practise with AI: talk to a simulated client about need, budget and scope, and get a message coach's review of your proposals and outreach, with your version beside a suggested improvement
 • Three projects: your freelancer profile, a client acquisition campaign and a first-contract simulation. Talino helps you organize and practise; it never sends messages for you or promises clients
+New: Software Architecture with AI, a course for developers on designing systems that scale and stay secure
+• 44 lessons in 12 modules, about 16 hours: requirements, architecture styles and how to choose, components, databases and multi-tenancy, APIs and integrations, cloud, scaling and reliability, security, documentation and production review
+• Four tools you keep using: an editable diagram workbench (C4, sequence, data-flow and ER diagrams written as text), a trade-off matrix, an architecture decision record builder and an architecture assistant that states its assumptions and the information it is missing
+• Practise with AI: live prompt labs that review a design, and a mentor that challenges your assumptions and gives hints before answers. Recommendations are drafts to check, never guarantees
+• Three projects: a multi-tenant SaaS architecture, a plan to scale an existing application and a full architecture blueprint with a working proof of concept
+New: How Large Language Models Work, a course on what happens inside ChatGPT, Claude and Gemini
+• 77 lessons in 11 modules, no programming needed: what a language model is, the text it learns from, tokens and embeddings, the Transformer and attention, how a reply is written one token at a time, and how a raw model becomes a helpful assistant
+• Why assistants forget, make things up and need outside knowledge, with retrieval-augmented generation, multimodal models, agents and function calling explained step by step
+• Interactive pictures you can play with: see attention connect the words of a sentence, change temperature, top-k and top-p on a next-token table, and follow one token through a Transformer
+• A 25-question final assessment with explanations, and a practical challenge: design a simple AI assistant workflow and say how you would check its answers
+New: AI Automation for Business and Everyday Work, a beginner course on putting AI and no-code automation to work, no coding needed
+• 83 lessons in 11 modules: tell what rules should decide from what AI can judge, then automate email, meeting notes, documents, spreadsheets, reports, marketing, sales, customer support and small-business tasks
+• Build workflows with a trigger, an AI step and a person who approves, with a rule-checked workflow builder and clear diagrams, and learn how AI agents use tools, memory and approval
+• Keep it safe: protect customer data and keys, expect AI mistakes, keep logs, and test before you rely on a workflow
+• Seven projects and a 25-question final assessment, then design your own AI-powered workflow for a real problem
 New: Time Management and Productivity, a beginner course on planning, focus and working with AI without burning out
 • 43 lessons in 10 modules, about 10 hours: priorities, daily and weekly plans, procrastination, deep work, simple tools, AI assistants and automation, remote and study time, rest and review
 • Four tools you keep using: an Eisenhower matrix, a day planner that shows conflicts and what is left over, a Pomodoro timer and an AI prompt playground (a checklist, not an AI)

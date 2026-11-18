@@ -8,7 +8,7 @@ import { PRACTICE_ITEMS, findLab, findPracticeItem } from './catalog';
 import { labProblems } from './lib/lab-rules';
 import { PARTNER_ROLES, PRACTICE_CRITERIA } from './types';
 
-/** The courses that use the engine: every role-play and message task belongs to exactly one activity of one of them (lab tasks belong to the Generative AI course and are checked there). */
+/** The courses that use the engine: every role-play and message task belongs to exactly one activity of one of them (lab tasks belong to the Generative AI and Software Architecture courses and are checked below). */
 const COURSES = [course, internationalClientsCourse, timeManagementProductivityCourse];
 const usage = new Map<string, string[]>();
 for (const lesson of COURSES.flatMap((one) => one.lessons)) {
@@ -90,9 +90,10 @@ describe('the Soft Skills practice catalog', () => {
 /** The prompt labs (Generative AI course): `practice/labs/module-NN.ts`. The rules live in `lib/lab-rules.ts`; with no labs written yet these pass over nothing. */
 describe('the prompt-lab catalog', () => {
   const labs = PRACTICE_ITEMS.filter((item) => item.kind === 'lab');
-  const genAi = ALL_COURSES.find((entry) => entry.id === 'generative-ai-applications');
+  // Prompt labs belong to the Generative AI course (`lab-NN-`) and to Software Architecture with AI (`arch-NN-`).
+  const labCourses = ALL_COURSES.filter((entry) => entry.id === 'generative-ai-applications' || entry.id === 'software-architecture-ai');
   const labUsage = new Map<string, string[]>();
-  for (const lesson of genAi?.lessons ?? []) {
+  for (const lesson of labCourses.flatMap((entry) => entry.lessons)) {
     for (const block of lesson.body) if (block.type === 'activity' && block.activity.kind === 'prompt-lab') labUsage.set(block.activity.labId, [...(labUsage.get(block.activity.labId) ?? []), block.activity.id]);
   }
 

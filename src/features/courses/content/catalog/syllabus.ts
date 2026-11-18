@@ -1,9 +1,14 @@
+import { SYLLABUS_AGENTS } from './syllabus-agents';
 import { SYLLABUS_AI_1 } from './syllabus-ai-1';
 import { SYLLABUS_AI_2 } from './syllabus-ai-2';
+import { SYLLABUS_AI_AUTOMATION } from './syllabus-ai-automation';
+import { SYLLABUS_AI_FUNDAMENTALS } from './syllabus-ai-fundamentals';
+import { SYLLABUS_ARCHITECTURE } from './syllabus-architecture';
 import { SYLLABUS_DSA } from './syllabus-dsa';
 import { SYLLABUS_FOUNDATIONS } from './syllabus-foundations';
 import { SYLLABUS_GENAI } from './syllabus-genai';
 import { SYLLABUS_INTERNATIONAL_CLIENTS } from './syllabus-international-clients';
+import { SYLLABUS_LLM } from './syllabus-llm';
 import { SYLLABUS_OOP } from './syllabus-oop';
 import { SYLLABUS_PRODUCTIVITY } from './syllabus-productivity';
 import { SYLLABUS_SOFT_SKILLS } from './syllabus-soft-skills';
@@ -16,7 +21,7 @@ export type { SyllabusEntry, SyllabusModule } from './syllabus-types';
  * C AI coding tools, D AI-assisted development workflows, E advanced AI software engineering, F building and monetising software
  * with AI. The earlier plan of 54 language, framework and backend courses was dropped by the owner the same day (docs/content/AI_FIRST_AUDIT.md).
  */
-export const CATALOG_SYLLABUS: readonly SyllabusEntry[] = [...SYLLABUS_AI_1, ...SYLLABUS_AI_2, ...SYLLABUS_FOUNDATIONS, ...SYLLABUS_DSA, ...SYLLABUS_OOP, ...SYLLABUS_SOFT_SKILLS, ...SYLLABUS_INTERNATIONAL_CLIENTS, ...SYLLABUS_GENAI, ...SYLLABUS_PRODUCTIVITY];
+export const CATALOG_SYLLABUS: readonly SyllabusEntry[] = [...SYLLABUS_AI_1, ...SYLLABUS_AI_2, ...SYLLABUS_FOUNDATIONS, ...SYLLABUS_DSA, ...SYLLABUS_OOP, ...SYLLABUS_SOFT_SKILLS, ...SYLLABUS_INTERNATIONAL_CLIENTS, ...SYLLABUS_GENAI, ...SYLLABUS_PRODUCTIVITY, ...SYLLABUS_AI_FUNDAMENTALS, ...SYLLABUS_ARCHITECTURE, ...SYLLABUS_LLM, ...SYLLABUS_AI_AUTOMATION, ...SYLLABUS_AGENTS];
 
 const byId = new Map(CATALOG_SYLLABUS.map((entry) => [entry.id, entry]));
 
@@ -28,7 +33,7 @@ export function getSyllabus(courseId: string): SyllabusEntry | undefined {
 export const STANDARD_MIN_LESSONS = 5;
 export const STANDARD_MAX_LESSONS = 15;
 /** A course made of modules (Programming Fundamentals) may be longer: a learner takes it module by module. */
-export const MODULE_COURSE_MAX_LESSONS = 80;
+export const MODULE_COURSE_MAX_LESSONS = 120;
 
 /** The most lessons this course's syllabus may list. */
 export function lessonLimitOf(entry: Pick<SyllabusEntry, 'modules'>): number {

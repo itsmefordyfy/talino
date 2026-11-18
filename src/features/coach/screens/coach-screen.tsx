@@ -1,14 +1,16 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, Stack, useLocalSearchParams } from 'expo-router';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { Tali } from '@/components/brand/tali';
+import { HeaderActions } from '@/components/header-actions';
 import { OfflineNotice } from '@/components/offline-notice';
 import { ThemedText } from '@/components/themed-text';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { ChipSelect } from '@/components/ui/chip-select';
 import { GlassIconButton } from '@/components/ui/glass-icon-button';
+import { HeaderControl } from '@/components/ui/header-control';
 import type { MaterialSymbolName } from '@/components/ui/material-symbols';
 import { Notice } from '@/components/ui/notice';
 import { Screen } from '@/components/ui/screen';
@@ -53,33 +55,33 @@ export function CoachScreen() {
     setSession((current) => ({ key: current.key + 1, chatId: first(params.chat) ?? null, mode: modeInfo(requestedMode) ? (requestedMode as string) : current.mode, prompt: first(params.prompt) ?? '', focus: focusFromParam(first(params.focus)) }));
   }
 
+  // History and New chat live in the sheet's header, to the right of the close X (owner, 2026-11-18). They are ONE header item with a small gap
+  // between them: as two items the header put its own wide spacing between them and each carried its own padding (owner: "big gaps"). On iOS the
+  // item hides the system's shared glass (the recipe of the X, `headerCloseOptions`), so each stays one round button; Android's SheetHeader draws the slot.
+  const buttons = (
+    <HeaderControl>
+      <HeaderActions>
+        <GlassIconButton icon="history" color="text" accessibilityLabel={strings.history} onPress={() => router.push('/coach-history')} />
+        <GlassIconButton icon="add_comment" color="text" accessibilityLabel={strings.newChat} onPress={() => startNew()} />
+      </HeaderActions>
+    </HeaderControl>
+  );
+  const headerRight =
+    process.env.EXPO_OS === 'ios'
+      ? { unstable_headerRightItems: () => [{ type: 'custom' as const, element: buttons, hidesSharedBackground: true }] }
+      : { headerRight: () => buttons };
+
   return (
-    <ChatView
-      key={session.key}
-      chatId={session.chatId}
-      mode={session.mode}
-      prompt={session.prompt}
-      focus={session.focus}
-      onNewChat={startNew}
-      header={
-        // Tali opens as a sheet, whose own title is "Tali": under it, the line about Tali and the two buttons.
-        <View style={styles.sheetHeader}>
-          <ThemedText type="secondary" themeColor="textSecondary" style={styles.flex}>
-            {strings.subtitle}
-          </ThemedText>
-          <View style={styles.headerButtons}>
-            <GlassIconButton icon="history" accessibilityLabel={strings.history} onPress={() => router.push('/coach-history')} />
-            <GlassIconButton icon="add_comment" accessibilityLabel={strings.newChat} onPress={() => startNew()} />
-          </View>
-        </View>
-      }
-    />
+    <>
+      <Stack.Screen options={headerRight} />
+      <ChatView key={session.key} chatId={session.chatId} mode={session.mode} prompt={session.prompt} focus={session.focus} onNewChat={startNew} />
+    </>
   );
 }
 
-type ChatViewProps = { chatId: string | null; mode: string; prompt: string; focus: CoachFocus | null; onNewChat: (mode: string) => void; header: React.ReactNode };
+type ChatViewProps = { chatId: string | null; mode: string; prompt: string; focus: CoachFocus | null; onNewChat: (mode: string) => void };
 
-function ChatView({ chatId, mode: initialMode, prompt, focus, onNewChat, header }: ChatViewProps) {
+function ChatView({ chatId, mode: initialMode, prompt, focus, onNewChat }: ChatViewProps) {
   const strings = useLocalized(coachStrings);
   const language = useLanguage();
   const name = useAppSelector(selectLearnerName);
@@ -117,7 +119,6 @@ function ChatView({ chatId, mode: initialMode, prompt, focus, onNewChat, header 
 
   return (
     <Screen footer={footer}>
-      {header}
       {!started && (
         <ChipSelect
           value={chat.mode}
@@ -192,15 +193,6 @@ function ChatView({ chatId, mode: initialMode, prompt, focus, onNewChat, header 
 }
 
 const styles = StyleSheet.create({
-  sheetHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: Spacing.three,
-  },
-  headerButtons: {
-    flexDirection: 'row',
-    gap: Spacing.two,
-  },
   footer: {
     gap: Spacing.one,
   },

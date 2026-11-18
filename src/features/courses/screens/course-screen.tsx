@@ -80,18 +80,30 @@ export function CourseScreen({ courseId }: { courseId: string }) {
   const level = facts ? learningLevelLabel(facts.learningLevel) : null;
   // A course the learner already has needs no access pill (owner, 2026-11-17: remove "Included with Pro"); only Free and a locked Pro course say so.
   const accessLabel = course.kind === 'starter' ? browse.accessFree : owned ? null : browse.accessPro;
+  // The first lesson of every course is free: a course the learner doesn't have offers it first, with Talino Pro under it.
+  const freeLesson = course.lessons[0];
+  const freeLessonOpen = !!freeLesson && progress?.lessonState(freeLesson.id) !== 'done';
   const footer = !owned ? (
-    <Button title={strings.unlock} icon="lock_open" onPress={() => void openPaywall('courses')} />
+    <View style={styles.footerStack}>
+      {freeLessonOpen && (
+        // Like Start on a course the learner has: the course becomes Home's Active Course and Home opens, where its free first lesson is next.
+        <Button title={browse.tryFirstLesson} icon="play_arrow" onPress={startOnHome} />
+      )}
+      <Button title={strings.unlock} variant={freeLessonOpen ? 'secondary' : 'primary'} icon="lock_open" onPress={() => void openPaywall('courses')} />
+    </View>
   ) : next ? (
     <Button title={progress?.started ? strings.continue : strings.start} icon="play_arrow" onPress={progress?.started ? () => openLesson(next.id) : startOnHome} />
   ) : progress?.complete && course.kind !== 'mini' ? (
     <Button title={strings.certificateTitle} icon="workspace_premium" onPress={() => router.push({ pathname: '/certificate/[courseId]', params: { courseId: course.id } })} />
   ) : null;
 
+  // The starter course reads as a plain course: whether it is free is said by the button and the paywall, not by a tag.
+  const kindLabel = strings.kinds[course.kind === 'starter' ? 'standard' : course.kind];
+
   return (
     <Screen footer={footer}>
       <Stack.Screen options={{ title: course.title }} />
-      <CourseHero icon={course.icon} course={course} eyebrow={level ? `${strings.kinds[course.kind]} · ${level}` : strings.kinds[course.kind]} title={course.title} subtitle={course.tagline}>
+      <CourseHero icon={course.icon} course={course} eyebrow={level ? `${kindLabel} · ${level}` : kindLabel} title={course.title} subtitle={course.tagline}>
         {progress?.started && (
           <View style={styles.heroRow}>
             <ProgressRing fraction={progress.fraction} tint={HeroInk.text} track={HeroInk.glass} accessibilityLabel={strings.lessonsDone(progress.lessonsDone, progress.lessonsTotal)} />
@@ -283,6 +295,9 @@ function Fact({ label, tone = 'neutral' }: { label: string; tone?: 'neutral' | '
 }
 
 const styles = StyleSheet.create({
+  footerStack: {
+    gap: Spacing.two,
+  },
   pills: {
     flexDirection: 'row',
     flexWrap: 'wrap',

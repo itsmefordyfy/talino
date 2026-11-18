@@ -85,12 +85,16 @@ export function startLevel(definition: JourneyDefinition, facts: JourneyFacts, l
   return at(index, reason);
 }
 
+/** The directions that say which kind of app the learner builds. Only these can set a platform milestone (the phone-app courses) aside. */
+const PLATFORM_FOCUS: readonly JourneyFocusId[] = ['web', 'mobile'];
+
 /** Whether a milestone is required for this learner (otherwise it is shown as optional). */
 export function isRequiredFor(milestone: JourneyMilestone, focus: readonly JourneyFocusId[]): boolean {
   if (!milestone.audience || milestone.audience.length === 0) return milestone.side !== true;
   if (milestone.audience.some((id) => focus.includes(id))) return true;
-  // Said nothing about where they are heading: the journey's own plan holds, for the milestones meant for everyone.
-  return focus.length === 0 && milestone.assumeForAll === true;
+  // Said nothing about which kind of app they build: the journey's own plan holds, for the milestones meant for everyone. Heading for
+  // AI, freelancing, a job or teaching says nothing against the phone-app courses; only choosing the web instead does.
+  return milestone.assumeForAll === true && !focus.some((id) => PLATFORM_FOCUS.includes(id));
 }
 
 function courseOf(facts: JourneyFacts, courseId: string): CourseSnapshot | null {

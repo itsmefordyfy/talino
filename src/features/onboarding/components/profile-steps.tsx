@@ -13,6 +13,7 @@ import { parseTime } from '@/lib/dates';
 
 import { cleanInterests } from '../lib/profile';
 import { DAILY_MINUTE_CHOICES, EXPERIENCE_LEVELS, GOAL_IDS, INTEREST_GROUPS, NOT_SURE, STYLE_IDS, TIMES_OF_DAY, WEEKDAYS, WEEKLY_GOAL_CHOICES, type ExperienceLevel, type GoalId, type InterestId, type StyleId, type TimeOfDay } from '../lib/options';
+import { onboardingCourseStrings } from '../course-strings';
 import { onboardingStrings } from '../strings';
 
 /**
@@ -108,10 +109,11 @@ export function StylesStep({ value, onChange }: { value: readonly StyleId[]; onC
 
 export function MinutesStep({ value, onChange }: { value: number | null; onChange: (value: number) => void }) {
   const strings = useLocalized(onboardingStrings);
+  const goals = useLocalized(onboardingCourseStrings);
   return (
     <View style={styles.stack} accessibilityRole="radiogroup">
       {DAILY_MINUTE_CHOICES.map((minutes) => (
-        <OptionCard key={minutes} mode="single" icon="timer" title={strings.minutes(minutes)} detail={strings.minutesDetail(minutes)} selected={value === minutes} onPress={() => onChange(minutes)} />
+        <OptionCard key={minutes} mode="single" icon="timer" title={goals.tiers[minutes] ? goals.tierTitle(goals.tiers[minutes], minutes) : strings.minutes(minutes)} detail={strings.minutesDetail(minutes)} selected={value === minutes} onPress={() => onChange(minutes)} />
       ))}
     </View>
   );

@@ -1,5 +1,5 @@
 import { router, Stack } from 'expo-router';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import { CoachLine } from '@/components/coach-line';
@@ -16,6 +16,7 @@ import { Notice } from '@/components/ui/notice';
 import { Screen, type ScreenHandle } from '@/components/ui/screen';
 import { LoadingState, NotFoundState } from '@/components/ui/state-view';
 import { Spacing } from '@/constants/theme';
+import { useStudyClock } from '@/features/goal-activity';
 import { useLearnerLevel } from '@/features/onboarding/hooks/use-learner-level';
 import { onboardingStrings } from '@/features/onboarding/strings';
 import { openPaywall, useAccess } from '@/features/store';
@@ -26,6 +27,7 @@ import { useSplitView } from '@/hooks/use-split-view';
 import { useLanguage, useLocalized } from '@/hooks/use-strings';
 import { useAppDispatch, useAppSelector } from '@/store/hooks';
 
+import { recordLessonVisit } from '../api/lesson-visits';
 import { useLessonListen } from '../audio/use-lesson-listen';
 import { lessonOutline, lessonScript } from '../lib/plain-text';
 import { blockUnit, lessonSegments, segmentIndexOf } from '../lib/speech-segments';
@@ -109,6 +111,14 @@ function LessonContent({ lessonId }: { lessonId: string }) {
   const levelLabels = useLocalized(onboardingStrings).experience;
   const [showAll, setShowAll] = useState(false);
   const access = useAccess();
+  // Time in an open lesson (reading, listening, the quiz, the practice) counts toward today's goal and its Lock Screen card.
+  const canOpen = !!found && access.canOpenLesson(found.course.id, found.lesson.id);
+  useStudyClock(canOpen);
+  // Opening a lesson bookmarks it ("where you left off" in My Learning), so a course counts as started from its first lesson, not its first quiz.
+  const courseId = found?.course.id;
+  useEffect(() => {
+    if (canOpen && courseId) recordLessonVisit(courseId, lessonId);
+  }, [canOpen, courseId, lessonId]);
   const saveQuiz = useSaveQuiz();
   const setTask = useSetTaskDone();
   const name = useAppSelector(selectLearnerName);
@@ -160,7 +170,8 @@ function LessonContent({ lessonId }: { lessonId: string }) {
   const progress = learning.progressFor(course.id);
   const state = progress?.lessonState(lesson.id) ?? 'locked';
   const row = learning.lessonRow(lesson.id);
-  const owned = access.owns(course.id);
+  // The course's first lesson opens for everyone; every other lesson needs the course (Talino Pro).
+  const owned = access.canOpenLesson(course.id, lesson.id);
   const nextLesson = course.lessons.find((entry) => entry.day === lesson.day + 1) ?? null;
 
   // What THIS learner is shown, asked and given to practise: the shared lesson plus the pieces for their level (or everything).

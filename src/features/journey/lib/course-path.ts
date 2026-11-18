@@ -84,7 +84,12 @@ export type CoursePath = {
 
 const percentOf = (fraction: number) => Math.round(Math.max(0, Math.min(1, fraction)) * 100);
 
-export function buildCoursePath(state: JourneyState, facts: JourneyFacts): CoursePath {
+export type CoursePathOptions = {
+  /** The course the learner picked for Home (in onboarding, or later): it is never drawn as skipped ground, whatever level they start at. */
+  pickedCourseId?: string | null;
+};
+
+export function buildCoursePath(state: JourneyState, facts: JourneyFacts, options: CoursePathOptions = {}): CoursePath {
   type Draft = Omit<PathNode, 'index' | 'indexInStage' | 'status'> & { milestone: MilestoneState; completed: boolean };
   const drafts: Draft[] = [];
 
@@ -174,7 +179,7 @@ export function buildCoursePath(state: JourneyState, facts: JourneyFacts): Cours
     if (completed) status = 'completed';
     else if (draft.key === currentKey) status = 'current';
     else if (draft.kind === 'course' && draft.started) status = 'in-progress';
-    else if (milestone.status === 'skipped') status = 'skipped';
+    else if (milestone.status === 'skipped' && !(draft.kind === 'course' && draft.courseId === options.pickedCourseId)) status = 'skipped';
     else status = 'available';
     return { ...rest, index, indexInStage, status };
   });

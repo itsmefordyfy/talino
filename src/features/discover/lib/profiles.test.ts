@@ -105,6 +105,29 @@ describe('startHere', () => {
   });
 });
 
+describe('startHere follows the learner’s level', () => {
+  const none = { completed: new Set<string>(), started: new Map<string, unknown>() };
+  test('with no level said, it is the beginner steps as before', () => {
+    const list = startHere(FACTS, none, 6);
+    expect(list[0].kind).toBe('starter');
+    expect(list.every((facts) => facts.level === 'beginner')).toBe(true);
+    expect(startHere(FACTS, { ...none, experience: 'beginner' }, 6).map((facts) => facts.id)).toEqual(list.map((facts) => facts.id));
+  });
+  test('an experienced developer is not offered the basics or the free starter', () => {
+    for (const experience of ['advanced', 'professional'] as const) {
+      const list = startHere(FACTS, { ...none, experience }, 6);
+      expect(list.length).toBeGreaterThan(0);
+      expect(list.some((facts) => facts.kind === 'starter')).toBe(false);
+      expect(list.every((facts) => facts.level !== 'beginner')).toBe(true);
+    }
+  });
+  test('an intermediate learner is offered courses at their level first, never more than the limit', () => {
+    const list = startHere(FACTS, { ...none, experience: 'intermediate' }, 6);
+    expect(list.length).toBeLessThanOrEqual(6);
+    expect(list[0].level).toBe('intermediate');
+  });
+});
+
 describe('signalsKey and memoByKey', () => {
   test('the same signals give the same key; progress, answers or exploring change it', () => {
     const base = PROFILES['web developer'];

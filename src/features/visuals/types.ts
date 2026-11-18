@@ -1,7 +1,7 @@
 import type { ComponentType } from 'react';
 
 /** What a visual explains, for grouping in the Concept Lab and for linking from lessons. */
-export type VisualCategory = 'fundamentals' | 'oop' | 'dsa' | 'web' | 'software-engineering' | 'ai' | 'productivity';
+export type VisualCategory = 'fundamentals' | 'oop' | 'dsa' | 'web' | 'software-engineering' | 'ai' | 'productivity' | 'architecture';
 
 export type VisualProps = {
   /** Drawn inside a lesson card, where room is tighter: skip extras, keep the controls. */

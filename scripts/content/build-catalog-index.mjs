@@ -8,7 +8,7 @@ import { fileURLToPath } from 'node:url';
 
 const root = join(dirname(fileURLToPath(import.meta.url)), '..', '..');
 const catalog = join(root, 'src/features/courses/content/catalog');
-const syllabus = ['syllabus-ai-1.ts', 'syllabus-ai-2.ts', 'syllabus-foundations.ts', 'syllabus-dsa.ts', 'syllabus-oop.ts', 'syllabus-soft-skills.ts', 'syllabus-international-clients.ts', 'syllabus-genai.ts', 'syllabus-productivity.ts'].flatMap((file) => [...readFileSync(join(catalog, file), 'utf8').matchAll(/^    id: '([a-z0-9-]+)',$/gm)].map((match) => match[1]));
+const syllabus = ['syllabus-ai-1.ts', 'syllabus-ai-2.ts', 'syllabus-foundations.ts', 'syllabus-dsa.ts', 'syllabus-oop.ts', 'syllabus-soft-skills.ts', 'syllabus-international-clients.ts', 'syllabus-genai.ts', 'syllabus-productivity.ts', 'syllabus-ai-fundamentals.ts', 'syllabus-architecture.ts', 'syllabus-llm.ts', 'syllabus-ai-automation.ts', 'syllabus-agents.ts'].flatMap((file) => [...readFileSync(join(catalog, file), 'utf8').matchAll(/^    id: '([a-z0-9-]+)',$/gm)].map((match) => match[1]));
 const files = new Set(readdirSync(join(catalog, 'courses')).filter((file) => file.endsWith('.ts') && !file.endsWith('.test.ts')).map((file) => file.slice(0, -3)));
 const registeredFile = join(catalog, 'registered.json');
 const registered = new Set([...(existsSync(registeredFile) ? JSON.parse(readFileSync(registeredFile, 'utf8')) : []), ...process.argv.slice(2)]);

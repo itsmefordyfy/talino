@@ -117,6 +117,16 @@ export const COURSE_COVERS: Record<string, CourseCoverArt> = {
   'international-clients': { scene: 'path', palette: 'ocean', pose: 'proud' },
   // Time Management and Productivity (2026-11-17): a checklist being worked through.
   'time-management-productivity': { scene: 'checklist', palette: 'ocean', pose: 'proud' },
+  // AI Automation for Business and Everyday Work (2026-11-18): steps connected into a workflow.
+  'ai-automation-business': { scene: 'flow', palette: 'violet', pose: 'encouraging' },
+  // AI Fundamentals for Everyone (2026-11-18): a network of connected nodes, friendlier palette than the Generative AI course.
+  'ai-fundamentals-everyone': { scene: 'neural', palette: 'mint', pose: 'explaining' },
+  // Software Architecture with AI (2026-11-18): components and the connections between them.
+  'software-architecture-ai': { scene: 'architecture', palette: 'ocean', pose: 'thinking' },
+  // Building AI Agents (2026-11-18): steps connected in a loop, a model calling tools.
+  'building-ai-agents': { scene: 'flow', palette: 'ocean', pose: 'coding' },
+  // How Large Language Models Work (2026-11-18): a neural network lit up, seen from inside.
+  'how-llms-work': { scene: 'neural', palette: 'night', pose: 'curious' },
   'deploy-with-vercel': { scene: 'cloud', palette: 'violet', pose: 'confident' },
 };
 

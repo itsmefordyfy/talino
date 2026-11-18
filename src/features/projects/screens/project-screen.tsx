@@ -15,6 +15,7 @@ import { Section } from '@/components/ui/section';
 import { LoadingState, NotFoundState } from '@/components/ui/state-view';
 import { TextField } from '@/components/ui/text-field';
 import { Spacing } from '@/constants/theme';
+import { artifactsSummaryText, ProjectArtifactsNote, useProjectArtifacts } from '@/features/architecture';
 import { coachErrorCode, requestReview, reviewFeedback, useCoachIdentity } from '@/features/coach';
 import { adaptProject, inheritLevels, LevelNote, levelStrings, courseStrings, findProject, localizedProject, parseStepsDone, useLearning, useSaveReview, useSaveSubmissionDraft, useSetProjectSteps } from '@/features/courses';
 import { onboardingStrings, useLearnerLevel } from '@/features/onboarding';
@@ -57,6 +58,9 @@ export function ProjectScreen({ projectId }: { projectId: string }) {
   const practice = usePracticeSummaries(practiceIds);
   // The prompt labs among them (Generative AI projects) go to the review as their own labelled block.
   const labs = useLabSummaries(practiceIds);
+  // The diagrams, decision records and matrices saved for an architecture project: shown here and sent to the review as labelled context.
+  const isArchitecture = /^software-architecture-ai-p\d+$/.test(projectId);
+  const artifacts = useProjectArtifacts(projectId);
 
   if (!found) return <NotFoundState icon="rocket_launch" title={strings.notFound} />;
   if (learning.isPending || learner.isPending) return <LoadingState />;
@@ -92,7 +96,7 @@ export function ProjectScreen({ projectId }: { projectId: string }) {
     setReviewing(true);
     const submission = serializeSubmission({ link: linkValue, note: noteValue });
     try {
-      const result = await requestReview(identity, { projectId, reviewId: newId(), link: isLink ? linkValue.trim() : '', submission: noteValue.trim(), language, level: learner.level, practice: practiceSummaryText(practice.data ?? []), labs: labResultsText(labs.data ?? []) });
+      const result = await requestReview(identity, { projectId, reviewId: newId(), link: isLink ? linkValue.trim() : '', submission: noteValue.trim(), language, level: learner.level, practice: practiceSummaryText(practice.data ?? []), labs: labResultsText(labs.data ?? []), artifacts: isArchitecture ? artifactsSummaryText(artifacts.data ?? []) : '' });
       await saveReview.mutateAsync({ projectId, courseId: course.id, outcome: { status: result.review.verdict === 'pass' ? 'passed' : 'needs_work', feedback: reviewFeedback(result.review, language), token: result.token, submission } });
       if (result.review.verdict === 'pass') successFeedback();
     } catch (error) {
@@ -148,6 +152,8 @@ export function ProjectScreen({ projectId }: { projectId: string }) {
       </Card>
 
       {owned && practiceIds.length > 0 && <PracticeSummaryCard rows={practiceRows(practiceIds, practice.data ?? [])} text={practiceText} nudge={open && !passed} />}
+
+      {owned && isArchitecture && <ProjectArtifactsNote artifacts={artifacts.data ?? []} />}
 
       <Section title={strings.projectSteps}>
         <Card padded={false}>

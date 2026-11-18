@@ -240,6 +240,16 @@ describe('levels the learner skips', () => {
     expect(node(p, 'c4').status).toBe('current');
     expect(node(p, 'c1').status).toBe('skipped');
   });
+
+  test('the course the learner picked for Home is never drawn as skipped ground, and the rest still are', () => {
+    const facts = miniFacts();
+    const p = buildCoursePath(computeJourney(MINI, facts, learner), facts, { pickedCourseId: 'c1' });
+    expect(node(p, 'c1').status).toBe('available');
+    expect(node(p, 'c2').status).toBe('skipped');
+    // A pick doesn't count towards the level's required courses and doesn't move the journey's own place.
+    expect(p.stages[0]).toMatchObject({ coursesDone: 0, coursesTotal: 0 });
+    expect(p.current?.key).toBe('c5');
+  });
 });
 
 describe('levels and stages', () => {

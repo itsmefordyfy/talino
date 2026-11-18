@@ -6,6 +6,7 @@ import { catalogIndex } from './catalog-index';
 import { pickLearningPath, type PathPlan, type PathStep } from './path-plan';
 import { INTEREST_TARGETS, type TopicInterestId } from './profile-mapping';
 import { recommendCourses, type Recommendation } from './recommend';
+import { fitsLevel, learnerExperience } from './score';
 import type { LearnerSignals } from './signals';
 import { NOT_SURE } from '../../../onboarding/lib/options';
 
@@ -107,7 +108,11 @@ export function buildDiscoverySections(signals: LearnerSignals, facts: readonly 
   // what their own activity points at, and improve and next level (from real progress) stay as they were.
   const asked = signals.goals.length > 0 || signals.interests.some((interest) => interest !== NOT_SURE && interest in INTEREST_TARGETS);
   const aboutThem = (entry: Recommendation) => (asked ? entry.declared >= MIN_RELEVANCE : entry.relevance >= ACTIVITY_MIN_RELEVANCE);
-  const relevant = pool.filter(aboutThem);
+  // About what they asked for, the courses at their own level first: an experienced developer is not led with beginner courses, nor a beginner
+  // with advanced ones. The rest follow in the same order, so a thin list is still filled from what they asked for, never hidden.
+  const experience = learnerExperience(signals, index);
+  const aboutAsked = pool.filter(aboutThem);
+  const relevant = [...aboutAsked.filter((entry) => fitsLevel(experience, entry.facts.level)), ...aboutAsked.filter((entry) => !fitsLevel(experience, entry.facts.level))];
   const aboutWhatTheyAsked = (entry: Recommendation) => !asked || aboutThem(entry);
 
   const recommended = relevant.filter((entry) => !shown.has(entry.facts.id)).slice(0, options.recommendedLimit ?? 6);

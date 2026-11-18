@@ -131,7 +131,12 @@ export function rankCourses(profile: LearnerProfile, catalog: readonly Course[])
   return recommendCourses(signals, facts, { scope: 'everything' }).map((entry) => ({ id: entry.facts.id, score: entry.score }));
 }
 
-export function buildPlan(profile: LearnerProfile, catalog: readonly Course[], context: PlanContext = NOTHING_YET): LearningPlan {
+export type PlanOptions = {
+  /** The course the learner picked in onboarding: it starts the plan in place of the engine's best match (unless it is already finished or isn't in the catalog). */
+  preferredStartId?: string | null;
+};
+
+export function buildPlan(profile: LearnerProfile, catalog: readonly Course[], context: PlanContext = NOTHING_YET, options: PlanOptions = {}): LearningPlan {
   const declared = profile.experience ?? 'complete-beginner';
   const experience = effectiveExperience(declared, profile.assessment?.level ?? null);
   const byId = new Map(catalog.map((course) => [course.id, course]));
@@ -141,7 +146,8 @@ export function buildPlan(profile: LearnerProfile, catalog: readonly Course[], c
   // The course to learn first: the best match that isn't finished (one already begun may be it). A finished course falls
   // through to the next; if everything is finished the best match overall is shown.
   const candidates = recommendCourses(signals, facts, { scope: 'next', includeStarted: true });
-  const startEntry = candidates.find((entry) => entry.relevance > 0) ?? candidates[0] ?? recommendCourses(signals, facts, { scope: 'everything' })[0];
+  const preferred = options.preferredStartId && !context.complete(options.preferredStartId) ? recommendCourses(signals, facts, { scope: 'everything' }).find((entry) => entry.facts.id === options.preferredStartId) : undefined;
+  const startEntry = preferred ?? candidates.find((entry) => entry.relevance > 0) ?? candidates[0] ?? recommendCourses(signals, facts, { scope: 'everything' })[0];
   const startCourse = byId.get(startEntry.facts.id) as Course;
   const nextCourses = candidates
     .filter((entry) => entry.facts.id !== startCourse.id && entry.relevance > 0)
@@ -153,10 +159,16 @@ export function buildPlan(profile: LearnerProfile, catalog: readonly Course[], c
   let firstStep: FirstStep;
   let startsWithFree = false;
   const ownLesson = startOwned ? context.nextLesson(startCourse.id) : null;
+  const firstLesson = startCourse.lessons[0];
+  const freeLessonOpen = !startOwned && !!firstLesson && !context.complete(startCourse.id) && (context.nextLesson(startCourse.id) ?? firstLesson).id === firstLesson.id;
   if (startOwned && ownLesson) {
     firstStep = { kind: 'lesson', courseId: startCourse.id, lessonId: ownLesson.id, lessonTitle: ownLesson.title, day: ownLesson.day, free: startCourse.kind === 'starter' };
+  } else if (!startOwned && freeLessonOpen) {
+    // Not bought yet: the first lesson of every course is free (owner, 2026-11-18), so the plan starts in the course the learner wants.
+    const lesson = startCourse.lessons[0];
+    firstStep = { kind: 'lesson', courseId: startCourse.id, lessonId: lesson.id, lessonTitle: lesson.title, day: lesson.day, free: true };
   } else if (!startOwned && starter && !context.complete(STARTER)) {
-    // Not bought yet: begin with the free course, which is a real first step toward it.
+    // Not bought, and its free first lesson is already done: carry on with the free course, a real step toward it.
     const lesson = context.nextLesson(STARTER) ?? starter.lessons[0];
     firstStep = { kind: 'lesson', courseId: STARTER, lessonId: lesson.id, lessonTitle: lesson.title, day: lesson.day, free: true };
     startsWithFree = true;

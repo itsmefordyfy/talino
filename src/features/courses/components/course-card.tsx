@@ -2,7 +2,6 @@ import { router } from 'expo-router';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
 import { ThemedText } from '@/components/themed-text';
-import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
 import { Icon } from '@/components/ui/icon';
 import { ProgressBar } from '@/components/ui/progress-bar';
@@ -58,8 +57,6 @@ export function CourseCard({ course: englishCourse, progress, owned, variant = '
   const theme = useTheme();
   const started = !!progress?.started;
   const free = course.kind === 'starter';
-  // A course the learner does not have shows "Pro", never a price: one subscription opens them all.
-  const status = free ? strings.free : owned ? strings.owned : strings.pro;
   const compact = variant !== 'default';
   const info = compact ? (facts ?? factsFor(course.id)) : undefined;
   const meta = [course.level ? strings.levels[course.level] : null, strings.lessons(course.lessons.length), strings.projects(course.projects.length)].filter(Boolean).join(' · ');
@@ -72,8 +69,8 @@ export function CourseCard({ course: englishCourse, progress, owned, variant = '
   const action = progress?.complete ? browse.cardReview : started ? browse.cardContinue : !owned && !free ? browse.cardView : browse.cardStart;
   const bestFor = useBestFor(info?.level ?? 'beginner', course.id).text;
   const label = compact
-    ? [isNew ? browse.cardNew : null, course.title, course.tagline, typeLabel, levelLabel, bestFor, compactMeta, status, reason, started && progress ? strings.lessonsDone(progress.lessonsDone, progress.lessonsTotal) : null, action].filter(Boolean).join('. ')
-    : [course.title, course.tagline, status, meta].filter(Boolean).join('. ');
+    ? [isNew ? browse.cardNew : null, course.title, course.tagline, typeLabel, levelLabel, bestFor, compactMeta, reason, started && progress ? strings.lessonsDone(progress.lessonsDone, progress.lessonsTotal) : null, action].filter(Boolean).join('. ')
+    : [course.title, course.tagline, meta].filter(Boolean).join('. ');
   return (
     <Card padded={false} onPress={() => router.push({ pathname: '/course/[id]', params: { id: course.id } })} accessibilityLabel={label} style={style}>
       <CourseCover course={course} height={variant === 'tile' ? TILE_COVER_HEIGHT : compact ? DISCOVERY_COVER_HEIGHT : COVER_HEIGHT} />
@@ -88,7 +85,6 @@ export function CourseCard({ course: englishCourse, progress, owned, variant = '
           <ThemedText type="cardTitle" numberOfLines={2} style={styles.title}>
             {course.title}
           </ThemedText>
-          {status && <Badge label={status} color={owned || free ? 'statusOk' : 'primaryText'} background={owned || free ? 'statusOkSoft' : 'primarySoft'} />}
         </View>
         <ThemedText type="secondary" themeColor="textSecondary" numberOfLines={2}>
           {course.tagline}
